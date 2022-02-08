@@ -56,7 +56,7 @@ void checkCUDA(cudaError_t ret){
 // 	 	return pown(base*base, n/2) * base;
 // }
 
-/* Below based on mutate_cont.cpp */
+/* Below based on mutate_conf.cpp */
 
  __device__ __forceinline__ void quaternion_increment(float* q, const float* rotation, float epsilon_fl);
 
@@ -1262,6 +1262,8 @@ void kernel(	m_cuda_t*			m_cuda_global,
 
 		// for (int step = 0; step < search_depth; step++) {
 		for (int step = 0; step < search_depth; step++) { //debug
+			printf("step:%d\n", step);
+			
 			output_type_cuda_init_with_output(&candidate, &tmp);
 
 			int map_index = (step + gll * search_depth) % MAX_NUM_OF_RANDOM_MAP;
@@ -1625,17 +1627,31 @@ void monte_carlo::operator()(model& m, output_container& out, const precalculate
 	output_type_cuda_t *results_gpu;
 	checkCUDA(cudaMalloc(&results_gpu, sizeof(output_type_cuda_t)));
 
+	/* Add timing */
+	cudaEvent_t start,stop;
+	checkCUDA(cudaEventCreate(&start));
+	checkCUDA(cudaEventCreate(&stop));
+	checkCUDA(cudaEventRecord(start,NULL));
+
 	/* Launch kernel */
 	printf("launch kernel\n");
 	kernel<<<1,1>>>(m_cuda_gpu, ig_cuda_gpu, p_cuda_gpu, rand_molec_struc_gpu,
 		best_e_gpu, quasi_newton_par_max_steps, global_steps, mutation_amplitude_float,
-		rand_maps_gpu, epsilon_fl, hunt_cap_gpu, authentic_v_gpu, results_gpu, global_steps);
+		rand_maps_gpu, epsilon_fl, hunt_cap_gpu, authentic_v_gpu, results_gpu, 10);
 
 	checkCUDA(cudaDeviceSynchronize());
 
+	/* Timing output */
+
+	checkCUDA(cudaEventRecord(stop,NULL));
+	cudaEventSynchronize(stop);
+	float msecTotal = 0.0f;
+	cudaEventElapsedTime(&msecTotal, start, stop);
+	printf("Time spend on GPU is %f ms\n", msecTotal);
+	
 	/* Convert result data. Since thread==1, result_vina can be defined as an object
-	 * instead of a vector
-	 */
+	* instead of a vector
+	*/
 	printf("cuda to vina\n");
 	output_type_cuda_t results;
 	checkCUDA(cudaMemcpy(&results, results_gpu, sizeof(output_type_cuda_t), cudaMemcpyDeviceToHost));
@@ -1643,6 +1659,7 @@ void monte_carlo::operator()(model& m, output_container& out, const precalculate
 	add_to_output_container(out, result_vina, min_rmsd, num_saved_mins);
 	VINA_CHECK(!out.empty());
 	VINA_CHECK(out.front().e <= out.back().e); // make sure the sorting worked in the correct order
+	
 
 	/* Free memory */
 	checkCUDA(cudaFree(m_cuda_gpu));
@@ -1653,8 +1670,8 @@ void monte_carlo::operator()(model& m, output_container& out, const precalculate
 	checkCUDA(cudaFree(hunt_cap_gpu));
 	checkCUDA(cudaFree(authentic_v_gpu));
 	checkCUDA(cudaFree(results_gpu));
-	free(rand_maps);
-	free(rand_molec_struc);
+	checkCUDA(cudaFreeHost(rand_maps));
+	checkCUDA(cudaFreeHost(rand_molec_struc));
 
 	printf("exit monte_carlo\n");
 
