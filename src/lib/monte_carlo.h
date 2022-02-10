@@ -37,7 +37,7 @@ struct monte_carlo {
 	sz num_saved_mins;
 	fl mutation_amplitude;
 	unsigned local_steps;
-    int thread = 10; // for CUDA parallel option
+    int thread = 32768; // for CUDA parallel option
     // T = 600K, R = 2cal/(K*mol) -> temperature = RT = 1.2;  global_steps = 50*lig_atoms = 2500
     monte_carlo() : max_evals(0), global_steps(2500), temperature(1.2), hunt_cap(10, 1.5, 10), min_rmsd(0.5), num_saved_mins(50), mutation_amplitude(2) {}
 

@@ -133,7 +133,7 @@ public:
         m_cutoff_sqr = sqr(sf.get_cutoff());
         m_max_cutoff_sqr = sqr(sf.get_max_cutoff());
         m_n = sz(m_factor * m_max_cutoff_sqr) + 3; // sz(factor * r^2) + 1 <= sz(factor * max_cutoff_sqr) + 2 <= n-1 < n  // see assert below
-        //std::cout << "-- DEBUG -- sf.cutoff^2 in precalculate = " << m_max_cutoff_sqr << "\n";
+        std::cout << "-- DEBUG precalculate -- sf.cutoff^2 in precalculate = " << m_max_cutoff_sqr << "\n" << factor << ' ' << m_n << "\n";
         triangular_matrix<precalculate_element> data(num_atom_types(sf.get_atom_typing()), precalculate_element(m_n, m_factor));
 
         VINA_CHECK(m_factor > epsilon_fl);
@@ -148,6 +148,7 @@ public:
             {
                 precalculate_element &p = data(t1, t2);
                 // init smooth[].first
+                
                 VINA_FOR_IN(i, p.smooth)
                 {
                     p.smooth[i].first = (std::min)(v, sf.eval(t1, t2, rs[i]));
@@ -203,7 +204,7 @@ public:
         m_cutoff_sqr = sqr(sf.get_cutoff());
         m_max_cutoff_sqr = sqr(sf.get_max_cutoff());
         m_n = sz(m_factor * m_max_cutoff_sqr) + 3; // sz(factor * r^2) + 1 <= sz(factor * cutoff_sqr) + 2 <= n-1 < n  // see assert below
-        // std::cout << "-- DEBUG -- sf.cutoff^2 in precalculate = " << m_cutoff_sqr << "\n";
+        std::cout << "-- DEBUG byatm -- sf.cutoff^2 in precalculate = " << m_cutoff_sqr << "\n" << factor << ' ' << m_n << "\n";
         sz n_atoms = model.num_atoms();
         atomv atoms = model.get_atoms();
         triangular_matrix<precalculate_element> data(n_atoms, precalculate_element(m_n, m_factor));

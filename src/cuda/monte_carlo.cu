@@ -1241,10 +1241,10 @@ void kernel(	m_cuda_t*			m_cuda_global,
 	// tid
 	int idx = blockIdx.x * blockDim.x + threadIdx.x;
 	// int gll = 0;
-	printf("idx=%d", idx);
 	float best_e = INFINITY;
 
-	for (int gll = idx; gll < thread; gll += blockDim.x)
+	// for (int gll = idx; gll < thread; gll += blockDim.x)
+	int gll = idx;
 	{
 		//if (gll % 100 == 0)printf("\nThread %d START", gll);
 
@@ -1254,7 +1254,7 @@ void kernel(	m_cuda_t*			m_cuda_global,
 		output_type_cuda_t tmp; // private memory, shared only in work item
 		change_cuda_t g;
 		output_type_cuda_init(&tmp, rand_molec_struc_gpu + gll * (SIZE_OF_MOLEC_STRUC / sizeof(float)));
-		printf("tmp.lig_torsion_size=%d\n",tmp.lig_torsion_size);
+		// printf("tmp.lig_torsion_size=%d\n",tmp.lig_torsion_size);
 		g.lig_torsion_size = tmp.lig_torsion_size;
 		// BFGS
 		output_type_cuda_t best_out;
@@ -1262,7 +1262,7 @@ void kernel(	m_cuda_t*			m_cuda_global,
 
 		// for (int step = 0; step < search_depth; step++) {
 		for (int step = 0; step < search_depth; step++) { //debug
-			printf("step:%d\n", step);
+			// printf("step:%d\n", step);
 			
 			output_type_cuda_init_with_output(&candidate, &tmp);
 
@@ -1318,7 +1318,7 @@ void kernel(	m_cuda_t*			m_cuda_global,
 #ifdef ENABLE_CUDA
 
 std::vector<output_type> monte_carlo::cuda_to_vina(output_type_cuda_t results_ptr[], int thread) const {
-	printf("entering cuda_to_vina\n");
+	// printf("entering cuda_to_vina\n");
 	std::vector<output_type> results_vina;
 	for (int i = 0; i < thread; ++i){
 		output_type_cuda_t results = results_ptr[i];
@@ -1331,8 +1331,8 @@ std::vector<output_type> monte_carlo::cuda_to_vina(output_type_cuda_t results_pt
 		tmp_c.ligands[0].rigid.orientation = q;
 		output_type tmp_vina(tmp_c, results.e);
 		// torsion
-		printf("lig_torsion_size=%d\n", results.lig_torsion_size);
-		printf("%lf\n", results.lig_torsion[0]);
+		// printf("lig_torsion_size=%d\n", results.lig_torsion_size);
+		// printf("%lf\n", results.lig_torsion[0]);
 		for (int j = 0; j < results.lig_torsion_size; j++) tmp_vina.c.ligands[0].torsions.push_back(results.lig_torsion[j]);
 		// coords
 		for (int j = 0; j < MAX_NUM_OF_ATOMS; j++) {
@@ -1340,10 +1340,10 @@ std::vector<output_type> monte_carlo::cuda_to_vina(output_type_cuda_t results_pt
 			if (v_tmp[0] * v_tmp[1] * v_tmp[2] != 0) tmp_vina.coords.push_back(v_tmp);
 		}
 		results_vina.push_back(tmp_vina);
-		printf("results_vina.size()=%d\n", results_vina.size());
-		printf("%d\n", tmp_vina.c.ligands[0].torsions.size());
-		printf("tmp_vina.c.ligands[0].torsions[0]=%lf\n", tmp_vina.c.ligands[0].torsions[0]);
-		printf("results_vina[i].c.ligands[0].torsions[0]=%lf\n", results_vina[i].c.ligands[0].torsions[0]);
+		// printf("results_vina.size()=%d\n", results_vina.size());
+		// printf("%d\n", tmp_vina.c.ligands[0].torsions.size());
+		// printf("tmp_vina.c.ligands[0].torsions[0]=%lf\n", tmp_vina.c.ligands[0].torsions[0]);
+		// printf("results_vina[i].c.ligands[0].torsions[0]=%lf\n", results_vina[i].c.ligands[0].torsions[0]);
 	}
 	return results_vina;
 }
@@ -1553,8 +1553,9 @@ void monte_carlo::operator()(model& m, output_container& out, const precalculate
 	p_cuda_t p_cuda;
 	p_cuda.m_cutoff_sqr = p.cutoff_sqr();
 	p_cuda.factor = p.m_factor;
+	printf("p.m_n=%d\n", p.m_n);
 	p_cuda.n = p.m_n;
-	printf("%d, %lu\n", MAX_P_DATA_M_DATA_SIZE, p.m_data.m_data.size());
+	printf("%d, %ld\n", MAX_P_DATA_M_DATA_SIZE, p.m_data.m_data.size());
 	// assert(MAX_P_DATA_M_DATA_SIZE > p.m_data.m_data.size());
 	printf("FAST_SIZE=%d, fast.size()=%lu\n", FAST_SIZE, p.m_data.m_data[0].fast.size());
 	printf("SMOOTH_SIZE=%d, smooth.size()=%lu\n", SMOOTH_SIZE, p.m_data.m_data[0].smooth.size());
@@ -1655,7 +1656,7 @@ void monte_carlo::operator()(model& m, output_container& out, const precalculate
 
 	/* Launch kernel */
 	printf("launch kernel\n");
-	kernel<<<1,16>>>(m_cuda_gpu, ig_cuda_gpu, p_cuda_gpu, rand_molec_struc_gpu,
+	kernel<<<thread/256, 256>>>(m_cuda_gpu, ig_cuda_gpu, p_cuda_gpu, rand_molec_struc_gpu,
 		best_e_gpu, quasi_newton_par_max_steps, global_steps, mutation_amplitude_float,
 		rand_maps_gpu, epsilon_fl_float, hunt_cap_gpu, authentic_v_gpu, results_gpu, 10, thread);
 
