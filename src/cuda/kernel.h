@@ -30,8 +30,8 @@
 //#define GRID_MK 61//81
 #define MAX_P_DATA_M_DATA_SIZE 256
 //#define MAX_NUM_OF_GRID_ATOMS 130
-#define FAST_SIZE 803 // modified for vina1.2
-#define SMOOTH_SIZE 803
+#define FAST_SIZE 2501 // modified for vina1.2
+#define SMOOTH_SIZE 2501
 #define MAX_CONTAINER_SIZE_EVERY_WI 5
 
 
