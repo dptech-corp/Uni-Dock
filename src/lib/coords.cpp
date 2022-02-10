@@ -23,6 +23,7 @@
 #include "coords.h"
 
 fl rmsd_upper_bound(const vecv& a, const vecv& b) {
+	// printf("a.size()=%d, b.size()=%d\n", a.size(), b.size());
 	VINA_CHECK(a.size() == b.size());
 	fl acc = 0;
 	VINA_FOR_IN(i, a) 

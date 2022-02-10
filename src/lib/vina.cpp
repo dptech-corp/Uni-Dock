@@ -975,7 +975,7 @@ void Vina::global_search(const int exhaustiveness, const int n_poses, const doub
 		VINA_FOR_IN(i, poses) {
 			if (m_verbosity > 1)
 				std::cout << "ENERGY FROM SEARCH: " << poses[i].e << "\n";
-
+				
 			m_model.set(poses[i].c);
 
 			// For AD42 intramolecular_energy is equal to 0

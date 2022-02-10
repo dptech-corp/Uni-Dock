@@ -1225,9 +1225,8 @@ void kernel(	m_cuda_t*			m_cuda_global,
 				float*				hunt_cap_gpu,
 				float*				authentic_v_gpu,
 				output_type_cuda_t*	results,
-				int					search_depth
-				// int					e,
-				// int					total_wi
+				int					search_depth,
+				int					thread
 )
 {
 	/* OpenCL function */
@@ -1240,12 +1239,12 @@ void kernel(	m_cuda_t*			m_cuda_global,
 	// TODO
 
 	// tid
-	int gll = blockIdx.x * blockDim.x + threadIdx.x;
+	int idx = blockIdx.x * blockDim.x + threadIdx.x;
 	// int gll = 0;
-	// printf("%d", gll);
+	printf("idx=%d", idx);
 	float best_e = INFINITY;
 
-	do
+	for (int gll = idx; gll < thread; gll += blockDim.x)
 	{
 		//if (gll % 100 == 0)printf("\nThread %d START", gll);
 
@@ -1255,6 +1254,7 @@ void kernel(	m_cuda_t*			m_cuda_global,
 		output_type_cuda_t tmp; // private memory, shared only in work item
 		change_cuda_t g;
 		output_type_cuda_init(&tmp, rand_molec_struc_gpu + gll * (SIZE_OF_MOLEC_STRUC / sizeof(float)));
+		printf("tmp.lig_torsion_size=%d\n",tmp.lig_torsion_size);
 		g.lig_torsion_size = tmp.lig_torsion_size;
 		// BFGS
 		output_type_cuda_t best_out;
@@ -1306,10 +1306,9 @@ void kernel(	m_cuda_t*			m_cuda_global,
 		}
 
 		// write the best conformation back to CPU
-		write_back(results, &best_out);
+		write_back(results + gll, &best_out);
 		//if (gll % 100 == 0)printf("\nThread %d FINISH", gll);
 	}
-	while(0);
 }
 
 /* Above based on kernel.cl */
@@ -1318,25 +1317,35 @@ void kernel(	m_cuda_t*			m_cuda_global,
 
 #ifdef ENABLE_CUDA
 
-output_type monte_carlo::cuda_to_vina(output_type_cuda_t &results) const {
+std::vector<output_type> monte_carlo::cuda_to_vina(output_type_cuda_t results_ptr[], int thread) const {
 	printf("entering cuda_to_vina\n");
-	printf("%f", results.e);
-	conf tmp_c;
-	tmp_c.ligands.resize(1);
-	// Position
-	for (int j = 0; j < 3; j++)tmp_c.ligands[0].rigid.position[j] = results.position[j];
-	// Orientation
-	qt q(results.orientation[0], results.orientation[1], results.orientation[2], results.orientation[3]);
-	tmp_c.ligands[0].rigid.orientation = q;
-	output_type result_vina(tmp_c, results.e);
-	// torsion
-	for (int j = 0; j < results.lig_torsion_size; j++)result_vina.c.ligands[0].torsions.push_back(results.lig_torsion[j]);
-	// coords
-	for (int j = 0; j < MAX_NUM_OF_ATOMS; j++) {
-		vec v_tmp(results.coords[j][0], results.coords[j][1], results.coords[j][2]);
-		if (v_tmp[0] * v_tmp[1] * v_tmp[2] != 0) result_vina.coords.push_back(v_tmp);
+	std::vector<output_type> results_vina;
+	for (int i = 0; i < thread; ++i){
+		output_type_cuda_t results = results_ptr[i];
+		conf tmp_c;
+		tmp_c.ligands.resize(1);
+		// Position
+		for (int j = 0; j < 3; j++)tmp_c.ligands[0].rigid.position[j] = results.position[j];
+		// Orientation
+		qt q(results.orientation[0], results.orientation[1], results.orientation[2], results.orientation[3]);
+		tmp_c.ligands[0].rigid.orientation = q;
+		output_type tmp_vina(tmp_c, results.e);
+		// torsion
+		printf("lig_torsion_size=%d\n", results.lig_torsion_size);
+		printf("%lf\n", results.lig_torsion[0]);
+		for (int j = 0; j < results.lig_torsion_size; j++) tmp_vina.c.ligands[0].torsions.push_back(results.lig_torsion[j]);
+		// coords
+		for (int j = 0; j < MAX_NUM_OF_ATOMS; j++) {
+			vec v_tmp(results.coords[j][0], results.coords[j][1], results.coords[j][2]);
+			if (v_tmp[0] * v_tmp[1] * v_tmp[2] != 0) tmp_vina.coords.push_back(v_tmp);
+		}
+		results_vina.push_back(tmp_vina);
+		printf("results_vina.size()=%d\n", results_vina.size());
+		printf("%d\n", tmp_vina.c.ligands[0].torsions.size());
+		printf("tmp_vina.c.ligands[0].torsions[0]=%lf\n", tmp_vina.c.ligands[0].torsions[0]);
+		printf("results_vina[i].c.ligands[0].torsions[0]=%lf\n", results_vina[i].c.ligands[0].torsions[0]);
 	}
-	return result_vina;
+	return results_vina;
 }
 
 __host__
@@ -1344,6 +1353,8 @@ void monte_carlo::operator()(model& m, output_container& out, const precalculate
 
 	/* Definitions from vina1.2 */
 	printf("entering CUDA monte_carlo search\n"); //debug
+
+	// thread = 10; // for CUDA parallel option
 
 	// int evalcount = 0;
 	vec authentic_v(1000, 1000, 1000); // FIXME? this is here to avoid max_fl/max_fl
@@ -1505,29 +1516,36 @@ void monte_carlo::operator()(model& m, output_container& out, const precalculate
 
 	// Generating random ligand structures
 	printf("Generating random ligand structures\n"); //debug
-	output_type_cuda_t* rand_molec_struc;
-	// rand_molec_struc_vec.resize(thread);
-	checkCUDA(cudaMallocHost(&rand_molec_struc, sizeof(output_type_cuda_t)));
+	printf("thread=%d\n", thread);
+	std::vector<output_type_cuda_t*> rand_molec_struc_vec;
+	rand_molec_struc_vec.resize(thread);
+	for (int i = 0; i < thread; i++) {
+		checkCUDA(cudaMallocHost(&rand_molec_struc_vec[i], sizeof(output_type_cuda_t)));
+	}
 
 	int lig_torsion_size = tmp.c.ligands[0].torsions.size();
 	int flex_torsion_size;
 	if (tmp.c.flex.size() != 0) flex_torsion_size = tmp.c.flex[0].torsions.size();
 	else flex_torsion_size = 0;
-	vec uniform_data;
+	std::vector<vec> uniform_data;
+	uniform_data.resize(thread);
+	
+	for (int i = 0; i < thread; ++i){
+		tmp.c.randomize(corner1, corner2, generator); // generate a random structure
+		for (int j = 0; j < 3; j++) rand_molec_struc_vec[i]->position[j] = tmp.c.ligands[0].rigid.position[j];
+		assert(lig_torsion_size < MAX_NUM_OF_LIG_TORSION);
+		for (int j = 0; j < lig_torsion_size; j++) rand_molec_struc_vec[i]->lig_torsion[j] = tmp.c.ligands[0].torsions[j];// Only support one ligand
+		assert(flex_torsion_size < MAX_NUM_OF_FLEX_TORSION);
+		for (int j = 0; j < flex_torsion_size; j++) rand_molec_struc_vec[i]->flex_torsion[j] = tmp.c.flex[0].torsions[j];// Only support one flex
+	
+		rand_molec_struc_vec[i]->orientation[0] = (float)tmp.c.ligands[0].rigid.orientation.R_component_1();
+		rand_molec_struc_vec[i]->orientation[1] = (float)tmp.c.ligands[0].rigid.orientation.R_component_2();
+		rand_molec_struc_vec[i]->orientation[2] = (float)tmp.c.ligands[0].rigid.orientation.R_component_3();
+		rand_molec_struc_vec[i]->orientation[3] = (float)tmp.c.ligands[0].rigid.orientation.R_component_4();
+	
+		rand_molec_struc_vec[i]->lig_torsion_size = lig_torsion_size;
+	}
 
-	tmp.c.randomize(corner1, corner2, generator); // generate a random structure
-	for (int j = 0; j < 3; j++) rand_molec_struc->position[j] = tmp.c.ligands[0].rigid.position[j];
-	assert(lig_torsion_size < MAX_NUM_OF_LIG_TORSION);
-	for (int j = 0; j < lig_torsion_size; j++) rand_molec_struc->lig_torsion[j] = tmp.c.ligands[0].torsions[j];// Only support one ligand
-	assert(flex_torsion_size < MAX_NUM_OF_FLEX_TORSION);
-	for (int j = 0; j < flex_torsion_size; j++) rand_molec_struc->flex_torsion[j] = tmp.c.flex[0].torsions[j];// Only support one flex
-
-	rand_molec_struc->orientation[0] = (float)tmp.c.ligands[0].rigid.orientation.R_component_1();
-	rand_molec_struc->orientation[1] = (float)tmp.c.ligands[0].rigid.orientation.R_component_2();
-	rand_molec_struc->orientation[2] = (float)tmp.c.ligands[0].rigid.orientation.R_component_3();
-	rand_molec_struc->orientation[3] = (float)tmp.c.ligands[0].rigid.orientation.R_component_4();
-
-	rand_molec_struc->lig_torsion_size = lig_torsion_size;
 
 
     // Preaparing p related data
@@ -1580,19 +1598,21 @@ void monte_carlo::operator()(model& m, output_container& out, const precalculate
 	printf("Allocating GPU memory\n");
 	// rand_molec_struc_gpu
 	float *rand_molec_struc_gpu;
-	checkCUDA(cudaMalloc(&rand_molec_struc_gpu, SIZE_OF_MOLEC_STRUC));
-	std::vector<float> pos(rand_molec_struc->position, rand_molec_struc->position + 3);
-	std::vector<float> ori(rand_molec_struc->orientation, rand_molec_struc->orientation + 4);
-	std::vector<float> lig_tor(rand_molec_struc->lig_torsion, rand_molec_struc->lig_torsion + MAX_NUM_OF_LIG_TORSION);
-	std::vector<float> flex_tor(rand_molec_struc->flex_torsion, rand_molec_struc->flex_torsion + MAX_NUM_OF_FLEX_TORSION);
-	float lig_tor_size = rand_molec_struc->lig_torsion_size;
-	checkCUDA(cudaMemcpy(rand_molec_struc_gpu, pos.data(), pos.size() * sizeof(float), cudaMemcpyHostToDevice));
-	checkCUDA(cudaMemcpy(rand_molec_struc_gpu + pos.size(), ori.data(), ori.size() * sizeof(float), cudaMemcpyHostToDevice));
-	checkCUDA(cudaMemcpy(rand_molec_struc_gpu + pos.size() + ori.size(), lig_tor.data(), lig_tor.size() * sizeof(float), cudaMemcpyHostToDevice));
-	checkCUDA(cudaMemcpy(rand_molec_struc_gpu + pos.size() + ori.size() + MAX_NUM_OF_LIG_TORSION, flex_tor.data(),
-		flex_tor.size() * sizeof(float), cudaMemcpyHostToDevice));
-	checkCUDA(cudaMemcpy(rand_molec_struc_gpu + pos.size() + ori.size() + MAX_NUM_OF_LIG_TORSION + MAX_NUM_OF_FLEX_TORSION,
-		&lig_tor_size, sizeof(float), cudaMemcpyHostToDevice));
+	checkCUDA(cudaMalloc(&rand_molec_struc_gpu, thread * SIZE_OF_MOLEC_STRUC));
+	for (int i = 0;i < thread; ++i){
+		std::vector<float> pos(rand_molec_struc_vec[i]->position, rand_molec_struc_vec[i]->position + 3);
+		std::vector<float> ori(rand_molec_struc_vec[i]->orientation, rand_molec_struc_vec[i]->orientation + 4);
+		std::vector<float> lig_tor(rand_molec_struc_vec[i]->lig_torsion, rand_molec_struc_vec[i]->lig_torsion + MAX_NUM_OF_LIG_TORSION);
+		std::vector<float> flex_tor(rand_molec_struc_vec[i]->flex_torsion, rand_molec_struc_vec[i]->flex_torsion + MAX_NUM_OF_FLEX_TORSION);
+		float lig_tor_size = rand_molec_struc_vec[i]->lig_torsion_size;
+		checkCUDA(cudaMemcpy(rand_molec_struc_gpu + i * SIZE_OF_MOLEC_STRUC / sizeof(float), pos.data(), pos.size() * sizeof(float), cudaMemcpyHostToDevice));
+		checkCUDA(cudaMemcpy(rand_molec_struc_gpu + i * SIZE_OF_MOLEC_STRUC / sizeof(float) + pos.size(), ori.data(), ori.size() * sizeof(float), cudaMemcpyHostToDevice));
+		checkCUDA(cudaMemcpy(rand_molec_struc_gpu + i * SIZE_OF_MOLEC_STRUC / sizeof(float) + pos.size() + ori.size(), lig_tor.data(), lig_tor.size() * sizeof(float), cudaMemcpyHostToDevice));
+		checkCUDA(cudaMemcpy(rand_molec_struc_gpu + i * SIZE_OF_MOLEC_STRUC / sizeof(float) + pos.size() + ori.size() + MAX_NUM_OF_LIG_TORSION, flex_tor.data(),
+			flex_tor.size() * sizeof(float), cudaMemcpyHostToDevice));
+		checkCUDA(cudaMemcpy(rand_molec_struc_gpu + i * SIZE_OF_MOLEC_STRUC / sizeof(float) + pos.size() + ori.size() + MAX_NUM_OF_LIG_TORSION + MAX_NUM_OF_FLEX_TORSION,
+			&lig_tor_size, sizeof(float), cudaMemcpyHostToDevice));
+	}
 	// best_e_gpu
 	float *best_e_gpu;
 	checkCUDA(cudaMalloc(&best_e_gpu, sizeof(float)));
@@ -1625,7 +1645,7 @@ void monte_carlo::operator()(model& m, output_container& out, const precalculate
 	checkCUDA(cudaMemcpy(authentic_v_gpu, authentic_v_float, sizeof(authentic_v_float), cudaMemcpyHostToDevice));
 	// Preparing result data
 	output_type_cuda_t *results_gpu;
-	checkCUDA(cudaMalloc(&results_gpu, sizeof(output_type_cuda_t)));
+	checkCUDA(cudaMalloc(&results_gpu, thread * sizeof(output_type_cuda_t)));
 
 	/* Add timing */
 	cudaEvent_t start,stop;
@@ -1635,9 +1655,9 @@ void monte_carlo::operator()(model& m, output_container& out, const precalculate
 
 	/* Launch kernel */
 	printf("launch kernel\n");
-	kernel<<<1,1>>>(m_cuda_gpu, ig_cuda_gpu, p_cuda_gpu, rand_molec_struc_gpu,
+	kernel<<<1,16>>>(m_cuda_gpu, ig_cuda_gpu, p_cuda_gpu, rand_molec_struc_gpu,
 		best_e_gpu, quasi_newton_par_max_steps, global_steps, mutation_amplitude_float,
-		rand_maps_gpu, epsilon_fl, hunt_cap_gpu, authentic_v_gpu, results_gpu, 10);
+		rand_maps_gpu, epsilon_fl_float, hunt_cap_gpu, authentic_v_gpu, results_gpu, 10, thread);
 
 	checkCUDA(cudaDeviceSynchronize());
 
@@ -1649,14 +1669,18 @@ void monte_carlo::operator()(model& m, output_container& out, const precalculate
 	cudaEventElapsedTime(&msecTotal, start, stop);
 	printf("Time spend on GPU is %f ms\n", msecTotal);
 	
-	/* Convert result data. Since thread==1, result_vina can be defined as an object
-	* instead of a vector
+	/* Convert result data. Can be improved by mapping memory
 	*/
 	printf("cuda to vina\n");
-	output_type_cuda_t results;
-	checkCUDA(cudaMemcpy(&results, results_gpu, sizeof(output_type_cuda_t), cudaMemcpyDeviceToHost));
-	output_type result_vina = cuda_to_vina(results);
-	add_to_output_container(out, result_vina, min_rmsd, num_saved_mins);
+	output_type_cuda_t *results;
+	checkCUDA(cudaMallocHost(&results, thread * sizeof(output_type_cuda_t)));
+	checkCUDA(cudaMemcpy(results, results_gpu, thread * sizeof(output_type_cuda_t), cudaMemcpyDeviceToHost));
+	std::vector<output_type> result_vina = cuda_to_vina(results, thread);
+	
+	for (int i = 0; i < thread; ++i){
+		// printf("result_vina[%d]:\n%s", i, result_vina[i]);
+		add_to_output_container(out, result_vina[i], min_rmsd, num_saved_mins);
+	}
 	VINA_CHECK(!out.empty());
 	VINA_CHECK(out.front().e <= out.back().e); // make sure the sorting worked in the correct order
 	
@@ -1671,7 +1695,8 @@ void monte_carlo::operator()(model& m, output_container& out, const precalculate
 	checkCUDA(cudaFree(authentic_v_gpu));
 	checkCUDA(cudaFree(results_gpu));
 	checkCUDA(cudaFreeHost(rand_maps));
-	checkCUDA(cudaFreeHost(rand_molec_struc));
+	for (int i = 0;i < thread; ++i)
+		checkCUDA(cudaFreeHost(rand_molec_struc_vec[i]));
 
 	printf("exit monte_carlo\n");
 
