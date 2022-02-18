@@ -180,6 +180,53 @@ void Vina::set_ligand_from_string(const std::vector<std::string>& ligand_string)
 	m_ligand_initialized = true;
 }
 
+// Generate protein-ligand model for each ligand and store them in m_model_gpu
+void Vina::set_ligand_from_string_gpu(const std::vector<std::string>& ligand_string) {
+	// Read ligand PDBQT strings and add them to the model
+	if (ligand_string.empty()) {
+		std::cerr << "ERROR: Cannot read ligand list. Ligands list is empty.\n";
+		exit(EXIT_FAILURE);
+	}
+
+	atom_type::t atom_typing = m_scoring_function.get_atom_typing();
+
+	if (!m_receptor_initialized) {
+		// This situation will happen if we don't need a receptor and we are using affinity maps
+		model m(atom_typing);
+		m_receptor = m;
+	}
+	m_model_gpu.resize(ligand_string.size(), m_receptor);// Initialize current model with receptor and reinitialize poses
+	m_precalculated_byatom_gpu.resize(ligand_string.size());
+
+	VINA_RANGE(i, 0, ligand_string.size()){
+		m_model_gpu[i].append(parse_ligand_pdbqt_from_string(ligand_string[i], atom_typing));
+		// Because we precalculate ligand atoms interactions
+		precalculate_byatom precalculated_byatom(m_scoring_function, m_model_gpu[i]);
+		m_precalculated_byatom_gpu[i] = precalculated_byatom;
+
+		// Check that all atom types are in the grid (if initialized)
+		if (m_map_initialized) {
+			szv atom_types = m_model.get_movable_atom_types(atom_typing);
+
+			if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO) {
+				if(!m_grid.are_atom_types_grid_initialized(atom_types))
+					exit(EXIT_FAILURE);
+			} else {
+				if(!m_ad4grid.are_atom_types_grid_initialized(atom_types))
+					exit(EXIT_FAILURE);
+			}
+		}
+
+	}
+
+	// Initialize poses container
+	output_container poses;
+	m_poses_gpu.resize(ligand_string.size(), poses);
+
+	// Store in Vina object
+	m_ligand_initialized = true;
+}
+
 void Vina::set_ligand_from_file(const std::string& ligand_name) {
 	set_ligand_from_string(get_file_contents(ligand_name));
 }
@@ -191,6 +238,15 @@ void Vina::set_ligand_from_file(const std::vector<std::string>& ligand_name) {
 		ligand_string.push_back(get_file_contents(ligand_name[i]));
 
 	set_ligand_from_string(ligand_string);
+}
+
+void Vina::set_ligand_from_file_gpu(const std::vector<std::string>& ligand_name) {
+	std::vector<std::string> ligand_string;
+
+	VINA_RANGE(i, 0, ligand_name.size())
+		ligand_string.push_back(get_file_contents(ligand_name[i]));
+
+	set_ligand_from_string_gpu(ligand_string);
 }
 
 /*
@@ -612,6 +668,57 @@ std::string Vina::get_poses(int how_many, double energy_range) {
 	return out.str();
 }
 
+std::string Vina::get_poses_gpu(int ligand_id, int how_many, double energy_range) {
+	int n = 0;
+	double best_energy = 0;
+	std::ostringstream out;
+	std::string remarks;
+
+	if (how_many < 0) {
+		std::cerr << "Error: number of poses written must be greater than zero.\n";
+		exit(EXIT_FAILURE);
+	}
+
+	if (energy_range < 0) {
+		std::cerr << "Error: energy range must be greater than zero.\n";
+		exit(EXIT_FAILURE);
+	}
+
+	if (!m_poses_gpu[ligand_id].empty()) {
+		// Get energy from the best conf
+
+		best_energy = m_poses_gpu[ligand_id][0].e;
+
+		VINA_FOR_IN(i, m_poses_gpu[ligand_id]) {
+			/* Stop if:
+				- We wrote the number of conf asked
+				- If there is no conf to write
+				- The energy of the current conf is superior than best_energy + energy_range
+			*/
+			if (n >= how_many || !not_max(m_poses_gpu[ligand_id][i].e) || m_poses_gpu[ligand_id][i].e > best_energy + energy_range)
+				break; // check energy_range sanity FIXME
+
+			// Push the current pose to model
+			m_model_gpu[ligand_id].set(m_poses_gpu[ligand_id][i].c);
+
+			// Write conf
+			remarks = vina_remarks(m_poses_gpu[ligand_id][i], m_poses_gpu[ligand_id][i].lb, m_poses_gpu[ligand_id][i].ub);
+			out << m_model_gpu[ligand_id].write_model(n + 1, remarks);
+
+			n++;
+		}
+
+		// Push back the best conf in model
+		m_model_gpu[ligand_id].set(m_poses_gpu[ligand_id][0].c);
+
+	} else {
+		std::cerr << "WARNING: Could not find any poses. No poses were written.\n";
+	}
+	// printf("out poses: %s\n", out.str());
+
+	return out.str();
+}
+
 void Vina::write_poses(const std::string& output_name, int how_many, double energy_range) {
 	std::string out;
 
@@ -623,6 +730,25 @@ void Vina::write_poses(const std::string& output_name, int how_many, double ener
 	} else {
 		std::cerr << "WARNING: Could not find any poses. No poses were written.\n";
 	}
+}
+
+/* 
+ * Write poses of different ligands to different files, gpu mode
+ */
+void Vina::write_poses_gpu(const std::vector<std::string> & gpu_output_name, int how_many, double energy_range) {
+	assert(gpu_output_name.size() == m_poses_gpu.size());
+	std::string out;
+	VINA_RANGE(i, 0, gpu_output_name.size()){
+		if (!m_poses_gpu[i].empty()) {
+			// Open output file
+			ofile f(make_path(gpu_output_name[i]));
+			out = get_poses_gpu(i, how_many, energy_range);
+			f << out;
+		} else {
+			std::cerr << "WARNING: Could not find any poses. No poses were written.\n";
+		}
+		
+	}	
 }
 
 void Vina::write_pose(const std::string& output_name, const std::string& remark) {
@@ -931,11 +1057,11 @@ void Vina::global_search(const int exhaustiveness, const int n_poses, const doub
 	done(m_verbosity, 1);
 
 	// Docking post-processing and rescoring
+	printf("num_output_poses before remove=%d\n", poses.size());
 	poses = remove_redundant(poses, min_rmsd);
 	printf("num_output_poses=%d\n", (int)poses.size());
 	printf("energy=%lf\n", poses[0].e);
 	
-
 	if (!poses.empty()) {
 		printf("vina: poses not empty\n");
 		// Core Dumped
@@ -975,7 +1101,7 @@ void Vina::global_search(const int exhaustiveness, const int n_poses, const doub
 		VINA_FOR_IN(i, poses) {
 			if (m_verbosity > 1)
 				std::cout << "ENERGY FROM SEARCH: " << poses[i].e << "\n";
-				
+
 			m_model.set(poses[i].c);
 
 			// For AD42 intramolecular_energy is equal to 0
@@ -1033,6 +1159,182 @@ void Vina::global_search(const int exhaustiveness, const int n_poses, const doub
 
 	// Store results in Vina object
 	m_poses = poses;
+}
+
+void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const double min_rmsd, const int max_evals, const int num_of_ligands) {
+	// Vina search (Monte-carlo and local optimization)
+	// Check if ff, box and ligand were initialized
+	if (!m_ligand_initialized) {
+		std::cerr << "ERROR: Cannot do the global search. Ligand(s) was(ere) not initialized.\n";
+		exit(EXIT_FAILURE);
+	} else if (!m_map_initialized) {
+		std::cerr << "ERROR: Cannot do the global search. Affinity maps were not initialized.\n";
+		exit(EXIT_FAILURE);
+	} else if (exhaustiveness < 1) {
+		std::cerr << "ERROR: Exhaustiveness must be 1 or greater";
+		exit(EXIT_FAILURE);
+	}
+
+	if (exhaustiveness < m_cpu) {
+		std::cerr << "WARNING: At low exhaustiveness, it may be impossible to utilize all CPUs.\n";
+	}
+
+	double e = 0;
+	double intramolecular_energy = 0;
+	const vec authentic_v(1000, 1000, 1000);
+	model best_model;
+	boost::optional<model> ref;
+	std::vector<output_container> poses_gpu;
+	output_container poses; // temp output_container
+	std::stringstream sstm;
+	rng generator(static_cast<rng::result_type>(m_seed));
+
+	// Setup Monte-Carlo search
+	monte_carlo mc;
+	poses_gpu.resize(num_of_ligands, poses);
+
+	// set global_steps with cutoff, maximun for the first version
+	sz heuristic = 0;
+	for (int i = 0;i < num_of_ligands;++i){
+		heuristic = std::max(heuristic, m_model_gpu[i].num_movable_atoms() + 10 * m_model_gpu[i].get_size().num_degrees_of_freedom());
+		mc.local_steps = unsigned((25 + m_model_gpu[i].num_movable_atoms()) / 3);
+	}
+	mc.global_steps = unsigned(70 * 3 * (50 + heuristic) / 2); // 2 * 70 -> 8 * 20 // FIXME
+	mc.max_evals = max_evals;
+	mc.min_rmsd = min_rmsd;
+	mc.num_saved_mins = n_poses;
+	mc.hunt_cap = vec(10, 10, 10);
+	mc.threads_per_ligand = exhaustiveness;
+	mc.num_of_ligands = num_of_ligands;
+	mc.thread = exhaustiveness * num_of_ligands;
+	
+	// Docking search
+	sstm << "Performing docking (random seed: " << m_seed << ")";
+	doing(sstm.str(), m_verbosity, 0);
+	if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO) {
+		mc(m_model_gpu, poses_gpu, m_precalculated_byatom_gpu,    m_grid, m_grid.corner1(), m_grid.corner2(), generator);
+	} else {
+		mc(m_model_gpu, poses_gpu, m_precalculated_byatom_gpu, m_ad4grid, m_ad4grid.corner1(), m_ad4grid.corner2(), generator);
+	}
+	done(m_verbosity, 1);
+
+	// Docking post-processing and rescoring
+	m_poses_gpu.resize(num_of_ligands);
+	non_cache m_non_cache_tmp = m_non_cache;
+
+	for (int l = 0; l < num_of_ligands; ++l){ // TODO: parallel execution, rescoring for 40000+ ligands is costly
+		printf("num_output_poses before remove=%d\n", poses_gpu[l].size());
+		poses = remove_redundant(poses_gpu[l], min_rmsd);
+		printf("num_output_poses=%d\n", (int)poses.size());
+		printf("energy=%lf\n", poses[0].e);
+		
+
+		if (!poses.empty()) {
+			printf("vina: poses not empty\n");
+			// For the Vina scoring function, we take the intramolecular energy from the best pose
+			// the order must not change because of non-decreasing g (see paper), but we'll re-sort in case g is non strictly increasing
+			if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO) {
+				// Refine poses if no_refine is false and got receptor
+				if (!m_no_refine & m_receptor_initialized) {
+					change g(m_model_gpu[l].get_size());
+					quasi_newton quasi_newton_par;
+					const vec authentic_v(1000, 1000, 1000);
+					//std::vector<double> energies_before_opt;
+					//std::vector<double> energies_after_opt;
+					int evalcount = 0;
+					const fl slope = 1e6;
+					m_non_cache = m_non_cache_tmp;
+					m_non_cache.slope = slope;
+					quasi_newton_par.max_steps = unsigned((25 + m_model_gpu[l].num_movable_atoms()) / 3);
+					VINA_FOR_IN(i, poses){
+						// printf("poses i score=%lf\n", poses[i].e);
+						const fl slope_orig = m_non_cache.slope;
+						VINA_FOR(p, 5){
+							m_non_cache.slope = 100 * std::pow(10.0, 2.0*p);
+							quasi_newton_par(m_model_gpu[l], m_precalculated_byatom_gpu[l], m_non_cache, poses[i], g, authentic_v, evalcount);
+							if(m_non_cache.within(m_model_gpu[l]))
+								break;
+						}
+						poses[i].coords = m_model_gpu[l].get_heavy_atom_movable_coords();
+						if (!m_non_cache.within(m_model_gpu[l]))
+							poses[i].e = max_fl;
+						m_non_cache.slope = slope;
+					}
+				}
+
+				// m_model_gpu[l].show_pairs();
+				// m_model_gpu[l].show_forces();
+				if (m_no_refine || !m_receptor_initialized)
+					intramolecular_energy = m_model_gpu[l].eval_intramolecular(m_precalculated_byatom_gpu[l], m_grid, authentic_v);
+				else
+					intramolecular_energy = m_model_gpu[l].eval_intramolecular(m_precalculated_byatom_gpu[l], m_non_cache, authentic_v);
+			}
+
+			VINA_FOR_IN(i, poses) {
+				if (m_verbosity > 1)
+					std::cout << "ENERGY FROM SEARCH: " << poses[i].e << "\n";
+
+				m_model_gpu[l].set(poses[i].c);
+
+				// For AD42 intramolecular_energy is equal to 0
+				m_model = m_model_gpu[l]; // Vina::score() will use m_model
+				std::vector<double> energies = score(intramolecular_energy);
+				// printf("energies.size()=%d\n", energies.size());
+				// Store energy components in current pose
+				poses[i].e = energies[0]; // specific to each scoring function
+				poses[i].inter = energies[1] + energies[2];
+				poses[i].intra = energies[3] + energies[4] + energies[5];
+				poses[i].total = poses[i].inter + poses[i].intra; // cost function for optimization
+				poses[i].conf_independent = energies[6]; // "torsion"
+				poses[i].unbound = energies[7]; // specific to each scoring function
+
+				if (m_verbosity > 1) {
+					std::cout << "FINAL ENERGY: \n";
+					show_score(energies);
+				}
+			}
+
+			// Since pose.e contains the final energy, we have to sort them again
+			poses.sort();
+
+
+			// Now compute RMSD from the best model
+			// Necessary to do it in two pass for AD4 scoring function
+			m_model_gpu[l].set(poses[0].c);
+			best_model = m_model_gpu[l];
+
+			if (m_verbosity > 0) {
+				std::cout << '\n';
+				std::cout << "mode |   affinity | dist from best mode\n";
+				std::cout << "     | (kcal/mol) | rmsd l.b.| rmsd u.b.\n";
+				std::cout << "-----+------------+----------+----------\n";
+			}
+
+			VINA_FOR_IN(i, poses) {
+				m_model_gpu[l].set(poses[i].c);
+
+				// Get RMSD between current pose and best_model
+				const model &r = ref ? ref.get() : best_model;
+				poses[i].lb = m_model_gpu[l].rmsd_lower_bound(r);
+				poses[i].ub = m_model_gpu[l].rmsd_upper_bound(r);
+
+				if (m_verbosity > 0) {
+					std::cout << std::setw(4) << i + 1 << "    " << std::setw(9) << std::setprecision(4) << poses[i].e;
+					std::cout << "  " << std::setw(9) << std::setprecision(4) << poses[i].lb;
+					std::cout << "  " << std::setw(9) << std::setprecision(4) << poses[i].ub << "\n";
+				}
+			}
+
+			// Clean up by putting back the best pose in model
+			m_model_gpu[l].set(poses[0].c);
+		} else {
+			std::cerr << "WARNING: Could not find any conformations completely within the search space.\n";
+			std::cerr << "WARNING: Check that it is large enough for all movable atoms, including those in the flexible side chains.\n";
+		}
+		// Store results in Vina object
+		m_poses_gpu[l] = poses;
+	}
+
 }
 
 Vina::~Vina() {

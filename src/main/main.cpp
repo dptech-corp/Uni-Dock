@@ -110,10 +110,12 @@ Thank you!\n";
 		std::string flex_name;
 		std::string config_name;
 		std::string out_name;
+		std::vector<std::string> gpu_out_name;
 		std::string out_dir;
 		std::string out_maps;
 		std::vector<std::string> ligand_names;
 		std::vector<std::string> batch_ligand_names;
+		std::vector<std::string> gpu_batch_ligand_names;
 		std::string maps;
 		std::string sf_name = "vina";
 		double center_x;
@@ -176,6 +178,7 @@ Thank you!\n";
 			("flex", value<std::string>(&flex_name), "flexible side chains, if any (PDBQT)")
 			("ligand", value< std::vector<std::string> >(&ligand_names)->multitoken(), "ligand (PDBQT)")
 			("batch", value< std::vector<std::string> >(&batch_ligand_names)->multitoken(), "batch ligand (PDBQT)")
+			("gpu_batch", value< std::vector<std::string> >(&gpu_batch_ligand_names)->multitoken(), "gpu batch ligand (PDBQT)")
 			("scoring", value<std::string>(&sf_name)->default_value(sf_name), "scoring function (ad4, vina or vinardo)")
 		;
 		//options_description search_area("Search area (required, except with --score_only)");
@@ -323,13 +326,13 @@ Thank you!\n";
 			exit(EXIT_FAILURE);
 		}
 
-		if (!vm.count("ligand") && !vm.count("batch")) {
+		if (!vm.count("ligand") && !vm.count("batch") && !vm.count("gpu_batch")) {
 			std::cerr << desc_simple << "\n\nERROR: Missing ligand(s).\n";
 			exit(EXIT_FAILURE);
-		} else if (vm.count("ligand") && vm.count("batch")) {
+		} else if (vm.count("ligand") && (vm.count("batch") || vm.count("gpu_batch"))) {
 			std::cerr << desc_simple << "\n\nERROR: Can't use both --ligand and --batch arguments simultaneously.\n";
 			exit(EXIT_FAILURE);
-		} else if (vm.count("batch") && !vm.count("dir")) {
+		} else if ((vm.count("batch") || vm.count("gpu_batch")) && !vm.count("dir")) {
 			std::cerr << desc_simple << "\n\nERROR: Need to specify an output directory for batch mode.\n";
 			exit(EXIT_FAILURE);
 		} else if (vm.count("dir")) {
@@ -478,6 +481,29 @@ Thank you!\n";
 					v.write_poses(out_name, num_modes, energy_range);
 				}
 			}
+		} else if (vm.count("gpu_batch")){
+			if (randomize_only || score_only || local_only ){
+				printf("Not available under gpu_batch mode.\n");
+				return 0;
+			}
+			v.enable_gpu();
+			if (sf_name.compare("vina") == 0) {
+				if (vm.count("maps")) {
+					v.load_maps(maps);
+				} else {
+					// Will compute maps for all Vina atom types
+					v.compute_vina_maps(center_x, center_y, center_z, size_x, size_y, size_z, grid_spacing);
+
+					if (vm.count("write_maps"))
+						v.write_maps(out_maps);
+				}
+			}
+			v.set_ligand_from_file_gpu(gpu_batch_ligand_names);
+			VINA_RANGE(i, 0, gpu_batch_ligand_names.size()){
+				gpu_out_name.push_back(default_output(get_filename(gpu_batch_ligand_names[i]), out_dir));
+			}
+			v.global_search_gpu(exhaustiveness, num_modes, min_rmsd, max_evals, gpu_batch_ligand_names.size());
+			v.write_poses_gpu(gpu_out_name, num_modes, energy_range);
 		}
 	}
 

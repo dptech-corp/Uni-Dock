@@ -129,6 +129,7 @@ struct precalculate
 public:
     precalculate() { }
     precalculate(const ScoringFunction& sf, fl v=max_fl, fl factor=32){
+        
         m_factor = factor;
         m_cutoff_sqr = sqr(sf.get_cutoff());
         m_max_cutoff_sqr = sqr(sf.get_max_cutoff());
@@ -255,6 +256,8 @@ public:
     
     triangular_matrix<precalculate_element> m_data;
 
+    // set public for GPU
+    fl m_cutoff_sqr;
 private:
     flv calculate_rs() const{
         flv tmp(m_n, 0);
@@ -263,7 +266,6 @@ private:
         return tmp;
     };
 
-    fl m_cutoff_sqr;
     fl m_max_cutoff_sqr;
 
 

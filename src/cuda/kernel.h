@@ -28,11 +28,15 @@
 //#define GRID_MI 65//55
 //#define GRID_MJ 71//55
 //#define GRID_MK 61//81
-#define MAX_P_DATA_M_DATA_SIZE 256
+#define MAX_PRECAL_NUM_ATOM 30
+#define MAX_P_DATA_M_DATA_SIZE 2701 // modified for vina1.2, should be larger, n*(n+1)/2, n=num_of_atom, select n=63
 //#define MAX_NUM_OF_GRID_ATOMS 130
-#define FAST_SIZE 2501 // modified for vina1.2
+#define FAST_SIZE 2501 // modified for vina1.2 m_max_cutoff^2 * factor + 3
 #define SMOOTH_SIZE 2501
 #define MAX_CONTAINER_SIZE_EVERY_WI 5
+
+#define MAX_THREAD 32768 // modified for vina1.2, to calculate random map memory upper bound
+#define MAX_LIGAND_NUM 1024 // modified for vina1.2, to calculate precalculate_byatom memory upper bound
 
 
 typedef struct {
@@ -61,8 +65,8 @@ typedef struct  { // namely molec_struc
 	float orientation	[4];
 	float lig_torsion	[MAX_NUM_OF_LIG_TORSION];
 	float flex_torsion	[MAX_NUM_OF_FLEX_TORSION];
-	float coords		[MAX_NUM_OF_ATOMS][3];
 	float lig_torsion_size;
+	float coords		[MAX_NUM_OF_ATOMS][3];
 	float e;
 } output_type_cuda_t;
 

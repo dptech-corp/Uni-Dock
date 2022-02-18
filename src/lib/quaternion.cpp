@@ -34,7 +34,7 @@ bool eq(const qt& a, const qt& b) { // elementwise approximate equality - may re
 }
 
 qt angle_to_quaternion(const vec& axis, fl angle) { // axis is assumed to be a unit vector
-	//assert(eq(tvmet::norm2(axis), 1));
+	// assert(eq(tvmet::norm2(axis), 1));
 	assert(eq(axis.norm(), 1));
 	normalize_angle(angle); // this is probably only necessary if angles can be very big
 	fl c = std::cos(angle/2);

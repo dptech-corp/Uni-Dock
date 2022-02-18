@@ -66,6 +66,7 @@ public:
 		m_seed = generate_seed(seed);
 		m_no_refine = no_refine;
 		m_progress_callback = progress_callback;
+		gpu = false;
 
 		// Look for the number of cpu
 		if (cpu <= 0) {
@@ -105,8 +106,11 @@ public:
 	void set_receptor(const std::string &rigid_name=std::string(), const std::string &flex_name=std::string());
 	void set_ligand_from_string(const std::string &ligand_string);
 	void set_ligand_from_string(const std::vector<std::string> &ligand_string);
+	void set_ligand_from_string_gpu(const std::vector<std::string> &ligand_string);
 	void set_ligand_from_file(const std::string& ligand_name);
 	void set_ligand_from_file(const std::vector<std::string>& ligand_name);
+	void set_ligand_from_file_gpu(const std::vector<std::string>& ligand_name);
+
 	//void set_ligand(OpenBabel::OBMol* mol);
 	//void set_ligand(std::vector<OpenBabel::OBMol*> mol);
 	void set_vina_weights(double weight_gauss1=-0.035579, double weight_gauss2=-0.005156,
@@ -129,11 +133,15 @@ public:
 	std::vector<double> score();
 	std::vector<double> optimize(const int max_steps=0);
 	void global_search(const int exhaustiveness=8, const int n_poses=20, const double min_rmsd=1.0, const int max_evals=0);
+	void global_search_gpu(const int exhaustiveness=8, const int n_poses=20, const double min_rmsd=1.0, const int max_evals=0, const int num_of_ligands=1);
 	std::string get_poses(int how_many=9, double energy_range=3.0);
+	std::string get_poses_gpu(int ligand_id, int how_many=9, double energy_range=3.0);
+	void enable_gpu(){ gpu = true;}
 	std::vector< std::vector<double> > get_poses_coordinates(int how_many=9, double energy_range=3.0);
 	std::vector< std::vector<double> > get_poses_energies(int how_many=9, double energy_range=3.0);
 	void write_pose(const std::string &output_name, const std::string &remark = std::string());
 	void write_poses(const std::string &output_name, int how_many=9, double energy_range=3.0);
+	void write_poses_gpu(const std::vector<std::string> &gpu_output_name, int how_many=9, double energy_range=3.0);
 	void write_maps(const std::string& map_prefix="receptor", const std::string& gpf_filename="NULL",
 					    const std::string& fld_filename="NULL", const std::string& receptor_filename="NULL");
 	void show_score(const std::vector<double> energies);
@@ -143,6 +151,10 @@ private:
 	model m_receptor;
 	model m_model;
 	output_container m_poses;
+	// gpu model vector and poses vector
+	bool gpu;
+	std::vector<model> m_model_gpu; // list of m_model for gpu parallelism
+	std::vector<output_container> m_poses_gpu;
 	//OpenBabel::OBMol m_mol;
 	bool m_receptor_initialized;
 	bool m_ligand_initialized;
@@ -152,6 +164,10 @@ private:
 	ScoringFunction m_scoring_function;
 	precalculate_byatom m_precalculated_byatom;
 	precalculate m_precalculated_sf;
+	// gpu scoring function precalculated
+	std::vector<precalculate_byatom> m_precalculated_byatom_gpu;
+	std::vector<precalculate> m_precalculated_sf_gpu;
+
 	// maps
 	cache m_grid;
 	ad4cache m_ad4grid;
