@@ -134,6 +134,7 @@ Thank you!\n";
 		double energy_range = 3.0;
 		double grid_spacing = 0.375;
 		double buffer_size = 4;
+		int max_step = 0;
 
 		// autodock4.2 weights
 		double weight_ad4_vdw   = 0.1662;
@@ -240,6 +241,7 @@ Thank you!\n";
 			("energy_range", value<double>(&energy_range)->default_value(3.0), "maximum energy difference between the best binding mode and the worst one displayed (kcal/mol)")
 			("spacing", value<double>(&grid_spacing)->default_value(0.375), "grid spacing (Angstrom)")
 			("verbosity", value<int>(&verbosity)->default_value(1), "verbosity (0=no output, 1=normal, 2=verbose)")
+			("max_step", value<int>(&max_step)->default_value(0), "maximum number of steps in each MC run (if zero, which is the default, the number of MC steps is based on heuristics)")
 		;
 		options_description config("Configuration file (optional)");
 		config.add_options()
@@ -502,7 +504,7 @@ Thank you!\n";
 			VINA_RANGE(i, 0, gpu_batch_ligand_names.size()){
 				gpu_out_name.push_back(default_output(get_filename(gpu_batch_ligand_names[i]), out_dir));
 			}
-			v.global_search_gpu(exhaustiveness, num_modes, min_rmsd, max_evals, gpu_batch_ligand_names.size());
+			v.global_search_gpu(exhaustiveness, num_modes, min_rmsd, max_evals, max_step, gpu_batch_ligand_names.size());
 			v.write_poses_gpu(gpu_out_name, num_modes, energy_range);
 		}
 	}

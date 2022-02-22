@@ -29,7 +29,7 @@
 //#define GRID_MJ 71//55
 //#define GRID_MK 61//81
 #define MAX_PRECAL_NUM_ATOM 30
-#define MAX_P_DATA_M_DATA_SIZE 2701 // modified for vina1.2, should be larger, n*(n+1)/2, n=num_of_atom, select n=63
+#define MAX_P_DATA_M_DATA_SIZE 3240 // modified for vina1.2, should be larger, n*(n+1)/2, n=num_of_atom, select n=63
 //#define MAX_NUM_OF_GRID_ATOMS 130
 #define FAST_SIZE 2501 // modified for vina1.2 m_max_cutoff^2 * factor + 3
 #define SMOOTH_SIZE 2501

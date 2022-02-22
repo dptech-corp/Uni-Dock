@@ -1612,7 +1612,7 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 		printf("p.m_n=%d\n", p.m_n);
 		p_cuda->n = p.m_n;
 		printf("%d, %ld\n", MAX_P_DATA_M_DATA_SIZE, p.m_data.m_data.size());
-		assert(MAX_P_DATA_M_DATA_SIZE > p.m_data.m_data.size());
+		assert(MAX_P_DATA_M_DATA_SIZE >= p.m_data.m_data.size());
 		printf("FAST_SIZE=%d, fast.size()=%lu\n", FAST_SIZE, p.m_data.m_data[0].fast.size());
 		printf("SMOOTH_SIZE=%d, smooth.size()=%lu\n", SMOOTH_SIZE, p.m_data.m_data[0].smooth.size());
 		for (int i = 0; i < p.m_data.m_data.size(); i++) { // only copy part of it when vina1.1 gpu
@@ -1704,10 +1704,10 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 	checkCUDA(cudaEventRecord(start,NULL));
 
 	/* Launch kernel */
-	printf("launch kernel\n");
+	printf("launch kernel, global_steps=%d\n", global_steps);
 	kernel<<<thread / 256 + 1, 256>>>(m_cuda_gpu, ig_cuda_gpu, p_cuda_gpu, rand_molec_struc_gpu,
 		best_e_gpu, quasi_newton_par_max_steps, mutation_amplitude_float,
-		rand_maps_gpu, epsilon_fl_float, hunt_cap_gpu, authentic_v_gpu, results_gpu, 200, 
+		rand_maps_gpu, epsilon_fl_float, hunt_cap_gpu, authentic_v_gpu, results_gpu, global_steps, 
 		num_of_ligands, threads_per_ligand);
 
 	checkCUDA(cudaDeviceSynchronize());

@@ -1161,7 +1161,7 @@ void Vina::global_search(const int exhaustiveness, const int n_poses, const doub
 	m_poses = poses;
 }
 
-void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const double min_rmsd, const int max_evals, const int num_of_ligands) {
+void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const double min_rmsd, const int max_evals, const int max_step, int num_of_ligands) {
 	// Vina search (Monte-carlo and local optimization)
 	// Check if ff, box and ligand were initialized
 	if (!m_ligand_initialized) {
@@ -1200,6 +1200,9 @@ void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const 
 		mc.local_steps = unsigned((25 + m_model_gpu[i].num_movable_atoms()) / 3);
 	}
 	mc.global_steps = unsigned(70 * 3 * (50 + heuristic) / 2); // 2 * 70 -> 8 * 20 // FIXME
+	if (max_step > 0 && mc.global_steps > max_step){
+		mc.global_steps = max_step;
+	}
 	mc.max_evals = max_evals;
 	mc.min_rmsd = min_rmsd;
 	mc.num_saved_mins = n_poses;
