@@ -443,6 +443,8 @@ std::vector<grid> cache::get_grids() const{
 }
 
 int cache::get_atu() const{
+	// return this->atu;
+	printf("atom_type::XS=%d\n", atom_type::XS);
 	return atom_type::XS;
 }
 

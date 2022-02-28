@@ -53,7 +53,7 @@ public:
                 m_conf_independents.push_back(new num_tors_div());
                 m_atom_typing = atom_type::XS;
                 m_cutoff = 8.0;
-                m_max_cutoff = 8.0;
+                m_max_cutoff = 20.0;
                 break;
             }
             case SF_VINARDO:
@@ -66,7 +66,7 @@ public:
                 m_conf_independents.push_back(new num_tors_div());
                 m_atom_typing = atom_type::XS;
                 m_cutoff = 8.0;
-                m_max_cutoff = 8.0;
+                m_max_cutoff = 20.0;
                 break;
             }
             case SF_AD42:

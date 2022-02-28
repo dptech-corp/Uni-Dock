@@ -316,10 +316,10 @@ int index_permissive(const matrix_d* m, int i, int j) {
 
 /* Below based on quasi_newton.cpp */
 
-#define EL_TYPE_SIZE 11
-#define AD_TYPE_SIZE 20
-#define XS_TYPE_SIZE 17
-#define SY_TYPE_SIZE 18
+// #define EL_TYPE_SIZE 14
+// #define AD_TYPE_SIZE 31
+// #define XS_TYPE_SIZE 32
+// #define SY_TYPE_SIZE 18
 
 
 
@@ -341,11 +341,12 @@ void change_cuda_init_with_change(change_cuda_t* g_new, const change_cuda_t* g_o
 	g_new->lig_torsion_size = g_old->lig_torsion_size;
 }
 
-void print_ouput_type(output_type_cuda_t* x, int torsion_size) {
+void print_output_type(output_type_cuda_t* x, int torsion_size) {
 	for (int i = 0; i < 3; i++)printf("\nx.position[%d] = %0.16f", i, x->position[i]);
 	for (int i = 0; i < 4; i++)printf("\nx.orientation[%d] = %0.16f", i, x->orientation[i]);
 	for (int i = 0; i < torsion_size; i++)printf("\n x.torsion[%d] = %0.16f", i, x->lig_torsion[i]);
 	printf("\n x.torsion_size = %f", x->lig_torsion_size);
+	printf("\n !!! x.e = %f\n", x->e);
 }
 
 void print_change(change_cuda_t* g, int torsion_size) {
@@ -556,8 +557,10 @@ float ig_eval_deriv(						output_type_cuda_t*		x,
 ) {
 	float e = 0;
 	int nat = num_atom_types(ig_cuda_gpu->atu);
+	// printf("nat=%d, ig_cuda_gpu->atu=%d ", nat, ig_cuda_gpu->atu);
 	for (int i = 0; i < m_cuda_gpu->m_num_movable_atoms; i++) {
 		int t = m_cuda_gpu->atoms[i].types[ig_cuda_gpu->atu];
+		// printf("i= %d, m_cuda_gpu->atoms[i].types[ig_cuda_gpu->atu]=%d\n", i,t);
 		if (t >= nat) {
 			for (int j = 0; j < 3; j++)m_cuda_gpu->minus_forces.coords[i][j] = 0;
 			continue;
@@ -728,8 +731,10 @@ void p_eval_deriv(						float*		out,
 									p_cuda_t*		p_cuda_gpu,
 					const				float		epsilon_fl
 ) {
+	// printf("entering p_eval_deriv, type_pair_index = %d\n", type_pair_index);
 	const float cutoff_sqr = p_cuda_gpu->m_cutoff_sqr;
 	if(r2 > cutoff_sqr) printf("\nkernel2: p_eval_deriv() ERROR!");
+
 	p_m_data_cuda_t* tmp = &p_cuda_gpu->m_data[type_pair_index];
 	float r2_factored = tmp->factor * r2;
 	if (r2_factored + 1 >= SMOOTH_SIZE) printf("\nkernel2: p_eval_deriv() ERROR!");
@@ -766,9 +771,11 @@ float eval_interacting_pairs_deriv(			p_cuda_t*			p_cuda_gpu,
 									const				float			epsilon_fl
 ) {
 	float e = 0;
-
+	// printf("eval_interacting_pairs_deriv\npairs->num_pairs = %d\n", pairs->num_pairs);
 	for (int i = 0; i < pairs->num_pairs; i++) {
 		const int ip[3] = { pairs->type_pair_index[i], pairs->a[i] ,pairs->b[i] };
+		int index = pairs->a[i] + pairs->b[i] * (pairs->b[i] + 1) / 2;
+		// printf("pairs->type_pair_index = %d, i=%d, j=%d, index = %d\n", pairs->type_pair_index[i], pairs->a[i], pairs->b[i], index);
 		float coords_b[3] = { m_coords->coords[ip[2]][0], m_coords->coords[ip[2]][1], m_coords->coords[ip[2]][2] };
 		float coords_a[3] = { m_coords->coords[ip[1]][0], m_coords->coords[ip[1]][1], m_coords->coords[ip[1]][2] };
 		float r[3] = { coords_b[0] - coords_a[0], coords_b[1] - coords_a[1] ,coords_b[2] - coords_a[2] };
@@ -776,7 +783,7 @@ float eval_interacting_pairs_deriv(			p_cuda_t*			p_cuda_gpu,
 
 		if (r2 < p_cuda_gpu->m_cutoff_sqr) {
 			float tmp[2];
-			p_eval_deriv(tmp, ip[0], r2, p_cuda_gpu, epsilon_fl);
+			p_eval_deriv(tmp, index, r2, p_cuda_gpu, epsilon_fl);
 			float force[3] = { r[0] * tmp[1], r[1] * tmp[1] ,r[2] * tmp[1] };
 			curl(&tmp[0], force, v, epsilon_fl);
 			e += tmp[0];
@@ -878,15 +885,20 @@ float m_eval_deriv(					output_type_cuda_t*		c,
 					const	float*				v,
 					const				float				epsilon_fl
 ) {
+	// check set args
+	// printf("m_cuda_gpu->ligand.begin=%d, end=%d, epsilon_fl=%f", m_cuda_gpu->ligand.begin, m_cuda_gpu->ligand.end, epsilon_fl);
 	set(c, &m_cuda_gpu->ligand.rigid, &m_cuda_gpu->m_coords, m_cuda_gpu->atoms, m_cuda_gpu->m_num_movable_atoms, epsilon_fl);
 
-	float e = ig_eval_deriv(	c,
+	float e = 0;
+	// printf("e original=%f\n", e);
+	e = ig_eval_deriv(	c,
 								g,
 								v[1],
 								ig_cuda_gpu,
 								m_cuda_gpu,
 								epsilon_fl
 							);
+	// printf("e ig_eval_deriv=%f\n", e);
 
 	e += eval_interacting_pairs_deriv(	p_cuda_gpu,
 										v[0],
@@ -895,7 +907,9 @@ float m_eval_deriv(					output_type_cuda_t*		c,
 										&m_cuda_gpu->minus_forces,
 										epsilon_fl
 									);
+	// printf("e eval_interacting_pairs_deriv = %f\n", e);
 
+	// should add derivs for glue, other and inter pairs
 	POT_deriv(&m_cuda_gpu->minus_forces, &m_cuda_gpu->ligand.rigid, &m_cuda_gpu->m_coords, g);
 
 	return e;
@@ -970,14 +984,22 @@ float line_search(					 	m_cuda_t*				m_cuda_gpu,
 	const float multiplier = 0.5;
 	float alpha = 1;
 
+	// printf("n=%d\n", n);
+
 	const float pg = scalar_product(p, g, n);
+	// printf("line_search pg = %lf\n", pg);
+
 
 	for (int trial = 0; trial < max_trials; trial++) {
 
 		output_type_cuda_init_with_output(x_new, x);
-
+		// printf("x_new->e=%f, alpha=%f\n", x_new->e, alpha);
+		// printf("x_new: (%f %f %f)(%f %f %f)\n", x_new->position[0], x_new->position[1], x_new->position[2],
+		// 	x_new->orientation[0], x_new->orientation[1], x_new->orientation[2]);
 		output_type_cuda_increment(x_new, p, alpha, epsilon_fl);
-
+		// printf("x_new: (%f %f %f)(%f %f %f)\n", x_new->position[0], x_new->position[1], x_new->position[2],
+		// 	x_new->orientation[0], x_new->orientation[1], x_new->orientation[2]);
+		// printf("hunt_cap=%f\n", hunt_cap[0]);
 		*f1 =  m_eval_deriv(x_new,
 							g_new,
 							m_cuda_gpu,
@@ -986,7 +1008,9 @@ float line_search(					 	m_cuda_t*				m_cuda_gpu,
 							hunt_cap,
 							epsilon_fl
 							);
-
+		// printf("line_search trial %d, f1 = %lf, alpha=%f\n", trial, *f1, alpha);
+		// printf("### x_new = %p", x_new);
+					
 		if (*f1 - f0 < c0 * alpha * pg)
 			break;
 		alpha *= multiplier;
@@ -1057,6 +1081,7 @@ void bfgs(					output_type_cuda_t*			x,
 								hunt_cap,
 								epsilon_fl
 							);
+	// printf("bfgs #1 f0=%f\n", f0);
 
 	float f_orig = f0;
 	/* Init g_orig, x_orig */
@@ -1075,6 +1100,7 @@ void bfgs(					output_type_cuda_t*			x,
 
 		minus_mat_vec_product(&h, g, &p);
 		float f1 = 0;
+		// printf("bfgs #2 f1 = %lf, f0 = %lf\n", f1, f0);
 
 		const float alpha = line_search(	m_cuda_gpu,
 											p_cuda_gpu,
@@ -1090,6 +1116,7 @@ void bfgs(					output_type_cuda_t*			x,
 											epsilon_fl,
 											hunt_cap
 										);
+		// printf("bfgs #3 f1 = %lf, f0 = %lf, alpha=%lf\n", f1, f0, alpha);
 
 		change_cuda_t y;
 		change_cuda_init_with_change(&y, &g_new);
@@ -1131,7 +1158,7 @@ void bfgs(					output_type_cuda_t*			x,
 
  __device__ __forceinline__
 void m_cuda_init_with_m_cuda(const m_cuda_t* m_cuda_old, m_cuda_t* m_cuda_new) {
-	memcpy(m_cuda_new, m_cuda_old, sizeof(atom_cuda_t));
+	memcpy(m_cuda_new, m_cuda_old, MAX_NUM_OF_ATOMS *  sizeof(atom_cuda_t));
 	// for (int i = 0; i < MAX_NUM_OF_ATOMS; i++)m_cuda_new->atoms[i] = m_cuda_old->atoms[i];
 	m_cuda_new->m_coords = m_cuda_old->m_coords;
 	m_cuda_new->minus_forces = m_cuda_old->minus_forces;
@@ -1245,6 +1272,7 @@ void kernel(	m_cuda_t*			m_cuda_global,
 	int idx = blockIdx.x * blockDim.x + threadIdx.x;
 	// int gll = 0;
 	float best_e = INFINITY;
+	// printf("epsilon_fl=%lf\n", epsilon_fl * 1000000000000000.0);
 
 	// for (int gll = idx; gll < thread; gll += blockDim.x)
 	int gll = idx;
@@ -1274,17 +1302,25 @@ void kernel(	m_cuda_t*			m_cuda_global,
 			output_type_cuda_init_with_output(&candidate, &tmp);
 
 			int map_index = (step + gll * search_depth) % MAX_NUM_OF_RANDOM_MAP;
+			// if (gll == 0) printf("#1 candidate.e=%f\n", candidate.e);
 			mutate_conf_cuda(map_index, bfgs_max_steps, &candidate, rand_maps_gpu->int_map, rand_maps_gpu->sphere_map,
 				rand_maps_gpu->pi_map, m_cuda_gpu.ligand.begin, m_cuda_gpu.ligand.end, m_cuda_gpu.atoms,
 				&m_cuda_gpu.m_coords, m_cuda_gpu.ligand.rigid.origin[0], epsilon_fl, mutation_amplitude);
-
+			// if (gll == 0) printf("#2 candidate.e=%f\n", candidate.e);
 			bfgs(&candidate, &g, &m_cuda_gpu, p_cuda_gpu, ig_cuda_gpu, hunt_cap_gpu, epsilon_fl, bfgs_max_steps);
-
+			// if (gll == 0) printf("#3 candidate.e=%f\n", candidate.e);
 			float n = generate_n(rand_maps_gpu->pi_map, map_index);
+			// if (gll == 0)
+			// 	printf("metropolis_accept tmp.e=%f, candidate.e=%f, n=%d\n", tmp.e, candidate.e, n);
 
 			if (step == 0 || metropolis_accept(tmp.e, candidate.e, 1.2, n)) {
-
+				// if (gll == 0){
+				// 	printf("step=%d, tmp.e=%f, candidate.e=%f\n", step, tmp.e, candidate.e);
+				// }
 				output_type_cuda_init_with_output(&tmp, &candidate);
+				// if (gll == 0){
+				// 	printf("step=%d, tmp.e=%f, candidate.e=%f, best_e=%f\n", step, tmp.e, candidate.e, best_e);
+				// }
 				set(&tmp, &m_cuda_gpu.ligand.rigid, &m_cuda_gpu.m_coords,
 					m_cuda_gpu.atoms, m_cuda_gpu.m_num_movable_atoms, epsilon_fl);
 				if (tmp.e < best_e) {
@@ -1297,6 +1333,9 @@ void kernel(	m_cuda_t*			m_cuda_global,
 							epsilon_fl,
 							bfgs_max_steps
 					);
+					// if (gll == 0){
+					// 	printf("after bfgs: tmp.e=%f, candidate.e=%f, best_e=%f\n", tmp.e, candidate.e, best_e);
+					// }
 					// set
 					if (tmp.e < best_e) {
 						set(&tmp, &m_cuda_gpu.ligand.rigid, &m_cuda_gpu.m_coords,
@@ -1311,7 +1350,8 @@ void kernel(	m_cuda_t*			m_cuda_global,
 			}
 
 		}
-
+		// if (gll % 100 == 0)
+		// 	printf("best_e=%f\n", best_e);
 		// write the best conformation back to CPU // FIX?? should add more
 		write_back(results + gll, &best_out);
 		//if (gll % 100 == 0)printf("\nThread %d FINISH", gll);
@@ -1322,7 +1362,7 @@ void kernel(	m_cuda_t*			m_cuda_global,
 
 /* Below based on monte-carlo.cpp */
 
-#ifdef ENABLE_CUDA
+// #ifdef ENABLE_CUDA
 
 std::vector<output_type> monte_carlo::cuda_to_vina(output_type_cuda_t results_ptr[], int thread) const {
 	// printf("entering cuda_to_vina\n");
@@ -1426,6 +1466,7 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 	checkCUDA(cudaMemcpy(best_e_gpu, &max_fl, sizeof(float), cudaMemcpyHostToDevice));
 	// rand_maps_gpu
 	random_maps_t *rand_maps_gpu;
+	printf("random_maps_t size=%d\n", sizeof(random_maps_t));
 	checkCUDA(cudaMalloc(&rand_maps_gpu, num_of_ligands * rand_maps_size));
 	// hunt_cap_gpu
 	float *hunt_cap_gpu;
@@ -1503,10 +1544,13 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 		assert(m.atoms.size() < MAX_NUM_OF_ATOMS);
 
 		for (int i = 0; i < m.atoms.size(); i++) {
+			// printf("i = %d, el=%lu, ad=%lu, xs=%lu, sy=%lu\n", i, m.atoms[i].el, m.atoms[i].ad, m.atoms[i].xs, m.atoms[i].sy);
 			m_cuda->atoms[i].types[0] = m.atoms[i].el;// To store 4 atoms types (el, ad, xs, sy)
 			m_cuda->atoms[i].types[1] = m.atoms[i].ad;
 			m_cuda->atoms[i].types[2] = m.atoms[i].xs;
 			m_cuda->atoms[i].types[3] = m.atoms[i].sy;
+			// printf("atoms[i].types[0]=%d, atoms[i].types[1]=%d, atoms[i].types[2]=%d, atoms[i].types[3]=%d\n", m_cuda->atoms[i].types[0], 
+			// m_cuda->atoms[i].types[1], m_cuda->atoms[i].types[2],m_cuda->atoms[i].types[3]);
 			for (int j = 0; j < 3; j++) {
 				m_cuda->atoms[i].coords[j] = m.atoms[i].coords[j];// To store atom coords
 			}
@@ -1539,7 +1583,8 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 		}
 		m_cuda->ligand.begin = m.ligands[0].begin; // 0
 		m_cuda->ligand.end = m.ligands[0].end; // 29
-		ligand m_ligand = m.ligands[0]; // Only support one ligand
+		ligand &m_ligand = m.ligands[0]; // Only support one ligand
+		printf("m_ligand.end=%d, MAX_NUM_OF_ATOMS=%d\n", m_ligand.end, MAX_NUM_OF_ATOMS);
 		assert(m_ligand.end < MAX_NUM_OF_ATOMS);
 
 		// Store root node
@@ -1575,10 +1620,19 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 		}
 		m_cuda->m_num_movable_atoms = m.num_movable_atoms();
 
+		printf("copy m_cuda to gpu, size=%lu\n", sizeof(m_cuda_t));
 		checkCUDA(cudaMemcpy(m_cuda_gpu + l, m_cuda, sizeof(m_cuda_t), cudaMemcpyHostToDevice));
+		m_cuda_t *m_cuda_test = m_cuda_gpu + l;
+		checkCUDA(cudaMemcpy(m_cuda, m_cuda_gpu + l, sizeof(m_cuda_t), cudaMemcpyDeviceToHost));
+		printf("m_cuda_gpu->m_num_movable_atoms = %d\n", m_cuda->m_num_movable_atoms);
+		// for (int i = 0;i < 45; ++i){
+		// 	printf("i = %d, atoms[i].types[0]=%d, atoms[i].types[1]=%d, atoms[i].types[2]=%d, atoms[i].types[3]=%d\n", i, m_cuda->atoms[i].types[0], 
+		// 		m_cuda->atoms[i].types[1], m_cuda->atoms[i].types[2],m_cuda->atoms[i].types[3]);
+		// }
 
 		/* Prepare rand_molec_struc data */
 		int lig_torsion_size = tmp.c.ligands[0].torsions.size();
+		printf("lig_torsion_size=%d\n", lig_torsion_size);
 		int flex_torsion_size;
 		if (tmp.c.flex.size() != 0) flex_torsion_size = tmp.c.flex[0].torsions.size();
 		else flex_torsion_size = 0;
@@ -1600,7 +1654,13 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 		
 			rand_molec_struc_tmp->lig_torsion_size = lig_torsion_size;
 
-			checkCUDA(cudaMemcpy(rand_molec_struc_gpu + (l * threads_per_ligand + i) * SIZE_OF_MOLEC_STRUC / sizeof(float), rand_molec_struc_tmp, SIZE_OF_MOLEC_STRUC, cudaMemcpyHostToDevice));
+			float *rand_molec_struc_gpu_tmp = rand_molec_struc_gpu + (l * threads_per_ligand + i) * SIZE_OF_MOLEC_STRUC / sizeof(float);
+			// printf("rand_molec_struc_gpu = %p, rand_molec_struc_gpu_tmp = %p\n", rand_molec_struc_gpu, rand_molec_struc_gpu_tmp);
+			checkCUDA(cudaMemcpy(rand_molec_struc_gpu_tmp, rand_molec_struc_tmp, SIZE_OF_MOLEC_STRUC, cudaMemcpyHostToDevice));
+			// printf("rand_molec_struc_tmp->position[0] = %f\n", rand_molec_struc_tmp->position[0]);
+			// checkCUDA(cudaMemcpy(rand_molec_struc_tmp, rand_molec_struc_gpu_tmp, SIZE_OF_MOLEC_STRUC, cudaMemcpyDeviceToHost));
+			// printf("rand_molec_struc_gpu[0] = %f\n", rand_molec_struc_tmp->position[0]);
+
 
 		}
 
@@ -1611,30 +1671,41 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 		p_cuda->factor = p.m_factor;
 		printf("p.m_n=%d\n", p.m_n);
 		p_cuda->n = p.m_n;
-		printf("%d, %ld\n", MAX_P_DATA_M_DATA_SIZE, p.m_data.m_data.size());
+		printf("MAX_P_DATA_M_DATA_SIZE=%d, p.m_data.m_data.size()=%lu\n", MAX_P_DATA_M_DATA_SIZE, p.m_data.m_data.size());
 		assert(MAX_P_DATA_M_DATA_SIZE >= p.m_data.m_data.size());
 		printf("FAST_SIZE=%d, fast.size()=%lu\n", FAST_SIZE, p.m_data.m_data[0].fast.size());
 		printf("SMOOTH_SIZE=%d, smooth.size()=%lu\n", SMOOTH_SIZE, p.m_data.m_data[0].smooth.size());
-		for (int i = 0; i < p.m_data.m_data.size(); i++) { // only copy part of it when vina1.1 gpu
+		for (int i = 0; i < p.m_data.m_data.size(); i++) {
+			// print precalculate_byatom
+			// printf("cutoff sqr = %lf, m_data.size()=%lu\n", p.m_cutoff_sqr, p.m_data.m_data.size());
+			// printf("factor=%lf\n", p.m_data.m_data[i].factor);
+			// for (int j = 0;j < 10;++j){
+			// 	printf("(%lf, %lf, %?lf)\n", p.m_data.m_data[i].fast[j], p.m_data.m_data[i].smooth[j].first, p.m_data.m_data[i].smooth[j].second);
+			// }
+
 			p_cuda->m_data[i].factor = p.m_data.m_data[i].factor;
 
-			// assert(FAST_SIZE == p.m_data.m_data[i].fast.size());
-			// assert(SMOOTH_SIZE == p.m_data.m_data[i].smooth.size());
-			for (int j = 0; j < FAST_SIZE; j++) {
+			assert(FAST_SIZE == p.m_data.m_data[i].fast.size());
+			assert(SMOOTH_SIZE == p.m_data.m_data[i].smooth.size());
+			for (int j = 0; j < p.m_data.m_data[i].fast.size(); j++) {
 				p_cuda->m_data[i].fast[j] = p.m_data.m_data[i].fast[j];
 			}
-			for (int j = 0; j < SMOOTH_SIZE; j++) {
+			for (int j = 0; j < p.m_data.m_data[i].smooth.size(); j++) {
 				p_cuda->m_data[i].smooth[j][0] = p.m_data.m_data[i].smooth[j].first;
 				p_cuda->m_data[i].smooth[j][1] = p.m_data.m_data[i].smooth[j].second;
 			}
 		}
 		printf("num_of_ligands * p_cuda_size = %lu\n", num_of_ligands * p_cuda_size);
 		printf("p_cuda_gpu=%p\n", p_cuda_gpu);
+		printf("p_cuda_gpu + l=%p\n", p_cuda_gpu + l);
+		printf("p_cuda_gpu + 1=%p\n", p_cuda_gpu + 1);
+
 
 		checkCUDA(cudaMemcpy(p_cuda_gpu + l, p_cuda, sizeof(p_cuda_t), cudaMemcpyHostToDevice));
 
 		
 		// Generate random maps
+		printf("MAX_NUM_OF_RANDOM_MAP = %d\n", MAX_NUM_OF_RANDOM_MAP);
 		for (int i = 0; i < MAX_NUM_OF_RANDOM_MAP; i++) {
 			rand_maps->int_map[i] = random_int(0, int(lig_torsion_size), generator);
 			rand_maps->pi_map[i] = random_fl(-pi, pi, generator);
@@ -1645,7 +1716,7 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 				rand_maps->sphere_map[i][j] = rand_coords[j];
 			}
 		}
-
+		// printf("rand_maps->int_map[0]=%d, rand_maps->pi_map[0]=%f\n", rand_maps->int_map[0], rand_maps->pi_map[0]);
 		checkCUDA(cudaMemcpy(rand_maps_gpu + l, rand_maps, sizeof(random_maps_t), cudaMemcpyHostToDevice));
 
 
@@ -1659,10 +1730,11 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
     // Preparing igrid related data
 	printf("Preparing ig related data\n"); //debug
 	ig_cuda_ptr->atu = ig.get_atu(); // atu
+	printf("ig_cuda_ptr->atu=%d\n", ig_cuda_ptr->atu);
 	ig_cuda_ptr->slope = ig.get_slope(); // slope
 	std::vector<grid> tmp_grids = ig.get_grids();
 	int grid_size = tmp_grids.size();
-	assert(GRIDS_SIZE > grid_size); 
+	printf("ig.size()=%d, GRIDS_SIZE=%d, should be 33\n", grid_size, GRIDS_SIZE);
 
 	for (int i = 0; i < grid_size; i++) {
 		// printf("i=%d\n",i); //debug
@@ -1691,8 +1763,12 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 	
 	float mutation_amplitude_float = static_cast<float>(mutation_amplitude);
 	
+	printf("memcpy ig_cuda, ig_cuda_size=%lu\n", ig_cuda_size);
 	checkCUDA(cudaMemcpy(ig_cuda_gpu, ig_cuda_ptr, ig_cuda_size, cudaMemcpyHostToDevice));
 	checkCUDA(cudaMemcpy(hunt_cap_gpu, hunt_cap_float, 3 * sizeof(float), cudaMemcpyHostToDevice));
+	float hunt_test[3];
+	checkCUDA(cudaMemcpy(hunt_test, hunt_cap_gpu, 3 * sizeof(float), cudaMemcpyDeviceToHost));
+	printf("hunt_test[1]=%f, hunt_cap_float[1]=%f\n", hunt_test[1], hunt_cap_float[1]);
 	checkCUDA(cudaMemcpy(authentic_v_gpu, authentic_v_float, sizeof(authentic_v_float), cudaMemcpyHostToDevice));
 
 	
@@ -1704,7 +1780,7 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 	checkCUDA(cudaEventRecord(start,NULL));
 
 	/* Launch kernel */
-	printf("launch kernel, global_steps=%d\n", global_steps);
+	printf("launch kernel, global_steps=%d, thread=%d\n", global_steps, thread);
 	kernel<<<thread / 256 + 1, 256>>>(m_cuda_gpu, ig_cuda_gpu, p_cuda_gpu, rand_molec_struc_gpu,
 		best_e_gpu, quasi_newton_par_max_steps, mutation_amplitude_float,
 		rand_maps_gpu, epsilon_fl_float, hunt_cap_gpu, authentic_v_gpu, results_gpu, global_steps, 
@@ -1726,21 +1802,40 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 	output_type_cuda_t *results;
 	checkCUDA(cudaMallocHost(&results, thread * sizeof(output_type_cuda_t)));
 	checkCUDA(cudaMemcpy(results, results_gpu, thread * sizeof(output_type_cuda_t), cudaMemcpyDeviceToHost));
+
 	std::vector<output_type> result_vina = cuda_to_vina(results, thread);
 
 	printf("result size=%d\n", result_vina.size());
 	
 	
 	for (int i = 0; i < thread; ++i){
-		// printf("result_vina %d\n", i);
+		// printf("\nthread=%d, ligand=%d", i, i/threads_per_ligand);
+		// print_output_type(results + i, results[i].lig_torsion_size);
 		add_to_output_container(out_gpu[i / threads_per_ligand], result_vina[i], min_rmsd, num_saved_mins);
 	}
 	for (int i = 0; i < num_of_ligands; ++i){
-		// printf("output poses size = %d\n", out_gpu[i].size());
+		printf("output poses size = %d\n", out_gpu[i].size());
+		printf("output poses energy from gpu =");
+		for (int j = 0;j < out_gpu[i].size(); ++j)
+			printf("%f ", out_gpu[i][j].e);
+		printf("\n");
 		VINA_CHECK(!out_gpu[i].empty());
 		VINA_CHECK(out_gpu[i].front().e <= out_gpu[i].back().e); // make sure the sorting worked in the correct order
 
 	}
+
+	// check output
+	const precalculate_byatom &p = p_gpu[0];
+	// for (int i = 0; i < std::min(int(p.m_data.m_data.size()), 10); i++) {
+	// for (int i = 0; i < 1035;i++) {
+
+	// 	// print precalculate_byatom
+	// 	printf("i=%d, cutoff sqr = %lf, m_data.size()=%lu ", i, p.m_cutoff_sqr, p.m_data.m_data.size());
+	// 	// printf("factor=%lf\n", p.m_data.m_data[i].factor);
+	// 	for (int j = 0;j < 1;++j){
+	// 		printf("(%lf, %lf, %lf)\n", p.m_data.m_data[i].fast[j], p.m_data.m_data[i].smooth[j].first, p.m_data.m_data[i].smooth[j].second);
+	// 	}
+	// }
 	
 
 	/* Free memory */
@@ -1898,10 +1993,11 @@ void monte_carlo::operator()(model& m, output_container& out, const precalculate
 	ig_cuda_ptr->atu = ig.get_atu(); // atu
 	ig_cuda_ptr->slope = ig.get_slope(); // slope
 	std::vector<grid> tmp_grids = ig.get_grids();
+
 	int grid_size = tmp_grids.size();
 	assert(GRIDS_SIZE > grid_size); //
 
-	printf("2,%d", grid_size);
+	printf("grid_size=%d", grid_size);
 	for (int i = 0; i < grid_size; i++) {
 		// printf("i=%d\n",i); //debug
 		for (int j = 0; j < 3; j++) {
@@ -1971,10 +2067,10 @@ void monte_carlo::operator()(model& m, output_container& out, const precalculate
 	printf("p.m_n=%d\n", p.m_n);
 	p_cuda->n = p.m_n;
 	printf("%d, %ld\n", MAX_P_DATA_M_DATA_SIZE, p.m_data.m_data.size());
-	// assert(MAX_P_DATA_M_DATA_SIZE > p.m_data.m_data.size());
+	assert(MAX_P_DATA_M_DATA_SIZE >= p.m_data.m_data.size());
 	printf("FAST_SIZE=%d, fast.size()=%lu\n", FAST_SIZE, p.m_data.m_data[0].fast.size());
 	printf("SMOOTH_SIZE=%d, smooth.size()=%lu\n", SMOOTH_SIZE, p.m_data.m_data[0].smooth.size());
-	for (int i = 0; i < MAX_P_DATA_M_DATA_SIZE; i++) { // only copy part of it
+	for (int i = 0; i < p.m_data.m_data.size(); i++) { // only copy part of it
 		p_cuda->m_data[i].factor = p.m_data.m_data[i].factor;
 
 		// assert(FAST_SIZE == p.m_data.m_data[i].fast.size());
@@ -2077,7 +2173,7 @@ void monte_carlo::operator()(model& m, output_container& out, const precalculate
 	printf("launch kernel\n");
 	kernel<<<thread/256, 256>>>(m_cuda_gpu, ig_cuda_gpu, p_cuda_gpu, rand_molec_struc_gpu,
 		best_e_gpu, quasi_newton_par_max_steps, mutation_amplitude_float,
-		rand_maps_gpu, epsilon_fl_float, hunt_cap_gpu, authentic_v_gpu, results_gpu, 10, 1, thread);
+		rand_maps_gpu, epsilon_fl_float, hunt_cap_gpu, authentic_v_gpu, results_gpu, 200, 1, thread);
 
 	checkCUDA(cudaDeviceSynchronize());
 
@@ -2124,4 +2220,4 @@ void monte_carlo::operator()(model& m, output_container& out, const precalculate
 
 /* Above based on monte-carlo.cpp */
 
-#endif
+// #endif

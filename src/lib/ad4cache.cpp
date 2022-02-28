@@ -35,6 +35,7 @@ std::vector<grid> ad4cache::get_grids() const{
 }
 
 int ad4cache::get_atu() const{
+	printf("atom_type::AD=%d\n", atom_type::AD);
 	return atom_type::AD;
 }
 

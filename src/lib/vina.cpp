@@ -1233,7 +1233,7 @@ void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const 
 		
 
 		if (!poses.empty()) {
-			printf("vina: poses not empty\n");
+			printf("vina: poses not empty, poses.size()=%d\n", poses.size());
 			// For the Vina scoring function, we take the intramolecular energy from the best pose
 			// the order must not change because of non-decreasing g (see paper), but we'll re-sort in case g is non strictly increasing
 			if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO) {
@@ -1267,6 +1267,7 @@ void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const 
 
 				// m_model_gpu[l].show_pairs();
 				// m_model_gpu[l].show_forces();
+				// m_model_gpu[l].print_stuff(0,1,1,0,0);
 				if (m_no_refine || !m_receptor_initialized)
 					intramolecular_energy = m_model_gpu[l].eval_intramolecular(m_precalculated_byatom_gpu[l], m_grid, authentic_v);
 				else
@@ -1280,7 +1281,9 @@ void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const 
 				m_model_gpu[l].set(poses[i].c);
 
 				// For AD42 intramolecular_energy is equal to 0
-				m_model = m_model_gpu[l]; // Vina::score() will use m_model
+				m_model = m_model_gpu[l]; // Vina::score() will use m_model and m_precalculated_byatom
+				m_precalculated_byatom = m_precalculated_byatom_gpu[l];
+				// printf("intramolecular_energy=%f\n", intramolecular_energy);
 				std::vector<double> energies = score(intramolecular_energy);
 				// printf("energies.size()=%d\n", energies.size());
 				// Store energy components in current pose
@@ -1298,7 +1301,7 @@ void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const 
 			}
 
 			// Since pose.e contains the final energy, we have to sort them again
-			poses.sort();
+			poses.sort(); // if not, Vina1.2-GPU will give scoring wrongly
 
 
 			// Now compute RMSD from the best model
