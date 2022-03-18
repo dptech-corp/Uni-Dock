@@ -731,7 +731,7 @@ void p_eval_deriv(						float*		out,
 									p_cuda_t*		p_cuda_gpu,
 					const				float		epsilon_fl
 ) {
-	// printf("entering p_eval_deriv, type_pair_index = %d\n", type_pair_index);
+	// printf("entering p_eval_deriv, type_pair_index = %d, m_data_size=%d\n", type_pair_index, p_cuda_gpu->m_data_size);
 	const float cutoff_sqr = p_cuda_gpu->m_cutoff_sqr;
 	if(r2 > cutoff_sqr) printf("\nkernel2: p_eval_deriv() ERROR!");
 
@@ -1093,8 +1093,8 @@ void bfgs(					output_type_cuda_t*			x,
 	change_cuda_t p;
 	change_cuda_init_with_change(&p, g);
 
-	float f_values[MAX_NUM_OF_BFGS_STEPS + 1];
-	f_values[0] = f0;
+	// float f_values[MAX_NUM_OF_BFGS_STEPS + 1];
+	// f_values[0] = f0;
 
 	for (int step = 0; step < max_steps; step++) {
 
@@ -1125,7 +1125,7 @@ void bfgs(					output_type_cuda_t*			x,
 			float tmp = find_change_index_read(&y, i) - find_change_index_read(g, i);
 			find_change_index_write(&y, i, tmp);
 		}
-		f_values[step + 1] = f1;
+		// f_values[step + 1] = f1;
 		f0 = f1;
 		output_type_cuda_init_with_output(x, &x_new);
 		if (!(sqrt(scalar_product(g, g, n)) >= 1e-5))break;
@@ -1270,6 +1270,7 @@ void kernel(	m_cuda_t*			m_cuda_global,
 
 	// tid
 	int idx = blockIdx.x * blockDim.x + threadIdx.x;
+	// printf("idx=%d\n", idx);
 	// int gll = 0;
 	float best_e = INFINITY;
 	// printf("epsilon_fl=%lf\n", epsilon_fl * 1000000000000000.0);
@@ -1283,11 +1284,20 @@ void kernel(	m_cuda_t*			m_cuda_global,
 		output_type_cuda_t tmp; // private memory, shared only in work item
 		change_cuda_t g;
 		m_cuda_t m_cuda_gpu;
+		// if (gll == 0){
+		// 	printf("size: m_cuda_gpu=%lu, change_cuda_t g=%lu, output_type_cuda_t tmp=%lu, p_cuda_t=%lu\n", sizeof(m_cuda_gpu), sizeof(g), sizeof(tmp), sizeof(p_cuda_t));
+		// }
 
 		// update pointer to get correct ligand data
 		output_type_cuda_init(&tmp, rand_molec_struc_gpu + gll * (SIZE_OF_MOLEC_STRUC / sizeof(float)));
+		// if (gll == 0){
+		// 	printf("1");
+		// }
 		rand_maps_gpu = rand_maps_gpu + gll / threads_per_ligand;
 		m_cuda_init_with_m_cuda(m_cuda_global + gll / threads_per_ligand, &m_cuda_gpu);
+		// if (gll == 0){
+		// 	printf("2");
+		// }
 		p_cuda_gpu = p_cuda_gpu + gll / threads_per_ligand;
 
 		g.lig_torsion_size = tmp.lig_torsion_size;
@@ -1297,10 +1307,16 @@ void kernel(	m_cuda_t*			m_cuda_global,
 
 		// for (int step = 0; step < search_depth; step++) {
 		for (int step = 0; step < search_depth; step++) { //debug
-			// printf("step:%d\n", step);
+			// if (gll == 0){
+			// 	printf("step:%d\n", step);
+			// 	// printf("1");
+			// }
 			
 			output_type_cuda_init_with_output(&candidate, &tmp);
-
+			// if (gll == 0){
+			// 	// printf("step:%d\n", step);
+			// 	printf("s 1");
+			// }
 			int map_index = (step + gll * search_depth) % MAX_NUM_OF_RANDOM_MAP;
 			// if (gll == 0) printf("#1 candidate.e=%f\n", candidate.e);
 			mutate_conf_cuda(map_index, bfgs_max_steps, &candidate, rand_maps_gpu->int_map, rand_maps_gpu->sphere_map,
@@ -1436,8 +1452,8 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 	ig_cuda_t *ig_cuda_ptr;
 	checkCUDA(cudaMallocHost(&ig_cuda_ptr, sizeof(ig_cuda_t)));
 
-	p_cuda_t *p_cuda;
-	checkCUDA(cudaMallocHost(&p_cuda, sizeof(p_cuda_t)));
+	p_cuda_t_cpu *p_cuda;
+	checkCUDA(cudaMallocHost(&p_cuda, sizeof(p_cuda_t_cpu)));
 
 	random_maps_t *rand_maps;
 	checkCUDA(cudaMallocHost(&rand_maps, sizeof(random_maps_t)));
@@ -1450,8 +1466,11 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 	printf("m_cuda_size=%lu\n", m_cuda_size);
 	size_t ig_cuda_size = sizeof(ig_cuda_t);
 	printf("ig_cuda_size=%lu\n", ig_cuda_size);
-	size_t p_cuda_size = sizeof(p_cuda_t);
-	printf("p_cuda_size=%lu\n", p_cuda_size);
+	size_t p_cuda_size_cpu = sizeof(p_cuda_t_cpu);
+	printf("p_cuda_size_cpu=%lu\n", p_cuda_size_cpu);
+
+	size_t p_cuda_size_gpu = sizeof(p_cuda_t);
+	printf("p_cuda_size_gpu=%lu\n", p_cuda_size_gpu);
 	
 	size_t rand_maps_size = sizeof(random_maps_t);
 	// rand_molec_struc_gpu
@@ -1480,7 +1499,7 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 	// Preparing p related data
 
 	p_cuda_t *p_cuda_gpu;
-	checkCUDA(cudaMalloc(&p_cuda_gpu, num_of_ligands * p_cuda_size));
+	checkCUDA(cudaMalloc(&p_cuda_gpu, num_of_ligands * p_cuda_size_gpu));
 	printf("p_cuda_gpu=%p\n", p_cuda_gpu);
 	// Preparing ig related data (cache related data)
 	ig_cuda_t *ig_cuda_gpu;
@@ -1695,14 +1714,19 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 				p_cuda->m_data[i].smooth[j][1] = p.m_data.m_data[i].smooth[j].second;
 			}
 		}
-		printf("num_of_ligands * p_cuda_size = %lu\n", num_of_ligands * p_cuda_size);
+		printf("num_of_ligands * p_cuda_size_gpu = %lu\n", num_of_ligands * p_cuda_size_gpu);
 		printf("p_cuda_gpu=%p\n", p_cuda_gpu);
-		printf("p_cuda_gpu + l=%p\n", p_cuda_gpu + l);
-		printf("p_cuda_gpu + 1=%p\n", p_cuda_gpu + 1);
 
-
-		checkCUDA(cudaMemcpy(p_cuda_gpu + l, p_cuda, sizeof(p_cuda_t), cudaMemcpyHostToDevice));
-
+		// malloc GPU memory for m_data
+		p_m_data_cuda_t *m_data_ptr;
+		int m_data_size = p.m_data.m_data.size();
+		checkCUDA(cudaMalloc(&m_data_ptr, sizeof(p_m_data_cuda_t) * m_data_size)); // malloc GPU memory as needed
+		checkCUDA(cudaMemcpy(p_cuda_gpu + l, p_cuda, 2 * sizeof(float) + 2 * sizeof(int), cudaMemcpyHostToDevice));
+		checkCUDA(cudaMemcpy(m_data_ptr, p_cuda->m_data, sizeof(p_m_data_cuda_t) * m_data_size, cudaMemcpyHostToDevice));
+		checkCUDA(cudaMemcpy(&(p_cuda_gpu[l].m_data_size), &m_data_size, sizeof(int), cudaMemcpyHostToDevice));
+		printf("sizeof(m_data_ptr) = %lu\n", sizeof(m_data_ptr));
+		checkCUDA(cudaMemcpy(&(p_cuda_gpu[l].m_data), &m_data_ptr, sizeof(m_data_ptr), cudaMemcpyHostToDevice));
+		
 		
 		// Generate random maps
 		printf("MAX_NUM_OF_RANDOM_MAP = %d\n", MAX_NUM_OF_RANDOM_MAP);
@@ -1780,8 +1804,8 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 	checkCUDA(cudaEventRecord(start,NULL));
 
 	/* Launch kernel */
-	printf("launch kernel, global_steps=%d, thread=%d\n", global_steps, thread);
-	kernel<<<thread / 256 + 1, 256>>>(m_cuda_gpu, ig_cuda_gpu, p_cuda_gpu, rand_molec_struc_gpu,
+	printf("launch kernel, global_steps=%d, thread=%d, num_of_ligands=%d\n", global_steps, thread, num_of_ligands);
+	kernel<<<thread / 128 + 1, 128>>>(m_cuda_gpu, ig_cuda_gpu, p_cuda_gpu, rand_molec_struc_gpu,
 		best_e_gpu, quasi_newton_par_max_steps, mutation_amplitude_float,
 		rand_maps_gpu, epsilon_fl_float, hunt_cap_gpu, authentic_v_gpu, results_gpu, global_steps, 
 		num_of_ligands, threads_per_ligand);
@@ -1852,6 +1876,7 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 	checkCUDA(cudaFreeHost(rand_molec_struc_tmp));
 	checkCUDA(cudaFreeHost(ig_cuda_ptr));
 	checkCUDA(cudaFreeHost(p_cuda));
+	// should free m_cuda pointers in p_cuda
 
 	printf("exit monte_carlo\n");
 

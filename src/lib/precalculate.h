@@ -205,7 +205,7 @@ public:
         m_cutoff_sqr = sqr(sf.get_cutoff());
         m_max_cutoff_sqr = sqr(sf.get_max_cutoff());
         m_n = sz(m_factor * m_max_cutoff_sqr) + 3; // sz(factor * r^2) + 1 <= sz(factor * cutoff_sqr) + 2 <= n-1 < n  // see assert below
-        std::cout << "-- DEBUG byatm -- sf.cutoff^2 in precalculate = " << m_cutoff_sqr << "\n" << factor << ' ' << m_n << "\n";
+        // std::cout << "-- DEBUG byatm -- sf.cutoff^2 in precalculate = " << m_cutoff_sqr << "\n" << factor << ' ' << m_n << "\n";
         sz n_atoms = model.num_atoms();
         atomv atoms = model.get_atoms();
         triangular_matrix<precalculate_element> data(n_atoms, precalculate_element(m_n, m_factor));

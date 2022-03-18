@@ -1200,9 +1200,11 @@ void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const 
 		mc.local_steps = unsigned((25 + m_model_gpu[i].num_movable_atoms()) / 3);
 	}
 	mc.global_steps = unsigned(70 * 3 * (50 + heuristic) / 2); // 2 * 70 -> 8 * 20 // FIXME
-	if (max_step > 0 && mc.global_steps > max_step){
-		mc.global_steps = max_step;
+	// printf("mc.global_steps = %u, max_step = %d, £¨unsigned)max_step=%u\n", mc.global_steps, max_step, (unsigned)max_step);
+	if (max_step > 0 && mc.global_steps > (unsigned)max_step){
+		mc.global_steps = (unsigned)max_step;
 	}
+	// printf("final mc.global_steps = %u\n", mc.global_steps);
 	mc.max_evals = max_evals;
 	mc.min_rmsd = min_rmsd;
 	mc.num_saved_mins = n_poses;
