@@ -198,15 +198,35 @@ void Vina::set_ligand_from_string_gpu(const std::vector<std::string>& ligand_str
 	m_model_gpu.resize(ligand_string.size(), m_receptor);// Initialize current model with receptor and reinitialize poses
 	m_precalculated_byatom_gpu.resize(ligand_string.size());
 
+	// Read ligand info
 	VINA_RANGE(i, 0, ligand_string.size()){
 		m_model_gpu[i].append(parse_ligand_pdbqt_from_string(ligand_string[i], atom_typing));
-		// Because we precalculate ligand atoms interactions
-		precalculate_byatom precalculated_byatom(m_scoring_function, m_model_gpu[i]);
-		m_precalculated_byatom_gpu[i] = precalculated_byatom;
+		m_precalculated_byatom_gpu[i].init_without_calculation(m_scoring_function, m_model_gpu[i]);
+	}	
+	
+	// calculate common rs data
+	flv common_rs = m_precalculated_byatom_gpu[0].calculate_rs();
 
+	// Because we precalculate ligand atoms interactions, which should be done in parallel
+	int precalculate_thread_num = ligand_string.size();
+	
+	precalculate_parallel(m_precalculated_byatom_gpu, m_scoring_function, m_model_gpu, common_rs, precalculate_thread_num);
+	
+	// // unittest printing, only check the first ligand
+    // printf("energies about the first ligand on GPU in vina.cpp:\n");
+    // for (int i = 0;i < 10; ++i){
+    //     printf("precalculated_byatom.m_data.m_data[%d]: (smooth.first, smooth.second, fast) ", i);
+    //     for (int j = 0;j < 20; ++j){
+    //         printf("(%f, %f, %f) ", m_precalculated_byatom_gpu[0].m_data.m_data[i].smooth[j].first,
+    //         m_precalculated_byatom_gpu[0].m_data.m_data[i].smooth[j].second, m_precalculated_byatom_gpu[0].m_data.m_data[i].fast[j]);
+    //     }
+    //     printf("\n");
+    // }
+
+	VINA_RANGE(i, 0, ligand_string.size()){
 		// Check that all atom types are in the grid (if initialized)
 		if (m_map_initialized) {
-			szv atom_types = m_model.get_movable_atom_types(atom_typing);
+			szv atom_types = m_model_gpu[i].get_movable_atom_types(atom_typing);
 
 			if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO) {
 				if(!m_grid.are_atom_types_grid_initialized(atom_types))
@@ -1048,6 +1068,7 @@ void Vina::global_search(const int exhaustiveness, const int n_poses, const doub
 
 	// Docking search
 	sstm << "Performing docking (random seed: " << m_seed << ")";
+
 	doing(sstm.str(), m_verbosity, 0);
 	if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO) {
 		parallelmc(m_model, poses, m_precalculated_byatom,    m_grid, m_grid.corner1(), m_grid.corner2(), generator);
@@ -1063,8 +1084,6 @@ void Vina::global_search(const int exhaustiveness, const int n_poses, const doub
 	printf("energy=%lf\n", poses[0].e);
 	
 	if (!poses.empty()) {
-		printf("vina: poses not empty\n");
-		// Core Dumped
 		// For the Vina scoring function, we take the intramolecular energy from the best pose
 		// the order must not change because of non-decreasing g (see paper), but we'll re-sort in case g is non strictly increasing
 		if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO) {
@@ -1073,8 +1092,6 @@ void Vina::global_search(const int exhaustiveness, const int n_poses, const doub
 				change g(m_model.get_size());
 				quasi_newton quasi_newton_par;
 				const vec authentic_v(1000, 1000, 1000);
-				//std::vector<double> energies_before_opt;
-				//std::vector<double> energies_after_opt;
 				int evalcount = 0;
 				const fl slope = 1e6;
 				m_non_cache.slope = slope;
@@ -1200,7 +1217,7 @@ void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const 
 		mc.local_steps = unsigned((25 + m_model_gpu[i].num_movable_atoms()) / 3);
 	}
 	mc.global_steps = unsigned(70 * 3 * (50 + heuristic) / 2); // 2 * 70 -> 8 * 20 // FIXME
-	// printf("mc.global_steps = %u, max_step = %d, £¨unsigned)max_step=%u\n", mc.global_steps, max_step, (unsigned)max_step);
+	// printf("mc.global_steps = %u, max_step = %d, ï¿½ï¿½unsigned)max_step=%u\n", mc.global_steps, max_step, (unsigned)max_step);
 	if (max_step > 0 && mc.global_steps > (unsigned)max_step){
 		mc.global_steps = (unsigned)max_step;
 	}
@@ -1303,7 +1320,7 @@ void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const 
 			}
 
 			// Since pose.e contains the final energy, we have to sort them again
-			poses.sort(); // if not, Vina1.2-GPU will give scoring wrongly
+			poses.sort();
 
 
 			// Now compute RMSD from the best model

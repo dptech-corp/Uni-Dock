@@ -73,8 +73,8 @@ public:
 template<typename T>
 class triangular_matrix {
 
-	sz m_dim;
 public:
+	sz m_dim;
 	std::vector<T> m_data; // add to public
 	sz index(sz i, sz j) const { return triangular_matrix_index(m_dim, i, j); }
 	sz index_permissive(sz i, sz j) const { return (i < j) ? index(i, j) : index(j, i); }
@@ -82,6 +82,7 @@ public:
 	triangular_matrix(sz n, const T& filler_val) : m_data(n*(n+1)/2, filler_val), m_dim(n) {} 
 	VINA_MATRIX_DEFINE_OPERATORS // temp macro defined above
 	sz dim() const { return m_dim; }
+	void set_dim(sz i){m_dim = i;} // for gpu reinitialization
 };
 
 template<typename T>

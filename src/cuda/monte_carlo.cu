@@ -34,14 +34,12 @@
 #include "cache.h"
 
 // #define checkCUDA(ret) assert((ret) == cudaSuccess)
-
 __host__
 void checkCUDA(cudaError_t ret){
 	if (ret != cudaSuccess){
 		printf("Cuda error\n");
 	}
 }
-
 
 //  __device__ __forceinline__
 // float pown(const float base, const int n)
@@ -384,7 +382,7 @@ float access_m_data(float* m_data, int m_i, int m_j, int i, int j, int k) {
 	return m_data[i + m_i * (j + m_j * k)];
 }
 
- __device__ __forceinline__
+__device__ __forceinline__
 bool not_max(float x) {
 	return (x < 0.1 * INFINITY); /* Problem: replace max_fl with INFINITY? */
 }
@@ -1805,7 +1803,7 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 
 	/* Launch kernel */
 	printf("launch kernel, global_steps=%d, thread=%d, num_of_ligands=%d\n", global_steps, thread, num_of_ligands);
-	kernel<<<thread / 128 + 1, 128>>>(m_cuda_gpu, ig_cuda_gpu, p_cuda_gpu, rand_molec_struc_gpu,
+	kernel<<<thread / 32 + 1, 32>>>(m_cuda_gpu, ig_cuda_gpu, p_cuda_gpu, rand_molec_struc_gpu,
 		best_e_gpu, quasi_newton_par_max_steps, mutation_amplitude_float,
 		rand_maps_gpu, epsilon_fl_float, hunt_cap_gpu, authentic_v_gpu, results_gpu, global_steps, 
 		num_of_ligands, threads_per_ligand);
@@ -1882,366 +1880,51 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 
 }
 
+bool metropolis_accept(fl old_f, fl new_f, fl temperature, rng& generator) {
+	if(new_f < old_f) return true;
+	const fl acceptance_probability = std::exp((old_f - new_f) / temperature);
+	return random_fl(0, 1, generator) < acceptance_probability;
+}
+
 __host__
 void monte_carlo::operator()(model& m, output_container& out, const precalculate_byatom& p, const igrid& ig, const vec& corner1, const vec& corner2, rng& generator) const {
-
-	/* Definitions from vina1.2 */
-	printf("entering CUDA monte_carlo search\n"); //debug
-
-	// thread = 10; // for CUDA parallel option
-
-	// int evalcount = 0;
+    int evalcount = 0;
 	vec authentic_v(1000, 1000, 1000); // FIXME? this is here to avoid max_fl/max_fl
 	conf_size s = m.get_size();
 	change g(s);
 	output_type tmp(s, 0);
-
-	// tmp.c.randomize(corner1, corner2, generator); // should be moved to gpu
-	// fl best_e = max_fl; // should be moved to gpu
+	tmp.c.randomize(corner1, corner2, generator);
+	fl best_e = max_fl;
 	quasi_newton quasi_newton_par;
-    const int quasi_newton_par_max_steps = local_steps; // no need to decrease step
+    quasi_newton_par.max_steps = local_steps;
+	VINA_U_FOR(step, global_steps) {
+		// if(increment_me)
+		// 	++(*increment_me);
+		if((max_evals > 0) & (evalcount > max_evals))
+			break;
+		output_type candidate = tmp;
+		mutate_conf(candidate.c, m, mutation_amplitude, generator);
+		quasi_newton_par(m, p, ig, candidate, g, hunt_cap, evalcount);
+		if(step == 0 || metropolis_accept(tmp.e, candidate.e, temperature, generator)) {
+			tmp = candidate;
 
-	/* Allocate CPU memory and define new data structure */
-	printf("Allocating CPU memory\n"); //debug
-	m_cuda_t m_cuda;
-	assert(m.atoms.size() < MAX_NUM_OF_ATOMS);
+			m.set(tmp.c); // FIXME? useless?
 
-	for (int i = 0; i < m.atoms.size(); i++) {
-		m_cuda.atoms[i].types[0] = m.atoms[i].el;// To store 4 atoms types (el, ad, xs, sy)
-		m_cuda.atoms[i].types[1] = m.atoms[i].ad;
-		m_cuda.atoms[i].types[2] = m.atoms[i].xs;
-		m_cuda.atoms[i].types[3] = m.atoms[i].sy;
-		for (int j = 0; j < 3; j++) {
-			m_cuda.atoms[i].coords[j] = m.atoms[i].coords[j];// To store atom coords
-		}
-	}
-
-
-	// To store atoms coords
-	for (int i = 0; i < m.coords.size(); i++) {
-		for (int j = 0; j < 3; j++) {
-			m_cuda.m_coords.coords[i][j] = m.coords[i].data[j];
-		}
-	}
-
-	//To store minus forces
-	for (int i = 0; i < m.coords.size(); i++) {
-		for (int j = 0; j < 3; j++) {
-			m_cuda.minus_forces.coords[i][j] = m.minus_forces[i].data[j];
-		}
-	}
-
-    // Preparing ligand data
-	printf("prepare ligand data\n");
-	assert(m.num_other_pairs() == 0); // m.other_paris is not supported!
-	assert(m.ligands.size() == 1); // Only one ligand supported!
-	m_cuda.ligand.pairs.num_pairs = m.ligands[0].pairs.size();
-	for (int i = 0; i < m_cuda.ligand.pairs.num_pairs; i++) {
-		m_cuda.ligand.pairs.type_pair_index[i]	= m.ligands[0].pairs[i].type_pair_index;
-		m_cuda.ligand.pairs.a[i]					= m.ligands[0].pairs[i].a;
-		m_cuda.ligand.pairs.b[i]					= m.ligands[0].pairs[i].b;
-	}
-	m_cuda.ligand.begin = m.ligands[0].begin; // 0
-	m_cuda.ligand.end = m.ligands[0].end; // 29
-	ligand m_ligand = m.ligands[0]; // Only support one ligand
-	assert(m_ligand.end < MAX_NUM_OF_ATOMS);
-
-	// Store root node
-	m_cuda.ligand.rigid.atom_range[0][0] = m_ligand.node.begin;
-	m_cuda.ligand.rigid.atom_range[0][1] = m_ligand.node.end;
-	for (int i = 0; i < 3; i++) m_cuda.ligand.rigid.origin[0][i] = m_ligand.node.get_origin()[i];
-	for (int i = 0; i < 9; i++) m_cuda.ligand.rigid.orientation_m[0][i] = m_ligand.node.get_orientation_m().data[i];
-	m_cuda.ligand.rigid.orientation_q[0][0] = m_ligand.node.orientation().R_component_1();
-	m_cuda.ligand.rigid.orientation_q[0][1] = m_ligand.node.orientation().R_component_2();
-	m_cuda.ligand.rigid.orientation_q[0][2] = m_ligand.node.orientation().R_component_3();
-	m_cuda.ligand.rigid.orientation_q[0][3] = m_ligand.node.orientation().R_component_4();
-	for (int i = 0; i < 3; i++) {m_cuda.ligand.rigid.axis[0][i] = 0;m_cuda.ligand.rigid.relative_axis[0][i] = 0;m_cuda.ligand.rigid.relative_origin[0][i] = 0;}
-
-	// Store children nodes (in depth-first order)
-	printf("store children nodes\n"); //debug
-
-	struct tmp_struct {
-		int start_index = 0;
-		int parent_index = 0;
-		void store_node(tree<segment>& child_ptr, rigid_cuda_t& rigid) {
-			start_index++; // start with index 1, index 0 is root node
-			rigid.parent[start_index] = parent_index;
-			rigid.atom_range[start_index][0] = child_ptr.node.begin;
-			rigid.atom_range[start_index][1] = child_ptr.node.end;
-			for (int i = 0; i < 9; i++) rigid.orientation_m[start_index][i] = child_ptr.node.get_orientation_m().data[i];
-			rigid.orientation_q[start_index][0] = child_ptr.node.orientation().R_component_1();
-			rigid.orientation_q[start_index][1] = child_ptr.node.orientation().R_component_2();
-			rigid.orientation_q[start_index][2] = child_ptr.node.orientation().R_component_3();
-			rigid.orientation_q[start_index][3] = child_ptr.node.orientation().R_component_4();
-			for (int i = 0; i < 3; i++) {
-				rigid.origin[start_index][i] = child_ptr.node.get_origin()[i];
-				rigid.axis[start_index][i] = child_ptr.node.get_axis()[i];
-				rigid.relative_axis[start_index][i] = child_ptr.node.relative_axis[i];
-				rigid.relative_origin[start_index][i] = child_ptr.node.relative_origin[i];
-			}
-			if (child_ptr.children.size() == 0) return;
-			else {
-				assert(start_index < MAX_NUM_OF_RIGID);
-				int parent_index_tmp = start_index;
-				for (int i = 0; i < child_ptr.children.size(); i++) {
-					this->parent_index = parent_index_tmp; // Update parent index
-					this->store_node(child_ptr.children[i], rigid);
-				}
+			// FIXME only for very promising ones
+			if(tmp.e < best_e || out.size() < num_saved_mins) {
+				quasi_newton_par(m, p, ig, tmp, g, authentic_v, evalcount);
+				m.set(tmp.c); // FIXME? useless?
+				tmp.coords = m.get_heavy_atom_movable_coords();
+				add_to_output_container(out, tmp, min_rmsd, num_saved_mins); // 20 - max size
+				if(tmp.e < best_e)
+					best_e = tmp.e;
 			}
 		}
-	};
-	tmp_struct ts;
-	for (int i = 0; i < m_ligand.children.size(); i++) {
-		ts.parent_index = 0; // Start a new branch, whose parent is 0
-		ts.store_node(m_ligand.children[i], m_cuda.ligand.rigid);
-	}
-	m_cuda.ligand.rigid.num_children = ts.start_index;
-
-	// set children_map
-	printf("set children map\n"); //debug
-	for (int i = 0; i < MAX_NUM_OF_RIGID; i++)
-		for (int j = 0; j < MAX_NUM_OF_RIGID; j++)
-			m_cuda.ligand.rigid.children_map[i][j] = false;
-	// printf("1"); //debug
-	for (int i = 1; i < m_cuda.ligand.rigid.num_children + 1; i++) {
-		int parent_index = m_cuda.ligand.rigid.parent[i];
-		m_cuda.ligand.rigid.children_map[parent_index][i] = true;
-	}
-	m_cuda.m_num_movable_atoms = m.num_movable_atoms();
-	size_t m_cuda_size = sizeof(m_cuda);
-	printf("m_cuda_size=%lu\n", m_cuda_size);
-
-    // Preparing ig related data
-	printf("Preparing ig related data\n"); //debug
-	ig_cuda_t* ig_cuda_ptr;
-	checkCUDA(cudaMallocHost(&ig_cuda_ptr, sizeof(ig_cuda_t)));
-	ig_cuda_ptr->atu = ig.get_atu(); // atu
-	ig_cuda_ptr->slope = ig.get_slope(); // slope
-	std::vector<grid> tmp_grids = ig.get_grids();
-
-	int grid_size = tmp_grids.size();
-	assert(GRIDS_SIZE > grid_size); //
-
-	printf("grid_size=%d", grid_size);
-	for (int i = 0; i < grid_size; i++) {
-		// printf("i=%d\n",i); //debug
-		for (int j = 0; j < 3; j++) {
-			ig_cuda_ptr->grids[i].m_init[j] = tmp_grids[i].m_init[j];
-			ig_cuda_ptr->grids[i].m_factor[j] = tmp_grids[i].m_factor[j];
-			ig_cuda_ptr->grids[i].m_dim_fl_minus_1[j] = tmp_grids[i].m_dim_fl_minus_1[j];
-			ig_cuda_ptr->grids[i].m_factor_inv[j] = tmp_grids[i].m_factor_inv[j];
-		}
-		if (tmp_grids[i].m_data.dim0() != 0) {
-			ig_cuda_ptr->grids[i].m_i = tmp_grids[i].m_data.dim0(); assert(MAX_NUM_OF_GRID_MI >= ig_cuda_ptr->grids[i].m_i);
-			ig_cuda_ptr->grids[i].m_j = tmp_grids[i].m_data.dim1(); assert(MAX_NUM_OF_GRID_MJ >= ig_cuda_ptr->grids[i].m_j);
-			ig_cuda_ptr->grids[i].m_k = tmp_grids[i].m_data.dim2(); assert(MAX_NUM_OF_GRID_MK >= ig_cuda_ptr->grids[i].m_k);
-
-			for (int j = 0; j < ig_cuda_ptr->grids[i].m_i * ig_cuda_ptr->grids[i].m_j * ig_cuda_ptr->grids[i].m_k; j++) {
-				ig_cuda_ptr->grids[i].m_data[j] = tmp_grids[i].m_data.m_data[j];
-			}
-		}
-		else {
-			ig_cuda_ptr->grids[i].m_i = 0;
-			ig_cuda_ptr->grids[i].m_j = 0;
-			ig_cuda_ptr->grids[i].m_k = 0;
-		}
-	}
-	size_t ig_cuda_size = sizeof(ig_cuda_t);
-	printf("ig_cuda_size=%lu\n", ig_cuda_size);
-
-	// Generating random ligand structures
-	printf("Generating random ligand structures\n"); //debug
-	printf("thread=%d\n", thread);
-	std::vector<output_type_cuda_t*> rand_molec_struc_vec;
-	rand_molec_struc_vec.resize(thread);
-	for (int i = 0; i < thread; i++) {
-		checkCUDA(cudaMallocHost(&rand_molec_struc_vec[i], sizeof(output_type_cuda_t)));
-	}
-
-	int lig_torsion_size = tmp.c.ligands[0].torsions.size();
-	int flex_torsion_size;
-	if (tmp.c.flex.size() != 0) flex_torsion_size = tmp.c.flex[0].torsions.size();
-	else flex_torsion_size = 0;
-	std::vector<vec> uniform_data;
-	uniform_data.resize(thread);
-	
-	for (int i = 0; i < thread; ++i){
-		tmp.c.randomize(corner1, corner2, generator); // generate a random structure
-		for (int j = 0; j < 3; j++) rand_molec_struc_vec[i]->position[j] = tmp.c.ligands[0].rigid.position[j];
-		assert(lig_torsion_size < MAX_NUM_OF_LIG_TORSION);
-		for (int j = 0; j < lig_torsion_size; j++) rand_molec_struc_vec[i]->lig_torsion[j] = tmp.c.ligands[0].torsions[j];// Only support one ligand
-		assert(flex_torsion_size < MAX_NUM_OF_FLEX_TORSION);
-		for (int j = 0; j < flex_torsion_size; j++) rand_molec_struc_vec[i]->flex_torsion[j] = tmp.c.flex[0].torsions[j];// Only support one flex
-	
-		rand_molec_struc_vec[i]->orientation[0] = (float)tmp.c.ligands[0].rigid.orientation.R_component_1();
-		rand_molec_struc_vec[i]->orientation[1] = (float)tmp.c.ligands[0].rigid.orientation.R_component_2();
-		rand_molec_struc_vec[i]->orientation[2] = (float)tmp.c.ligands[0].rigid.orientation.R_component_3();
-		rand_molec_struc_vec[i]->orientation[3] = (float)tmp.c.ligands[0].rigid.orientation.R_component_4();
-	
-		rand_molec_struc_vec[i]->lig_torsion_size = lig_torsion_size;
-	}
-
-
-
-    // Preaparing p related data
-	printf("Preaparing p related data\n"); //debug
-	p_cuda_t* p_cuda;
-	checkCUDA(cudaMallocHost(&p_cuda, sizeof(p_cuda_t)));
-	p_cuda->m_cutoff_sqr = p.cutoff_sqr();
-	p_cuda->factor = p.m_factor;
-	printf("p.m_n=%d\n", p.m_n);
-	p_cuda->n = p.m_n;
-	printf("%d, %ld\n", MAX_P_DATA_M_DATA_SIZE, p.m_data.m_data.size());
-	assert(MAX_P_DATA_M_DATA_SIZE >= p.m_data.m_data.size());
-	printf("FAST_SIZE=%d, fast.size()=%lu\n", FAST_SIZE, p.m_data.m_data[0].fast.size());
-	printf("SMOOTH_SIZE=%d, smooth.size()=%lu\n", SMOOTH_SIZE, p.m_data.m_data[0].smooth.size());
-	for (int i = 0; i < p.m_data.m_data.size(); i++) { // only copy part of it
-		p_cuda->m_data[i].factor = p.m_data.m_data[i].factor;
-
-		// assert(FAST_SIZE == p.m_data.m_data[i].fast.size());
-		// assert(SMOOTH_SIZE == p.m_data.m_data[i].smooth.size());
-		for (int j = 0; j < FAST_SIZE; j++) {
-			p_cuda->m_data[i].fast[j] = p.m_data.m_data[i].fast[j];
-		}
-		for (int j = 0; j < SMOOTH_SIZE; j++) {
-			p_cuda->m_data[i].smooth[j][0] = p.m_data.m_data[i].smooth[j].first;
-			p_cuda->m_data[i].smooth[j][1] = p.m_data.m_data[i].smooth[j].second;
-		}
-	}
-	size_t p_cuda_size = sizeof(p_cuda_t);
-
-	// Generate random maps
-	random_maps_t* rand_maps;
-	checkCUDA(cudaMallocHost(&rand_maps, sizeof(random_maps_t)));
-	for (int i = 0; i < MAX_NUM_OF_RANDOM_MAP; i++) {
-		rand_maps->int_map[i] = random_int(0, int(lig_torsion_size), generator);
-		rand_maps->pi_map[i] = random_fl(-pi, pi, generator);
-	}
-	for (int i = 0; i < MAX_NUM_OF_RANDOM_MAP; i++) {
-		vec rand_coords = random_inside_sphere(generator);
-		for (int j = 0; j < 3 ; j ++) {
-			rand_maps->sphere_map[i][j] = rand_coords[j];
-		}
-	}
-	size_t rand_maps_size = sizeof(random_maps_t);
-
-	fl hunt_cap_float[3] = {hunt_cap[0], hunt_cap[1], hunt_cap[2]};
-	float authentic_v_float[3] = {static_cast<float>(authentic_v[0]), static_cast<float>(authentic_v[1]),static_cast<float>(authentic_v[2])};
-	float mutation_amplitude_float = static_cast<float>(mutation_amplitude);
-	float epsilon_fl_float = static_cast<float>(epsilon_fl);
-	// int	total_wi = max_wi_size[0] * max_wi_size[1];
-
-	/* Allocate GPU memory */
-	printf("Allocating GPU memory\n");
-	// rand_molec_struc_gpu
-	float *rand_molec_struc_gpu;
-	printf("rand_molec_struc_gpu_size=%lu\n", thread * SIZE_OF_MOLEC_STRUC);
-	checkCUDA(cudaMalloc(&rand_molec_struc_gpu, thread * SIZE_OF_MOLEC_STRUC));
-	for (int i = 0;i < thread; ++i){
-		std::vector<float> pos(rand_molec_struc_vec[i]->position, rand_molec_struc_vec[i]->position + 3);
-		std::vector<float> ori(rand_molec_struc_vec[i]->orientation, rand_molec_struc_vec[i]->orientation + 4);
-		std::vector<float> lig_tor(rand_molec_struc_vec[i]->lig_torsion, rand_molec_struc_vec[i]->lig_torsion + MAX_NUM_OF_LIG_TORSION);
-		std::vector<float> flex_tor(rand_molec_struc_vec[i]->flex_torsion, rand_molec_struc_vec[i]->flex_torsion + MAX_NUM_OF_FLEX_TORSION);
-		float lig_tor_size = rand_molec_struc_vec[i]->lig_torsion_size;
-		checkCUDA(cudaMemcpy(rand_molec_struc_gpu + i * SIZE_OF_MOLEC_STRUC / sizeof(float), pos.data(), pos.size() * sizeof(float), cudaMemcpyHostToDevice));
-		checkCUDA(cudaMemcpy(rand_molec_struc_gpu + i * SIZE_OF_MOLEC_STRUC / sizeof(float) + pos.size(), ori.data(), ori.size() * sizeof(float), cudaMemcpyHostToDevice));
-		checkCUDA(cudaMemcpy(rand_molec_struc_gpu + i * SIZE_OF_MOLEC_STRUC / sizeof(float) + pos.size() + ori.size(), lig_tor.data(), lig_tor.size() * sizeof(float), cudaMemcpyHostToDevice));
-		checkCUDA(cudaMemcpy(rand_molec_struc_gpu + i * SIZE_OF_MOLEC_STRUC / sizeof(float) + pos.size() + ori.size() + MAX_NUM_OF_LIG_TORSION, flex_tor.data(),
-			flex_tor.size() * sizeof(float), cudaMemcpyHostToDevice));
-		checkCUDA(cudaMemcpy(rand_molec_struc_gpu + i * SIZE_OF_MOLEC_STRUC / sizeof(float) + pos.size() + ori.size() + MAX_NUM_OF_LIG_TORSION + MAX_NUM_OF_FLEX_TORSION,
-			&lig_tor_size, sizeof(float), cudaMemcpyHostToDevice));
-	}
-	// best_e_gpu
-	float *best_e_gpu;
-	checkCUDA(cudaMalloc(&best_e_gpu, sizeof(float)));
-	checkCUDA(cudaMemcpy(best_e_gpu, &max_fl, sizeof(float), cudaMemcpyHostToDevice));
-	// rand_maps_gpu
-	random_maps_t *rand_maps_gpu;
-	checkCUDA(cudaMalloc(&rand_maps_gpu, rand_maps_size));
-	checkCUDA(cudaMemcpy(rand_maps_gpu, rand_maps, rand_maps_size, cudaMemcpyHostToDevice));
-	// hunt_cap_gpu
-	float *hunt_cap_gpu;
-	checkCUDA(cudaMalloc(&hunt_cap_gpu, 3 * sizeof(float)));
-	checkCUDA(cudaMemcpy(hunt_cap_gpu, hunt_cap_float, 3 * sizeof(float), cudaMemcpyHostToDevice));
-	// Preparing m related data
-	m_cuda_t* m_cuda_gpu;
-	printf("m_cuda_size=%lu\n", m_cuda_size);
-	checkCUDA(cudaMalloc(&m_cuda_gpu, m_cuda_size));
-	printf("m_cuda_gpu");
-	printf("%p\n", m_cuda_gpu);
-	checkCUDA(cudaMemcpy(m_cuda_gpu, &m_cuda, m_cuda_size, cudaMemcpyHostToDevice));
-	// Preparing p related data
-	p_cuda_t *p_cuda_gpu;
-	printf("p_cuda_size=%lu\n", p_cuda_size);
-	checkCUDA(cudaMalloc(&p_cuda_gpu, p_cuda_size));
-	checkCUDA(cudaMemcpy(p_cuda_gpu, p_cuda, p_cuda_size, cudaMemcpyHostToDevice));
-	// Preparing ig related data (cache related data)
-	ig_cuda_t *ig_cuda_gpu;
-	printf("ig_cuda_size=%lu\n", ig_cuda_size);
-	checkCUDA(cudaMalloc(&ig_cuda_gpu, ig_cuda_size));
-	checkCUDA(cudaMemcpy(ig_cuda_gpu, ig_cuda_ptr, ig_cuda_size, cudaMemcpyHostToDevice));
-	float *authentic_v_gpu;
-	checkCUDA(cudaMalloc(&authentic_v_gpu, sizeof(authentic_v_float)));
-	checkCUDA(cudaMemcpy(authentic_v_gpu, authentic_v_float, sizeof(authentic_v_float), cudaMemcpyHostToDevice));
-	// Preparing result data
-	output_type_cuda_t *results_gpu;
-	printf("results_size=%lu\n", thread * sizeof(output_type_cuda_t));
-	checkCUDA(cudaMalloc(&results_gpu, thread * sizeof(output_type_cuda_t)));
-
-	/* Add timing */
-	cudaEvent_t start,stop;
-	checkCUDA(cudaEventCreate(&start));
-	checkCUDA(cudaEventCreate(&stop));
-	checkCUDA(cudaEventRecord(start,NULL));
-
-	/* Launch kernel */
-	printf("launch kernel\n");
-	kernel<<<thread/256, 256>>>(m_cuda_gpu, ig_cuda_gpu, p_cuda_gpu, rand_molec_struc_gpu,
-		best_e_gpu, quasi_newton_par_max_steps, mutation_amplitude_float,
-		rand_maps_gpu, epsilon_fl_float, hunt_cap_gpu, authentic_v_gpu, results_gpu, 200, 1, thread);
-
-	checkCUDA(cudaDeviceSynchronize());
-
-	/* Timing output */
-
-	checkCUDA(cudaEventRecord(stop,NULL));
-	cudaEventSynchronize(stop);
-	float msecTotal = 0.0f;
-	cudaEventElapsedTime(&msecTotal, start, stop);
-	printf("Time spend on GPU is %f ms\n", msecTotal);
-	
-	/* Convert result data. Can be improved by mapping memory
-	*/
-	printf("cuda to vina\n");
-	output_type_cuda_t *results;
-	checkCUDA(cudaMallocHost(&results, thread * sizeof(output_type_cuda_t)));
-	checkCUDA(cudaMemcpy(results, results_gpu, thread * sizeof(output_type_cuda_t), cudaMemcpyDeviceToHost));
-	std::vector<output_type> result_vina = cuda_to_vina(results, thread);
-	
-	for (int i = 0; i < thread; ++i){
-		// printf("result_vina[%d]:\n%s", i, result_vina[i]);
-		add_to_output_container(out, result_vina[i], min_rmsd, num_saved_mins);
 	}
 	VINA_CHECK(!out.empty());
 	VINA_CHECK(out.front().e <= out.back().e); // make sure the sorting worked in the correct order
-	
-
-	/* Free memory */
-	checkCUDA(cudaFree(m_cuda_gpu));
-	checkCUDA(cudaFree(ig_cuda_gpu));
-	checkCUDA(cudaFree(p_cuda_gpu));
-	checkCUDA(cudaFree(rand_molec_struc_gpu));
-	checkCUDA(cudaFree(best_e_gpu));
-	checkCUDA(cudaFree(hunt_cap_gpu));
-	checkCUDA(cudaFree(authentic_v_gpu));
-	checkCUDA(cudaFree(results_gpu));
-	checkCUDA(cudaFreeHost(rand_maps));
-	for (int i = 0;i < thread; ++i)
-		checkCUDA(cudaFreeHost(rand_molec_struc_vec[i]));
-
-	printf("exit monte_carlo\n");
-
 }
+
 
 /* Above based on monte-carlo.cpp */
 

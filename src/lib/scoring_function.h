@@ -54,6 +54,7 @@ public:
                 m_atom_typing = atom_type::XS;
                 m_cutoff = 8.0;
                 m_max_cutoff = 8.0;
+                m_sf_choice = SF_VINA;
                 break;
             }
             case SF_VINARDO:
@@ -67,6 +68,7 @@ public:
                 m_atom_typing = atom_type::XS;
                 m_cutoff = 8.0;
                 m_max_cutoff = 8.0;
+                m_sf_choice = SF_VINARDO;
                 break;
             }
             case SF_AD42:
@@ -80,6 +82,7 @@ public:
                 m_atom_typing = atom_type::AD;
                 m_cutoff = 20.48;
                 m_max_cutoff = 20.48;
+                m_sf_choice = SF_AD42;
                 break;
             }
             default:
@@ -89,7 +92,6 @@ public:
                 break;
             }
         }
-
         m_num_potentials = m_potentials.size();
         m_num_conf_independents = m_conf_independents.size();
         m_weights = weights;
@@ -137,7 +139,6 @@ public:
     sz get_num_atom_types() const { return num_atom_types(m_atom_typing); }
     flv get_weights() const { return m_weights; }
 
-private:
     std::vector<Potential*> m_potentials;
     std::vector<ConfIndependent*> m_conf_independents;
     flv m_weights;
@@ -146,6 +147,7 @@ private:
     int m_num_potentials;
     int m_num_conf_independents;
     atom_type::t m_atom_typing;
+    int m_sf_choice; // 0:vina, 1:vinardo, 2:ad4
 };
 
 #endif

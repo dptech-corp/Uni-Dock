@@ -215,24 +215,68 @@ public:
         VINA_CHECK(m_max_cutoff_sqr * m_factor + 1 < m_n);
 
         flv rs = calculate_rs();
+        printf("calculate_rs(), size=%lu:", rs.size());
+        for (int i = 0;i < rs.size();++i){
+            printf("%f ", rs[i]);
+        }
+        printf("\n");
 
+        printf("data.dim=%lu, m_n=%lu, n_atoms=%lu\n", data.dim(), m_n, n_atoms);
         VINA_FOR(i, data.dim())
         {
             VINA_RANGE(j, i, data.dim())
             {
                 precalculate_element &p = data(i, j);
+                sz offset = i + j*(j+1)/2;
+                printf("i=%lu, j=%lu, offset=%lu\n", i, j, offset);
+                if (offset == 66){
+                    printf("the blank element:\n");
+                    printf("atom[i].xs=%lu, atom[j].xs=%lu\n", atoms[i].xs, atoms[j].xs);
+                }
                 // init smooth[].first
                 VINA_FOR_IN(k, p.smooth)
                 {
                     p.smooth[k].first = (std::min)(v, sf.eval(atoms[i], atoms[j], rs[k]));
                 }
-
+                if (offset == 66){
+                    printf("v=%f\n", v);
+                    printf("smooth[0].fisrt=%f\n", p.smooth[0].first);
+                }
                 // init the rest
                 p.init_from_smooth_fst(rs);
             }
         }
         m_data = data;
+
+        // // unittest printing, only check the first ligand in function
+        // printf("energies about the first ligand on CPU 1st time:\n");
+        // for (int i = 0;i < m_data.m_data.size(); ++i){
+        //     printf("precalculated_byatom.m_data.m_data[%d]: (smooth.first, smooth.second, fast) ", i);
+        //     for (int j = 0;j < 2051; ++j){
+        //         printf("(%f, %f, %f) ", m_data.m_data[i].smooth[j].first,
+        //         m_data.m_data[i].smooth[j].second, m_data.m_data[i].fast[j]);
+        //     }
+        //     printf("\n");
+        // }
     };
+    // leave m_data and rs to GPU, reinitialize m_dim
+    void init_without_calculation(const ScoringFunction &sf, const model &model, fl v=max_fl, fl factor=32){
+        // sf should not be discontinuous, even near cutoff, for the sake of the derivatives
+        m_factor = factor;
+        m_cutoff_sqr = sqr(sf.get_cutoff());
+        m_max_cutoff_sqr = sqr(sf.get_max_cutoff());
+        m_n = sz(m_factor * m_max_cutoff_sqr) + 3; // sz(factor * r^2) + 1 <= sz(factor * cutoff_sqr) + 2 <= n-1 < n  // see assert below
+        // std::cout << "-- DEBUG byatm -- sf.cutoff^2 in precalculate = " << m_cutoff_sqr << "\n" << factor << ' ' << m_n << "\n";
+        sz n_atoms = model.num_atoms();
+        triangular_matrix<precalculate_element> data(n_atoms, precalculate_element(m_n, m_factor));
+        m_data = data;
+
+        VINA_CHECK(m_factor > epsilon_fl);
+        VINA_CHECK(sz(m_max_cutoff_sqr * m_factor) + 1 < m_n); // cutoff_sqr * factor is the largest float we may end up converting into sz, then 1 can be added to the result
+        VINA_CHECK(m_max_cutoff_sqr * m_factor + 1 < m_n);
+        printf("init_without_calculation exiting successfullly\n");
+    }
+
     fl eval_fast(sz i, sz j, fl r2) const{
         assert(r2 <= m_max_cutoff_sqr);
         return m_data(i, j).eval_fast(r2);
@@ -258,7 +302,6 @@ public:
 
     // set public for GPU
     fl m_cutoff_sqr;
-private:
     flv calculate_rs() const{
         flv tmp(m_n, 0);
         VINA_FOR(i, m_n)
@@ -270,5 +313,10 @@ private:
 
 
 };
+
+void precalculate_parallel(std::vector<precalculate_byatom> & m_precalculated_byatom_gpu,
+        const ScoringFunction &m_scoring_function, std::vector<model> &m_model_gpu,
+        const flv & common_rs, const int thread);
+
 
 #endif

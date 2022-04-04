@@ -166,7 +166,6 @@ private:
 	precalculate m_precalculated_sf;
 	// gpu scoring function precalculated
 	std::vector<precalculate_byatom> m_precalculated_byatom_gpu;
-	std::vector<precalculate> m_precalculated_sf_gpu;
 
 	// maps
 	cache m_grid;

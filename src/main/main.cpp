@@ -448,40 +448,9 @@ Thank you!\n";
 				v.write_pose(out_name);
 				v.show_score(energies);
 			} else {
+				// search one ligand on cpu
 				v.global_search(exhaustiveness, num_modes, min_rmsd, max_evals);
 				v.write_poses(out_name, num_modes, energy_range);
-			}
-		} else if (vm.count("batch")) {
-			if (sf_name.compare("vina") == 0) {
-				if (vm.count("maps")) {
-					v.load_maps(maps);
-				} else {
-					// Will compute maps for all Vina atom types
-					v.compute_vina_maps(center_x, center_y, center_z, size_x, size_y, size_z, grid_spacing);
-
-					if (vm.count("write_maps"))
-						v.write_maps(out_maps);
-				}
-			}
-
-			VINA_RANGE(i, 0, batch_ligand_names.size()) {
-				v.set_ligand_from_file(batch_ligand_names[i]);
-
-				out_name = default_output(get_filename(batch_ligand_names[i]), out_dir);
-
-				if (randomize_only) {
-					v.randomize();
-					v.write_pose(out_name);
-				} else if (score_only) {
-					v.score();
-				} else if (local_only) {
-					v.optimize();
-					v.write_pose(out_name);
-				} else {
-					v.global_search(exhaustiveness, num_modes, min_rmsd, max_evals);
-					printf("global_search ends\n");
-					v.write_poses(out_name, num_modes, energy_range);
-				}
 			}
 		} else if (vm.count("gpu_batch")){
 			if (randomize_only || score_only || local_only ){
@@ -489,12 +458,12 @@ Thank you!\n";
 				return 0;
 			}
 			v.enable_gpu();
-			if (sf_name.compare("vina") == 0) {
+			if (sf_name.compare("vina") == 0 || sf_name.compare("vinardo") == 0) {
 				if (vm.count("maps")) {
 					v.load_maps(maps);
 				} else {
 					// Will compute maps for all Vina atom types
-					v.compute_vina_maps(center_x, center_y, center_z, size_x, size_y, size_z, grid_spacing);
+					v.compute_vina_maps(center_x, center_y, center_z, size_x, size_y, size_z, grid_spacing, force_even_voxels);
 
 					if (vm.count("write_maps"))
 						v.write_maps(out_maps);
