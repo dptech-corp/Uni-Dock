@@ -14,7 +14,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 
-   Author: Dr. Oleg Trott <ot14@columbia.edu>, 
+   Author: Dr. Oleg Trott <ot14@columbia.edu>,
 		   The Olson Lab,
 		   The Scripps Research Institute
 
@@ -23,6 +23,7 @@
 #include "vina.h"
 #include "scoring_function.h"
 #include "precalculate.h"
+#include "omp.h"
 
 
 void Vina::cite() {
@@ -199,19 +200,20 @@ void Vina::set_ligand_from_string_gpu(const std::vector<std::string>& ligand_str
 	m_precalculated_byatom_gpu.resize(ligand_string.size());
 
 	// Read ligand info
-	VINA_RANGE(i, 0, ligand_string.size()){
+	# pragma omp parallel for
+	for (int i = 0;i < ligand_string.size(); ++i){
 		m_model_gpu[i].append(parse_ligand_pdbqt_from_string(ligand_string[i], atom_typing));
 		m_precalculated_byatom_gpu[i].init_without_calculation(m_scoring_function, m_model_gpu[i]);
-	}	
-	
+	}
+
 	// calculate common rs data
 	flv common_rs = m_precalculated_byatom_gpu[0].calculate_rs();
 
 	// Because we precalculate ligand atoms interactions, which should be done in parallel
 	int precalculate_thread_num = ligand_string.size();
-	
+
 	precalculate_parallel(m_precalculated_byatom_gpu, m_scoring_function, m_model_gpu, common_rs, precalculate_thread_num);
-	
+
 	// // unittest printing, only check the first ligand
     // printf("energies about the first ligand on GPU in vina.cpp:\n");
     // for (int i = 0;i < 10; ++i){
@@ -752,7 +754,7 @@ void Vina::write_poses(const std::string& output_name, int how_many, double ener
 	}
 }
 
-/* 
+/*
  * Write poses of different ligands to different files, gpu mode
  */
 void Vina::write_poses_gpu(const std::vector<std::string> & gpu_output_name, int how_many, double energy_range) {
@@ -767,8 +769,8 @@ void Vina::write_poses_gpu(const std::vector<std::string> & gpu_output_name, int
 		} else {
 			std::cerr << "WARNING: Could not find any poses. No poses were written.\n";
 		}
-		
-	}	
+
+	}
 }
 
 void Vina::write_pose(const std::string& output_name, const std::string& remark) {
@@ -1082,7 +1084,7 @@ void Vina::global_search(const int exhaustiveness, const int n_poses, const doub
 	poses = remove_redundant(poses, min_rmsd);
 	printf("num_output_poses=%d\n", (int)poses.size());
 	printf("energy=%lf\n", poses[0].e);
-	
+
 	if (!poses.empty()) {
 		// For the Vina scoring function, we take the intramolecular energy from the best pose
 		// the order must not change because of non-decreasing g (see paper), but we'll re-sort in case g is non strictly increasing
@@ -1229,7 +1231,7 @@ void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const 
 	mc.threads_per_ligand = exhaustiveness;
 	mc.num_of_ligands = num_of_ligands;
 	mc.thread = exhaustiveness * num_of_ligands;
-	
+
 	// Docking search
 	sstm << "Performing docking (random seed: " << m_seed << ")";
 	doing(sstm.str(), m_verbosity, 0);
@@ -1249,7 +1251,7 @@ void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const 
 		poses = remove_redundant(poses_gpu[l], min_rmsd);
 		printf("num_output_poses=%d\n", (int)poses.size());
 		printf("energy=%lf\n", poses[0].e);
-		
+
 
 		if (!poses.empty()) {
 			printf("vina: poses not empty, poses.size()=%d\n", poses.size());
