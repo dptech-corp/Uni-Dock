@@ -214,17 +214,6 @@ void Vina::set_ligand_from_string_gpu(const std::vector<std::string>& ligand_str
 
 	precalculate_parallel(m_precalculated_byatom_gpu, m_scoring_function, m_model_gpu, common_rs, precalculate_thread_num);
 
-	// // unittest printing, only check the first ligand
-    // printf("energies about the first ligand on GPU in vina.cpp:\n");
-    // for (int i = 0;i < 10; ++i){
-    //     printf("precalculated_byatom.m_data.m_data[%d]: (smooth.first, smooth.second, fast) ", i);
-    //     for (int j = 0;j < 20; ++j){
-    //         printf("(%f, %f, %f) ", m_precalculated_byatom_gpu[0].m_data.m_data[i].smooth[j].first,
-    //         m_precalculated_byatom_gpu[0].m_data.m_data[i].smooth[j].second, m_precalculated_byatom_gpu[0].m_data.m_data[i].fast[j]);
-    //     }
-    //     printf("\n");
-    // }
-
 	VINA_RANGE(i, 0, ligand_string.size()){
 		// Check that all atom types are in the grid (if initialized)
 		if (m_map_initialized) {
@@ -1286,9 +1275,6 @@ void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const 
 					}
 				}
 
-				// m_model_gpu[l].show_pairs();
-				// m_model_gpu[l].show_forces();
-				// m_model_gpu[l].print_stuff(0,1,1,0,0);
 				if (m_no_refine || !m_receptor_initialized)
 					intramolecular_energy = m_model_gpu[l].eval_intramolecular(m_precalculated_byatom_gpu[l], m_grid, authentic_v);
 				else

@@ -215,32 +215,16 @@ public:
         VINA_CHECK(m_max_cutoff_sqr * m_factor + 1 < m_n);
 
         flv rs = calculate_rs();
-        printf("calculate_rs(), size=%lu:", rs.size());
-        for (int i = 0;i < rs.size();++i){
-            printf("%f ", rs[i]);
-        }
-        printf("\n");
 
-        printf("data.dim=%lu, m_n=%lu, n_atoms=%lu\n", data.dim(), m_n, n_atoms);
         VINA_FOR(i, data.dim())
         {
             VINA_RANGE(j, i, data.dim())
             {
                 precalculate_element &p = data(i, j);
-                sz offset = i + j*(j+1)/2;
-                printf("i=%lu, j=%lu, offset=%lu\n", i, j, offset);
-                if (offset == 66){
-                    printf("the blank element:\n");
-                    printf("atom[i].xs=%lu, atom[j].xs=%lu\n", atoms[i].xs, atoms[j].xs);
-                }
                 // init smooth[].first
                 VINA_FOR_IN(k, p.smooth)
                 {
                     p.smooth[k].first = (std::min)(v, sf.eval(atoms[i], atoms[j], rs[k]));
-                }
-                if (offset == 66){
-                    printf("v=%f\n", v);
-                    printf("smooth[0].fisrt=%f\n", p.smooth[0].first);
                 }
                 // init the rest
                 p.init_from_smooth_fst(rs);
@@ -248,16 +232,6 @@ public:
         }
         m_data = data;
 
-        // // unittest printing, only check the first ligand in function
-        // printf("energies about the first ligand on CPU 1st time:\n");
-        // for (int i = 0;i < m_data.m_data.size(); ++i){
-        //     printf("precalculated_byatom.m_data.m_data[%d]: (smooth.first, smooth.second, fast) ", i);
-        //     for (int j = 0;j < 2051; ++j){
-        //         printf("(%f, %f, %f) ", m_data.m_data[i].smooth[j].first,
-        //         m_data.m_data[i].smooth[j].second, m_data.m_data[i].fast[j]);
-        //     }
-        //     printf("\n");
-        // }
     };
     // leave m_data and rs to GPU, reinitialize m_dim
     void init_without_calculation(const ScoringFunction &sf, const model &model, fl v=max_fl, fl factor=32){

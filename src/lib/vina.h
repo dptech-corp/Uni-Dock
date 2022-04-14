@@ -146,7 +146,6 @@ public:
 					    const std::string& fld_filename="NULL", const std::string& receptor_filename="NULL");
 	void show_score(const std::vector<double> energies);
 
-private:
 	// model and poses
 	model m_receptor;
 	model m_model;
