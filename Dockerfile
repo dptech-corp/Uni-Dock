@@ -1,3 +1,5 @@
+# This docker image depends on nvidia-docker, see https://github.com/NVIDIA/nvidia-docker
+
 FROM nvidia/cuda:11.4.0-cudnn8-devel-ubuntu20.04
 
 COPY ./src /opt/vina_gpu/src/
@@ -17,14 +19,12 @@ RUN mkdir packages; \
     cd boost_1_77_0/; \
     ./bootstrap.sh; \
     ./b2; \
-    ./b2 install --prefix=/opt/lib/packages/boost1_77;
+    ./b2 install --prefix=/usr/local;
 
-ENV LD_LIBRARY_PATH /opt/lib/packages/boost1_77/lib/:$LD_LIBRARY_PATH
+ENV LD_LIBRARY_PATH /usr/local/lib/:$LD_LIBRARY_PATH
 
 ENV PATH /opt/vina_gpu/build/linux/release:$PATH
 
-RUN cd /opt/vina_gpu/
-
-
+RUN cd /opt/vina_gpu/build/linux/release; make clean; make -j 4
 
 ENTRYPOINT /bin/bash

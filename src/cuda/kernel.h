@@ -121,7 +121,7 @@ typedef struct {
 	m_coords_cuda_t m_coords;
 	m_minus_forces_t minus_forces;
 	ligand_cuda_t ligand;
-	int m_num_movable_atoms;
+	int m_num_movable_atoms; // will be -1 if ligand parsing failed
 } m_cuda_t;
 
 typedef struct {

@@ -46,6 +46,9 @@ std::pair<sz, fl> find_closest(const vecv& a, const output_container& b) {
 
 void add_to_output_container(output_container& out, const output_type& t, fl min_rmsd, sz max_size) {
 	// printf("entering add_to_output_container\n");
+	if (t.e < epsilon_fl && t.e > -epsilon_fl){ // the energy is precisely 0, error
+		return;
+	}
 	std::pair<sz, fl> closest_rmsd = find_closest(t.coords, out);
 	if(closest_rmsd.first < out.size() && closest_rmsd.second < min_rmsd) { // have a very similar one
 		if(t.e < out[closest_rmsd.first].e) { // the new one is better, apparently

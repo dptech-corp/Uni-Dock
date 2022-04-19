@@ -199,10 +199,10 @@ void Vina::set_ligand_from_string_gpu(const std::vector<std::string>& ligand_str
 	m_model_gpu.resize(ligand_string.size(), m_receptor);// Initialize current model with receptor and reinitialize poses
 	m_precalculated_byatom_gpu.resize(ligand_string.size());
 
-	// Read ligand info
+	// Read ligand info and delete broken input
 	# pragma omp parallel for
 	for (int i = 0;i < ligand_string.size(); ++i){
-		m_model_gpu[i].append(parse_ligand_pdbqt_from_string(ligand_string[i], atom_typing));
+		m_model_gpu[i].append(parse_ligand_pdbqt_from_string_no_failure(ligand_string[i], atom_typing));
 		m_precalculated_byatom_gpu[i].init_without_calculation(m_scoring_function, m_model_gpu[i]);
 	}
 
@@ -1069,9 +1069,9 @@ void Vina::global_search(const int exhaustiveness, const int n_poses, const doub
 	done(m_verbosity, 1);
 
 	// Docking post-processing and rescoring
-	printf("num_output_poses before remove=%d\n", poses.size());
+	printf("num_output_poses before remove=%lu\n", poses.size());
 	poses = remove_redundant(poses, min_rmsd);
-	printf("num_output_poses=%d\n", (int)poses.size());
+	printf("num_output_poses=%lu\n", poses.size());
 	printf("energy=%lf\n", poses[0].e);
 
 	if (!poses.empty()) {
@@ -1236,14 +1236,13 @@ void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const 
 	non_cache m_non_cache_tmp = m_non_cache;
 
 	for (int l = 0; l < num_of_ligands; ++l){ // TODO: parallel execution, rescoring for 40000+ ligands is costly
-		printf("num_output_poses before remove=%d\n", poses_gpu[l].size());
+		printf("num_output_poses before remove=%lu\n", poses_gpu[l].size());
 		poses = remove_redundant(poses_gpu[l], min_rmsd);
-		printf("num_output_poses=%d\n", (int)poses.size());
-		printf("energy=%lf\n", poses[0].e);
-
+		printf("num_output_poses=%lu\n", poses.size());
 
 		if (!poses.empty()) {
-			printf("vina: poses not empty, poses.size()=%d\n", poses.size());
+			printf("energy=%lf\n", poses[0].e);
+			printf("vina: poses not empty, poses.size()=%lu\n", poses.size());
 			// For the Vina scoring function, we take the intramolecular energy from the best pose
 			// the order must not change because of non-decreasing g (see paper), but we'll re-sort in case g is non strictly increasing
 			if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO) {
@@ -1252,8 +1251,6 @@ void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const 
 					change g(m_model_gpu[l].get_size());
 					quasi_newton quasi_newton_par;
 					const vec authentic_v(1000, 1000, 1000);
-					//std::vector<double> energies_before_opt;
-					//std::vector<double> energies_after_opt;
 					int evalcount = 0;
 					const fl slope = 1e6;
 					m_non_cache = m_non_cache_tmp;
@@ -1343,6 +1340,7 @@ void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const 
 		} else {
 			std::cerr << "WARNING: Could not find any conformations completely within the search space.\n";
 			std::cerr << "WARNING: Check that it is large enough for all movable atoms, including those in the flexible side chains.\n";
+			std::cerr << "WARNING: Or could not successfully parse PDBQT input file of ligand #" << l << std::endl;
 		}
 		// Store results in Vina object
 		m_poses_gpu[l] = poses;

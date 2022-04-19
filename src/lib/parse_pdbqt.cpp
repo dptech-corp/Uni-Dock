@@ -658,6 +658,28 @@ model parse_ligand_pdbqt_from_string(const std::string& string_name, atom_type::
     return tmp.m;
 }
 
+model parse_ligand_pdbqt_from_string_no_failure(const std::string& string_name, atom_type::t atype) { // can throw parse_error
+    non_rigid_parsed nrp;
+    context c;
+
+    try {
+        std::stringstream molstream(string_name);
+        parse_pdbqt_ligand(molstream, nrp, c);
+    }
+    catch(pdbqt_parse_error& e) {
+        printf("caught error\n");
+        std::cerr << e.what() << '\n';
+        model m;
+        assert(m.num_ligands() == 0);
+        return m; // return empty model as failure, ligand.size = 0
+    }
+
+    pdbqt_initializer tmp(atype);
+    tmp.initialize_from_nrp(nrp, c, true);
+    tmp.initialize(nrp.mobility_matrix());
+    return tmp.m;
+}
+
 model parse_receptor_pdbqt(const std::string& rigid_name, const std::string& flex_name, atom_type::t atype) { 
     // Parse PDBQT receptor with flex residues
     //if (rigid_name.empty() && flex_name.empty()) {
