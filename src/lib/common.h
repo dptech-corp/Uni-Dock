@@ -42,7 +42,7 @@
 
 #include "macros.h"
 
-typedef double fl;
+typedef float fl;
 
 template<typename T>
 T sqr(T x) {
@@ -196,6 +196,12 @@ struct internal_error {
 	#define VINA_CHECK(P) do { if(!(P)) throw internal_error(__FILE__, __LINE__); } while(false)
 #else
 	#define VINA_CHECK(P) assert(P)
+#endif
+
+#ifdef NDEBUG
+	#define VINA_CHECK_GPU(...)
+#else
+	#define VINA_CHECK_GPU(P) assert(P)
 #endif
 
 const fl pi = fl(3.1415926535897931);

@@ -469,10 +469,10 @@ Thank you!\n";
 						v.write_maps(out_maps);
 				}
 			}
-			v.set_ligand_from_file_gpu(gpu_batch_ligand_names);
 			VINA_RANGE(i, 0, gpu_batch_ligand_names.size()){
 				gpu_out_name.push_back(default_output(get_filename(gpu_batch_ligand_names[i]), out_dir));
 			}
+			v.set_ligand_from_file_gpu(gpu_batch_ligand_names);
 			v.global_search_gpu(exhaustiveness, num_modes, min_rmsd, max_evals, max_step, gpu_batch_ligand_names.size());
 			v.write_poses_gpu(gpu_out_name, num_modes, energy_range);
 		}

@@ -36,8 +36,8 @@
 #define SMOOTH_SIZE 2051
 #define MAX_CONTAINER_SIZE_EVERY_WI 5
 
-#define MAX_THREAD 524288 // modified for vina1.2, to calculate random map memory upper bound
-#define MAX_LIGAND_NUM 256 // modified for vina1.2, to calculate precalculate_byatom memory upper bound
+#define MAX_THREAD 41700000 // modified for vina1.2, to calculate random map memory upper bound
+#define MAX_LIGAND_NUM 10250 // modified for vina1.2, to calculate precalculate_byatom memory upper bound
 
 
 typedef struct {

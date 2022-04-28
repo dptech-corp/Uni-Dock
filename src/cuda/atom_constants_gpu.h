@@ -226,7 +226,7 @@ __device__ __forceinline__  sz ad_type_to_el_type_gpu(sz t) {
 		case AD_TYPE_G3   : return EL_TYPE_Dummy;
 		case AD_TYPE_W    : return EL_TYPE_Dummy;
 		case AD_TYPE_SIZE : return EL_TYPE_SIZE;
-		default: VINA_CHECK(false);
+		default: VINA_CHECK_GPU(false);
 	}
 	return EL_TYPE_SIZE; // to placate the compiler in case of warnings - it should never get here though
 }

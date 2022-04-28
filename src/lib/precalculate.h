@@ -25,7 +25,13 @@
 
 #include "scoring_function.h"
 #include "matrix.h"
+#include "kernel.h"
 
+#ifdef DEBUG
+    #define DEBUG_PRINTF printf
+#else
+    #define DEBUG_PRINTF(...) do {} while (0)
+#endif
 
 //Forward declaration
 struct model;
@@ -134,7 +140,7 @@ public:
         m_cutoff_sqr = sqr(sf.get_cutoff());
         m_max_cutoff_sqr = sqr(sf.get_max_cutoff());
         m_n = sz(m_factor * m_max_cutoff_sqr) + 3; // sz(factor * r^2) + 1 <= sz(factor * max_cutoff_sqr) + 2 <= n-1 < n  // see assert below
-        std::cout << "-- DEBUG precalculate -- sf.cutoff^2 in precalculate = " << m_max_cutoff_sqr << "\n" << factor << ' ' << m_n << "\n";
+        // std::cout << "-- DEBUG precalculate -- sf.cutoff^2 in precalculate = " << m_max_cutoff_sqr << "\n" << factor << ' ' << m_n << "\n";
         triangular_matrix<precalculate_element> data(num_atom_types(sf.get_atom_typing()), precalculate_element(m_n, m_factor));
 
         VINA_CHECK(m_factor > epsilon_fl);
@@ -248,7 +254,7 @@ public:
         VINA_CHECK(m_factor > epsilon_fl);
         VINA_CHECK(sz(m_max_cutoff_sqr * m_factor) + 1 < m_n); // cutoff_sqr * factor is the largest float we may end up converting into sz, then 1 can be added to the result
         VINA_CHECK(m_max_cutoff_sqr * m_factor + 1 < m_n);
-        printf("init_without_calculation exiting successfullly\n");
+        DEBUG_PRINTF("init_without_calculation exiting successfully\n");
     }
 
     fl eval_fast(sz i, sz j, fl r2) const{
@@ -288,7 +294,22 @@ public:
 
 };
 
-void precalculate_parallel(std::vector<precalculate_byatom> & m_precalculated_byatom_gpu,
+/* precalculate_byatm related start */
+
+typedef struct {
+    fl fast[FAST_SIZE];
+    fl smooth[SMOOTH_SIZE][2]; // smooth
+    fl factor;
+} precalculate_element_cuda_t;  // made consistent with p_m_data_cuda_t
+
+typedef struct {
+    precalculate_element_cuda_t *p_data; // make triangular_matrix_cuda_t array easier
+} triangular_matrix_cuda_t;
+
+
+/* precalculate_byatm related end */
+
+void precalculate_parallel(triangular_matrix_cuda_t *m_data_list_cpu, std::vector<precalculate_byatom> & m_precalculated_byatom_gpu,
         const ScoringFunction &m_scoring_function, std::vector<model> &m_model_gpu,
         const flv & common_rs, const int thread);
 

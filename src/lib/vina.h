@@ -54,6 +54,11 @@
 #include "scoring_function.h"
 #include "precalculate.h"
 
+#ifdef DEBUG
+    #define DEBUG_PRINTF printf
+#else
+    #define DEBUG_PRINTF(...) do {} while (0)
+#endif
 
 class Vina {
 public:
@@ -82,7 +87,6 @@ public:
 		} else {
 			m_cpu = cpu;
 		}
-		printf("m_cpu=%d\n", m_cpu); //debug
 
 		if (sf_name.compare("vina") == 0) {
 			m_sf_choice = SF_VINA;
@@ -165,6 +169,7 @@ public:
 	precalculate m_precalculated_sf;
 	// gpu scoring function precalculated
 	std::vector<precalculate_byatom> m_precalculated_byatom_gpu;
+	triangular_matrix_cuda_t m_data_list_gpu[MAX_LIGAND_NUM]; // the pointer to precalculated output on GPU
 
 	// maps
 	cache m_grid;

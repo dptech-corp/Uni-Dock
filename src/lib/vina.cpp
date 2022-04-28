@@ -212,7 +212,7 @@ void Vina::set_ligand_from_string_gpu(const std::vector<std::string>& ligand_str
 	// Because we precalculate ligand atoms interactions, which should be done in parallel
 	int precalculate_thread_num = ligand_string.size();
 
-	precalculate_parallel(m_precalculated_byatom_gpu, m_scoring_function, m_model_gpu, common_rs, precalculate_thread_num);
+	precalculate_parallel(m_data_list_gpu, m_precalculated_byatom_gpu, m_scoring_function, m_model_gpu, common_rs, precalculate_thread_num);
 
 	VINA_RANGE(i, 0, ligand_string.size()){
 		// Check that all atom types are in the grid (if initialized)
@@ -725,7 +725,7 @@ std::string Vina::get_poses_gpu(int ligand_id, int how_many, double energy_range
 	} else {
 		std::cerr << "WARNING: Could not find any poses. No poses were written.\n";
 	}
-	// printf("out poses: %s\n", out.str());
+	// DEBUG_PRINTF("out poses: %s\n", out.str());
 
 	return out.str();
 }
@@ -1069,10 +1069,10 @@ void Vina::global_search(const int exhaustiveness, const int n_poses, const doub
 	done(m_verbosity, 1);
 
 	// Docking post-processing and rescoring
-	printf("num_output_poses before remove=%lu\n", poses.size());
+	DEBUG_PRINTF("num_output_poses before remove=%lu\n", poses.size());
 	poses = remove_redundant(poses, min_rmsd);
-	printf("num_output_poses=%lu\n", poses.size());
-	printf("energy=%lf\n", poses[0].e);
+	DEBUG_PRINTF("num_output_poses=%lu\n", poses.size());
+	DEBUG_PRINTF("energy=%lf\n", poses[0].e);
 
 	if (!poses.empty()) {
 		// For the Vina scoring function, we take the intramolecular energy from the best pose
@@ -1208,11 +1208,11 @@ void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const 
 		mc.local_steps = unsigned((25 + m_model_gpu[i].num_movable_atoms()) / 3);
 	}
 	mc.global_steps = unsigned(70 * 3 * (50 + heuristic) / 2); // 2 * 70 -> 8 * 20 // FIXME
-	// printf("mc.global_steps = %u, max_step = %d, ��unsigned)max_step=%u\n", mc.global_steps, max_step, (unsigned)max_step);
+	// DEBUG_PRINTF("mc.global_steps = %u, max_step = %d, ��unsigned)max_step=%u\n", mc.global_steps, max_step, (unsigned)max_step);
 	if (max_step > 0 && mc.global_steps > (unsigned)max_step){
 		mc.global_steps = (unsigned)max_step;
 	}
-	// printf("final mc.global_steps = %u\n", mc.global_steps);
+	// DEBUG_PRINTF("final mc.global_steps = %u\n", mc.global_steps);
 	mc.max_evals = max_evals;
 	mc.min_rmsd = min_rmsd;
 	mc.num_saved_mins = n_poses;
@@ -1225,9 +1225,9 @@ void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const 
 	sstm << "Performing docking (random seed: " << m_seed << ")";
 	doing(sstm.str(), m_verbosity, 0);
 	if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO) {
-		mc(m_model_gpu, poses_gpu, m_precalculated_byatom_gpu,    m_grid, m_grid.corner1(), m_grid.corner2(), generator);
+		mc(m_model_gpu, poses_gpu, m_precalculated_byatom_gpu, m_data_list_gpu,    m_grid, m_grid.corner1(), m_grid.corner2(), generator, m_verbosity);
 	} else {
-		mc(m_model_gpu, poses_gpu, m_precalculated_byatom_gpu, m_ad4grid, m_ad4grid.corner1(), m_ad4grid.corner2(), generator);
+		mc(m_model_gpu, poses_gpu, m_precalculated_byatom_gpu, m_data_list_gpu, m_ad4grid, m_ad4grid.corner1(), m_ad4grid.corner2(), generator, m_verbosity);
 	}
 	done(m_verbosity, 1);
 
@@ -1236,13 +1236,13 @@ void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const 
 	non_cache m_non_cache_tmp = m_non_cache;
 
 	for (int l = 0; l < num_of_ligands; ++l){ // TODO: parallel execution, rescoring for 40000+ ligands is costly
-		printf("num_output_poses before remove=%lu\n", poses_gpu[l].size());
+		DEBUG_PRINTF("num_output_poses before remove=%lu\n", poses_gpu[l].size());
 		poses = remove_redundant(poses_gpu[l], min_rmsd);
-		printf("num_output_poses=%lu\n", poses.size());
+		DEBUG_PRINTF("num_output_poses=%lu\n", poses.size());
 
 		if (!poses.empty()) {
-			printf("energy=%lf\n", poses[0].e);
-			printf("vina: poses not empty, poses.size()=%lu\n", poses.size());
+			DEBUG_PRINTF("energy=%lf\n", poses[0].e);
+			DEBUG_PRINTF("vina: poses not empty, poses.size()=%lu\n", poses.size());
 			// For the Vina scoring function, we take the intramolecular energy from the best pose
 			// the order must not change because of non-decreasing g (see paper), but we'll re-sort in case g is non strictly increasing
 			if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO) {
@@ -1257,7 +1257,7 @@ void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const 
 					m_non_cache.slope = slope;
 					quasi_newton_par.max_steps = unsigned((25 + m_model_gpu[l].num_movable_atoms()) / 3);
 					VINA_FOR_IN(i, poses){
-						// printf("poses i score=%lf\n", poses[i].e);
+						// DEBUG_PRINTF("poses i score=%lf\n", poses[i].e);
 						const fl slope_orig = m_non_cache.slope;
 						VINA_FOR(p, 5){
 							m_non_cache.slope = 100 * std::pow(10.0, 2.0*p);
@@ -1287,9 +1287,9 @@ void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const 
 				// For AD42 intramolecular_energy is equal to 0
 				m_model = m_model_gpu[l]; // Vina::score() will use m_model and m_precalculated_byatom
 				m_precalculated_byatom = m_precalculated_byatom_gpu[l];
-				// printf("intramolecular_energy=%f\n", intramolecular_energy);
+				// DEBUG_PRINTF("intramolecular_energy=%f\n", intramolecular_energy);
 				std::vector<double> energies = score(intramolecular_energy);
-				// printf("energies.size()=%d\n", energies.size());
+				// DEBUG_PRINTF("energies.size()=%d\n", energies.size());
 				// Store energy components in current pose
 				poses[i].e = energies[0]; // specific to each scoring function
 				poses[i].inter = energies[1] + energies[2];

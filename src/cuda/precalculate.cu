@@ -7,6 +7,12 @@
 #include "precalculate.h"
 #include "precalculate_gpu.h"
 
+#ifdef DEBUG
+    #define DEBUG_PRINTF printf
+#else
+    #define DEBUG_PRINTF(...) do {} while (0)
+#endif
+
 __host__
 void checkCUDA_(cudaError_t ret){
 	if (ret != cudaSuccess){
@@ -17,29 +23,30 @@ void checkCUDA_(cudaError_t ret){
 // TODO: define kernel here
 __global__ 
 void precalculate_gpu(triangular_matrix_cuda_t *m_data_gpu_list, scoring_function_cuda_t *sf_gpu,
-    sz *atom_xs_gpu, sz *atom_ad_gpu, fl *atom_charge_gpu, int *atom_num_gpu, fl factor, fl *common_rs_gpu, fl max_fl, int thread){
+    sz *atom_xs_gpu, sz *atom_ad_gpu, fl *atom_charge_gpu, int *atom_num_gpu, fl factor, fl *common_rs_gpu, fl max_fl, int thread, int max_atom_num){
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx >= thread){
         return;
     }
-    // printf("idx=%d\n", idx);
+    // DEBUG_PRINTF("idx=%d\n", idx);
     // move to correct atom offset
-    // atom_xs_gpu += idx * MAX_NUM_OF_ATOMS;
-    // atom_ad_gpu += idx * MAX_NUM_OF_ATOMS;
-    // atom_charge_gpu += idx * MAX_NUM_OF_ATOMS;
+    atom_xs_gpu += idx * max_atom_num;
+    atom_ad_gpu += idx * max_atom_num;
+    atom_charge_gpu += idx * max_atom_num;
     int atom_num = atom_num_gpu[idx];
-    // printf("atom_num=%d\n", atom_num);
+    // DEBUG_PRINTF("atom_num=%d\n", atom_num);
     precalculate_element_cuda_t *p_data_gpu = m_data_gpu_list[idx].p_data;
 
     // // debug
     // for (int i = 0;i < atom_num;++i){
-    //     printf("atom[%d] on gpu: xs=%lu\n", i, atom_xs_gpu[i]);
+    //     DEBUG_PRINTF("atom[%d] on gpu: xs=%lu\n", i, atom_xs_gpu[i]);
     // }
 
     for (int i = 0;i < atom_num; ++i){
         for (int j = i;j < atom_num; ++j){
             int offset = i + j*(j+1)/2; // copied from "triangular_matrix_index.h"
             int n = SMOOTH_SIZE;
+            p_data_gpu[offset].factor = 32.0;
             switch (sf_gpu->m_sf_choice){
                 case SF_VINA:
                 {
@@ -53,7 +60,7 @@ void precalculate_gpu(triangular_matrix_cuda_t *m_data_gpu_list, scoring_functio
                         sum += sf_gpu->m_weights[4] * vina_non_dir_h_bond_cuda_eval(atom_xs_gpu[i], atom_xs_gpu[j], common_rs_gpu[k], sf_gpu->vina_non_dir_h_bond_good, sf_gpu->vina_non_dir_h_bond_bad, sf_gpu->vina_non_dir_h_bond_cutoff);
                         sum += sf_gpu->m_weights[5] * linearattraction_eval(atom_xs_gpu[i], atom_xs_gpu[j], common_rs_gpu[k], sf_gpu->linearattraction_cutoff);
                         p_data_gpu[offset].smooth[k][0] = sum;
-                        // printf("i=%d, j=%d, k=%d, sum=%f\n", i, j, k, sum);
+                        // DEBUG_PRINTF("i=%d, j=%d, k=%d, sum=%f\n", i, j, k, sum);
                     }
                     break;
                 }
@@ -68,7 +75,7 @@ void precalculate_gpu(triangular_matrix_cuda_t *m_data_gpu_list, scoring_functio
                         sum += sf_gpu->m_weights[3] * vinardo_non_dir_h_bond_eval(atom_xs_gpu[i], atom_xs_gpu[j], common_rs_gpu[k], sf_gpu->vinardo_non_dir_h_bond_good, sf_gpu->vinardo_non_dir_h_bond_bad, sf_gpu->vinardo_non_dir_h_bond_cutoff);
                         sum += sf_gpu->m_weights[4] * linearattraction_eval(atom_xs_gpu[i], atom_xs_gpu[j], common_rs_gpu[k], sf_gpu->linearattraction_cutoff);
                         p_data_gpu[offset].smooth[k][0] = sum;
-                        // printf("i=%d, j=%d, k=%d, sum=%f\n", i, j, k, sum);
+                        // DEBUG_PRINTF("i=%d, j=%d, k=%d, sum=%f\n", i, j, k, sum);
                     }
                     break;
                 }
@@ -84,7 +91,7 @@ void precalculate_gpu(triangular_matrix_cuda_t *m_data_gpu_list, scoring_functio
                                  atom_xs_gpu[j], atom_charge_gpu[j], sf_gpu->ad4_solvation_desolvation_sigma, sf_gpu->ad4_solvation_solvation_q, sf_gpu->ad4_solvation_charge_dependent, sf_gpu->ad4_solvation_cutoff, common_rs_gpu[k]);
                         sum += sf_gpu->m_weights[4] * linearattraction_eval(atom_xs_gpu[i], atom_xs_gpu[j], common_rs_gpu[k], sf_gpu->linearattraction_cutoff);
                         p_data_gpu[offset].smooth[k][0] = sum;
-                        // printf("i=%d, j=%d, k=%d, sum=%f\n", i, j, k, sum);
+                        // DEBUG_PRINTF("i=%d, j=%d, k=%d, sum=%f\n", i, j, k, sum);
                     }
                     break;
                 }
@@ -102,13 +109,13 @@ void precalculate_gpu(triangular_matrix_cuda_t *m_data_gpu_list, scoring_functio
                     fl r = common_rs_gpu[k];
                     dor = (p_data_gpu[offset].smooth[k+1][0] - p_data_gpu[offset].smooth[k-1][0]) / (delta * r);
                 }                
-                // printf("i=%d, j=%d, k=%d, dor=%f", i, j, k, dor);
+                // DEBUG_PRINTF("i=%d, j=%d, k=%d, dor=%f", i, j, k, dor);
 
                 p_data_gpu[offset].smooth[k][1] = dor;
                 fl f1 = p_data_gpu[offset].smooth[k][0];
                 fl f2 = (k+1 >= n) ? 0 : p_data_gpu[offset].smooth[k+1][0];
                 p_data_gpu[offset].fast[k] = (f2 + f1) / 2;
-                // printf("fast=%f\n", p_data_gpu[offset].fast[k]);
+                // DEBUG_PRINTF("fast=%f\n", p_data_gpu[offset].fast[k]);
             }
         }
     }
@@ -116,7 +123,7 @@ void precalculate_gpu(triangular_matrix_cuda_t *m_data_gpu_list, scoring_functio
 
 }
 
-void precalculate_parallel(std::vector<precalculate_byatom> & m_precalculated_byatom_gpu, 
+void precalculate_parallel(triangular_matrix_cuda_t *m_data_list_cpu, std::vector<precalculate_byatom> & m_precalculated_byatom_gpu, 
     const ScoringFunction &m_scoring_function, std::vector<model> &m_model_gpu, 
     const flv & common_rs, int thread){
 
@@ -126,7 +133,7 @@ void precalculate_parallel(std::vector<precalculate_byatom> & m_precalculated_by
         if ((int)m_model_gpu[i].num_atoms() > max_atom_num)
             max_atom_num = (int)m_model_gpu[i].num_atoms();
     }
-    printf("max_atom_num = %d\n", max_atom_num);
+    DEBUG_PRINTF("max_atom_num = %d\n", max_atom_num);
 
     // copy atomv from m_model_gpu array and put into atom array
 
@@ -153,7 +160,7 @@ void precalculate_parallel(std::vector<precalculate_byatom> & m_precalculated_by
         precalculate_matrix_size[i] = atom_num[i] * (atom_num[i] + 1) / 2;
         for (int j = 0; j < atoms.size(); ++j){
             atom_xs[i * max_atom_num + j] = atoms[j].xs;
-            // printf("atom[%d] on CPU: xs=%lu %lu\n", j, atoms[j].xs, atom_xs[i * max_atom_num + j]);
+            // DEBUG_PRINTF("atom[%d] on CPU: xs=%lu %lu\n", j, atoms[j].xs, atom_xs[i * max_atom_num + j]);
             atom_ad[i * max_atom_num + j] = atoms[j].ad;
             atom_charge[i * max_atom_num + j] = atoms[j].charge;
         }
@@ -164,7 +171,7 @@ void precalculate_parallel(std::vector<precalculate_byatom> & m_precalculated_by
     // sz atom_xs_check[max_atom_num];
     // checkCUDA_(cudaMemcpy(atom_xs_check, atom_xs_gpu, max_atom_num * sizeof(sz), cudaMemcpyDeviceToHost));
     // for (int i = 0;i < max_atom_num;++i){
-    //     printf("atom[%d] on gpu check: xs=%lu\n", i, atom_xs_check[i]);
+    //     DEBUG_PRINTF("atom[%d] on gpu check: xs=%lu\n", i, atom_xs_check[i]);
     // }
     checkCUDA_(cudaMemcpy(atom_ad_gpu, atom_ad, thread * max_atom_num * sizeof(sz), cudaMemcpyHostToDevice));
     checkCUDA_(cudaMemcpy(atom_charge_gpu, atom_charge, thread * max_atom_num * sizeof(fl), cudaMemcpyHostToDevice));
@@ -255,38 +262,25 @@ void precalculate_parallel(std::vector<precalculate_byatom> & m_precalculated_by
 
     
     // TODO: launch kernel
-    printf("launch kernel precalculate_gpu, thread=%d\n", thread);
+    DEBUG_PRINTF("launch kernel precalculate_gpu, thread=%d\n", thread);
     precalculate_gpu<<<thread / 4 + 1, 4>>>(m_data_gpu_list, scoring_cuda_gpu, atom_xs_gpu, atom_ad_gpu, atom_charge_gpu, atom_num_gpu,
-         32, common_rs_gpu, max_fl, thread);
+         32, common_rs_gpu, max_fl, thread, max_atom_num);
 
 	checkCUDA_(cudaDeviceSynchronize());
 
-    printf("kernel exited\n");
-
-    // TODO: copy back data to m_precalculated_byatom_gpu
-    precalculate_element_cuda_t *p_data;
-    checkCUDA_(cudaMallocHost(&p_data, sizeof(precalculate_element_cuda_t) * MAX_P_DATA_M_DATA_SIZE));
+    DEBUG_PRINTF("kernel exited\n");
     
-    for (int l = 0;l < thread; ++l){
-        // copy data to m_data on CPU, then to m_precalculated_byatom_gpu[l]
-        checkCUDA_(cudaMemcpy(p_data, m_data_cpu_list[l].p_data, sizeof(precalculate_element_cuda_t) * precalculate_matrix_size[l], cudaMemcpyDeviceToHost));
-        checkCUDA_(cudaFree(m_data_cpu_list[l].p_data)); // free GPU data
-        int pnum = precalculate_matrix_size[l];
-        for (int i = 0;i < pnum; ++i){
-            memcpy(&m_precalculated_byatom_gpu[l].m_data.m_data[i].fast[0], p_data[i].fast, sizeof(p_data[i].fast));
-            memcpy(&m_precalculated_byatom_gpu[l].m_data.m_data[i].smooth[0], p_data[i].smooth, sizeof(p_data[i].smooth));
-        }
-    }
+    memcpy(m_data_list_cpu, m_data_cpu_list, sizeof(m_data_cpu_list));
 
     // // debug printing, only check the first ligand
-    // printf("energies about the first ligand on GPU:\n");
+    // DEBUG_PRINTF("energies about the first ligand on GPU:\n");
     // for (int i = 0;i < precalculate_matrix_size[0]; ++i){
-    //     printf("precalculated_byatom.m_data.m_data[%d]: (smooth.first, smooth.second, fast) ", i);
+    //     DEBUG_PRINTF("precalculated_byatom.m_data.m_data[%d]: (smooth.first, smooth.second, fast) ", i);
     //     for (int j = 0;j < FAST_SIZE; ++j){
-    //         printf("(%f, %f, %f) ", m_precalculated_byatom_gpu[0].m_data.m_data[i].smooth[j].first,
+    //         DEBUG_PRINTF("(%f, %f, %f) ", m_precalculated_byatom_gpu[0].m_data.m_data[i].smooth[j].first,
     //         m_precalculated_byatom_gpu[0].m_data.m_data[i].smooth[j].second, m_precalculated_byatom_gpu[0].m_data.m_data[i].fast[j]);
     //     }
-    //     printf("\n");
+    //     DEBUG_PRINTF("\n");
     // }
      
 
@@ -298,6 +292,5 @@ void precalculate_parallel(std::vector<precalculate_byatom> & m_precalculated_by
     checkCUDA_(cudaFree(scoring_cuda_gpu));
     checkCUDA_(cudaFree(common_rs_gpu));
     checkCUDA_(cudaFree(m_data_gpu_list));
-    checkCUDA_(cudaFreeHost(p_data));
 
 }

@@ -71,25 +71,25 @@ __device__ __forceinline__ fl smoothen_gpu(fl r, fl rij, fl smoothing) {
 
 __device__ __forceinline__ fl ad4_hb_eps_gpu(sz a) {
     if (a < AD_TYPE_SIZE) return ad_type_property_gpu(a).hb_depth;
-    VINA_CHECK(false);
+    VINA_CHECK_GPU(false);
     return 0; // placating the compiler
 }
 
 __device__ __forceinline__ fl ad4_hb_radius_gpu(sz t) {
     if (t < AD_TYPE_SIZE) return ad_type_property_gpu(t).hb_radius;
-    VINA_CHECK(false);
+    VINA_CHECK_GPU(false);
     return 0; // placating the compiler
 }
 
 __device__ __forceinline__ fl ad4_vdw_eps_gpu(sz a) {
     if(a < AD_TYPE_SIZE) return ad_type_property_gpu(a).depth;
-    VINA_CHECK(false);
+    VINA_CHECK_GPU(false);
     return 0; // placating the compiler
 }
 
 __device__ __forceinline__ fl ad4_vdw_radius_gpu(sz t) {
     if(t < AD_TYPE_SIZE) return ad_type_property_gpu(t).radius;
-    VINA_CHECK(false);
+    VINA_CHECK_GPU(false);
     return 0; // placating the compiler
 }
 
@@ -224,7 +224,7 @@ __device__ __forceinline__ fl volume_gpu(sz a_ad, sz a_xs){
         return ad_type_property_gpu(a_ad).volume;
     else if (a_xs < XS_TYPE_SIZE)
         return 4.0 * pi / 3.0 * pow(xs_radius_gpu(a_xs), 3);
-    VINA_CHECK(false);
+    VINA_CHECK_GPU(false);
     return 0.0; // placating the compiler
 };
 
@@ -234,7 +234,7 @@ __device__ __forceinline__ fl solvation_parameter_gpu(sz a_ad, sz a_xs){
         return ad_type_property_gpu(a_ad).solvation;
     else if (a_xs == XS_TYPE_Met_D)
         return metal_solvation_parameter_gpu;
-    VINA_CHECK(false);
+    VINA_CHECK_GPU(false);
     return 0.0; // placating the compiler
 };
 
@@ -249,8 +249,8 @@ __device__ __forceinline__ fl ad4_solvation_eval_gpu(fl a_ad, fl a_xs, fl a_char
         return 0.0;
     fl q1 = a_charge;
     fl q2 = b_charge;
-    VINA_CHECK(not_max_gpu(q1));
-    VINA_CHECK(not_max_gpu(q2));
+    VINA_CHECK_GPU(not_max_gpu(q1));
+    VINA_CHECK_GPU(not_max_gpu(q2));
     fl solv1 = solvation_parameter_gpu(a_ad, a_xs);
     fl solv2 = solvation_parameter_gpu(b_ad, b_xs);
     fl volume1 = volume_gpu(a_ad, a_xs);
@@ -258,7 +258,7 @@ __device__ __forceinline__ fl ad4_solvation_eval_gpu(fl a_ad, fl a_xs, fl a_char
     fl my_solv = charge_dependent ? solvation_q : 0;
     fl tmp = ((solv1 + my_solv * std::abs(q1)) * volume2 + 
                 (solv2 + my_solv * std::abs(q2)) * volume1) * std::exp(-0.5 * sqr(r / desolvation_sigma));
-    VINA_CHECK(not_max_gpu(tmp));
+    VINA_CHECK_GPU(not_max_gpu(tmp));
     return tmp;
 };
 
@@ -280,7 +280,7 @@ __device__ __forceinline__  fl ad4_vdw_eval(sz a_ad, sz b_ad, fl r, fl smoothing
         return min(cap, c_12 / r12 - c_6 / r6);
     else
         return cap;
-    VINA_CHECK(false);
+    VINA_CHECK_GPU(false);
     return 0.0; // placating the compiler
 };
 
@@ -303,7 +303,7 @@ __device__ __forceinline__  fl ad4_hb_eval(sz a_ad, sz b_ad, fl r, fl smoothing,
         return min(cap, c_12 / r12 - c_10 / r10);
     else
         return cap;
-    VINA_CHECK(false);
+    VINA_CHECK_GPU(false);
     return 0.0; // placating the compiler
 };
 
@@ -347,18 +347,3 @@ typedef struct {
 } scoring_function_cuda_t;
 
 /* scoring function related end */
-
-/* precalculate_byatm related start */
-
-typedef struct {
-    fl smooth[SMOOTH_SIZE][2]; // smooth
-    // factor == 32, omitted
-    fl fast[FAST_SIZE];
-} precalculate_element_cuda_t;
-
-typedef struct {
-    precalculate_element_cuda_t *p_data;
-} triangular_matrix_cuda_t;
-
-
-/* precalculate_byatm related end */

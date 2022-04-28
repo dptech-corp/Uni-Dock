@@ -367,7 +367,7 @@ public:
         if (r < epsilon_fl)
             return q1q2 * cap / diel;
         else {
-            return q1q2 * (std::min)(cap, 1.0 / (r * diel));
+            return q1q2 * (std::min)(cap, (fl)1.0 / (r * diel));
         }
     };
     fl eval(sz t1, sz t2, fl r) { return 0; }
