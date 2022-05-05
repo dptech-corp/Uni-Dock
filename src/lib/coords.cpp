@@ -23,10 +23,6 @@
 #include "coords.h"
 
 fl rmsd_upper_bound(const vecv& a, const vecv& b) {
-	if (a.size() != b.size()){
-		printf("a.size()=%d, b.size()=%d\n", a.size(), b.size());
-		printf("err\n");
-	}
 	VINA_CHECK(a.size() == b.size());
 	fl acc = 0;
 	VINA_FOR_IN(i, a) 
@@ -46,6 +42,10 @@ std::pair<sz, fl> find_closest(const vecv& a, const output_container& b) {
 
 void add_to_output_container(output_container& out, const output_type& t, fl min_rmsd, sz max_size) {
 	// printf("entering add_to_output_container\n");
+	if (out.size() > 0 && t.coords.size() != out[0].coords.size()){
+		printf("WARNING: in add_to_output_container, adding the %luth ligand\nt.coords.size()=%lu, out[0].coords.size()=%lu\n", out.size(), t.coords.size(), out[0].coords.size());
+		return;
+	}
 	if (t.e < epsilon_fl && t.e > -epsilon_fl){ // the energy is precisely 0, error
 		return;
 	}
