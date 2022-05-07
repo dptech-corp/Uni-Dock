@@ -699,20 +699,19 @@ void p_eval_deriv(						float*		out,
 					const				float		epsilon_fl
 ) {
 	const float cutoff_sqr = p_cuda_gpu->m_cutoff_sqr;
-	if(r2 > cutoff_sqr) DEBUG_PRINTF("\nkernel2: p_eval_deriv() ERROR!");
+	if(r2 > cutoff_sqr) DEBUG_PRINTF("\nkernel2: p_eval_deriv() ERROR!, r2 > Cutoff_sqr, r2=%f, cutoff_sqr=%f", r2, cutoff_sqr);
 
 	p_m_data_cuda_t* tmp = &p_cuda_gpu->m_data[type_pair_index];
 	float r2_factored = tmp->factor * r2;
-	if (r2_factored + 1 >= SMOOTH_SIZE) DEBUG_PRINTF("\nkernel2: p_eval_deriv() ERROR!");
 	int i1 = (int)(r2_factored);
 	int i2 = i1 + 1;
-	if (i1 >= SMOOTH_SIZE || i1 < 0)DEBUG_PRINTF("\n kernel2: p_eval_deriv() ERROR!");
-	if (i2 >= SMOOTH_SIZE || i2 < 0)DEBUG_PRINTF("\n : p_eval_deriv() ERROR!");
 	float rem = r2_factored - i1;
 	if (rem < -epsilon_fl)DEBUG_PRINTF("\nkernel2: p_eval_deriv() ERROR!");
 	if (rem >= 1 + epsilon_fl)DEBUG_PRINTF("\nkernel2: p_eval_deriv() ERROR!");
 	float p1[2] = { tmp->smooth[i1][0], tmp->smooth[i1][1] };
+	if (i1 >= SMOOTH_SIZE) p1[0] = p1[1] = 0;
 	float p2[2] = { tmp->smooth[i2][0], tmp->smooth[i2][1] };
+	if (i2 >= SMOOTH_SIZE) p2[0] = p2[1] = 0;
 	float e = p1[0] + rem * (p2[0] - p1[0]);
 	float dor = p1[1] + rem * (p2[1] - p1[1]);
 	out[0] = e;

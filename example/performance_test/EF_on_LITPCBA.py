@@ -1,5 +1,7 @@
 import os
+import sys
 import json
+import tempfile
 import multiprocessing as mlp
 import logging
 from tqdm import tqdm
@@ -8,6 +10,9 @@ import traceback
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
+
+sys.path.append(os.path.dirname(__file__))
+from ad4_utils import AD4Mapper
 
 logging.basicConfig(
     level=logging.WARNING,
@@ -77,27 +82,55 @@ class PT_EF:
         if target_list is None:
             target_list = self.filedict.keys()
         cmdlist = []
+
         for target in target_list:
+            if self.scoring_fn == "ad4":
+                mapdir = tempfile.mkdtemp()
+                admapper = AD4Mapper(center=[self.config[target]["pocket"]["center_x"], 
+                    self.config[target]["pocket"]["center_y"], 
+                    self.config[target]["pocket"]["center_z"]], 
+                    box_size=[self.config[target]["pocket"]["size_x"], 
+                    self.config[target]["pocket"]["size_y"], 
+                    self.config[target]["pocket"]["size_z"]], spacing=0.25) #spacing
+                admapper.generate_ad4_map(os.path.join(self.db_path, self.config[target]["protein"]), [t[0] for t in self.filedict[target]], mapdir)
             # run dock for active
             for indata, outdata, oriidx in self.filedict[target]:
+                if self.scoring_fn == "ad4":
+                    cmd = "vina --maps {} --ligand {} --scoring {} \
+                            --center_x {} --center_y {} --center_z {} \
+                            --size_x {} --size_y {} --size_z {} \
+                            --seed 181129 --exhaustiveness {} --cpu 1 \
+                            --num_modes 1 --out {} --verbosity 0".format(
+                                    os.path.join(mapdir, os.path.splitext(os.path.basename(self.config[target]["protein"]))[0]),
+                                    indata, self.scoring_fn, 
+                                    self.config[target]["pocket"]["center_x"],
+                                    self.config[target]["pocket"]["center_y"],
+                                    self.config[target]["pocket"]["center_z"],
+                                    self.config[target]["pocket"]["size_x"],
+                                    self.config[target]["pocket"]["size_y"],
+                                    self.config[target]["pocket"]["size_z"],
+                                    self.ex, outdata
+                            )
+                else:
+                    cmd = "vina --receptor {} --ligand {} --scoring {} \
+                            --center_x {} --center_y {} --center_z {} \
+                            --size_x {} --size_y {} --size_z {} \
+                            --seed 181129 --exhaustiveness {} --cpu 1 \
+                            --num_modes 1 --out {} --verbosity 0".format(
+                                    os.path.join(self.db_path, self.config[target]["protein"]),
+                                    indata, self.scoring_fn, 
+                                    self.config[target]["pocket"]["center_x"],
+                                    self.config[target]["pocket"]["center_y"],
+                                    self.config[target]["pocket"]["center_z"],
+                                    self.config[target]["pocket"]["size_x"],
+                                    self.config[target]["pocket"]["size_y"],
+                                    self.config[target]["pocket"]["size_z"],
+                                    self.ex, outdata
+                            )
                 cmdlist.append((
                     target,
                     oriidx,
-                    "vina --receptor {} --ligand {} --scoring {} \
-                          --center_x {} --center_y {} --center_z {} \
-                          --size_x {} --size_y {} --size_z {} \
-                          --seed 181129 --exhaustiveness {} --cpu 1 \
-                          --num_modes 1 --out {} --verbosity 0".format(
-                                os.path.join(self.db_path, self.config[target]["protein"]),
-                                indata, self.scoring_fn, 
-                                self.config[target]["pocket"]["center_x"],
-                                self.config[target]["pocket"]["center_y"],
-                                self.config[target]["pocket"]["center_z"],
-                                self.config[target]["pocket"]["size_x"],
-                                self.config[target]["pocket"]["size_y"],
-                                self.config[target]["pocket"]["size_z"],
-                                self.ex, outdata
-                          )
+                    cmd
                 ))
         return cmdlist
     
@@ -108,6 +141,15 @@ class PT_EF:
         inlist1 = [] # the internal list
         inlist2 = [] # the external list
         for target in target_list:
+            if self.scoring_fn == "ad4":
+                mapdir = tempfile.mkdtemp()
+                admapper = AD4Mapper(center=[self.config[target]["pocket"]["center_x"], 
+                    self.config[target]["pocket"]["center_y"], 
+                    self.config[target]["pocket"]["center_z"]], 
+                    box_size=[self.config[target]["pocket"]["size_x"], 
+                    self.config[target]["pocket"]["size_y"], 
+                    self.config[target]["pocket"]["size_z"]], spacing=0.25) #spacing
+                admapper.generate_ad4_map(os.path.join(self.db_path, self.config[target]["protein"]), [t[0] for t in self.filedict[target]], mapdir)
             count = 0
             # run dock for active
             for indata, _, oriidx in self.filedict[target]:
@@ -121,15 +163,13 @@ class PT_EF:
             inlist1 = []
             count = 0
             for l in inlist2:
-                cmdlist.append((
-                    target,
-                    "|".join([u[1] for u in l]),
-                    "vina --receptor {} --gpu_batch {} --scoring {} \
+                if self.scoring_fn == "ad4":
+                    cmd = "vina --maps {} --gpu_batch {} --scoring {} \
                         --center_x {} --center_y {} --center_z {} \
                         --size_x {} --size_y {} --size_z {} \
                         --seed 181129 --max_step 20 --exhaustiveness {} \
                         --num_modes 1 --dir {} --verbosity 0".format(
-                                os.path.join(self.db_path, self.config[target]["protein"]),
+                                os.path.join(mapdir, os.path.splitext(os.path.basename(self.config[target]["protein"]))[0]),
                                 "  ".join([u[0] for u in l]), self.scoring_fn, 
                                 self.config[target]["pocket"]["center_x"],
                                 self.config[target]["pocket"]["center_y"],
@@ -140,6 +180,27 @@ class PT_EF:
                                 self.ex, 
                                 os.path.join(self.save_path, target)
                         )
+                else:
+                    cmd = "vina --receptor {} --gpu_batch {} --scoring {} \
+                            --center_x {} --center_y {} --center_z {} \
+                            --size_x {} --size_y {} --size_z {} \
+                            --seed 181129 --max_step 20 --exhaustiveness {} \
+                            --num_modes 1 --dir {} --verbosity 0".format(
+                                    os.path.join(self.db_path, self.config[target]["protein"]),
+                                    "  ".join([u[0] for u in l]), self.scoring_fn, 
+                                    self.config[target]["pocket"]["center_x"],
+                                    self.config[target]["pocket"]["center_y"],
+                                    self.config[target]["pocket"]["center_z"],
+                                    self.config[target]["pocket"]["size_x"],
+                                    self.config[target]["pocket"]["size_y"],
+                                    self.config[target]["pocket"]["size_z"],
+                                    self.ex, 
+                                    os.path.join(self.save_path, target)
+                            )
+                cmdlist.append((
+                    target,
+                    "|".join([u[1] for u in l]),
+                    cmd
                 ))
         return cmdlist
 
