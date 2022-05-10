@@ -1113,7 +1113,7 @@ void get_heavy_atom_movable_coords(output_type_cuda_t* tmp, const m_cuda_t* m_cu
 			counter++;
 		}
 		else {
-			// DEBUG_PRINTF("\n kernel2: removed H atom coords in get_heavy_atom_movable_coords()!");
+			// DEBUG_PRINTF("\n P2: removed H atom coords in get_heavy_atom_movable_coords()!");
 		}
 	}
 	/* assign 0 for others */
@@ -1191,7 +1191,7 @@ void kernel(	m_cuda_t*			m_cuda_global,
 		output_type_cuda_t best_out;
 		output_type_cuda_t candidate;
 
-		for (int step = 0; step < search_depth; step++) { 
+		for (int step = 0; step < search_depth; step++) {
 			output_type_cuda_init_with_output(&candidate, &tmp);
 			int map_index = (step + gll * search_depth) % MAX_NUM_OF_RANDOM_MAP;
 			mutate_conf_cuda(map_index, bfgs_max_steps, &candidate, rand_maps_gpu->int_map, rand_maps_gpu->sphere_map,
@@ -1200,7 +1200,7 @@ void kernel(	m_cuda_t*			m_cuda_global,
 			bfgs(&candidate, &g, &m_cuda_gpu, p_cuda_gpu, ig_cuda_gpu, hunt_cap_gpu, epsilon_fl, bfgs_max_steps);
 			float n = generate_n(rand_maps_gpu->pi_map, map_index);
 			// if (gll == 0)
-			// 	DEBUG_PRINTF("metropolis_accept tmp.e=%f, candidate.e=%f, n=%d\n", tmp.e, candidate.e, n);
+			// 	DEBUG_PRINTF("metropolis_accept tmp.e=%f, candidate.e=%f, n=%f\n", tmp.e, candidate.e, n);
 
 			if (step == 0 || metropolis_accept(tmp.e, candidate.e, 1.2, n)) {
 				output_type_cuda_init_with_output(&tmp, &candidate);
@@ -1267,13 +1267,13 @@ std::vector<output_type> monte_carlo::cuda_to_vina(output_type_cuda_t results_pt
 }
 
 __host__
-void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_container>& out_gpu, std::vector<precalculate_byatom> & p_gpu, 
+void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_container>& out_gpu, std::vector<precalculate_byatom> & p_gpu,
 				triangular_matrix_cuda_t *m_data_list_gpu, const igrid& ig, const vec& corner1, const vec& corner2, rng& generator, int verbosity) const {
 
 
 	/* Definitions from vina1.2 */
 	DEBUG_PRINTF("entering CUDA monte_carlo search\n"); //debug
-	
+
 	vec authentic_v(1000, 1000, 1000); // FIXME? this is here to avoid max_fl/max_fl
 
 	quasi_newton quasi_newton_par;
@@ -1286,7 +1286,7 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 
 	output_type_cuda_t *rand_molec_struc_tmp;
 	checkCUDA(cudaMallocHost(&rand_molec_struc_tmp, sizeof(output_type_cuda_t)));
-	
+
 	ig_cuda_t *ig_cuda_ptr;
 	checkCUDA(cudaMallocHost(&ig_cuda_ptr, sizeof(ig_cuda_t)));
 
@@ -1309,7 +1309,7 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 
 	size_t p_cuda_size_gpu = sizeof(p_cuda_t);
 	DEBUG_PRINTF("p_cuda_size_gpu=%lu\n", p_cuda_size_gpu);
-	
+
 	size_t rand_maps_size = sizeof(random_maps_t);
 	// rand_molec_struc_gpu
 	float *rand_molec_struc_gpu;
@@ -1350,10 +1350,10 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 
 	/* End Allocating GPU Memory */
 
-	
+
 	assert(num_of_ligands <= MAX_LIGAND_NUM);
 	assert(thread <= MAX_THREAD);
-	
+
 	struct tmp_struct {
 		int start_index = 0;
 		int parent_index = 0;
@@ -1401,7 +1401,7 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 		DEBUG_PRINTF("prepare ligand data\n");
 		assert(m.num_other_pairs() == 0); // m.other_pairs is not supported!
 		assert(m.ligands.size() <= 1); // Only one ligand supported!
-		
+
 		if (m.ligands.size() == 0){ // ligand parsing error
 			m_cuda->m_num_movable_atoms = -1;
 			DEBUG_PRINTF("copy m_cuda to gpu, size=%lu\n", sizeof(m_cuda_t));
@@ -1418,15 +1418,15 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 					m_cuda->atoms[i].coords[j] = m.atoms[i].coords[j];// To store atom coords
 				}
 			}
-	
-	
+
+
 			// To store atoms coords
 			for (int i = 0; i < m.coords.size(); i++) {
 				for (int j = 0; j < 3; j++) {
 					m_cuda->m_coords.coords[i][j] = m.coords[i].data[j];
 				}
 			}
-	
+
 			//To store minus forces
 			for (int i = 0; i < m.coords.size(); i++) {
 				for (int j = 0; j < 3; j++) {
@@ -1480,7 +1480,7 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 
 			DEBUG_PRINTF("copy m_cuda to gpu, size=%lu\n", sizeof(m_cuda_t));
 			checkCUDA(cudaMemcpy(m_cuda_gpu + l, m_cuda, sizeof(m_cuda_t), cudaMemcpyHostToDevice));
-			
+
 			/* Prepare rand_molec_struc data */
 			int lig_torsion_size = tmp.c.ligands[0].torsions.size();
 			DEBUG_PRINTF("lig_torsion_size=%d\n", lig_torsion_size);
@@ -1489,7 +1489,7 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 			else flex_torsion_size = 0;
 			// std::vector<vec> uniform_data;
 			// uniform_data.resize(thread);
-			
+
 			for (int i = 0; i < threads_per_ligand; ++i){
 				tmp.c.randomize(corner1, corner2, generator); // generate a random structure, can move to GPU if necessary
 				for (int j = 0; j < 3; j++) rand_molec_struc_tmp->position[j] = tmp.c.ligands[0].rigid.position[j];
@@ -1497,12 +1497,12 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 				for (int j = 0; j < lig_torsion_size; j++) rand_molec_struc_tmp->lig_torsion[j] = tmp.c.ligands[0].torsions[j];// Only support one ligand
 				assert(flex_torsion_size < MAX_NUM_OF_FLEX_TORSION);
 				for (int j = 0; j < flex_torsion_size; j++) rand_molec_struc_tmp->flex_torsion[j] = tmp.c.flex[0].torsions[j];// Only support one flex
-			
+
 				rand_molec_struc_tmp->orientation[0] = (float)tmp.c.ligands[0].rigid.orientation.R_component_1();
 				rand_molec_struc_tmp->orientation[1] = (float)tmp.c.ligands[0].rigid.orientation.R_component_2();
 				rand_molec_struc_tmp->orientation[2] = (float)tmp.c.ligands[0].rigid.orientation.R_component_3();
 				rand_molec_struc_tmp->orientation[3] = (float)tmp.c.ligands[0].rigid.orientation.R_component_4();
-			
+
 				rand_molec_struc_tmp->lig_torsion_size = lig_torsion_size;
 
 				float *rand_molec_struc_gpu_tmp = rand_molec_struc_gpu + (l * threads_per_ligand + i) * SIZE_OF_MOLEC_STRUC / sizeof(float);
@@ -1536,7 +1536,7 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 			checkCUDA(cudaMemcpy(rand_maps_gpu + l, rand_maps, sizeof(random_maps_t), cudaMemcpyHostToDevice));
 		}
 
-	}	
+	}
 
 	/* Prepare data only concerns rigid receptor */
 
@@ -1572,10 +1572,10 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 			ig_cuda_ptr->grids[i].m_k = 0;
 		}
 	}
-	
-	
+
+
 	float mutation_amplitude_float = static_cast<float>(mutation_amplitude);
-	
+
 	DEBUG_PRINTF("memcpy ig_cuda, ig_cuda_size=%lu\n", ig_cuda_size);
 	checkCUDA(cudaMemcpy(ig_cuda_gpu, ig_cuda_ptr, ig_cuda_size, cudaMemcpyHostToDevice));
 	checkCUDA(cudaMemcpy(hunt_cap_gpu, hunt_cap_float, 3 * sizeof(float), cudaMemcpyHostToDevice));
@@ -1584,7 +1584,7 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 	DEBUG_PRINTF("hunt_test[1]=%f, hunt_cap_float[1]=%f\n", hunt_test[1], hunt_cap_float[1]);
 	checkCUDA(cudaMemcpy(authentic_v_gpu, authentic_v_float, sizeof(authentic_v_float), cudaMemcpyHostToDevice));
 
-	
+
 
 	/* Add timing */
 	cudaEvent_t start,stop;
@@ -1596,13 +1596,13 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 	DEBUG_PRINTF("launch kernel, global_steps=%d, thread=%d, num_of_ligands=%d\n", global_steps, thread, num_of_ligands);
 	kernel<<<thread / 32 + 1, 32>>>(m_cuda_gpu, ig_cuda_gpu, p_cuda_gpu, rand_molec_struc_gpu,
 		best_e_gpu, quasi_newton_par_max_steps, mutation_amplitude_float,
-		rand_maps_gpu, epsilon_fl_float, hunt_cap_gpu, authentic_v_gpu, results_gpu, global_steps, 
+		rand_maps_gpu, epsilon_fl_float, hunt_cap_gpu, authentic_v_gpu, results_gpu, global_steps,
 		num_of_ligands, threads_per_ligand);
 
 	// Device to Host memcpy of precalculated_byatom, copy back data to p_gpu
     p_m_data_cuda_t *p_data;
     checkCUDA(cudaMallocHost(&p_data, sizeof(p_m_data_cuda_t) * MAX_P_DATA_M_DATA_SIZE));
-    
+
 	for (int l = 0;l < num_of_ligands; ++l){
         // copy data to m_data on CPU, then to p_gpu[l]
 		int pnum = p_gpu[l].m_data.m_data.size();
@@ -1631,7 +1631,7 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 	float msecTotal = 0.0f;
 	cudaEventElapsedTime(&msecTotal, start, stop);
 	DEBUG_PRINTF("Time spend on GPU is %f ms\n", msecTotal);
-	
+
 	/* Convert result data. Can be improved by mapping memory
 	*/
 	DEBUG_PRINTF("cuda to vina\n");
@@ -1642,8 +1642,8 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 	std::vector<output_type> result_vina = cuda_to_vina(results, thread);
 
 	DEBUG_PRINTF("result size=%lu\n", result_vina.size());
-	
-	
+
+
 	for (int i = 0; i < thread; ++i){
 		add_to_output_container(out_gpu[i / threads_per_ligand], result_vina[i], min_rmsd, num_saved_mins);
 	}

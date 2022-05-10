@@ -109,7 +109,7 @@ __device__ __constant__ sz SY_TYPE_SIZE  = 18;
 
 #endif
 
-__device__ struct atom_kind_gpu {
+struct atom_kind_gpu {
     char name[4];
     fl radius;
 	fl depth;
@@ -120,7 +120,7 @@ __device__ struct atom_kind_gpu {
 	fl covalent_radius; // from http://en.wikipedia.org/wiki/Atomic_radii_of_the_elements_(data_page)
 };
 
-// generated from edited AD4_parameters.data using a script, 
+// generated from edited AD4_parameters.data using a script,
 // then covalent radius added from en.wikipedia.org/wiki/Atomic_radii_of_the_elements_(data_page)
 __device__ atom_kind_gpu atom_kind_data_gpu[] = {
     // name, radius, depth, hb_depth, hb_r, solvation, volume, covalent radius
@@ -187,8 +187,8 @@ __device__ __forceinline__  bool ad_is_hydrogen_gpu(sz ad) {
 }
 
 __device__ __forceinline__  bool ad_is_heteroatom_gpu(sz ad) { // returns false for ad >= AD_TYPE_SIZE
-	return ad != AD_TYPE_A && ad != AD_TYPE_C  && 
-		   ad != AD_TYPE_H && ad != AD_TYPE_HD && 
+	return ad != AD_TYPE_A && ad != AD_TYPE_C  &&
+		   ad != AD_TYPE_H && ad != AD_TYPE_HD &&
 		   ad < AD_TYPE_SIZE;
 }
 
@@ -328,10 +328,10 @@ __device__ __forceinline__  bool is_non_ad_metal_name_gpu(const char name[4]) {
 }
 
 __device__ __forceinline__  bool xs_is_hydrophobic_gpu(sz xs) {
-	return xs == XS_TYPE_C_H || 
+	return xs == XS_TYPE_C_H ||
 		   xs == XS_TYPE_F_H ||
 		   xs == XS_TYPE_Cl_H ||
-		   xs == XS_TYPE_Br_H || 
+		   xs == XS_TYPE_Br_H ||
 		   xs == XS_TYPE_I_H;
 }
 

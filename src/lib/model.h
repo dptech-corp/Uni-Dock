@@ -14,8 +14,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 
-   Author: Dr. Oleg Trott <ot14@columbia.edu>, 
-           The Olson Lab, 
+   Author: Dr. Oleg Trott <ot14@columbia.edu>,
+           The Olson Lab,
            The Scripps Research Institute
 
 */
@@ -69,7 +69,7 @@ fl eval_interacting_pairs_deriv(const precalculate_byatom& p, fl v, const intera
 
 struct model {
 public:
-	// Had to move it from private to public to make it work. 
+	// Had to move it from private to public to make it work.
 	// So we might have to fix that later
 	model() : m_num_movable_atoms(0), m_atom_typing_used(atom_type::XS) {}
 	model(atom_type::t atype) : m_num_movable_atoms(0), m_atom_typing_used(atype) {}
@@ -172,7 +172,12 @@ public:
 	atomv atoms; // movable, inflex
 	vecv coords;
 	vecv minus_forces;
-
+	atomv grid_atoms;
+	vector_mutable<residue> flex;
+	context flex_context;
+	interacting_pairs other_pairs; // INTRAmolecular interactions: flex_i - flex_j and flex_i - flex_i
+	interacting_pairs inter_pairs; // INTERmolecular interactions: ligand - flex and ligand_i - ligand_j
+	interacting_pairs glue_pairs;  // INTRAmolecular interactions: glue_i - glue_i
 
 private:
 	friend struct cache;
@@ -196,7 +201,7 @@ private:
 		write_context(c, out, remark);
 	}
 	fl rmsd_lower_bound_asymmetric(const model& x, const model& y) const; // actually static
-	
+
 	atom_index sz_to_atom_index(sz i) const; // grid_atoms, atoms
 	bool bonded_to_HD(const atom& a) const;
 	bool bonded_to_heteroatom(const atom& a) const;
@@ -210,14 +215,6 @@ private:
 	void initialize_pairs(const distance_type_matrix& mobility);
 	void initialize(const distance_type_matrix& mobility);
 	fl clash_penalty_aux(const interacting_pairs& pairs) const;
-
-	atomv grid_atoms;
-	
-	vector_mutable<residue> flex;
-	context flex_context;
-	interacting_pairs other_pairs; // INTRAmolecular interactions: flex_i - flex_j and flex_i - flex_i
-	interacting_pairs inter_pairs; // INTERmolecular interactions: ligand - flex and ligand_i - ligand_j
-	interacting_pairs glue_pairs; // INTRAmolecular interactions: glue_i - glue_i
 
 	sz m_num_movable_atoms;
 	atom_type::t m_atom_typing_used;

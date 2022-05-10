@@ -14,7 +14,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 
-   Author: Dr. Oleg Trott <ot14@columbia.edu>, 
+   Author: Dr. Oleg Trott <ot14@columbia.edu>,
 		   The Olson Lab,
 		   The Scripps Research Institute
 
@@ -114,6 +114,7 @@ Thank you!\n";
 		std::string out_dir;
 		std::string out_maps;
 		std::vector<std::string> ligand_names;
+		std::string ligand_index; // path to a text file, containing paths to ligands files
 		std::vector<std::string> batch_ligand_names;
 		std::vector<std::string> gpu_batch_ligand_names;
 		std::string maps;
@@ -178,6 +179,7 @@ Thank you!\n";
 			("receptor", value<std::string>(&rigid_name), "rigid part of the receptor (PDBQT)")
 			("flex", value<std::string>(&flex_name), "flexible side chains, if any (PDBQT)")
 			("ligand", value< std::vector<std::string> >(&ligand_names)->multitoken(), "ligand (PDBQT)")
+			("ligand_index",value<std::string>(&ligand_index),"file containing paths to ligands")
 			("batch", value< std::vector<std::string> >(&batch_ligand_names)->multitoken(), "batch ligand (PDBQT)")
 			("gpu_batch", value< std::vector<std::string> >(&gpu_batch_ligand_names)->multitoken(), "gpu batch ligand (PDBQT)")
 			("scoring", value<std::string>(&sf_name)->default_value(sf_name), "scoring function (ad4, vina or vinardo)")
@@ -328,7 +330,7 @@ Thank you!\n";
 			exit(EXIT_FAILURE);
 		}
 
-		if (!vm.count("ligand") && !vm.count("batch") && !vm.count("gpu_batch")) {
+		if (!vm.count("ligand") && !vm.count("batch") && !vm.count("gpu_batch") && !vm.count("ligand_index")) {
 			std::cerr << desc_simple << "\n\nERROR: Missing ligand(s).\n";
 			exit(EXIT_FAILURE);
 		} else if (vm.count("ligand") && (vm.count("batch") || vm.count("gpu_batch"))) {
@@ -354,6 +356,20 @@ Thank you!\n";
 				std::cerr << desc_simple << "\n\nERROR: Output name must be defined when docking simultaneously multiple ligands.\n";
 				exit(EXIT_FAILURE);
 			}
+		}
+
+		// read ligands from index file
+		// will append to `batch` if used together
+		if (vm.count("ligand_index")) {
+			std::ifstream index_file(ligand_index);
+			if (!index_file.is_open()) {
+				throw file_error(ligand_index, true);
+			}
+			std::string ligand_name;
+			while (index_file >> ligand_name) {
+				gpu_batch_ligand_names.push_back(ligand_name); // FIXME: not compatiable with CPU batch mode
+			}
+			index_file.close();
 		}
 
 		if (verbosity > 0) {
@@ -452,7 +468,7 @@ Thank you!\n";
 				v.global_search(exhaustiveness, num_modes, min_rmsd, max_evals);
 				v.write_poses(out_name, num_modes, energy_range);
 			}
-		} else if (vm.count("gpu_batch")){
+		} else if (vm.count("gpu_batch") || vm.count("ligand_index")) {
 			if (randomize_only || score_only || local_only ){
 				printf("Not available under gpu_batch mode.\n");
 				return 0;
@@ -469,12 +485,49 @@ Thank you!\n";
 						v.write_maps(out_maps);
 				}
 			}
-			VINA_RANGE(i, 0, gpu_batch_ligand_names.size()){
-				gpu_out_name.push_back(default_output(get_filename(gpu_batch_ligand_names[i]), out_dir));
+			// Vina worker[2]{v,v}; // Do CPU works on one worker while GPU works on another
+			// bool index = 0; // indicate which worker occupies GPU
+			std::vector<std::string> ligand_names {std::move(gpu_batch_ligand_names)};
+			std::cout << "Total ligands: " << ligand_names.size() << std::endl;
+
+			int processed_ligands = 0;
+			while (processed_ligands < ligand_names.size()) {
+				Vina v1(v); // reuse init'ed maps
+				int batch_size = 0;
+				int all_atom_numbers = 0; // total number of atoms in current batch
+				const int max_atom_numbers = 300000; // FIXME: choose an appropriate value
+				while (all_atom_numbers < max_atom_numbers && processed_ligands + batch_size < ligand_names.size())
+				{
+					int next_atom_numbers = parse_ligand_pdbqt_from_file(
+												ligand_names[processed_ligands + batch_size],
+												v1.m_scoring_function.get_atom_typing())
+												.get_atoms()
+												.size();
+					next_atom_numbers = next_atom_numbers * next_atom_numbers; // Memory ~ atom numbers^2
+					if (all_atom_numbers + next_atom_numbers < max_atom_numbers)
+					{
+						all_atom_numbers += next_atom_numbers;
+						batch_size++;
+					}
+					else
+						break;
+				}
+				std::cout << "Batch size: " << batch_size << std::endl;
+				std::vector<std::string> batch_ligand_names;
+				for (int i = processed_ligands; i < processed_ligands + batch_size; i++)
+				{
+					batch_ligand_names.push_back(ligand_names[i]);
+				}
+				processed_ligands += batch_size;
+				gpu_out_name = {};
+				VINA_RANGE(i, 0, batch_ligand_names.size())
+				{
+					gpu_out_name.push_back(default_output(get_filename(batch_ligand_names[i]), out_dir));
+				}
+				v1.set_ligand_from_file_gpu(batch_ligand_names);
+				v1.global_search_gpu(exhaustiveness, num_modes, min_rmsd, max_evals, max_step, batch_ligand_names.size());
+				v1.write_poses_gpu(gpu_out_name, num_modes, energy_range);
 			}
-			v.set_ligand_from_file_gpu(gpu_batch_ligand_names);
-			v.global_search_gpu(exhaustiveness, num_modes, min_rmsd, max_evals, max_step, gpu_batch_ligand_names.size());
-			v.write_poses_gpu(gpu_out_name, num_modes, energy_range);
 		}
 	}
 
@@ -490,7 +543,9 @@ Thank you!\n";
 		std::cerr << "\n\nUsage error: " << e.what() << ".\n";
 		return 1;
 	}
-	catch(std::bad_alloc&) {
+#ifdef NDEBUG // don't catch in debug mode
+	catch (std::bad_alloc &)
+	{
 		std::cerr << "\n\nError: insufficient memory!\n";
 		return 1;
 	}
@@ -508,4 +563,5 @@ Thank you!\n";
 		std::cerr << "\n\nAn unknown error occurred. " << error_message;
 		return 1;
 	}
+#endif // NDEBUG
 }
