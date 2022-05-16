@@ -56,9 +56,9 @@
 #include "precalculate.h"
 
 #ifdef DEBUG
-    #define DEBUG_PRINTF printf
+#define DEBUG_PRINTF printf
 #else
-    #define DEBUG_PRINTF(...) do {} while (0)
+#define DEBUG_PRINTF(...)
 #endif
 
 class Vina {

@@ -33,19 +33,6 @@
 #include "precalculate.h"
 #include "cache.h"
 
-#ifdef DEBUG
-    #define DEBUG_PRINTF printf
-#else
-    #define DEBUG_PRINTF(...) do {} while (0)
-#endif
-
-__host__
-void checkCUDA(cudaError_t ret){
-	if (ret != cudaSuccess){
-		printf("Cuda error\n");
-	}
-}
-
 /* Below based on mutate_conf.cpp */
 
  __device__ __forceinline__ void quaternion_increment(float* q, const float* rotation, float epsilon_fl);

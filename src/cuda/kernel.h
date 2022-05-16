@@ -1,5 +1,19 @@
 #pragma once
 
+#include <stdexcept>
+template <typename T>
+void check(T result, char const *const func, const char *const file,
+		   int const line)
+{
+	if (result)
+	{
+		printf("CUDA error at %s:%d code=%d(%s) \"%s\" \n", file, line,
+				static_cast<unsigned int>(result), cudaGetErrorName(result), func);
+		throw std::runtime_error("CUDA Runtime Error");
+	}
+}
+#define checkCUDA(val) check((val), #val, __FILE__, __LINE__)
+
 // Macros below are shared in both device and host
 #define TOLERANCE 1e-16
 // kernel1 macros
@@ -13,7 +27,7 @@
 #define MAX_NUM_OF_LIG_TORSION 48
 #define MAX_NUM_OF_FLEX_TORSION 1
 #define MAX_NUM_OF_RIGID 128
-#define MAX_NUM_OF_ATOMS 130 
+#define MAX_NUM_OF_ATOMS 130
 #define SIZE_OF_MOLEC_STRUC ((3+4+MAX_NUM_OF_LIG_TORSION+MAX_NUM_OF_FLEX_TORSION+ 1)*sizeof(float) )
 #define SIZE_OF_CHANGE_STRUC ((3+3+MAX_NUM_OF_LIG_TORSION+MAX_NUM_OF_FLEX_TORSION + 1)*sizeof(float))
 #define MAX_HESSIAN_MATRIX_D_SIZE ((6 +  MAX_NUM_OF_LIG_TORSION + MAX_NUM_OF_FLEX_TORSION)*(6 +  MAX_NUM_OF_LIG_TORSION + MAX_NUM_OF_FLEX_TORSION + 1) / 2)
@@ -85,15 +99,15 @@ typedef struct { // depth-first order
 	float	origin			[MAX_NUM_OF_RIGID][3];
 	float	orientation_m	[MAX_NUM_OF_RIGID][9]; // This matrix is fixed to 3*3
 	float	orientation_q	[MAX_NUM_OF_RIGID][4];
-	
+
 	float	axis			[MAX_NUM_OF_RIGID][3]; // 1st column is root node, all 0s
 	float	relative_axis	[MAX_NUM_OF_RIGID][3]; // 1st column is root node, all 0s
 	float	relative_origin	[MAX_NUM_OF_RIGID][3]; // 1st column is root node, all 0s
-	
+
 	int		parent			[MAX_NUM_OF_RIGID]; // every node has only 1 parent node
 	bool	children_map	[MAX_NUM_OF_RIGID][MAX_NUM_OF_RIGID]; // chidren_map[i][j] = true if node i's child is node j
 	int		num_children;
-	
+
 } rigid_cuda_t;
 
 typedef struct {

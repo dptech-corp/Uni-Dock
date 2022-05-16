@@ -14,8 +14,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 
-   Author: Dr. Oleg Trott <ot14@columbia.edu>, 
-           The Olson Lab, 
+   Author: Dr. Oleg Trott <ot14@columbia.edu>,
+           The Olson Lab,
            The Scripps Research Institute
 
 */
@@ -30,7 +30,7 @@
 #ifdef DEBUG
     #define DEBUG_PRINTF printf
 #else
-    #define DEBUG_PRINTF(...) do {} while (0)
+    #define DEBUG_PRINTF(...)
 #endif
 
 //Forward declaration
@@ -130,12 +130,12 @@ private:
 
 };
 
-struct precalculate 
+struct precalculate
 {
 public:
     precalculate() { }
     precalculate(const ScoringFunction& sf, fl v=max_fl, fl factor=32){
-        
+
         m_factor = factor;
         m_cutoff_sqr = sqr(sf.get_cutoff());
         m_max_cutoff_sqr = sqr(sf.get_max_cutoff());
@@ -155,7 +155,7 @@ public:
             {
                 precalculate_element &p = data(t1, t2);
                 // init smooth[].first
-                
+
                 VINA_FOR_IN(i, p.smooth)
                 {
                     p.smooth[i].first = (std::min)(v, sf.eval(t1, t2, rs[i]));
@@ -277,7 +277,7 @@ public:
     };
     sz m_n;
     fl m_factor;
-    
+
     triangular_matrix<precalculate_element> m_data;
 
     // set public for GPU

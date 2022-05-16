@@ -7,19 +7,6 @@
 #include "precalculate.h"
 #include "precalculate_gpu.h"
 
-#ifdef DEBUG
-    #define DEBUG_PRINTF printf
-#else
-    #define DEBUG_PRINTF(...) do {} while (0)
-#endif
-
-__host__
-void checkCUDA_(cudaError_t ret){
-	if (ret != cudaSuccess){
-		printf("Cuda error\n");
-	}
-}
-
 // TODO: define kernel here
 __global__
 void precalculate_gpu(triangular_matrix_cuda_t *m_data_gpu_list, scoring_function_cuda_t *sf_gpu,
@@ -149,10 +136,10 @@ void precalculate_parallel(triangular_matrix_cuda_t *m_data_list_cpu, std::vecto
     sz *atom_ad_gpu;
     fl *atom_charge_gpu;
     int *atom_num_gpu;
-    checkCUDA_(cudaMalloc(&atom_xs_gpu, thread * max_atom_num * sizeof(sz)));
-    checkCUDA_(cudaMalloc(&atom_ad_gpu, thread * max_atom_num * sizeof(sz)));
-    checkCUDA_(cudaMalloc(&atom_charge_gpu, thread * max_atom_num * sizeof(fl)));
-    checkCUDA_(cudaMalloc(&atom_num_gpu, thread * sizeof(int)));
+    checkCUDA(cudaMalloc(&atom_xs_gpu, thread * max_atom_num * sizeof(sz)));
+    checkCUDA(cudaMalloc(&atom_ad_gpu, thread * max_atom_num * sizeof(sz)));
+    checkCUDA(cudaMalloc(&atom_charge_gpu, thread * max_atom_num * sizeof(fl)));
+    checkCUDA(cudaMalloc(&atom_num_gpu, thread * sizeof(int)));
 
     for (int i = 0; i < thread; ++i){
         atomv atoms = m_model_gpu[i].get_atoms();
@@ -166,16 +153,16 @@ void precalculate_parallel(triangular_matrix_cuda_t *m_data_list_cpu, std::vecto
         }
     }
 
-    checkCUDA_(cudaMemcpy(atom_xs_gpu, atom_xs, thread * max_atom_num * sizeof(sz), cudaMemcpyHostToDevice));
+    checkCUDA(cudaMemcpy(atom_xs_gpu, atom_xs, thread * max_atom_num * sizeof(sz), cudaMemcpyHostToDevice));
     // // debug
     // sz atom_xs_check[max_atom_num];
-    // checkCUDA_(cudaMemcpy(atom_xs_check, atom_xs_gpu, max_atom_num * sizeof(sz), cudaMemcpyDeviceToHost));
+    // checkCUDA(cudaMemcpy(atom_xs_check, atom_xs_gpu, max_atom_num * sizeof(sz), cudaMemcpyDeviceToHost));
     // for (int i = 0;i < max_atom_num;++i){
     //     DEBUG_PRINTF("atom[%d] on gpu check: xs=%lu\n", i, atom_xs_check[i]);
     // }
-    checkCUDA_(cudaMemcpy(atom_ad_gpu, atom_ad, thread * max_atom_num * sizeof(sz), cudaMemcpyHostToDevice));
-    checkCUDA_(cudaMemcpy(atom_charge_gpu, atom_charge, thread * max_atom_num * sizeof(fl), cudaMemcpyHostToDevice));
-    checkCUDA_(cudaMemcpy(atom_num_gpu, atom_num, thread * sizeof(int), cudaMemcpyHostToDevice));
+    checkCUDA(cudaMemcpy(atom_ad_gpu, atom_ad, thread * max_atom_num * sizeof(sz), cudaMemcpyHostToDevice));
+    checkCUDA(cudaMemcpy(atom_charge_gpu, atom_charge, thread * max_atom_num * sizeof(fl), cudaMemcpyHostToDevice));
+    checkCUDA(cudaMemcpy(atom_num_gpu, atom_num, thread * sizeof(int), cudaMemcpyHostToDevice));
 
     // copy scoring function parameters
     scoring_function_cuda_t scoring_cuda;
@@ -239,25 +226,25 @@ void precalculate_parallel(triangular_matrix_cuda_t *m_data_list_cpu, std::vecto
         }
     }
     scoring_function_cuda_t *scoring_cuda_gpu;
-    checkCUDA_(cudaMalloc(&scoring_cuda_gpu, sizeof(scoring_function_cuda_t)));
-    checkCUDA_(cudaMemcpy(scoring_cuda_gpu, &scoring_cuda, sizeof(scoring_function_cuda_t), cudaMemcpyHostToDevice));
+    checkCUDA(cudaMalloc(&scoring_cuda_gpu, sizeof(scoring_function_cuda_t)));
+    checkCUDA(cudaMemcpy(scoring_cuda_gpu, &scoring_cuda, sizeof(scoring_function_cuda_t), cudaMemcpyHostToDevice));
 
     // transfer common_rs to gpu
     fl *common_rs_gpu;
-    checkCUDA_(cudaMalloc(&common_rs_gpu, FAST_SIZE * sizeof(fl)));
-    checkCUDA_(cudaMemcpy(common_rs_gpu, common_rs.data(), FAST_SIZE * sizeof(fl), cudaMemcpyHostToDevice));
+    checkCUDA(cudaMalloc(&common_rs_gpu, FAST_SIZE * sizeof(fl)));
+    checkCUDA(cudaMemcpy(common_rs_gpu, common_rs.data(), FAST_SIZE * sizeof(fl), cudaMemcpyHostToDevice));
 
     // malloc output buffer for m_data, array of precalculate_element
     triangular_matrix_cuda_t *m_data_gpu_list;
-    checkCUDA_(cudaMalloc(&m_data_gpu_list, sizeof(triangular_matrix_cuda_t) * thread));
+    checkCUDA(cudaMalloc(&m_data_gpu_list, sizeof(triangular_matrix_cuda_t) * thread));
     triangular_matrix_cuda_t m_data_cpu_list[thread];
     triangular_matrix_cuda_t m_data_gpu;
     precalculate_element_cuda_t *precalculate_element_list_ptr_gpu;
     for (int i = 0;i < thread; ++i){
-        checkCUDA_(cudaMalloc(&precalculate_element_list_ptr_gpu, sizeof(precalculate_element_cuda_t) * precalculate_matrix_size[i]));
+        checkCUDA(cudaMalloc(&precalculate_element_list_ptr_gpu, sizeof(precalculate_element_cuda_t) * precalculate_matrix_size[i]));
         m_data_gpu.p_data = precalculate_element_list_ptr_gpu;
         m_data_cpu_list[i].p_data = precalculate_element_list_ptr_gpu;
-        checkCUDA_(cudaMemcpy(m_data_gpu_list + i, &m_data_gpu, sizeof(triangular_matrix_cuda_t), cudaMemcpyHostToDevice));
+        checkCUDA(cudaMemcpy(m_data_gpu_list + i, &m_data_gpu, sizeof(triangular_matrix_cuda_t), cudaMemcpyHostToDevice));
     }
 
 
@@ -266,7 +253,7 @@ void precalculate_parallel(triangular_matrix_cuda_t *m_data_list_cpu, std::vecto
     precalculate_gpu<<<thread / 4 + 1, 4>>>(m_data_gpu_list, scoring_cuda_gpu, atom_xs_gpu, atom_ad_gpu, atom_charge_gpu, atom_num_gpu,
          32, common_rs_gpu, max_fl, thread, max_atom_num);
 
-	checkCUDA_(cudaDeviceSynchronize());
+	checkCUDA(cudaDeviceSynchronize());
 
     DEBUG_PRINTF("kernel exited\n");
 
@@ -285,12 +272,12 @@ void precalculate_parallel(triangular_matrix_cuda_t *m_data_list_cpu, std::vecto
 
 
     // TODO: free memory
-    checkCUDA_(cudaFree(atom_xs_gpu));
-    checkCUDA_(cudaFree(atom_ad_gpu));
-    checkCUDA_(cudaFree(atom_charge_gpu));
-    checkCUDA_(cudaFree(atom_num_gpu));
-    checkCUDA_(cudaFree(scoring_cuda_gpu));
-    checkCUDA_(cudaFree(common_rs_gpu));
-    checkCUDA_(cudaFree(m_data_gpu_list));
+    checkCUDA(cudaFree(atom_xs_gpu));
+    checkCUDA(cudaFree(atom_ad_gpu));
+    checkCUDA(cudaFree(atom_charge_gpu));
+    checkCUDA(cudaFree(atom_num_gpu));
+    checkCUDA(cudaFree(scoring_cuda_gpu));
+    checkCUDA(cudaFree(common_rs_gpu));
+    checkCUDA(cudaFree(m_data_gpu_list));
 
 }
