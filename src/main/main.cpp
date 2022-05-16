@@ -495,7 +495,7 @@ Thank you!\n";
 				Vina v1(v); // reuse init'ed maps
 				int batch_size = 0;
 				int all_atom_numbers = 0; // total number of atoms in current batch
-				const int max_atom_numbers = 300000; // FIXME: choose an appropriate value
+				const int max_atom_numbers = 700000; // FIXME: choose an appropriate value
 				while (all_atom_numbers < max_atom_numbers && processed_ligands + batch_size < ligand_names.size())
 				{
 					int next_atom_numbers = parse_ligand_pdbqt_from_file(
