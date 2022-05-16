@@ -14,8 +14,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 
-   Author: Dr. Oleg Trott <ot14@columbia.edu>, 
-		   The Olson Lab, 
+   Author: Dr. Oleg Trott <ot14@columbia.edu>,
+		   The Olson Lab,
 		   The Scripps Research Institute
 
 */
@@ -23,6 +23,7 @@
 #ifndef VINA_H
 #define VINA_H
 
+#include <chrono>
 #include <iostream>
 #include <string>
 #include <stdlib.h>

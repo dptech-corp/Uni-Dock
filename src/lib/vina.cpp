@@ -1224,11 +1224,14 @@ void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const 
 	// Docking search
 	sstm << "Performing docking (random seed: " << m_seed << ")";
 	doing(sstm.str(), m_verbosity, 0);
+	auto start = std::chrono::system_clock::now();
 	if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO) {
 		mc(m_model_gpu, poses_gpu, m_precalculated_byatom_gpu, m_data_list_gpu,    m_grid, m_grid.corner1(), m_grid.corner2(), generator, m_verbosity);
 	} else {
 		mc(m_model_gpu, poses_gpu, m_precalculated_byatom_gpu, m_data_list_gpu, m_ad4grid, m_ad4grid.corner1(), m_ad4grid.corner2(), generator, m_verbosity);
 	}
+	auto end = std::chrono::system_clock::now();
+	std::cout << "Kernel running time: " << std::chrono::duration_cast<std::chrono::seconds>(end - start).count() << std::endl;
 	done(m_verbosity, 1);
 
 	// Docking post-processing and rescoring
