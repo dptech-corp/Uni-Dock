@@ -29,6 +29,10 @@
 #include "utils.h"
 #include "scoring_function.h"
 
+#include <cuda.h>
+#include <cuda_runtime.h>
+#include <device_launch_parameters.h>
+
 struct usage_error : public std::runtime_error {
 	usage_error(const std::string& message) : std::runtime_error(message) {}
 };
@@ -136,6 +140,7 @@ Thank you!\n";
 		double grid_spacing = 0.375;
 		double buffer_size = 4;
 		int max_step = 0;
+		int max_gpu_memory = 0;
 
 		// autodock4.2 weights
 		double weight_ad4_vdw   = 0.1662;
@@ -244,6 +249,8 @@ Thank you!\n";
 			("spacing", value<double>(&grid_spacing)->default_value(0.375), "grid spacing (Angstrom)")
 			("verbosity", value<int>(&verbosity)->default_value(1), "verbosity (0=no output, 1=normal, 2=verbose)")
 			("max_step", value<int>(&max_step)->default_value(0), "maximum number of steps in each MC run (if zero, which is the default, the number of MC steps is based on heuristics)")
+			("max_gpu_memory", value<int>(&max_gpu_memory)->default_value(0), "maximum gpu memory to use (default=0, use all available GPU memory to optain maximum batch size)")
+
 		;
 		options_description config("Configuration file (optional)");
 		config.add_options()
@@ -491,27 +498,41 @@ Thank you!\n";
 			std::cout << "Total ligands: " << ligand_names.size() << std::endl;
 
 			int processed_ligands = 0;
+			int receptor_atom_numbers = v.m_receptor.get_atoms().size();
+			int deviceCount=0;
+			size_t avail;
+			size_t total;
+			float max_memory = 32000;
+			cudaGetDeviceCount(&deviceCount);
+			if (deviceCount > 0){
+				cudaSetDevice(0);
+				cudaMemGetInfo(&avail, &total); 
+				printf("Avaliable Memery = %dMiB   Total Memory = %dMiB\n", int(avail/1024/1024), int(total / 1024 / 1024));
+				max_memory = avail / 1024 / 1024 - 200; // leave 200MB to prevent error
+			}
+			if (max_gpu_memory > 0 && max_gpu_memory < max_memory){
+				max_memory = (float)max_gpu_memory;
+			}
+			
 			while (processed_ligands < ligand_names.size()) {
 				Vina v1(v); // reuse init'ed maps
 				int batch_size = 0;
-				int all_atom_numbers = 0; // total number of atoms in current batch
-				const int max_atom_numbers = 700000; // FIXME: choose an appropriate value
-				while (all_atom_numbers < max_atom_numbers && processed_ligands + batch_size < ligand_names.size())
+				int all_atom2_numbers = 0; // total number of atom^2 in current batch
+				while (1.214869*batch_size + .0038522*exhaustiveness*batch_size + .011978*all_atom2_numbers + 20017.72 < max_memory && // this is based on V100, 32G
+					 processed_ligands + batch_size < ligand_names.size())
 				{
 					int next_atom_numbers = parse_ligand_pdbqt_from_file(
 												ligand_names[processed_ligands + batch_size],
 												v1.m_scoring_function.get_atom_typing())
 												.get_atoms()
-												.size();
-					next_atom_numbers = next_atom_numbers * next_atom_numbers; // Memory ~ atom numbers^2
-					if (all_atom_numbers + next_atom_numbers < max_atom_numbers)
-					{
-						all_atom_numbers += next_atom_numbers;
-						batch_size++;
-					}
-					else
-						break;
+												.size()
+											+ receptor_atom_numbers;
+					int next_atom2_numbers = next_atom_numbers * next_atom_numbers; // Memory ~ atom numbers^2
+					all_atom2_numbers += next_atom2_numbers;
+					batch_size++;
 				}
+				DEBUG_PRINTF("batch size=%d, all_atom2_numbers=%d\n", batch_size, all_atom2_numbers);
+
 				std::cout << "Batch size: " << batch_size << std::endl;
 				std::vector<std::string> batch_ligand_names;
 				for (int i = processed_ligands; i < processed_ligands + batch_size; i++)
