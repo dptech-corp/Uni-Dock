@@ -478,7 +478,14 @@ void parse_pdbqt_ligand(std::istream& in, non_rigid_parsed& nr, context& c) {
     if(!torsdof)
         throw pdbqt_parse_error("Missing TORSDOF keyword.");
 
-    postprocess_ligand(nr, p, c, unsigned(torsdof.get())); // bizarre size_t -> unsigned compiler complaint
+    try{
+        postprocess_ligand(nr, p, c, unsigned(torsdof.get())); // bizarre size_t -> unsigned compiler complaint
+    }
+    catch (int e){
+        if (e == 1){
+            throw pdbqt_parse_error("Ligand with zero coords.");
+        }
+    }
 
     VINA_CHECK(nr.atoms_atoms_bonds.dim() == nr.atoms.size());
 }
@@ -495,7 +502,15 @@ void parse_pdbqt_ligand(const path& name, non_rigid_parsed& nr, context& c) {
     if(!torsdof)
         throw pdbqt_parse_error("Missing TORSDOF keyword in this ligand.");
 
-    postprocess_ligand(nr, p, c, unsigned(torsdof.get())); // bizarre size_t -> unsigned compiler complaint
+    try{
+        postprocess_ligand(nr, p, c, unsigned(torsdof.get())); // bizarre size_t -> unsigned compiler complaint
+    }
+    catch (int e){
+        if (e == 1){
+            throw pdbqt_parse_error("Ligand with zero coords.");
+
+        }
+    }
 
     VINA_CHECK(nr.atoms_atoms_bonds.dim() == nr.atoms.size());
 }
@@ -639,6 +654,26 @@ model parse_ligand_pdbqt_from_file(const std::string& name, atom_type::t atype) 
     return tmp.m;
 }
 
+model parse_ligand_pdbqt_from_file_no_failure(const std::string& name, atom_type::t atype) { // can throw parse_error
+    non_rigid_parsed nrp;
+    context c;
+
+    try {
+        parse_pdbqt_ligand(make_path(name), nrp, c);
+    }
+    catch(pdbqt_parse_error& e) {
+        std::cerr << e.what() << "Ligand name:" << name << '\n\n';
+        model m;
+        assert(m.num_ligands() == 0);
+        return m; // return empty model as failure, ligand.size = 0
+    }
+
+    pdbqt_initializer tmp(atype);
+    tmp.initialize_from_nrp(nrp, c, true);
+    tmp.initialize(nrp.mobility_matrix());
+    return tmp.m;
+}
+
 model parse_ligand_pdbqt_from_string(const std::string& string_name, atom_type::t atype) { // can throw parse_error
     non_rigid_parsed nrp;
     context c;
@@ -667,7 +702,6 @@ model parse_ligand_pdbqt_from_string_no_failure(const std::string& string_name, 
         parse_pdbqt_ligand(molstream, nrp, c);
     }
     catch(pdbqt_parse_error& e) {
-        printf("caught error\n");
         std::cerr << e.what() << '\n';
         model m;
         assert(m.num_ligands() == 0);

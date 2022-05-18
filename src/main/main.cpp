@@ -521,7 +521,7 @@ Thank you!\n";
 				while (1.214869*batch_size + .0038522*exhaustiveness*batch_size + .011978*all_atom2_numbers + 20017.72 < max_memory && // this is based on V100, 32G
 					 processed_ligands + batch_size < ligand_names.size())
 				{
-					int next_atom_numbers = parse_ligand_pdbqt_from_file(
+					int next_atom_numbers = parse_ligand_pdbqt_from_file_no_failure(
 												ligand_names[processed_ligands + batch_size],
 												v1.m_scoring_function.get_atom_typing())
 												.get_atoms()

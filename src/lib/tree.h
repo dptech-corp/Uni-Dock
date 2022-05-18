@@ -100,6 +100,10 @@ struct axis_frame : public atom_frame {
 	axis_frame(const vec& origin_, sz begin_, sz end_, const vec& axis_root) : atom_frame(origin_, begin_, end_) {
 		vec diff; diff = origin - axis_root;
 		fl nrm = diff.norm();
+		if (nrm < epsilon_fl) {
+			throw(1);
+			return;
+		}
 		VINA_CHECK(nrm >= epsilon_fl);
 		axis = (1/nrm) * diff;
 	}
