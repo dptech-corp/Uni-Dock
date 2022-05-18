@@ -1,0 +1,48 @@
+name: auto build docker image for vina-gpu
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+
+  docker_auto_build:
+    name: build and push Docker image to DP docker image repo 
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: checkout repo
+      uses: actions/checkout@v2
+
+    - name: login
+      uses: docker/login-action@v1
+      with:
+        registry: ${{ secrets.DPLC_REGISTRY }} 
+        username: ${{ secrets.DPLC_USERNAME }} 
+        password: ${{ secrets.DPLC_PASSWORD }}
+    
+    - name: build and push
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        file: ./container/step2_build_vina-gpu.dockerfile
+        push: true
+        tags: ${{ secrets.DPLC_REGISTRY }}/dplc/vina_gpu:${{ github.ref }}
+
+  send_email:
+    name: send email to inform vina-gpu group members
+    runs-on: ubuntu-latest
+    needs: [ docker_auto_build ]
+    steps:
+    - name: send email
+      uses: dawidd6/action-send-mail@v3
+      with:
+        server_address: smtp.feishu.cn
+        server_port: 465
+        username: ${{ secrets.ZH_MAILUSERNAME }}
+        password: ${{ secrets.ZH_MAILPASSWORD }}
+        subject: Auto Build For Vina-GPU
+        body: ${{ secrets.DPLC_REGISTRY }}/dplc/vina_gpu:${{ github.ref }}
+        to: ${{ secrets.VINAGPU_MAIL_RECEIVER_LIST }}
+        from: GitHub Actions
+        content_type: text
