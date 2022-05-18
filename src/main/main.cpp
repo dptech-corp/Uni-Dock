@@ -123,6 +123,7 @@ Thank you!\n";
 		std::vector<std::string> gpu_batch_ligand_names;
 		std::string maps;
 		std::string sf_name = "vina";
+		std::string search_mode;
 		double center_x;
 		double center_y;
 		double center_z;
@@ -250,6 +251,7 @@ Thank you!\n";
 			("verbosity", value<int>(&verbosity)->default_value(1), "verbosity (0=no output, 1=normal, 2=verbose)")
 			("max_step", value<int>(&max_step)->default_value(0), "maximum number of steps in each MC run (if zero, which is the default, the number of MC steps is based on heuristics)")
 			("max_gpu_memory", value<int>(&max_gpu_memory)->default_value(0), "maximum gpu memory to use (default=0, use all available GPU memory to optain maximum batch size)")
+			("search_mode", value<std::string>(&search_mode), "search mode of vina (fast, balance, detail), using recommended settings of exhaustiveness and search steps; the higher the computational complexity, the higher the accuracy, but the larger the computational cost")
 
 		;
 		options_description config("Configuration file (optional)");
@@ -316,6 +318,21 @@ Thank you!\n";
 		if (vm.count("receptor") && vm.count("maps")) {
 			std::cerr << "ERROR: Cannot specify both receptor and affinity maps at the same time, --flex argument is allowed with receptor or maps.\n";
 			exit(EXIT_FAILURE);
+		}
+
+		if (vm.count("search_mode")){
+			if (search_mode.compare("balance") == 0){
+				exhaustiveness = 1024;
+				max_step = 20;
+			}
+			if (search_mode.compare("fast") == 0){
+				exhaustiveness = 256;
+				max_step = 15;
+			}
+			if (search_mode.compare("detail") == 0){
+				exhaustiveness = 2048;
+				max_step = 20;
+			}
 		}
 
 		if (sf_name.compare("vina") == 0 || sf_name.compare("vinardo") == 0) {
@@ -508,7 +525,7 @@ Thank you!\n";
 				cudaSetDevice(0);
 				cudaMemGetInfo(&avail, &total); 
 				printf("Avaliable Memery = %dMiB   Total Memory = %dMiB\n", int(avail/1024/1024), int(total / 1024 / 1024));
-				max_memory = avail / 1024 / 1024 - 200; // leave 200MB to prevent error
+				max_memory = avail / 1024 / 1024 - 2000; // leave 2000MB to prevent error
 			}
 			if (max_gpu_memory > 0 && max_gpu_memory < max_memory){
 				max_memory = (float)max_gpu_memory;
