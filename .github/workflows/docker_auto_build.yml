@@ -11,6 +11,10 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+    - name: Get the version
+      id: get_version
+      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+    
     - name: checkout repo
       uses: actions/checkout@v2
 
@@ -27,7 +31,9 @@ jobs:
         context: .
         file: ./container/step2_build_vina-gpu.dockerfile
         push: true
-        tags: ${{ secrets.DPLC_REGISTRY }}/dplc/vina_gpu:${{ github.ref }}
+        tags: |
+          ${{ secrets.DPLC_REGISTRY }}/dplc/vina_gpu:${{ steps.get_version.outputs.VERSION }}
+          ${{ secrets.DPLC_REGISTRY }}/dplc/vina_gpu:latest
 
   send_email:
     name: send email to inform vina-gpu group members
