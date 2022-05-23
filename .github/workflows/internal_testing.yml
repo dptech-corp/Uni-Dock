@@ -27,6 +27,8 @@ jobs:
         file: ./container/internal_testing.dockerfile
         push: true
         tags: ${{ secrets.DPLC_REGISTRY }}/dplc/vina_gpu:autobuild-${{ github.sha }}
+        cache-from: type=registry,ref=${{ secrets.DPLC_REGISTRY }}/dplc/vina_gpu:latest
+        cache-to: type=inline
 
   send_email:
     name: send email to inform vina-gpu group members
