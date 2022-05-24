@@ -133,6 +133,9 @@ inline vec operator*(fl s, const vec& v) {
 	return vec(s * v[0], s * v[1], s * v[2]);
 }
 
+inline vec operator/(const vec& v, fl s) {
+	return vec(v[0] / s, v[1] / s, v[2] / s);
+}
 inline vec cross_product(const vec& a, const vec& b) {
 	return vec(a[1]*b[2] - a[2]*b[1],
 		       a[2]*b[0] - a[0]*b[2],

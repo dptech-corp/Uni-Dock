@@ -46,9 +46,9 @@ qt angle_to_quaternion(const vec& rotation) {
 	//fl angle = tvmet::norm2(rotation); 
 	fl angle = rotation.norm(); 
 	if(angle > epsilon_fl) {
-		//vec axis; 
-		//axis = rotation / angle;	
-		vec axis = (1/angle) * rotation;
+		vec axis; 
+		axis = rotation / angle;	
+		// vec axis = (1/angle) * rotation;
 		return angle_to_quaternion(axis, angle);
 	}
 	return qt_identity;
