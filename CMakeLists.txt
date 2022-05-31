@@ -36,7 +36,7 @@ add_library(lib OBJECT
 # set(CMAKE_CURRENT_SOURCE_DIR ${CMAKE_SOURCE_DIR}/src/cuda)
 add_library(cuda OBJECT src/cuda/monte_carlo.cu src/cuda/precalculate.cu)
 target_link_libraries(${VINA_BIN_NAME} cuda lib)
-
+target_include_directories(${VINA_BIN_NAME} PUBLIC ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}) # For detecting CUDA memory size
 # set_property(TARGET ${VINA_BIN_NAME} PROPERTY CUDA_ARCHITECTURES
 # 	# 60 # P100
 # 	70 # V100
