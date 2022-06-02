@@ -48,7 +48,6 @@ jobs:
         username: ${{ secrets.ZH_MAILUSERNAME }}
         password: ${{ secrets.ZH_MAILPASSWORD }}
         subject: Auto Build For Vina-GPU
-        body: ${{ secrets.DPLC_REGISTRY }}/dplc/vina_gpu:${{ github.ref }}
+        body: ${{ secrets.DPLC_REGISTRY }}/dplc/vina_gpu:${{ steps.get_version.outputs.VERSION }}
         to: ${{ secrets.VINAGPU_MAIL_RECEIVER_LIST }}
         from: GitHub Actions
-        content_type: text
