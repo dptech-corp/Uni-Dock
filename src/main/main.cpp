@@ -523,24 +523,26 @@ Thank you!\n";
 			cudaGetDeviceCount(&deviceCount);
 			if (deviceCount > 0){
 				cudaSetDevice(0);
-				cudaMemGetInfo(&avail, &total); 
+				cudaMemGetInfo(&avail, &total);
 				printf("Avaliable Memery = %dMiB   Total Memory = %dMiB\n", int(avail/1024/1024), int(total / 1024 / 1024));
 				max_memory = avail / 1024 / 1024 - 2000; // leave 2000MB to prevent error
 			}
 			if (max_gpu_memory > 0 && max_gpu_memory < max_memory){
 				max_memory = (float)max_gpu_memory;
 			}
-			
+
 			while (processed_ligands < ligand_names.size()) {
 				Vina v1(v); // reuse init'ed maps
 				int batch_size = 0;
 				int all_atom2_numbers = 0; // total number of atom^2 in current batch
+				std::vector<model> batch_ligands; // ligands in current batch
 				while (1.214869*batch_size + .0038522*exhaustiveness*batch_size + .011978*all_atom2_numbers + 20017.72 < max_memory && // this is based on V100, 32G
 					 processed_ligands + batch_size < ligand_names.size())
 				{
-					int next_atom_numbers = parse_ligand_pdbqt_from_file_no_failure(
+					batch_ligands.emplace_back(parse_ligand_pdbqt_from_file_no_failure(
 												ligand_names[processed_ligands + batch_size],
-												v1.m_scoring_function.get_atom_typing())
+												v1.m_scoring_function.get_atom_typing()));
+					int next_atom_numbers = batch_ligands.back()
 												.get_atoms()
 												.size()
 											+ receptor_atom_numbers;
@@ -562,7 +564,7 @@ Thank you!\n";
 				{
 					gpu_out_name.push_back(default_output(get_filename(batch_ligand_names[i]), out_dir));
 				}
-				v1.set_ligand_from_file_gpu(batch_ligand_names);
+				v1.set_ligand_from_object_gpu(batch_ligands);
 				v1.global_search_gpu(exhaustiveness, num_modes, min_rmsd, max_evals, max_step, batch_ligand_names.size());
 				v1.write_poses_gpu(gpu_out_name, num_modes, energy_range);
 			}
