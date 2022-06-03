@@ -555,11 +555,11 @@ Thank you!\n";
 						ligand, v.m_scoring_function.get_atom_typing());
 				#pragma omp critical
 				all_ligands.emplace_back(std::make_pair(ligand,l));
-            }
-            std::sort(all_ligands.begin(), all_ligands.end(),
-                      [](named_model a, named_model b)
-					  { return a.second.get_atoms().size() < b.second.get_atoms().size(); });
-            while (processed_ligands < ligand_names.size()) {
+			}
+			std::sort(all_ligands.begin(), all_ligands.end(),
+				  [](named_model a, named_model b)
+				  { return a.second.get_atoms().size() < b.second.get_atoms().size(); });
+			while (processed_ligands < ligand_names.size()) {
 				Vina v1(v); // reuse init'ed maps
 				int batch_size = 0;
 				int all_atom2_numbers = 0; // total number of atom^2 in current batch
