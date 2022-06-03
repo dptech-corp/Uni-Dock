@@ -16,7 +16,8 @@ set(VINA_BIN_NAME vina)
 add_compile_definitions(ENABLE_CUDA)
 add_compile_options(-O2 -g)
 add_compile_definitions(VERSION="v${PROJECT_VERSION}")
-
+find_package(OpenMP REQUIRED)
+add_compile_options(${OPENMP_COMPILE_FLAGS})
 
 include_directories(src/lib src/cuda)
 add_executable(${VINA_BIN_NAME} src/main/main)
@@ -26,7 +27,6 @@ find_package(Boost REQUIRED
 	COMPONENTS system thread serialization filesystem program_options)
 target_link_libraries(${VINA_BIN_NAME} Boost::system Boost::thread Boost::serialization Boost::filesystem Boost::program_options)
 target_link_libraries(split Boost::system Boost::thread Boost::serialization Boost::filesystem Boost::program_options)
-find_package(OpenMP REQUIRED)
 target_link_libraries(${VINA_BIN_NAME} OpenMP::OpenMP_CXX)
 
 # set(CMAKE_CURRENT_SOURCE_DIR ${CMAKE_SOURCE_DIR}/src/lib)
