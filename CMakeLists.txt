@@ -10,14 +10,13 @@ set(CMAKE_CXX_STANDARD 11)
 
 include(CheckLanguage)
 check_language(CUDA)
-set(CMAKE_CUDA_HOST_COMPILER ${CMAKE_CXX_COMPILER})
 set(VINA_BIN_NAME vina)
 
 add_compile_definitions(ENABLE_CUDA)
-add_compile_options(-O2 -g)
 add_compile_definitions(VERSION="v${PROJECT_VERSION}")
-find_package(OpenMP REQUIRED)
-add_compile_options(${OPENMP_COMPILE_FLAGS})
+add_compile_options(-O2 -g)
+
+find_package(OpenMP REQUIRED) # OpenMP only required in main.cpp
 
 include_directories(src/lib src/cuda)
 add_executable(${VINA_BIN_NAME} src/main/main)
