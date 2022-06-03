@@ -530,8 +530,21 @@ Thank you!\n";
 			if (max_gpu_memory > 0 && max_gpu_memory < max_memory){
 				max_memory = (float)max_gpu_memory;
 			}
-
-			while (processed_ligands < ligand_names.size()) {
+			typedef std::pair<std::string,model> named_model;
+			std::vector<named_model> all_ligands; // 2GB for 10,000 lig obj
+			// TODO: limit all ligands number
+			#pragma omp parallel for
+			for (auto &ligand : ligand_names)
+			{
+				auto l = parse_ligand_pdbqt_from_file_no_failure(
+						ligand, v.m_scoring_function.get_atom_typing());
+				#pragma omp critical
+				all_ligands.emplace_back(std::make_pair(ligand,l));
+            }
+            std::sort(all_ligands.begin(), all_ligands.end(),
+                      [](named_model a, named_model b)
+					  { return a.second.get_atoms().size() < b.second.get_atoms().size(); });
+            while (processed_ligands < ligand_names.size()) {
 				Vina v1(v); // reuse init'ed maps
 				int batch_size = 0;
 				int all_atom2_numbers = 0; // total number of atom^2 in current batch
@@ -539,9 +552,7 @@ Thank you!\n";
 				while (1.214869*batch_size + .0038522*exhaustiveness*batch_size + .011978*all_atom2_numbers + 20017.72 < max_memory && // this is based on V100, 32G
 					 processed_ligands + batch_size < ligand_names.size())
 				{
-					batch_ligands.emplace_back(parse_ligand_pdbqt_from_file_no_failure(
-												ligand_names[processed_ligands + batch_size],
-												v1.m_scoring_function.get_atom_typing()));
+					batch_ligands.push_back(all_ligands[processed_ligands + batch_size].second);
 					int next_atom_numbers = batch_ligands.back()
 												.get_atoms()
 												.size()
@@ -556,7 +567,7 @@ Thank you!\n";
 				std::vector<std::string> batch_ligand_names;
 				for (int i = processed_ligands; i < processed_ligands + batch_size; i++)
 				{
-					batch_ligand_names.push_back(ligand_names[i]);
+					batch_ligand_names.push_back(all_ligands[i].first);
 				}
 				processed_ligands += batch_size;
 				gpu_out_name = {};
