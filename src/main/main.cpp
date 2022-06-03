@@ -66,6 +66,16 @@ void check_occurrence(boost::program_options::variables_map& vm, boost::program_
 	}
 }
 
+int predict_peak_memory(int batch_size, int exhaustiveness, int all_atom2_numbers, bool use_v100 = true){
+	if (use_v100){
+		return 1.214869*batch_size + .0038522*exhaustiveness*batch_size + .011978*all_atom2_numbers + 20017.72; // this is based on V100, 32G
+	}
+	else {
+		return 1.166067*batch_size + .0038676*exhaustiveness*batch_size + .0119598*all_atom2_numbers + 5313.848; // this is based on T4, 16G
+	}
+	return 0;
+}
+
 int main(int argc, char* argv[]) {
 	using namespace boost::program_options;
 	const std::string git_version = VERSION;
@@ -520,12 +530,17 @@ Thank you!\n";
 			size_t avail;
 			size_t total;
 			float max_memory = 32000;
+			bool use_v100 = true;
 			cudaGetDeviceCount(&deviceCount);
 			if (deviceCount > 0){
 				cudaSetDevice(0);
 				cudaMemGetInfo(&avail, &total); 
 				printf("Avaliable Memery = %dMiB   Total Memory = %dMiB\n", int(avail/1024/1024), int(total / 1024 / 1024));
-				max_memory = avail / 1024 / 1024 - 2000; // leave 2000MB to prevent error
+				max_memory = avail / 1024 / 1024 * 0.95; // leave 5% to prevent error
+			}
+			if (max_memory < 17000){
+				// using T4 or other 16G global memory GPU
+				use_v100 = false;
 			}
 			if (max_gpu_memory > 0 && max_gpu_memory < max_memory){
 				max_memory = (float)max_gpu_memory;
@@ -535,7 +550,7 @@ Thank you!\n";
 				Vina v1(v); // reuse init'ed maps
 				int batch_size = 0;
 				int all_atom2_numbers = 0; // total number of atom^2 in current batch
-				while (1.214869*batch_size + .0038522*exhaustiveness*batch_size + .011978*all_atom2_numbers + 20017.72 < max_memory && // this is based on V100, 32G
+				while (predict_peak_memory(batch_size, exhaustiveness, all_atom2_numbers, use_v100) < max_memory && 
 					 processed_ligands + batch_size < ligand_names.size())
 				{
 					int next_atom_numbers = parse_ligand_pdbqt_from_file_no_failure(
