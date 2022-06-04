@@ -1658,6 +1658,7 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 	checkCUDA(cudaFreeHost(ig_cuda_ptr));
 	checkCUDA(cudaFreeHost(p_cuda));
 	checkCUDA(cudaFreeHost(p_data));
+	checkCUDA(cudaFreeHost(results));
 
 	DEBUG_PRINTF("exit monte_carlo\n");
 
