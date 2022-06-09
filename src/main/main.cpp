@@ -559,7 +559,10 @@ Thank you!\n";
 			std::sort(all_ligands.begin(), all_ligands.end(),
 				  [](named_model a, named_model b)
 				  { return a.second.get_atoms().size() < b.second.get_atoms().size(); });
+			int batch_id = 0;
 			while (processed_ligands < ligand_names.size()) {
+				++batch_id;
+				auto start = std::chrono::system_clock::now();
 				Vina v1(v); // reuse init'ed maps
 				int batch_size = 0;
 				int all_atom2_numbers = 0; // total number of atom^2 in current batch
@@ -578,7 +581,7 @@ Thank you!\n";
 				}
 				DEBUG_PRINTF("batch size=%d, all_atom2_numbers=%d\n", batch_size, all_atom2_numbers);
 
-				std::cout << "Batch size: " << batch_size << std::endl;
+				std::cout << "Batch " << batch_id << " size: " << batch_size << std::endl;
 				std::vector<std::string> batch_ligand_names;
 				for (int i = processed_ligands; i < processed_ligands + batch_size; i++)
 				{
@@ -593,6 +596,9 @@ Thank you!\n";
 				v1.set_ligand_from_object_gpu(batch_ligands);
 				v1.global_search_gpu(exhaustiveness, num_modes, min_rmsd, max_evals, max_step, batch_ligand_names.size());
 				v1.write_poses_gpu(gpu_out_name, num_modes, energy_range);
+				auto end = std::chrono::system_clock::now();
+				std::cout << "Batch " << batch_id << " running time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
+	
 			}
 		}
 	}
