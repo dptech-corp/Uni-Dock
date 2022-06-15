@@ -222,9 +222,9 @@ void mutate_conf_cuda(const	int	num_steps, output_type_cuda_t *c,
 		DEBUG_PRINTF("random sphere r=%f\n", norm3(random_inside_sphere));
 	}
 	
-	float ramdon_pi = (random_inside_sphere[3] - 0.5) * 2.0 * pi; // ~ U[-pi, pi]
+	float random_pi = (random_inside_sphere[3] - 0.5) * 2.0 * pi; // ~ U[-pi, pi]
 	if (which == 0){
-		DEBUG_PRINTF("random pi=%f\n", ramdon_pi);
+		DEBUG_PRINTF("random pi=%f\n", random_pi);
 	}
 
 	if (which == 0) {
@@ -243,11 +243,11 @@ void mutate_conf_cuda(const	int	num_steps, output_type_cuda_t *c,
 		return;
 	}
 	--which;
-	if (which < c->lig_torsion_size) { c->lig_torsion[which] = ramdon_pi; return; }
+	if (which < c->lig_torsion_size) { c->lig_torsion[which] = random_pi; return; }
 	which -= c->lig_torsion_size;
 
 	if (flex_torsion_size != 0) {
-		if (which < flex_torsion_size) { c->flex_torsion[which] = ramdon_pi; return; }
+		if (which < flex_torsion_size) { c->flex_torsion[which] = random_pi; return; }
 		which -= flex_torsion_size;
 	}
 }
