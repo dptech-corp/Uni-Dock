@@ -591,7 +591,7 @@ Thank you!\n";
 					gpu_out_name.push_back(default_output(get_filename(batch_ligand_names[i]), out_dir));
 				}
 				v1.set_ligand_from_object_gpu(batch_ligands);
-				v1.global_search_gpu(exhaustiveness, num_modes, min_rmsd, max_evals, max_step, batch_ligand_names.size());
+				v1.global_search_gpu(exhaustiveness, num_modes, min_rmsd, max_evals, max_step, batch_ligand_names.size(), (unsigned long long)seed);
 				v1.write_poses_gpu(gpu_out_name, num_modes, energy_range);
 			}
 		}

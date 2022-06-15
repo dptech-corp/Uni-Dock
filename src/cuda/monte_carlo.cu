@@ -24,6 +24,8 @@
 #include "kernel.h"
 #include "math.h"
 #include <vector>
+#include "curand_kernel.h"
+#include "cuda.h"
 /* Original Include files */
 #include "monte_carlo.h"
 #include "coords.h"
@@ -76,6 +78,23 @@ void output_type_cuda_increment(output_type_cuda_t* x, const change_cuda_t* c, f
 float norm3(const float* a) {
 	return sqrt(pow(a[0], 2) + pow(a[1], 2) + pow(a[2], 2));
 }
+
+ __device__ __forceinline__
+void random_inside_sphere_gpu(float *random_inside_sphere, curandStatePhilox4_32_10_t* state){
+	float4 random_inside_sphere_fl;
+	while(true) { // on average, this will have to be run about twice
+		random_inside_sphere_fl = curand_uniform4(state); // ~ U[0,1]
+		random_inside_sphere[0] = (random_inside_sphere_fl.x - 0.5)*2.0;
+		random_inside_sphere[1] = (random_inside_sphere_fl.y - 0.5)*2.0;
+		random_inside_sphere[2] = (random_inside_sphere_fl.z - 0.5)*2.0;
+		random_inside_sphere[3] = random_inside_sphere_fl.w;
+		float r = norm3(random_inside_sphere);
+		if (r < 1){
+			return;
+		}
+	}
+}
+
 
  __device__ __forceinline__
 void normalize_angle(float* x) {
@@ -143,7 +162,7 @@ void quaternion_normalize_approx(float* q, float epsilon_fl) {
 		;
 	else {
 		const float a = sqrt(s);
-		for (int i = 0; i < 4; i++)q[i] *= (1 / a);
+		for (int i = 0; i < 4; i++) q[i] /= a;
 	}
 }
 
@@ -153,6 +172,7 @@ void quaternion_increment(float* q, const float* rotation, float epsilon_fl) {
 	angle_to_quaternion(q, rotation, epsilon_fl);
 	angle_to_quaternion_multi(q, q_old);
 	quaternion_normalize_approx(q, epsilon_fl);
+	// assert(quaternion_is_normalized(q)); // unnecessary
 }
 
 
@@ -182,8 +202,8 @@ float gyration_radius(				int				m_lig_begin,
 }
 
  __device__ __forceinline__
-void mutate_conf_cuda(const	int	step, const	int	num_steps, output_type_cuda_t *c, int *random_int_map_gpu,
-			float random_inside_sphere_map_gpu[][3], float*	random_fl_pi_map_gpu,
+void mutate_conf_cuda(const	int	num_steps, output_type_cuda_t *c,
+			curandStatePhilox4_32_10_t* state, 
 			const int	m_lig_begin,
 			const int	m_lig_end,
 			const atom_cuda_t* atoms,
@@ -192,32 +212,42 @@ void mutate_conf_cuda(const	int	step, const	int	num_steps, output_type_cuda_t *c
 			const float			epsilon_fl,
 			const float			amplitude
 ) {
-
-	int index = step; // global index (among all exhaus)
-	int which = random_int_map_gpu[index];
-	int lig_torsion_size = c->lig_torsion_size;
 	int flex_torsion_size = 0; // FIX? 20210727
-		if (which == 0) {
-			for (int i = 0; i < 3; i++)
-				c->position[i] += amplitude * random_inside_sphere_map_gpu[index][i];
-			return;
+	int count_mutable_entities = 2 + c->lig_torsion_size + flex_torsion_size;
+	int which = curand(state) % count_mutable_entities;
+
+	float random_inside_sphere[4];
+	random_inside_sphere_gpu(random_inside_sphere, state);
+	if (which == 0){
+		DEBUG_PRINTF("random sphere r=%f\n", norm3(random_inside_sphere));
+	}
+	
+	float ramdon_pi = (random_inside_sphere[3] - 0.5) * 2.0 * pi; // ~ U[-pi, pi]
+	if (which == 0){
+		DEBUG_PRINTF("random pi=%f\n", ramdon_pi);
+	}
+
+	if (which == 0) {
+		for (int i = 0; i < 3; i++)
+			c->position[i] += amplitude * random_inside_sphere[i];
+		return;
+	}
+	--which;
+	if (which == 0) {
+		float gr = gyration_radius(m_lig_begin, m_lig_end, atoms, m_coords_gpu, m_lig_node_origin_gpu);
+		if (gr > epsilon_fl) {
+			float rotation[3];
+			for (int i = 0; i < 3; i++) rotation[i] = amplitude / gr * random_inside_sphere[i];
+			quaternion_increment(c->orientation, rotation, epsilon_fl);
 		}
-		--which;
-		if (which == 0) {
-			float gr = gyration_radius(m_lig_begin, m_lig_end, atoms, m_coords_gpu, m_lig_node_origin_gpu);
-			if (gr > epsilon_fl) {
-				float rotation[3];
-				for (int i = 0; i < 3; i++)rotation[i] = amplitude / gr * random_inside_sphere_map_gpu[index][i];
-				quaternion_increment(c->orientation, rotation, epsilon_fl);
-			}
-			return;
-		}
-		--which;
-		if (which < lig_torsion_size) { c->lig_torsion[which] = random_fl_pi_map_gpu[index]; return; }
-		which -= lig_torsion_size;
+		return;
+	}
+	--which;
+	if (which < c->lig_torsion_size) { c->lig_torsion[which] = ramdon_pi; return; }
+	which -= c->lig_torsion_size;
 
 	if (flex_torsion_size != 0) {
-		if (which < flex_torsion_size) { c->flex_torsion[which] = random_fl_pi_map_gpu[index]; return; }
+		if (which < flex_torsion_size) { c->flex_torsion[which] = ramdon_pi; return; }
 		which -= flex_torsion_size;
 	}
 }
@@ -1144,7 +1174,8 @@ void kernel(	m_cuda_t*			m_cuda_global,
 				float*				best_e_gpu,
 				int					bfgs_max_steps,
 				float				mutation_amplitude,
-				random_maps_t*		rand_maps_gpu,
+				curandStatePhilox4_32_10_t* states, 
+				unsigned long long seed,
 				float				epsilon_fl,
 				float*				hunt_cap_gpu,
 				float*				authentic_v_gpu,
@@ -1156,22 +1187,21 @@ void kernel(	m_cuda_t*			m_cuda_global,
 {
 	int idx = blockIdx.x * blockDim.x + threadIdx.x;
 	float best_e = INFINITY;
-	int gll = idx;
 
-	if (gll < num_of_ligands * threads_per_ligand)
+	if (idx < num_of_ligands * threads_per_ligand)
 	{
-		//if (gll % 100 == 0)DEBUG_PRINTF("\nThread %d START", gll);
+		//if (idx % 100 == 0)DEBUG_PRINTF("\nThread %d START", idx);
 		output_type_cuda_t tmp; // private memory, shared only in work item
 		change_cuda_t g;
 		m_cuda_t m_cuda_gpu;
 		// update pointer to get correct ligand data
-		output_type_cuda_init(&tmp, rand_molec_struc_gpu + gll * (SIZE_OF_MOLEC_STRUC / sizeof(float)));
-		rand_maps_gpu = rand_maps_gpu + gll / threads_per_ligand;
-		m_cuda_init_with_m_cuda(m_cuda_global + gll / threads_per_ligand, &m_cuda_gpu);
+		output_type_cuda_init(&tmp, rand_molec_struc_gpu + idx * (SIZE_OF_MOLEC_STRUC / sizeof(float)));
+		curand_init(seed, idx, 0, &states[idx]);
+		m_cuda_init_with_m_cuda(m_cuda_global + idx / threads_per_ligand, &m_cuda_gpu);
 		if (m_cuda_gpu.m_num_movable_atoms == -1){
 			return;
 		}
-		p_cuda_gpu = p_cuda_gpu + gll / threads_per_ligand;
+		p_cuda_gpu = p_cuda_gpu + idx / threads_per_ligand;
 
 		g.lig_torsion_size = tmp.lig_torsion_size;
 		// BFGS
@@ -1180,13 +1210,14 @@ void kernel(	m_cuda_t*			m_cuda_global,
 
 		for (int step = 0; step < search_depth; step++) {
 			output_type_cuda_init_with_output(&candidate, &tmp);
-			int map_index = (step + gll * search_depth) % MAX_NUM_OF_RANDOM_MAP;
-			mutate_conf_cuda(map_index, bfgs_max_steps, &candidate, rand_maps_gpu->int_map, rand_maps_gpu->sphere_map,
-				rand_maps_gpu->pi_map, m_cuda_gpu.ligand.begin, m_cuda_gpu.ligand.end, m_cuda_gpu.atoms,
+			mutate_conf_cuda(bfgs_max_steps, &candidate, &states[idx],
+				m_cuda_gpu.ligand.begin, m_cuda_gpu.ligand.end, m_cuda_gpu.atoms,
 				&m_cuda_gpu.m_coords, m_cuda_gpu.ligand.rigid.origin[0], epsilon_fl, mutation_amplitude);
 			bfgs(&candidate, &g, &m_cuda_gpu, p_cuda_gpu, ig_cuda_gpu, hunt_cap_gpu, epsilon_fl, bfgs_max_steps);
-			float n = generate_n(rand_maps_gpu->pi_map, map_index);
-			// if (gll == 0)
+			// n ~ U[0,1]
+			float n = curand_uniform(&states[idx]);
+
+			// if (idx == 0)
 			// 	DEBUG_PRINTF("metropolis_accept tmp.e=%f, candidate.e=%f, n=%f\n", tmp.e, candidate.e, n);
 
 			if (step == 0 || metropolis_accept(tmp.e, candidate.e, 1.2, n)) {
@@ -1217,8 +1248,8 @@ void kernel(	m_cuda_t*			m_cuda_global,
 
 		}
 		// write the best conformation back to CPU // FIX?? should add more
-		write_back(results + gll, &best_out);
-		// if (gll % 100 == 0) DEBUG_PRINTF("\nThread %d FINISH", gll);
+		write_back(results + idx, &best_out);
+		// if (idx % 100 == 0) DEBUG_PRINTF("\nThread %d FINISH", idx);
 	}
 }
 
@@ -1255,7 +1286,7 @@ std::vector<output_type> monte_carlo::cuda_to_vina(output_type_cuda_t results_pt
 
 __host__
 void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_container>& out_gpu, std::vector<precalculate_byatom> & p_gpu,
-				triangular_matrix_cuda_t *m_data_list_gpu, const igrid& ig, const vec& corner1, const vec& corner2, rng& generator, int verbosity) const {
+				triangular_matrix_cuda_t *m_data_list_gpu, const igrid& ig, const vec& corner1, const vec& corner2, rng& generator, int verbosity, unsigned long long seed) const {
 
 
 	/* Definitions from vina1.2 */
@@ -1280,8 +1311,6 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 	p_cuda_t_cpu *p_cuda;
 	checkCUDA(cudaMallocHost(&p_cuda, sizeof(p_cuda_t_cpu)));
 
-	random_maps_t *rand_maps;
-	checkCUDA(cudaMallocHost(&rand_maps, sizeof(random_maps_t)));
 
 	/* End CPU allocation */
 
@@ -1297,7 +1326,6 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 	size_t p_cuda_size_gpu = sizeof(p_cuda_t);
 	DEBUG_PRINTF("p_cuda_size_gpu=%lu\n", p_cuda_size_gpu);
 
-	size_t rand_maps_size = sizeof(random_maps_t);
 	// rand_molec_struc_gpu
 	float *rand_molec_struc_gpu;
 	checkCUDA(cudaMalloc(&rand_molec_struc_gpu, thread * SIZE_OF_MOLEC_STRUC));
@@ -1306,10 +1334,12 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 	float epsilon_fl_float = static_cast<float>(epsilon_fl);
 	checkCUDA(cudaMalloc(&best_e_gpu, sizeof(float)));
 	checkCUDA(cudaMemcpy(best_e_gpu, &max_fl, sizeof(float), cudaMemcpyHostToDevice));
-	// rand_maps_gpu
-	random_maps_t *rand_maps_gpu;
-	DEBUG_PRINTF("random_maps_t size=%lu\n", sizeof(random_maps_t));
-	checkCUDA(cudaMalloc(&rand_maps_gpu, num_of_ligands * rand_maps_size));
+	
+	// use cuRand to generate random values on GPU
+	curandStatePhilox4_32_10_t* states;
+	DEBUG_PRINTF("random states size=%lu\n", sizeof(curandStatePhilox4_32_10_t) * thread);
+	checkCUDA(cudaMalloc(&states, sizeof(curandStatePhilox4_32_10_t) * thread));
+
 	// hunt_cap_gpu
 	float *hunt_cap_gpu;
 	float hunt_cap_float[3] = {static_cast<float>(hunt_cap[0]), static_cast<float>(hunt_cap[1]), static_cast<float>(hunt_cap[2])};
@@ -1508,19 +1538,6 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 			checkCUDA(cudaMemcpy(p_cuda_gpu + l, p_cuda, sizeof(p_cuda_t), cudaMemcpyHostToDevice));
 			checkCUDA(cudaMemcpy(&(p_cuda_gpu[l].m_data), &(m_data_list_gpu[l].p_data), sizeof(p_m_data_cuda_t *), cudaMemcpyHostToDevice)); // check if fl == float
 
-			// Generate random maps
-			DEBUG_PRINTF("MAX_NUM_OF_RANDOM_MAP = %d\n", MAX_NUM_OF_RANDOM_MAP);
-			for (int i = 0; i < MAX_NUM_OF_RANDOM_MAP; i++) {
-				rand_maps->int_map[i] = random_int(0, int(lig_torsion_size), generator);
-				rand_maps->pi_map[i] = random_fl(-pi, pi, generator);
-			}
-			for (int i = 0; i < MAX_NUM_OF_RANDOM_MAP; i++) {
-				vec rand_coords = random_inside_sphere(generator);
-				for (int j = 0; j < 3 ; j ++) {
-					rand_maps->sphere_map[i][j] = rand_coords[j];
-				}
-			}
-			checkCUDA(cudaMemcpy(rand_maps_gpu + l, rand_maps, sizeof(random_maps_t), cudaMemcpyHostToDevice));
 		}
 
 	}
@@ -1583,7 +1600,8 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 	DEBUG_PRINTF("launch kernel, global_steps=%d, thread=%d, num_of_ligands=%d\n", global_steps, thread, num_of_ligands);
 	kernel<<<thread / 32 + 1, 32>>>(m_cuda_gpu, ig_cuda_gpu, p_cuda_gpu, rand_molec_struc_gpu,
 		best_e_gpu, quasi_newton_par_max_steps, mutation_amplitude_float,
-		rand_maps_gpu, epsilon_fl_float, hunt_cap_gpu, authentic_v_gpu, results_gpu, global_steps,
+		states, seed,
+		epsilon_fl_float, hunt_cap_gpu, authentic_v_gpu, results_gpu, global_steps,
 		num_of_ligands, threads_per_ligand);
 
 	// Device to Host memcpy of precalculated_byatom, copy back data to p_gpu
@@ -1652,7 +1670,7 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 	checkCUDA(cudaFree(hunt_cap_gpu));
 	checkCUDA(cudaFree(authentic_v_gpu));
 	checkCUDA(cudaFree(results_gpu));
-	checkCUDA(cudaFreeHost(rand_maps));
+	checkCUDA(cudaFree(states));
 	checkCUDA(cudaFreeHost(m_cuda));
 	checkCUDA(cudaFreeHost(rand_molec_struc_tmp));
 	checkCUDA(cudaFreeHost(ig_cuda_ptr));
