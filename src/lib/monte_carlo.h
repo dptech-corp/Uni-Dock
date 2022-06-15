@@ -50,7 +50,7 @@ struct monte_carlo {
 	void operator()(model& m, output_container& out, const precalculate_byatom& p, const igrid& ig,
                     const vec& corner1, const vec& corner2, rng& generator) const;
     void operator()(std::vector<model>& m, std::vector<output_container>& out, std::vector<precalculate_byatom>& p, triangular_matrix_cuda_t *m_data_list_gpu, const igrid& ig,
-                    const vec& corner1, const vec& corner2, rng& generator, int verbosity) const;
+                    const vec& corner1, const vec& corner2, rng& generator, int verbosity, unsigned long long seed = 181129) const;
     std::vector<output_type> cuda_to_vina(output_type_cuda_t *results_p, int thread) const;
 };
 
