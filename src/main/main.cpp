@@ -556,9 +556,11 @@ Thank you!\n";
 				#pragma omp critical
 				all_ligands.emplace_back(std::make_pair(ligand,l));
 			}
+			/*
 			std::sort(all_ligands.begin(), all_ligands.end(),
 				  [](named_model a, named_model b)
 				  { return a.second.get_atoms().size() < b.second.get_atoms().size(); });
+			*/
 			int batch_id = 0;
 			while (processed_ligands < ligand_names.size()) {
 				++batch_id;
