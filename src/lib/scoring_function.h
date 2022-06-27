@@ -80,8 +80,8 @@ public:
                 m_potentials.push_back(new linearattraction(20.0));
                 m_conf_independents.push_back(new ad4_tors_add());
                 m_atom_typing = atom_type::AD;
-                m_cutoff = 8.0;
-                m_max_cutoff = 8.0;
+                m_cutoff = 20.48;
+                m_max_cutoff = 20.48;
                 m_sf_choice = SF_AD42;
                 break;
             }
