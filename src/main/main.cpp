@@ -524,7 +524,6 @@ Thank you!\n";
 			std::vector<std::string> ligand_names {std::move(gpu_batch_ligand_names)};
 			std::cout << "Total ligands: " << ligand_names.size() << std::endl;
 
-			int processed_ligands = 0;
 			int receptor_atom_numbers = v.m_receptor.get_atoms().size();
 			int deviceCount=0;
 			size_t avail;
@@ -545,34 +544,43 @@ Thank you!\n";
 			if (max_gpu_memory > 0 && max_gpu_memory < max_memory){
 				max_memory = (float)max_gpu_memory;
 			}
+
 			typedef std::pair<std::string,model> named_model;
-			std::vector<named_model> all_ligands; // 2GB for 10,000 lig obj
-			// TODO: limit all ligands number
+			std::vector<named_model> all_ligands;
+			const int ligand_batch_limit = 1e6; // ~20GB for 100,000 lig obj
+			int batch_index=0;
+			while(batch_index<ligand_names.size()){
+			all_ligands.clear();
+			int next_batch_index = std::min(int(batch_index+ligand_batch_limit),int(ligand_names.size()));
 			#pragma omp parallel for
-			for (auto &ligand : ligand_names)
+			for (int ligand_count=batch_index;ligand_count<next_batch_index;++ligand_count)
 			{
+				auto& ligand=ligand_names[ligand_count];
 				auto l = parse_ligand_pdbqt_from_file_no_failure(
 						ligand, v.m_scoring_function.get_atom_typing());
 				#pragma omp critical
 				all_ligands.emplace_back(std::make_pair(ligand,l));
 			}
+			batch_index=next_batch_index;
 			/*
 			std::sort(all_ligands.begin(), all_ligands.end(),
 				  [](named_model a, named_model b)
 				  { return a.second.get_atoms().size() < b.second.get_atoms().size(); });
 			*/
+			DEBUG_PRINTF("%d\n",next_batch_index);
+			int processed_ligands = 0;
 			int batch_id = 0;
-			while (processed_ligands < ligand_names.size()) {
+			while (processed_ligands < all_ligands.size()) {
 				++batch_id;
 				auto start = std::chrono::system_clock::now();
 				Vina v1(v); // reuse init'ed maps
 				int batch_size = 0;
 				int all_atom2_numbers = 0; // total number of atom^2 in current batch
 				std::vector<model> batch_ligands; // ligands in current batch
-				while (predict_peak_memory(batch_size, exhaustiveness, all_atom2_numbers, use_v100) < max_memory && 
-					 processed_ligands + batch_size < ligand_names.size())
+				while (predict_peak_memory(batch_size, exhaustiveness, all_atom2_numbers, use_v100) < max_memory &&
+					 processed_ligands + batch_size < all_ligands.size())
 				{
-					batch_ligands.push_back(all_ligands[processed_ligands + batch_size].second);
+					batch_ligands.emplace_back(all_ligands[processed_ligands + batch_size].second);
 					int next_atom_numbers = batch_ligands.back()
 												.get_atoms()
 												.size()
@@ -600,8 +608,8 @@ Thank you!\n";
 				v1.write_poses_gpu(gpu_out_name, num_modes, energy_range);
 				auto end = std::chrono::system_clock::now();
 				std::cout << "Batch " << batch_id << " running time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
-	
 			}
+		}
 		}
 	}
 
