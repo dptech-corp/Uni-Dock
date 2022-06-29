@@ -672,7 +672,7 @@ model parse_ligand_pdbqt_from_file_no_failure(const std::string& name, atom_type
     tmp.initialize_from_nrp(nrp, c, true);
     tmp.initialize(nrp.mobility_matrix());
     assert(tmp.m.ligands.count_torsions().size()==1);
-    if(tmp.m.ligands.count_torsions()[0]>= MAX_NUM_OF_LIG_TORSION)
+    if(tmp.m.ligands.count_torsions()[0] > MAX_NUM_OF_LIG_TORSION)
     {
         std::cerr << "Ligand " << name << " exceed max torsion counts. " << tmp.m.ligands.count_torsions()[0] << std::endl;
         model m;
