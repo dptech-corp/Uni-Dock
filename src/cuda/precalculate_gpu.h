@@ -171,7 +171,7 @@ __device__ __forceinline__  fl vinardo_gaussian_eval(sz t1, sz t2, fl r, fl offs
     return gauss_gpu(r - (optimal_distance_vinardo_gpu(t1, t2) + offset), width); // hard-coded to XS atom type
 };
 
-__device__ __forceinline__  fl vinardo_repulsion_eval(sz t1, sz t2, fl r, fl offset, fl cutoff) {
+__device__ __forceinline__  fl vinardo_repulsion_eval(sz t1, sz t2, fl r, fl cutoff, fl offset) {
     if (r >= cutoff)
         return 0.0;
     if ((t1 >= XS_TYPE_SIZE) || (t2 >= XS_TYPE_SIZE))
