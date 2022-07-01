@@ -79,10 +79,10 @@ int predict_peak_memory(int batch_size, int exhaustiveness, int all_atom2_number
 int main(int argc, char* argv[]) {
 	using namespace boost::program_options;
 	const std::string git_version = VERSION;
-	const std::string version_string = "AutoDock Vina " + git_version;
+	const std::string version_string = "Uni-Dock " + git_version;
 	const std::string error_message = "\n\n\
 Please report bugs through the Issue Tracker on GitHub \n\
-(https://github.com/ccsb-scripps/AutoDock-Vina/issues)., so\n\
+(https://github.com/dptech-corp/Uni-Dock/issues)., so\n\
 that this problem can be resolved. The reproducibility of the\n\
 error may be vital, so please remember to include the following in\n\
 your problem report:\n\
@@ -102,7 +102,10 @@ Thank you!\n";
 
 	const std::string cite_message = "\
 #################################################################\n\
-# If you used AutoDock Vina in your work, please cite:          #\n\
+# If you used Uni-Dock in your work, please cite:               #\n\
+#                                                               #\n\
+# Uni-Dock, xxxx, (2022) DOI xxxx							    #\n\
+#                                                               #\n\
 #                                                               #\n\
 # J. Eberhardt, D. Santos-Martins, A. F. Tillack, and S. Forli  #\n\
 # AutoDock Vina 1.2.0: New Docking Methods, Expanded Force      #\n\
@@ -115,7 +118,7 @@ Thank you!\n";
 # multithreading, J. Comp. Chem. (2010)                         #\n\
 # DOI 10.1002/jcc.21334                                         #\n\
 #                                                               #\n\
-# Please see https://github.com/ccsb-scripps/AutoDock-Vina for  #\n\
+# Please see https://github.com/dptech-corp/Uni-Dock/ for       #\n\
 # more information.                                             #\n\
 #################################################################\n";
 
@@ -332,16 +335,16 @@ Thank you!\n";
 
 		if (vm.count("search_mode")){
 			if (search_mode.compare("balance") == 0){
-				exhaustiveness = 1024;
-				max_step = 20;
+				exhaustiveness = 384;
+				max_step = 40;
 			}
 			if (search_mode.compare("fast") == 0){
-				exhaustiveness = 256;
-				max_step = 15;
+				exhaustiveness = 128;
+				max_step = 20;
 			}
 			if (search_mode.compare("detail") == 0){
-				exhaustiveness = 2048;
-				max_step = 20;
+				exhaustiveness = 512;
+				max_step = 40;
 			}
 		}
 
