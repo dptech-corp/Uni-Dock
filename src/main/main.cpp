@@ -334,7 +334,7 @@ Thank you!\n";
 		}
 
 		if (vm.count("search_mode")){
-			if (search_mode.compare("balance") == 0){
+			if (search_mode.compare("balance") == 0 || search_mode.compare("balanced") == 0){
 				exhaustiveness = 384;
 				max_step = 40;
 			}
@@ -342,7 +342,7 @@ Thank you!\n";
 				exhaustiveness = 128;
 				max_step = 20;
 			}
-			if (search_mode.compare("detail") == 0){
+			if (search_mode.compare("detail") == 0 || search_mode.compare("detailed") == 0){
 				exhaustiveness = 512;
 				max_step = 40;
 			}
@@ -537,7 +537,7 @@ Thank you!\n";
 			if (deviceCount > 0){
 				cudaSetDevice(0);
 				cudaMemGetInfo(&avail, &total);
-				printf("Avaliable Memery = %dMiB   Total Memory = %dMiB\n", int(avail/1024/1024), int(total / 1024 / 1024));
+				printf("Avaliable Memory = %dMiB   Total Memory = %dMiB\n", int(avail/1024/1024), int(total / 1024 / 1024));
 				max_memory = avail / 1024 / 1024 * 0.95; // leave 5% to prevent error
 			}
 			if (max_memory < 17000){
