@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 
 #include "kernel.h"
 #include "math.h"
@@ -124,7 +125,7 @@ void precalculate_parallel(triangular_matrix_cuda_t *m_data_list_cpu, std::vecto
 
     // copy atomv from m_model_gpu array and put into atom array
 
-    // using cudaMallocHost may be better
+    // using hipHostMalloc may be better
     assert(MAX_LIGAND_NUM >= thread);
     sz atom_xs[thread * max_atom_num]; // maybe size_t is too large
     sz atom_ad[thread * max_atom_num];
@@ -136,10 +137,10 @@ void precalculate_parallel(triangular_matrix_cuda_t *m_data_list_cpu, std::vecto
     sz *atom_ad_gpu;
     fl *atom_charge_gpu;
     int *atom_num_gpu;
-    checkCUDA(cudaMalloc(&atom_xs_gpu, thread * max_atom_num * sizeof(sz)));
-    checkCUDA(cudaMalloc(&atom_ad_gpu, thread * max_atom_num * sizeof(sz)));
-    checkCUDA(cudaMalloc(&atom_charge_gpu, thread * max_atom_num * sizeof(fl)));
-    checkCUDA(cudaMalloc(&atom_num_gpu, thread * sizeof(int)));
+    checkCUDA(hipMalloc(&atom_xs_gpu, thread * max_atom_num * sizeof(sz)));
+    checkCUDA(hipMalloc(&atom_ad_gpu, thread * max_atom_num * sizeof(sz)));
+    checkCUDA(hipMalloc(&atom_charge_gpu, thread * max_atom_num * sizeof(fl)));
+    checkCUDA(hipMalloc(&atom_num_gpu, thread * sizeof(int)));
 
     for (int i = 0; i < thread; ++i){
         atomv atoms = m_model_gpu[i].get_atoms();
@@ -153,16 +154,16 @@ void precalculate_parallel(triangular_matrix_cuda_t *m_data_list_cpu, std::vecto
         }
     }
 
-    checkCUDA(cudaMemcpy(atom_xs_gpu, atom_xs, thread * max_atom_num * sizeof(sz), cudaMemcpyHostToDevice));
+    checkCUDA(hipMemcpy(atom_xs_gpu, atom_xs, thread * max_atom_num * sizeof(sz), hipMemcpyHostToDevice));
     // // debug
     // sz atom_xs_check[max_atom_num];
-    // checkCUDA(cudaMemcpy(atom_xs_check, atom_xs_gpu, max_atom_num * sizeof(sz), cudaMemcpyDeviceToHost));
+    // checkCUDA(hipMemcpy(atom_xs_check, atom_xs_gpu, max_atom_num * sizeof(sz), hipMemcpyDeviceToHost));
     // for (int i = 0;i < max_atom_num;++i){
     //     DEBUG_PRINTF("atom[%d] on gpu check: xs=%lu\n", i, atom_xs_check[i]);
     // }
-    checkCUDA(cudaMemcpy(atom_ad_gpu, atom_ad, thread * max_atom_num * sizeof(sz), cudaMemcpyHostToDevice));
-    checkCUDA(cudaMemcpy(atom_charge_gpu, atom_charge, thread * max_atom_num * sizeof(fl), cudaMemcpyHostToDevice));
-    checkCUDA(cudaMemcpy(atom_num_gpu, atom_num, thread * sizeof(int), cudaMemcpyHostToDevice));
+    checkCUDA(hipMemcpy(atom_ad_gpu, atom_ad, thread * max_atom_num * sizeof(sz), hipMemcpyHostToDevice));
+    checkCUDA(hipMemcpy(atom_charge_gpu, atom_charge, thread * max_atom_num * sizeof(fl), hipMemcpyHostToDevice));
+    checkCUDA(hipMemcpy(atom_num_gpu, atom_num, thread * sizeof(int), hipMemcpyHostToDevice));
 
     // copy scoring function parameters
     scoring_function_cuda_t scoring_cuda;
@@ -226,34 +227,34 @@ void precalculate_parallel(triangular_matrix_cuda_t *m_data_list_cpu, std::vecto
         }
     }
     scoring_function_cuda_t *scoring_cuda_gpu;
-    checkCUDA(cudaMalloc(&scoring_cuda_gpu, sizeof(scoring_function_cuda_t)));
-    checkCUDA(cudaMemcpy(scoring_cuda_gpu, &scoring_cuda, sizeof(scoring_function_cuda_t), cudaMemcpyHostToDevice));
+    checkCUDA(hipMalloc(&scoring_cuda_gpu, sizeof(scoring_function_cuda_t)));
+    checkCUDA(hipMemcpy(scoring_cuda_gpu, &scoring_cuda, sizeof(scoring_function_cuda_t), hipMemcpyHostToDevice));
 
     // transfer common_rs to gpu
     fl *common_rs_gpu;
-    checkCUDA(cudaMalloc(&common_rs_gpu, FAST_SIZE * sizeof(fl)));
-    checkCUDA(cudaMemcpy(common_rs_gpu, common_rs.data(), FAST_SIZE * sizeof(fl), cudaMemcpyHostToDevice));
+    checkCUDA(hipMalloc(&common_rs_gpu, FAST_SIZE * sizeof(fl)));
+    checkCUDA(hipMemcpy(common_rs_gpu, common_rs.data(), FAST_SIZE * sizeof(fl), hipMemcpyHostToDevice));
 
     // malloc output buffer for m_data, array of precalculate_element
     triangular_matrix_cuda_t *m_data_gpu_list;
-    checkCUDA(cudaMalloc(&m_data_gpu_list, sizeof(triangular_matrix_cuda_t) * thread));
+    checkCUDA(hipMalloc(&m_data_gpu_list, sizeof(triangular_matrix_cuda_t) * thread));
     triangular_matrix_cuda_t m_data_cpu_list[thread];
     triangular_matrix_cuda_t m_data_gpu;
     precalculate_element_cuda_t *precalculate_element_list_ptr_gpu;
     for (int i = 0;i < thread; ++i){
-        checkCUDA(cudaMalloc(&precalculate_element_list_ptr_gpu, sizeof(precalculate_element_cuda_t) * precalculate_matrix_size[i]));
+        checkCUDA(hipMalloc(&precalculate_element_list_ptr_gpu, sizeof(precalculate_element_cuda_t) * precalculate_matrix_size[i]));
         m_data_gpu.p_data = precalculate_element_list_ptr_gpu;
         m_data_cpu_list[i].p_data = precalculate_element_list_ptr_gpu;
-        checkCUDA(cudaMemcpy(m_data_gpu_list + i, &m_data_gpu, sizeof(triangular_matrix_cuda_t), cudaMemcpyHostToDevice));
+        checkCUDA(hipMemcpy(m_data_gpu_list + i, &m_data_gpu, sizeof(triangular_matrix_cuda_t), hipMemcpyHostToDevice));
     }
 
 
     // TODO: launch kernel
     DEBUG_PRINTF("launch kernel precalculate_gpu, thread=%d\n", thread);
-    precalculate_gpu<<<thread / 4 + 1, 4>>>(m_data_gpu_list, scoring_cuda_gpu, atom_xs_gpu, atom_ad_gpu, atom_charge_gpu, atom_num_gpu,
+    hipLaunchKernelGGL(precalculate_gpu, dim3(thread / 4 + 1), dim3(4), 0, 0, m_data_gpu_list, scoring_cuda_gpu, atom_xs_gpu, atom_ad_gpu, atom_charge_gpu, atom_num_gpu,
          32, common_rs_gpu, max_fl, thread, max_atom_num);
 
-	checkCUDA(cudaDeviceSynchronize());
+	checkCUDA(hipDeviceSynchronize());
 
     DEBUG_PRINTF("kernel exited\n");
 
@@ -272,12 +273,12 @@ void precalculate_parallel(triangular_matrix_cuda_t *m_data_list_cpu, std::vecto
 
 
     // TODO: free memory
-    checkCUDA(cudaFree(atom_xs_gpu));
-    checkCUDA(cudaFree(atom_ad_gpu));
-    checkCUDA(cudaFree(atom_charge_gpu));
-    checkCUDA(cudaFree(atom_num_gpu));
-    checkCUDA(cudaFree(scoring_cuda_gpu));
-    checkCUDA(cudaFree(common_rs_gpu));
-    checkCUDA(cudaFree(m_data_gpu_list));
+    checkCUDA(hipFree(atom_xs_gpu));
+    checkCUDA(hipFree(atom_ad_gpu));
+    checkCUDA(hipFree(atom_charge_gpu));
+    checkCUDA(hipFree(atom_num_gpu));
+    checkCUDA(hipFree(scoring_cuda_gpu));
+    checkCUDA(hipFree(common_rs_gpu));
+    checkCUDA(hipFree(m_data_gpu_list));
 
 }

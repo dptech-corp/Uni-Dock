@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
 
    Copyright (c) 2006-2010, The Scripps Research Institute
@@ -24,8 +25,8 @@
 #include "kernel.h"
 #include "math.h"
 #include <vector>
-#include "curand_kernel.h"
-#include "cuda.h"
+#include "hiprand_kernel.h"
+#include "hip/hip_runtime.h"
 /* Original Include files */
 #include "monte_carlo.h"
 #include "coords.h"
@@ -80,10 +81,10 @@ float norm3(const float* a) {
 }
 
  __device__ __forceinline__
-void random_inside_sphere_gpu(float *random_inside_sphere, curandStatePhilox4_32_10_t* state){
+void random_inside_sphere_gpu(float *random_inside_sphere, hiprandStatePhilox4_32_10_t* state){
 	float4 random_inside_sphere_fl;
 	while(true) { // on average, this will have to be run about twice
-		random_inside_sphere_fl = curand_uniform4(state); // ~ U[0,1]
+		random_inside_sphere_fl = hiprand_uniform4(state); // ~ U[0,1]
 		random_inside_sphere[0] = (random_inside_sphere_fl.x - 0.5)*2.0;
 		random_inside_sphere[1] = (random_inside_sphere_fl.y - 0.5)*2.0;
 		random_inside_sphere[2] = (random_inside_sphere_fl.z - 0.5)*2.0;
@@ -203,7 +204,7 @@ float gyration_radius(				int				m_lig_begin,
 
  __device__ __forceinline__
 void mutate_conf_cuda(const	int	num_steps, output_type_cuda_t *c,
-			curandStatePhilox4_32_10_t* state, 
+			hiprandStatePhilox4_32_10_t* state, 
 			const int	m_lig_begin,
 			const int	m_lig_end,
 			const atom_cuda_t* atoms,
@@ -214,7 +215,7 @@ void mutate_conf_cuda(const	int	num_steps, output_type_cuda_t *c,
 ) {
 	int flex_torsion_size = 0; // FIX? 20210727
 	int count_mutable_entities = 2 + c->lig_torsion_size + flex_torsion_size;
-	int which = curand(state) % count_mutable_entities;
+	int which = hiprand(state) % count_mutable_entities;
 
 	float random_inside_sphere[4];
 	random_inside_sphere_gpu(random_inside_sphere, state);
@@ -1174,7 +1175,7 @@ void kernel(	m_cuda_t*			m_cuda_global,
 				float*				best_e_gpu,
 				int					bfgs_max_steps,
 				float				mutation_amplitude,
-				curandStatePhilox4_32_10_t* states, 
+				hiprandStatePhilox4_32_10_t* states, 
 				unsigned long long seed,
 				float				epsilon_fl,
 				float*				hunt_cap_gpu,
@@ -1196,7 +1197,7 @@ void kernel(	m_cuda_t*			m_cuda_global,
 		m_cuda_t m_cuda_gpu;
 		// update pointer to get correct ligand data
 		output_type_cuda_init(&tmp, rand_molec_struc_gpu + idx * (SIZE_OF_MOLEC_STRUC / sizeof(float)));
-		curand_init(seed, idx, 0, &states[idx]);
+		hiprand_init(seed, idx, 0, &states[idx]);
 		m_cuda_init_with_m_cuda(m_cuda_global + idx / threads_per_ligand, &m_cuda_gpu);
 		if (m_cuda_gpu.m_num_movable_atoms == -1){
 			return;
@@ -1215,7 +1216,7 @@ void kernel(	m_cuda_t*			m_cuda_global,
 				&m_cuda_gpu.m_coords, m_cuda_gpu.ligand.rigid.origin[0], epsilon_fl, mutation_amplitude);
 			bfgs(&candidate, &g, &m_cuda_gpu, p_cuda_gpu, ig_cuda_gpu, hunt_cap_gpu, epsilon_fl, bfgs_max_steps);
 			// n ~ U[0,1]
-			float n = curand_uniform(&states[idx]);
+			float n = hiprand_uniform(&states[idx]);
 
 			// if (idx == 0)
 			// 	DEBUG_PRINTF("metropolis_accept tmp.e=%f, candidate.e=%f, n=%f\n", tmp.e, candidate.e, n);
@@ -1300,16 +1301,16 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 	/* Allocate CPU memory and define new data structure */
 	DEBUG_PRINTF("Allocating CPU memory\n"); //debug
 	m_cuda_t *m_cuda;
-	checkCUDA(cudaMallocHost(&m_cuda, sizeof(m_cuda_t)));
+	checkCUDA(hipHostMalloc(&m_cuda, sizeof(m_cuda_t)));
 
 	output_type_cuda_t *rand_molec_struc_tmp;
-	checkCUDA(cudaMallocHost(&rand_molec_struc_tmp, sizeof(output_type_cuda_t)));
+	checkCUDA(hipHostMalloc(&rand_molec_struc_tmp, sizeof(output_type_cuda_t)));
 
 	ig_cuda_t *ig_cuda_ptr;
-	checkCUDA(cudaMallocHost(&ig_cuda_ptr, sizeof(ig_cuda_t)));
+	checkCUDA(hipHostMalloc(&ig_cuda_ptr, sizeof(ig_cuda_t)));
 
 	p_cuda_t_cpu *p_cuda;
-	checkCUDA(cudaMallocHost(&p_cuda, sizeof(p_cuda_t_cpu)));
+	checkCUDA(hipHostMalloc(&p_cuda, sizeof(p_cuda_t_cpu)));
 
 
 	/* End CPU allocation */
@@ -1328,42 +1329,42 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 
 	// rand_molec_struc_gpu
 	float *rand_molec_struc_gpu;
-	checkCUDA(cudaMalloc(&rand_molec_struc_gpu, thread * SIZE_OF_MOLEC_STRUC));
+	checkCUDA(hipMalloc(&rand_molec_struc_gpu, thread * SIZE_OF_MOLEC_STRUC));
 	// best_e_gpu
 	float *best_e_gpu;
 	float epsilon_fl_float = static_cast<float>(epsilon_fl);
-	checkCUDA(cudaMalloc(&best_e_gpu, sizeof(float)));
-	checkCUDA(cudaMemcpy(best_e_gpu, &max_fl, sizeof(float), cudaMemcpyHostToDevice));
+	checkCUDA(hipMalloc(&best_e_gpu, sizeof(float)));
+	checkCUDA(hipMemcpy(best_e_gpu, &max_fl, sizeof(float), hipMemcpyHostToDevice));
 	
 	// use cuRand to generate random values on GPU
-	curandStatePhilox4_32_10_t* states;
-	DEBUG_PRINTF("random states size=%lu\n", sizeof(curandStatePhilox4_32_10_t) * thread);
-	checkCUDA(cudaMalloc(&states, sizeof(curandStatePhilox4_32_10_t) * thread));
+	hiprandStatePhilox4_32_10_t* states;
+	DEBUG_PRINTF("random states size=%lu\n", sizeof(hiprandStatePhilox4_32_10_t) * thread);
+	checkCUDA(hipMalloc(&states, sizeof(hiprandStatePhilox4_32_10_t) * thread));
 
 	// hunt_cap_gpu
 	float *hunt_cap_gpu;
 	float hunt_cap_float[3] = {static_cast<float>(hunt_cap[0]), static_cast<float>(hunt_cap[1]), static_cast<float>(hunt_cap[2])};
 
-	checkCUDA(cudaMalloc(&hunt_cap_gpu, 3 * sizeof(float)));
+	checkCUDA(hipMalloc(&hunt_cap_gpu, 3 * sizeof(float)));
 	// Preparing m related data
 	m_cuda_t* m_cuda_gpu;
 	DEBUG_PRINTF("m_cuda_size=%lu", m_cuda_size);
-	checkCUDA(cudaMalloc(&m_cuda_gpu, num_of_ligands * m_cuda_size));
+	checkCUDA(hipMalloc(&m_cuda_gpu, num_of_ligands * m_cuda_size));
 	// Preparing p related data
 
 	p_cuda_t *p_cuda_gpu;
-	checkCUDA(cudaMalloc(&p_cuda_gpu, num_of_ligands * p_cuda_size_gpu));
+	checkCUDA(hipMalloc(&p_cuda_gpu, num_of_ligands * p_cuda_size_gpu));
 	DEBUG_PRINTF("p_cuda_gpu=%p\n", p_cuda_gpu);
 	// Preparing ig related data (cache related data)
 	ig_cuda_t *ig_cuda_gpu;
-	checkCUDA(cudaMalloc(&ig_cuda_gpu, ig_cuda_size));
+	checkCUDA(hipMalloc(&ig_cuda_gpu, ig_cuda_size));
 	float *authentic_v_gpu;
 	float authentic_v_float[3] = {static_cast<float>(authentic_v[0]), static_cast<float>(authentic_v[1]),static_cast<float>(authentic_v[2])};
 
-	checkCUDA(cudaMalloc(&authentic_v_gpu, sizeof(authentic_v_float)));
+	checkCUDA(hipMalloc(&authentic_v_gpu, sizeof(authentic_v_float)));
 	// Preparing result data
 	output_type_cuda_t *results_gpu;
-	checkCUDA(cudaMalloc(&results_gpu, thread * sizeof(output_type_cuda_t)));
+	checkCUDA(hipMalloc(&results_gpu, thread * sizeof(output_type_cuda_t)));
 
 	/* End Allocating GPU Memory */
 
@@ -1422,7 +1423,7 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 		if (m.ligands.size() == 0){ // ligand parsing error
 			m_cuda->m_num_movable_atoms = -1;
 			DEBUG_PRINTF("copy m_cuda to gpu, size=%lu\n", sizeof(m_cuda_t));
-			checkCUDA(cudaMemcpy(m_cuda_gpu + l, m_cuda, sizeof(m_cuda_t), cudaMemcpyHostToDevice));
+			checkCUDA(hipMemcpy(m_cuda_gpu + l, m_cuda, sizeof(m_cuda_t), hipMemcpyHostToDevice));
 		}
 		else
 		{
@@ -1496,7 +1497,7 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 			m_cuda->m_num_movable_atoms = m.num_movable_atoms();
 
 			DEBUG_PRINTF("copy m_cuda to gpu, size=%lu\n", sizeof(m_cuda_t));
-			checkCUDA(cudaMemcpy(m_cuda_gpu + l, m_cuda, sizeof(m_cuda_t), cudaMemcpyHostToDevice));
+			checkCUDA(hipMemcpy(m_cuda_gpu + l, m_cuda, sizeof(m_cuda_t), hipMemcpyHostToDevice));
 
 			/* Prepare rand_molec_struc data */
 			int lig_torsion_size = tmp.c.ligands[0].torsions.size();
@@ -1523,7 +1524,7 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 				rand_molec_struc_tmp->lig_torsion_size = lig_torsion_size;
 
 				float *rand_molec_struc_gpu_tmp = rand_molec_struc_gpu + (l * threads_per_ligand + i) * SIZE_OF_MOLEC_STRUC / sizeof(float);
-				checkCUDA(cudaMemcpy(rand_molec_struc_gpu_tmp, rand_molec_struc_tmp, SIZE_OF_MOLEC_STRUC, cudaMemcpyHostToDevice));
+				checkCUDA(hipMemcpy(rand_molec_struc_gpu_tmp, rand_molec_struc_tmp, SIZE_OF_MOLEC_STRUC, hipMemcpyHostToDevice));
 
 			}
 
@@ -1535,8 +1536,8 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 			p_cuda->factor = p.m_factor;
 			p_cuda->n = p.m_n;
 			p_cuda->m_data_size = p.m_data.m_data.size();
-			checkCUDA(cudaMemcpy(p_cuda_gpu + l, p_cuda, sizeof(p_cuda_t), cudaMemcpyHostToDevice));
-			checkCUDA(cudaMemcpy(&(p_cuda_gpu[l].m_data), &(m_data_list_gpu[l].p_data), sizeof(p_m_data_cuda_t *), cudaMemcpyHostToDevice)); // check if fl == float
+			checkCUDA(hipMemcpy(p_cuda_gpu + l, p_cuda, sizeof(p_cuda_t), hipMemcpyHostToDevice));
+			checkCUDA(hipMemcpy(&(p_cuda_gpu[l].m_data), &(m_data_list_gpu[l].p_data), sizeof(p_m_data_cuda_t *), hipMemcpyHostToDevice)); // check if fl == float
 
 		}
 
@@ -1581,24 +1582,24 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 	float mutation_amplitude_float = static_cast<float>(mutation_amplitude);
 
 	DEBUG_PRINTF("memcpy ig_cuda, ig_cuda_size=%lu\n", ig_cuda_size);
-	checkCUDA(cudaMemcpy(ig_cuda_gpu, ig_cuda_ptr, ig_cuda_size, cudaMemcpyHostToDevice));
-	checkCUDA(cudaMemcpy(hunt_cap_gpu, hunt_cap_float, 3 * sizeof(float), cudaMemcpyHostToDevice));
+	checkCUDA(hipMemcpy(ig_cuda_gpu, ig_cuda_ptr, ig_cuda_size, hipMemcpyHostToDevice));
+	checkCUDA(hipMemcpy(hunt_cap_gpu, hunt_cap_float, 3 * sizeof(float), hipMemcpyHostToDevice));
 	float hunt_test[3];
-	checkCUDA(cudaMemcpy(hunt_test, hunt_cap_gpu, 3 * sizeof(float), cudaMemcpyDeviceToHost));
+	checkCUDA(hipMemcpy(hunt_test, hunt_cap_gpu, 3 * sizeof(float), hipMemcpyDeviceToHost));
 	DEBUG_PRINTF("hunt_test[1]=%f, hunt_cap_float[1]=%f\n", hunt_test[1], hunt_cap_float[1]);
-	checkCUDA(cudaMemcpy(authentic_v_gpu, authentic_v_float, sizeof(authentic_v_float), cudaMemcpyHostToDevice));
+	checkCUDA(hipMemcpy(authentic_v_gpu, authentic_v_float, sizeof(authentic_v_float), hipMemcpyHostToDevice));
 
 
 
 	/* Add timing */
-	cudaEvent_t start,stop;
-	checkCUDA(cudaEventCreate(&start));
-	checkCUDA(cudaEventCreate(&stop));
-	checkCUDA(cudaEventRecord(start,NULL));
+	hipEvent_t start,stop;
+	checkCUDA(hipEventCreate(&start));
+	checkCUDA(hipEventCreate(&stop));
+	checkCUDA(hipEventRecord(start,NULL));
 
 	/* Launch kernel */
 	DEBUG_PRINTF("launch kernel, global_steps=%d, thread=%d, num_of_ligands=%d\n", global_steps, thread, num_of_ligands);
-	kernel<<<thread / 32 + 1, 32>>>(m_cuda_gpu, ig_cuda_gpu, p_cuda_gpu, rand_molec_struc_gpu,
+	hipLaunchKernelGGL(kernel, dim3(thread / 32 + 1), dim3(32), 0, 0, m_cuda_gpu, ig_cuda_gpu, p_cuda_gpu, rand_molec_struc_gpu,
 		best_e_gpu, quasi_newton_par_max_steps, mutation_amplitude_float,
 		states, seed,
 		epsilon_fl_float, hunt_cap_gpu, authentic_v_gpu, results_gpu, global_steps,
@@ -1606,13 +1607,13 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 
 	// Device to Host memcpy of precalculated_byatom, copy back data to p_gpu
     p_m_data_cuda_t *p_data;
-    checkCUDA(cudaMallocHost(&p_data, sizeof(p_m_data_cuda_t) * MAX_P_DATA_M_DATA_SIZE));
+    checkCUDA(hipHostMalloc(&p_data, sizeof(p_m_data_cuda_t) * MAX_P_DATA_M_DATA_SIZE));
 
 	for (int l = 0;l < num_of_ligands; ++l){
         // copy data to m_data on CPU, then to p_gpu[l]
 		int pnum = p_gpu[l].m_data.m_data.size();
-        checkCUDA(cudaMemcpy(p_data, m_data_list_gpu[l].p_data, sizeof(p_m_data_cuda_t) * pnum, cudaMemcpyDeviceToHost));
-        checkCUDA(cudaFree(m_data_list_gpu[l].p_data)); // free m_cuda pointers in p_cuda
+        checkCUDA(hipMemcpy(p_data, m_data_list_gpu[l].p_data, sizeof(p_m_data_cuda_t) * pnum, hipMemcpyDeviceToHost));
+        checkCUDA(hipFree(m_data_list_gpu[l].p_data)); // free m_cuda pointers in p_cuda
         for (int i = 0;i < pnum; ++i){
             memcpy(&p_gpu[l].m_data.m_data[i].fast[0], p_data[i].fast, sizeof(p_data[i].fast));
             memcpy(&p_gpu[l].m_data.m_data[i].smooth[0], p_data[i].smooth, sizeof(p_data[i].smooth));
@@ -1628,21 +1629,21 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
     //     DEBUG_PRINTF("\n");
     // }
 
-	checkCUDA(cudaDeviceSynchronize());
+	checkCUDA(hipDeviceSynchronize());
 	/* Timing output */
 
-	checkCUDA(cudaEventRecord(stop,NULL));
-	cudaEventSynchronize(stop);
+	checkCUDA(hipEventRecord(stop,NULL));
+	hipEventSynchronize(stop);
 	float msecTotal = 0.0f;
-	cudaEventElapsedTime(&msecTotal, start, stop);
+	hipEventElapsedTime(&msecTotal, start, stop);
 	DEBUG_PRINTF("Time spend on GPU is %f ms\n", msecTotal);
 
 	/* Convert result data. Can be improved by mapping memory
 	*/
 	DEBUG_PRINTF("cuda to vina\n");
 	output_type_cuda_t *results;
-	checkCUDA(cudaMallocHost(&results, thread * sizeof(output_type_cuda_t)));
-	checkCUDA(cudaMemcpy(results, results_gpu, thread * sizeof(output_type_cuda_t), cudaMemcpyDeviceToHost));
+	checkCUDA(hipHostMalloc(&results, thread * sizeof(output_type_cuda_t)));
+	checkCUDA(hipMemcpy(results, results_gpu, thread * sizeof(output_type_cuda_t), hipMemcpyDeviceToHost));
 
 	std::vector<output_type> result_vina = cuda_to_vina(results, thread);
 
@@ -1662,21 +1663,21 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 	}
 
 	/* Free memory */
-	checkCUDA(cudaFree(m_cuda_gpu));
-	checkCUDA(cudaFree(ig_cuda_gpu));
-	checkCUDA(cudaFree(p_cuda_gpu));
-	checkCUDA(cudaFree(rand_molec_struc_gpu));
-	checkCUDA(cudaFree(best_e_gpu));
-	checkCUDA(cudaFree(hunt_cap_gpu));
-	checkCUDA(cudaFree(authentic_v_gpu));
-	checkCUDA(cudaFree(results_gpu));
-	checkCUDA(cudaFree(states));
-	checkCUDA(cudaFreeHost(m_cuda));
-	checkCUDA(cudaFreeHost(rand_molec_struc_tmp));
-	checkCUDA(cudaFreeHost(ig_cuda_ptr));
-	checkCUDA(cudaFreeHost(p_cuda));
-	checkCUDA(cudaFreeHost(p_data));
-	checkCUDA(cudaFreeHost(results));
+	checkCUDA(hipFree(m_cuda_gpu));
+	checkCUDA(hipFree(ig_cuda_gpu));
+	checkCUDA(hipFree(p_cuda_gpu));
+	checkCUDA(hipFree(rand_molec_struc_gpu));
+	checkCUDA(hipFree(best_e_gpu));
+	checkCUDA(hipFree(hunt_cap_gpu));
+	checkCUDA(hipFree(authentic_v_gpu));
+	checkCUDA(hipFree(results_gpu));
+	checkCUDA(hipFree(states));
+	checkCUDA(hipHostFree(m_cuda));
+	checkCUDA(hipHostFree(rand_molec_struc_tmp));
+	checkCUDA(hipHostFree(ig_cuda_ptr));
+	checkCUDA(hipHostFree(p_cuda));
+	checkCUDA(hipHostFree(p_data));
+	checkCUDA(hipHostFree(results));
 
 	DEBUG_PRINTF("exit monte_carlo\n");
 
