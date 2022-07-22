@@ -120,6 +120,18 @@ struct atom_kind_gpu {
 	fl covalent_radius; // from http://en.wikipedia.org/wiki/Atomic_radii_of_the_elements_(data_page)
 };
 
+
+__device__ bool strcmp(const char* a, const char* b){
+	int i = 0;
+	while(true){
+		if (a[i] == 0 && b[i] == 0) break;
+		else return false;
+		if (a[i] == b[i]) ++i;
+		else return false;
+	}
+	return true;
+}
+
 // generated from edited AD4_parameters.data using a script,
 // then covalent radius added from en.wikipedia.org/wiki/Atomic_radii_of_the_elements_(data_page)
 __device__ atom_kind_gpu atom_kind_data_gpu[] = {

@@ -31,7 +31,7 @@
 
 #include <hip/hip_runtime.h>
 #include <hip/hip_runtime.h>
-#include <device_launch_parameters.h>
+// #include <device_launch_parameters.h>
 
 struct usage_error : public std::runtime_error {
 	usage_error(const std::string& message) : std::runtime_error(message) {}
