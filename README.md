@@ -3,21 +3,21 @@
 # Introduction
 [AutoDock Vina](https://github.com/ccsb-scripps/AutoDock-Vina) is one of the fastest and most widely used open-source docking engines. It is a turnkey computational docking program that is based on a simple scoring function and rapid gradient-optimization conformational search.
 
-**DP-Vina-GPU**, developed by DP Technology, carries out extreme performance optimization based on GPU acceleration, increasing AutoDock Vina's computing speed by more than **500 times** on one nvidia V100 32G GPU compared with one CPU core.
+**Uni-Dock**, developed by DP Technology, carries out extreme performance optimization based on GPU acceleration, increasing AutoDock Vina's computing speed by more than **1000 times** on one Nvidia V100 32G GPU compared with one CPU core.
 
 # Installation
-DP-Vina-GPU requires an NVIDIA GPU. It works best on V100 32G machines (no matter how many CPU cores there are), and we recommend running on it.
+Uni-Dock requires an NVIDIA GPU. It works best on V100 32G machines (no matter how many CPU cores there are), and we recommend running on it.
 
 ## Docker Image
-We recommend that you use Docker to run the DP-Vina-GPU, with all the required environments and dependencies configured in Docker image.
+We recommend that you use Docker to run the Uni-Dock, with all the required environments and dependencies configured in Docker image.
 1. Install nvidia-container (a GPU supported version of docker)  
-Refer to the installation tutorial provided by nvidia：https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker
-2. Pull image of DP-Vina-GPU from DP image registry
+Refer to the installation tutorial provided by nvidiaï¼šhttps://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker
+2. Pull image of Uni-Dock from DP image registry
 ```bash
 docker pull dp-harbor-registry.cn-zhangjiakou.cr.aliyuncs.com/dplc/vina_gpu:latest
 ```
 ## Binary
-Refer to the releases page of this repo to download binary of DP-Vina-GPU: https://github.com/dptech-corp/Vina1.2-GPU/releases
+Refer to the releases page of this repo to download binary of Uni-Dock: https://github.com/dptech-corp/Uni-Dock/releases
 ## Build from source
 1. Install dependencies
 - Boost 1.77.0
@@ -34,9 +34,9 @@ cd boost_1_77_0/
 export LD_LIBRARY_PATH=/opt/lib/packages/boost1_77/lib/:$LD_LIBRARY_PATH
 ```
 - CUDA toolkit  
-Refer to the installation tutorial provided by nvidia：https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html
+Refer to the installation tutorial provided by nvidia: https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html
 2. Clone GitHub repo or retrieve source code from release page
-3. Build DP-Vina-GPU
+3. Build Uni-Dock
 ```bash
 cd ./build/linux/release
 make clean
@@ -44,21 +44,21 @@ make -j 4
 ```
 # Usage
 ## Example
-To launch a DP-Vina-GPU job, the most important parameters are as follows：
-- `--receptor`： filepath of the receptor (PDBQT)
-- `--gpu_batch`：filepath of the ligands to dock with GPU (PDBQT), enter multiple at a time, separated by spaces (" ")
+To launch a Uni-Dock job, the most important parameters are as follows:
+- `--receptor`: filepath of the receptor (PDBQT)
+- `--gpu_batch`: filepath of the ligands to dock with GPU (PDBQT), enter multiple at a time, separated by spaces (" ")
 - `--search_mode`: computational complexity, choice in [*`fast`*, *`balance`*, and *`detail`*].
 
 ***Advanced options***  
 `--search_mode` is the recommended setting of `--exhaustiveness` and `--max_step`, with three combinations called `fast`, `balance`, and `detail`.  
-- `fast` mode: `--exhaustiveness 256` & `--max_step 15`
-- `balance` mode: `--exhaustiveness 1024` & `--max_step 20`
-- `detail` mode: `--exhaustiveness 2048` & `--max_step 20`  
+- `fast` mode: `--exhaustiveness 128` & `--max_step 20`
+- `balance` mode: `--exhaustiveness 384` & `--max_step 40`
+- `detail` mode: `--exhaustiveness 512` & `--max_step 40`  
 
 The larger `--exhaustiveness` and `--max_step`, the higher the computational complexity, the higher the accuracy, but the larger the computational cost.  
 
 ```bash
-vina --receptor <receptor.pdbqt> \
+unidock --receptor <receptor.pdbqt> \
      --gpu_batch <lig1.pdbqt> <lig2.pdbqt> ... <ligN.pdbqt> \
      --search_mode balance \
      --scoring vina \
@@ -73,7 +73,7 @@ vina --receptor <receptor.pdbqt> \
 ```
 ## Parameters
 ```shell
->> vina --help
+>> unidock --help
 
 Input:
   --receptor arg             rigid part of the receptor (PDBQT)
@@ -125,7 +125,7 @@ Misc (optional):
                              based on heuristics)
   --max_gpu_memory arg (=0)  maximum gpu memory to use (default=0, use all 
                              available GPU memory to optain maximum batch size)
-  --search_mode arg          search mode of vina (fast, balance, detail), using
+  --search_mode arg          search mode of unidock (fast, balance, detail), using
                              recommended settings of exhaustiveness and search 
                              steps; the higher the computational complexity, 
                              the higher the accuracy, but the larger the 
@@ -141,8 +141,8 @@ Information (optional):
 ```
 
 # Troubleshooting
-1. Some bugs are triggered when I run DP-Vina-GPU in Docker, but no such problems when running directly on the server.
-    - We did find that when running DP-Vina-GPU in docker, there will be additional GPU memory usage. When you use docker to run DP-Vina-GPU on a machine with V100 32G, please use `--max_gpu_memory 27000` to limit the usage of GPU memory size by DP-Vina-GPU.
+1. Some bugs are triggered when I run Uni-Dock in Docker, but no such problems when running directly on the server.
+    - We did find that when running Uni-Dock in docker, there will be additional GPU memory usage. When you use docker to run Uni-Dock on a machine with V100 32G, please use `--max_gpu_memory 27000` to limit the usage of GPU memory size by Uni-Dock.
 2. I want to put all my ligands in `--gpu_batch`, but it exceeds the maximum command line length that linux can accept.
-    - You can save your command in a shell script like run.sh, and run the command by bash run.sh.
+    - You can save your command in a shell script like run.sh, and run the command by `bash run.sh`.
     - You can save your ligands path in a file (separated by spaces) by `ls . | tee index.txt`, and use `--ligand_index <ligands path file>` in place of `--gpu_batch`.

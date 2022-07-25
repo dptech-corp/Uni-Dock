@@ -82,10 +82,10 @@ int predict_peak_memory(int batch_size, int exhaustiveness, int all_atom2_number
 int main(int argc, char* argv[]) {
 	using namespace boost::program_options;
 	const std::string git_version = VERSION;
-	const std::string version_string = "AutoDock Vina " + git_version;
+	const std::string version_string = "Uni-Dock " + git_version;
 	const std::string error_message = "\n\n\
 Please report bugs through the Issue Tracker on GitHub \n\
-(https://github.com/ccsb-scripps/AutoDock-Vina/issues)., so\n\
+(https://github.com/dptech-corp/Uni-Dock/issues)., so\n\
 that this problem can be resolved. The reproducibility of the\n\
 error may be vital, so please remember to include the following in\n\
 your problem report:\n\
@@ -105,7 +105,10 @@ Thank you!\n";
 
 	const std::string cite_message = "\
 #################################################################\n\
-# If you used AutoDock Vina in your work, please cite:          #\n\
+# If you used Uni-Dock in your work, please cite:               #\n\
+#                                                               #\n\
+# Uni-Dock, xxxx, (2022) DOI xxxx							    #\n\
+#                                                               #\n\
 #                                                               #\n\
 # J. Eberhardt, D. Santos-Martins, A. F. Tillack, and S. Forli  #\n\
 # AutoDock Vina 1.2.0: New Docking Methods, Expanded Force      #\n\
@@ -118,7 +121,7 @@ Thank you!\n";
 # multithreading, J. Comp. Chem. (2010)                         #\n\
 # DOI 10.1002/jcc.21334                                         #\n\
 #                                                               #\n\
-# Please see https://github.com/ccsb-scripps/AutoDock-Vina for  #\n\
+# Please see https://github.com/dptech-corp/Uni-Dock/ for       #\n\
 # more information.                                             #\n\
 #################################################################\n";
 
@@ -334,17 +337,17 @@ Thank you!\n";
 		}
 
 		if (vm.count("search_mode")){
-			if (search_mode.compare("balance") == 0){
-				exhaustiveness = 1024;
-				max_step = 20;
+			if (search_mode.compare("balance") == 0 || search_mode.compare("balanced") == 0){
+				exhaustiveness = 384;
+				max_step = 40;
 			}
 			if (search_mode.compare("fast") == 0){
-				exhaustiveness = 256;
-				max_step = 15;
-			}
-			if (search_mode.compare("detail") == 0){
-				exhaustiveness = 2048;
+				exhaustiveness = 128;
 				max_step = 20;
+			}
+			if (search_mode.compare("detail") == 0 || search_mode.compare("detailed") == 0){
+				exhaustiveness = 512;
+				max_step = 40;
 			}
 		}
 
@@ -527,7 +530,6 @@ Thank you!\n";
 			std::vector<std::string> ligand_names {std::move(gpu_batch_ligand_names)};
 			std::cout << "Total ligands: " << ligand_names.size() << std::endl;
 
-			int processed_ligands = 0;
 			int receptor_atom_numbers = v.m_receptor.get_atoms().size();
 			int deviceCount=0;
 			size_t avail;
@@ -540,7 +542,7 @@ Thank you!\n";
 			if (deviceCount > 0){
 				cudaSetDevice(0);
 				cudaMemGetInfo(&avail, &total);
-				printf("Avaliable Memery = %dMiB   Total Memory = %dMiB\n", int(avail/1024/1024), int(total / 1024 / 1024));
+				printf("Avaliable Memory = %dMiB   Total Memory = %dMiB\n", int(avail/1024/1024), int(total / 1024 / 1024));
 				max_memory = avail / 1024 / 1024 * 0.95; // leave 5% to prevent error
 			}
 			if (max_memory < 17000){
@@ -550,24 +552,33 @@ Thank you!\n";
 			if (max_gpu_memory > 0 && max_gpu_memory < max_memory){
 				max_memory = (float)max_gpu_memory;
 			}
+
 			typedef std::pair<std::string,model> named_model;
-			std::vector<named_model> all_ligands; // 2GB for 10,000 lig obj
-			// TODO: limit all ligands number
+			std::vector<named_model> all_ligands;
+			const int ligand_batch_limit = 1e6; // ~20GB for 100,000 lig obj
+			int batch_index=0;
+			while(batch_index<ligand_names.size()){
+			all_ligands.clear();
+			int next_batch_index = std::min(int(batch_index+ligand_batch_limit),int(ligand_names.size()));
 			#pragma omp parallel for
-			for (auto &ligand : ligand_names)
+			for (int ligand_count=batch_index;ligand_count<next_batch_index;++ligand_count)
 			{
+				auto& ligand=ligand_names[ligand_count];
 				auto l = parse_ligand_pdbqt_from_file_no_failure(
 						ligand, v.m_scoring_function.get_atom_typing());
 				#pragma omp critical
 				all_ligands.emplace_back(std::make_pair(ligand,l));
 			}
+			batch_index=next_batch_index;
 			/*
 			std::sort(all_ligands.begin(), all_ligands.end(),
 				  [](named_model a, named_model b)
 				  { return a.second.get_atoms().size() < b.second.get_atoms().size(); });
 			*/
+			DEBUG_PRINTF("%d\n",next_batch_index);
+			int processed_ligands = 0;
 			int batch_id = 0;
-			while (processed_ligands < ligand_names.size()) {
+			while (processed_ligands < all_ligands.size()) {
 				++batch_id;
 				auto start = std::chrono::system_clock::now();
 				Vina v1(v); // reuse init'ed maps
@@ -577,7 +588,7 @@ Thank you!\n";
 				while (predict_peak_memory(batch_size, exhaustiveness, all_atom2_numbers, use_v100, ad4) < max_memory && 
 					 processed_ligands + batch_size < ligand_names.size())
 				{
-					batch_ligands.push_back(all_ligands[processed_ligands + batch_size].second);
+					batch_ligands.emplace_back(all_ligands[processed_ligands + batch_size].second);
 					int next_atom_numbers = batch_ligands.back()
 												.get_atoms()
 												.size()
@@ -605,8 +616,8 @@ Thank you!\n";
 				v1.write_poses_gpu(gpu_out_name, num_modes, energy_range);
 				auto end = std::chrono::system_clock::now();
 				std::cout << "Batch " << batch_id << " running time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
-	
 			}
+		}
 		}
 	}
 
