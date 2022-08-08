@@ -83,6 +83,9 @@ fl non_cache::eval      (const model& m, fl v) const { // clean up
 			}
 		}
 		curl(this_e, v);
+
+		// TODO: add bias 
+
 		e += this_e + out_of_bounds_penalty;
 	}
 	return e;
@@ -163,6 +166,9 @@ fl non_cache::eval_deriv(      model& m, fl v) const { // clean up
 		}
 		curl(this_e, deriv, v);
 		m.minus_forces[i] = deriv + out_of_bounds_deriv;
+
+		// TODO: add bias and bias derivs
+		
 		e += this_e + out_of_bounds_penalty;
 	}
 	return e;

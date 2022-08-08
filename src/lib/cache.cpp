@@ -522,6 +522,8 @@ void cache::populate(const model &m, const precalculate &p, const szv &atom_type
 					assert(t < nat);
 					m_grids[t].m_data(x, y, z) = affinities[j];
 				}
+
+				// TODO: add bias based on input bias file
 			}
 		}
 	}

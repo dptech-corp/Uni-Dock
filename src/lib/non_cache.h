@@ -26,6 +26,7 @@
 #include "igrid.h"
 #include "szv_grid.h"
 #include "precalculate.h"
+#include "bias.h"
 
 struct non_cache : public igrid {
     non_cache() {}

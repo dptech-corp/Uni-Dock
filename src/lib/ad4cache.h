@@ -38,6 +38,7 @@
 #include "file.h"
 #include "szv_grid.h"
 #include "common.h"
+#include "bias.h"
 
 
 struct ad4cache : public igrid {

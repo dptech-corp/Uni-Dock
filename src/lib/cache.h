@@ -37,6 +37,7 @@
 #include "model.h"
 #include "file.h"
 #include "szv_grid.h"
+#include "bias.h"
 
 
 struct precalculate;

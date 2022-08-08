@@ -54,6 +54,7 @@
 #include "utils.h"
 #include "scoring_function.h"
 #include "precalculate.h"
+#include "bias.h"
 
 #ifdef DEBUG
 #define DEBUG_PRINTF printf
@@ -177,6 +178,8 @@ public:
 	ad4cache m_ad4grid;
 	non_cache m_non_cache;
 	bool m_map_initialized;
+	// bias
+	std::vector<bias_element> bias_list;
 	// global search
 	int m_cpu;
 	int m_seed;
