@@ -455,10 +455,10 @@ Thank you!\n";
 		if (vm.count("bias")){
 			std::ifstream bias_file_content(bias_file);
 			if (!bias_file_content.is_open()){
-				throw file_error(bias_file_content, true);
+				throw file_error(bias_file, true);
 			}
 
-			// TODO: initialize bias object
+			// initialize bias object
 			v.set_bias(bias_file_content);
 
 			bias_file_content.close();

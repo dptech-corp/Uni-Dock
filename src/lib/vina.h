@@ -151,6 +151,7 @@ public:
 	void write_maps(const std::string& map_prefix="receptor", const std::string& gpf_filename="NULL",
 					    const std::string& fld_filename="NULL", const std::string& receptor_filename="NULL");
 	void show_score(const std::vector<double> energies);
+	void set_bias(std::ifstream &bias_file_content);
 
 	// model and poses
 	model m_receptor;

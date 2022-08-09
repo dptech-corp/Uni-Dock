@@ -39,6 +39,10 @@ int ad4cache::get_atu() const{
 	return atom_type::AD;
 }
 
+void ad4cache::set_ad4_bias(const std::vector<bias_element> bias_list){
+	
+}
+
 std::string get_adtype_str(sz& t) {
 	switch(t) {
 		case AD_TYPE_C : return "C";

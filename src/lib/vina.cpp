@@ -438,6 +438,7 @@ std::vector<double> Vina::grid_dimensions_from_ligand(double buffer_size) {
 	return box_dimensions;
 }
 
+// set vina and vinardo bias
 void Vina::compute_vina_maps(double center_x, double center_y, double center_z, double size_x, double size_y, double size_z, double granularity, bool force_even_voxels) {
 	// Setup the search box
 	// Check first that the receptor was added
@@ -495,9 +496,9 @@ void Vina::compute_vina_maps(double center_x, double center_y, double center_z, 
 	else
 		doing("Computing Vinardo grid", m_verbosity, 0);
 
-	// Compute the Vina grids
+	// Compute the Vina grids and set bias
 	cache grid(gd, slope);
-	grid.populate(m_model, precalculated_sf, atom_types);
+	grid.populate(m_model, precalculated_sf, atom_types, bias_list);
 
 	done(m_verbosity, 0);
 
@@ -527,6 +528,10 @@ void Vina::load_maps(std::string maps) {
 		ad4cache grid(slope);
 		grid.read(maps);
 		done(m_verbosity, 0);
+		if (bias_list.size() > 0){
+			doing("Setting AD4.2 bias", m_verbosity, 0);
+			grid.set_ad4_bias(bias_list);
+		}
 		m_ad4grid = grid;
 	}
 
@@ -1070,6 +1075,16 @@ output_container Vina::remove_redundant(const output_container &in, fl min_rmsd)
 	VINA_FOR_IN(i, in)
 	add_to_output_container(tmp, in[i], min_rmsd, in.size());
 	return tmp;
+}
+
+void Vina::set_bias(std::ifstream &bias_file_content){
+	std::string line;
+	std::getline(bias_file_content, line); // first line header
+	while (std::getline(bias_file_content, line)){
+		std::istringstream input(line);
+		bias_element bias_term(input);
+		bias_list.push_back(bias_term);
+	}
 }
 
 void Vina::global_search(const int exhaustiveness, const int n_poses, const double min_rmsd, const int max_evals) {

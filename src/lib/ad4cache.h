@@ -58,6 +58,7 @@ public:
                const std::string& fld_filename="NULL", const std::string& receptor_filename="NULL");
     // add for gpu
     float get_slope() const;
+    void set_ad4_bias(const std::vector<bias_element> bias_list);
     std::vector<grid> get_grids() const;
     int get_atu() const;
 private:

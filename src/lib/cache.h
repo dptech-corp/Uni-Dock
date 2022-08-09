@@ -59,7 +59,7 @@ public:
     void read(const std::string& str);
     void write(const std::string& out_prefix, const szv& atom_types, const std::string& gpf_filename="NULL",
                const std::string& fld_filename="NULL", const std::string& receptor_filename="NULL");
-	void populate(const model& m, const precalculate& p, const szv& atom_types_needed);
+	void populate(const model& m, const precalculate& p, const szv& atom_types_needed, const std::vector<bias_element> bias_list=std::vector<bias_element>());
     // add for gpu
     float get_slope() const;
     std::vector<grid> get_grids() const;
