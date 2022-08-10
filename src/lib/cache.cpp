@@ -526,6 +526,7 @@ void cache::populate(const model &m, const precalculate &p, const szv &atom_type
 				// add bias based on input bias file
 				for (auto bias = bias_list.begin(); bias != bias_list.end(); ++bias){
 					const fl rb = vec_distance_sqr(bias->coords, probe_coords);
+					DEBUG_PRINTF("bias type=%d x=%d y=%d z=%d\n",bias->type,x,y,z);
 					switch (bias->type){
 						case bias_element::itype::don: { // HD
 							break; // no polar H used in vina/vinardo docking
@@ -533,12 +534,13 @@ void cache::populate(const model &m, const precalculate &p, const szv &atom_type
 						case bias_element::itype::acc: { // OA, NA
 							fl dE = bias->vset * exp(-rb*rb/bias->r/bias->r);
 							if (dE >= -0.01) break;
+							// std::cout << "dE=" << dE << std::endl;
 							// choose atom constants, XS
-							m_grids[XS_TYPE_O_A].m_data(x,y,z) += dE; // acceptor O
-							m_grids[XS_TYPE_N_A].m_data(x,y,z) += dE; // acceptor N
+							if (m_grids[XS_TYPE_O_A].initialized()) m_grids[XS_TYPE_O_A].m_data(x,y,z) += dE; // acceptor O
+							if (m_grids[XS_TYPE_N_A].initialized()) m_grids[XS_TYPE_N_A].m_data(x,y,z) += dE; // acceptor N
 							// FIX: donor acceptor which bonded to HD, necessary?
-							m_grids[XS_TYPE_O_DA].m_data(x,y,z) += dE;
-							m_grids[XS_TYPE_N_DA].m_data(x,y,z) += dE;
+							if (m_grids[XS_TYPE_O_DA].initialized()) m_grids[XS_TYPE_O_DA].m_data(x,y,z) += dE;
+							if (m_grids[XS_TYPE_N_DA].initialized()) m_grids[XS_TYPE_N_DA].m_data(x,y,z) += dE;
 							break;
 						}
 						case bias_element::itype::aro: { // AC
@@ -549,11 +551,16 @@ void cache::populate(const model &m, const precalculate &p, const szv &atom_type
 							fl dE = bias->vset * exp(-rb*rb/bias->r/bias->r);
 							if (dE >= -0.01) break;
 							if (bias->atom_list.size() == 0){ // all
+								// printf("nat=%d XS_TYPE_SIZE=%lu\n", nat, XS_TYPE_SIZE);
 								for (int t = 0; t < XS_TYPE_SIZE; ++t){
-									m_grids[t].m_data(x,y,z) += dE;
+									if (m_grids[t].initialized()){
+										std::cout << "t=" << t << " dE=" << dE << std::endl;
+										m_grids[t].m_data(x,y,z) += dE;
+									}
 								}
 							}
 							else{
+								std::cout << "b 2\n";
 								bool xs_type_affected[XS_TYPE_SIZE] = {false};
 								for (int t = 0; t < bias->atom_list.size(); ++t){
 									if (bias->atom_list[t] == AD_TYPE_SIZE+1) xs_type_affected[XS_TYPE_Met_D] = true;
@@ -595,8 +602,10 @@ void cache::populate(const model &m, const precalculate &p, const szv &atom_type
 										}
 									}
 								}
+								std::cout << "b 3\n";
 								for (int t = 0; t < XS_TYPE_SIZE; ++t){
-									m_grids[xs_type_affected[t]].m_data(x,y,z) += dE;
+									if (xs_type_affected[t] && m_grids[t].initialized())
+										m_grids[t].m_data(x,y,z) += dE;
 								}
 							break;
 							}
