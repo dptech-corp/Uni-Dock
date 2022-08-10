@@ -46,8 +46,8 @@ void set_ad4_bias(grid &g, std::vector<bias_element>::const_iterator bias){
 		VINA_FOR(y, g.m_data.dim1()) {
 			VINA_FOR(z, g.m_data.dim2()) {
 				vec probe_coords; probe_coords = g.index_to_argument(x, y, z);
-				const fl rb = vec_distance_sqr(bias->coords, probe_coords);
-				fl dE = bias->vset * exp(-rb*rb/bias->r/bias->r);
+				const fl rb2 = vec_distance_sqr(bias->coords, probe_coords);
+				fl dE = bias->vset * exp(-rb2/bias->r/bias->r);
 				if (dE >= -0.01) continue;
 				g.m_data(x,y,z) += dE;
 			}

@@ -525,14 +525,14 @@ void cache::populate(const model &m, const precalculate &p, const szv &atom_type
 
 				// add bias based on input bias file
 				for (auto bias = bias_list.begin(); bias != bias_list.end(); ++bias){
-					const fl rb = vec_distance_sqr(bias->coords, probe_coords);
+					const fl rb2 = vec_distance_sqr(bias->coords, probe_coords);
 					DEBUG_PRINTF("bias type=%d x=%d y=%d z=%d\n",bias->type,x,y,z);
 					switch (bias->type){
 						case bias_element::itype::don: { // HD
 							break; // no polar H used in vina/vinardo docking
 						}
 						case bias_element::itype::acc: { // OA, NA
-							fl dE = bias->vset * exp(-rb*rb/bias->r/bias->r);
+							fl dE = bias->vset * exp(-rb2/bias->r/bias->r);
 							if (dE >= -0.01) break;
 							// std::cout << "dE=" << dE << std::endl;
 							// choose atom constants, XS
@@ -548,7 +548,7 @@ void cache::populate(const model &m, const precalculate &p, const szv &atom_type
 							break;
 						}
 						case bias_element::itype::map: { // all or given by atom_list
-							fl dE = bias->vset * exp(-rb*rb/bias->r/bias->r);
+							fl dE = bias->vset * exp(-rb2/bias->r/bias->r);
 							if (dE >= -0.01) break;
 							if (bias->atom_list.size() == 0){ // all
 								// printf("nat=%d XS_TYPE_SIZE=%lu\n", nat, XS_TYPE_SIZE);

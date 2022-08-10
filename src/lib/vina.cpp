@@ -504,7 +504,7 @@ void Vina::compute_vina_maps(double center_x, double center_y, double center_z, 
 
 	// create non_cache for scoring with explicit receptor atoms (instead of grids)
 	if (!m_no_refine) {
-		non_cache nc(m_model, gd, &m_precalculated_sf, slope);
+		non_cache nc(m_model, gd, &m_precalculated_sf, slope, bias_list);
 		m_non_cache = nc;
 	}
 
