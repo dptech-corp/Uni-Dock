@@ -532,12 +532,14 @@ void cache::populate(const model &m, const precalculate &p, const szv &atom_type
 						}
 						case bias_element::itype::acc: { // OA, NA
 							fl dE = bias->vset * exp(-rb*rb/bias->r/bias->r);
+							if (dE >= -0.01) break;
 							// choose atom constants, XS
 							m_grids[XS_TYPE_O_A].m_data(x,y,z) += dE; // acceptor O
 							m_grids[XS_TYPE_N_A].m_data(x,y,z) += dE; // acceptor N
 							// FIX: donor acceptor which bonded to HD, necessary?
 							m_grids[XS_TYPE_O_DA].m_data(x,y,z) += dE;
 							m_grids[XS_TYPE_N_DA].m_data(x,y,z) += dE;
+							break;
 						}
 						case bias_element::itype::aro: { // AC
 							// TODO: add atom type AC
@@ -545,6 +547,7 @@ void cache::populate(const model &m, const precalculate &p, const szv &atom_type
 						}
 						case bias_element::itype::map: { // all or given by atom_list
 							fl dE = bias->vset * exp(-rb*rb/bias->r/bias->r);
+							if (dE >= -0.01) break;
 							if (bias->atom_list.size() == 0){ // all
 								for (int t = 0; t < XS_TYPE_SIZE; ++t){
 									m_grids[t].m_data(x,y,z) += dE;
@@ -595,6 +598,7 @@ void cache::populate(const model &m, const precalculate &p, const szv &atom_type
 								for (int t = 0; t < XS_TYPE_SIZE; ++t){
 									m_grids[xs_type_affected[t]].m_data(x,y,z) += dE;
 								}
+							break;
 							}
 						}
 						default: break;

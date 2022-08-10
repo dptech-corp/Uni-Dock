@@ -7,17 +7,24 @@
 #include <string>
 #include <iostream>
 
+#ifdef DEBUG
+    #define DEBUG_PRINTF printf
+#else
+    #define DEBUG_PRINTF(...)
+#endif
+
 struct bias_element
 {
 public:
     vec coords;
     fl vset, r;
-    enum itype{don, acc, aro, map} type; // depend on interaction type
+    enum itype{don, acc, aro, map, unknown} type; // depend on interaction type
     szv atom_list; // affected atom types in AD, used only if type==map
     bias_element(std::istringstream & input){
         input >> coords[0] >> coords[1] >> coords[2] >> vset >> r;
         std::string stype;
         input >> stype;
+        DEBUG_PRINTF("stype=%s\n", stype.c_str());
         if (stype == "don"){
             type = don;
         }
@@ -37,6 +44,9 @@ public:
                 if (type_num < AD_TYPE_SIZE)
                     atom_list.push_back(type_num);
             }
+        }
+        else {
+            type = unknown;
         }
     }
 

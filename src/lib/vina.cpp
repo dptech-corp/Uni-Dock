@@ -530,7 +530,8 @@ void Vina::load_maps(std::string maps) {
 		done(m_verbosity, 0);
 		if (bias_list.size() > 0){
 			doing("Setting AD4.2 bias", m_verbosity, 0);
-			grid.set_ad4_bias(bias_list);
+			grid.set_bias(bias_list);
+			done(m_verbosity, 0);
 		}
 		m_ad4grid = grid;
 	}
