@@ -39,11 +39,11 @@ struct non_cache : public igrid {
 	float get_slope() const;
     bool within(const model& m, fl margin = 0.0001) const;
 	fl slope;
+    std::vector<bias_element> bias_list;
 private:
 	szv_grid sgrid;
 	grid_dims gd;
 	const precalculate* p;
-    const std::vector<bias_element> bias_list;
 };
 
 #endif

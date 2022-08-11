@@ -107,7 +107,7 @@ fl non_cache::eval      (const model& m, fl v) const { // clean up
 					}
 					else {
 						for (int t = 0; t < bias->atom_list.size(); ++t){
-							if (bias->atom_list[t] == AD_TYPE_SIZE+1 && t1 = XS_TYPE_Met_D) this_e += dE;
+							if (bias->atom_list[t] == AD_TYPE_SIZE+1 && t1 == XS_TYPE_Met_D) this_e += dE;
 							else {
 								sz ad = bias->atom_list[t];
 								sz el = ad_type_to_el_type(ad);
@@ -240,7 +240,7 @@ fl non_cache::eval_deriv(      model& m, fl v) const { // clean up
 			if (rb2 > cutoff_sqr) continue;
 			fl dE = bias->vset * exp(-rb2/bias->r/bias->r);
 			// TODO: calculate deriv of bias, we can get higher accuracy without using precalculate
-			vec bias_deriv = {0};
+			vec bias_deriv = {0,0,0};
 
 			if (dE >= -0.01) continue;
 			switch (bias->type){
@@ -265,7 +265,7 @@ fl non_cache::eval_deriv(      model& m, fl v) const { // clean up
 					}
 					else {
 						for (int t = 0; t < bias->atom_list.size(); ++t){
-							if (bias->atom_list[t] == AD_TYPE_SIZE+1 && t1 = XS_TYPE_Met_D) this_e += dE;
+							if (bias->atom_list[t] == AD_TYPE_SIZE+1 && t1 == XS_TYPE_Met_D) this_e += dE;
 							else {
 								sz ad = bias->atom_list[t];
 								sz el = ad_type_to_el_type(ad);
