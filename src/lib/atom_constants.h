@@ -192,7 +192,8 @@ struct atom_equivalence {
 };
 
 const atom_equivalence atom_equivalence_data[] = {
-	{"Se",  "S"}
+	{"Se",  "S"},
+	{"CL",  "Cl"}
 };
 
 const sz atom_equivalences_size = sizeof(atom_equivalence_data) / sizeof(const atom_equivalence);
