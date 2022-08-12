@@ -71,7 +71,7 @@ void ad4cache::set_bias(const std::vector<bias_element> bias_list){
 				break;
 			}
 			case bias_element::itype::aro: { // AC
-				// TODO: add atom type AD
+				set_ad4_bias(m_grids[AD_TYPE_A], bias);
 				break;
 			}
 			case bias_element::itype::map: {

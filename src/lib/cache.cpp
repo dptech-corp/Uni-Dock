@@ -560,7 +560,7 @@ void cache::populate(const model &m, const precalculate &p, const szv &atom_type
 								}
 							}
 							else{
-								std::cout << "b 2\n";
+								// std::cout << "b 2\n";
 								bool xs_type_affected[XS_TYPE_SIZE] = {false};
 								for (int t = 0; t < bias->atom_list.size(); ++t){
 									if (bias->atom_list[t] == AD_TYPE_SIZE+1) xs_type_affected[XS_TYPE_Met_D] = true;
@@ -574,6 +574,13 @@ void cache::populate(const model &m, const precalculate &p, const szv &atom_type
 												else if(ad == AD_TYPE_CG1){ xs_type_affected[XS_TYPE_C_P_CG1] = true; xs_type_affected[XS_TYPE_C_H_CG1] = true;}
 												else if(ad == AD_TYPE_CG2){ xs_type_affected[XS_TYPE_C_P_CG2] = true; xs_type_affected[XS_TYPE_C_H_CG2] = true;}
 												else if(ad == AD_TYPE_CG3){ xs_type_affected[XS_TYPE_C_P_CG3] = true; xs_type_affected[XS_TYPE_C_H_CG3] = true;}
+												else if(ad == AD_TYPE_C)  { // add bias for all kinds of Carbon
+													xs_type_affected[XS_TYPE_C_P_CG0] = true; xs_type_affected[XS_TYPE_C_H_CG0] = true;
+													xs_type_affected[XS_TYPE_C_P_CG1] = true; xs_type_affected[XS_TYPE_C_H_CG1] = true;
+													xs_type_affected[XS_TYPE_C_P_CG2] = true; xs_type_affected[XS_TYPE_C_H_CG2] = true;
+													xs_type_affected[XS_TYPE_C_P_CG3] = true; xs_type_affected[XS_TYPE_C_H_CG3] = true;
+													xs_type_affected[XS_TYPE_C_P] = xs_type_affected[XS_TYPE_C_H] = true;
+												}
 												else                      { xs_type_affected[XS_TYPE_C_P] = xs_type_affected[XS_TYPE_C_H] = true;}
 												break;
 											}
@@ -602,7 +609,7 @@ void cache::populate(const model &m, const precalculate &p, const szv &atom_type
 										}
 									}
 								}
-								std::cout << "b 3\n";
+								// std::cout << "b 3\n";
 								for (int t = 0; t < XS_TYPE_SIZE; ++t){
 									if (xs_type_affected[t] && m_grids[t].initialized())
 										m_grids[t].m_data(x,y,z) += dE;

@@ -98,7 +98,11 @@ fl non_cache::eval      (const model& m, fl v) const { // clean up
 					break;
 				}
 				case bias_element::itype::aro: { // AC
-					// TODO: add atom type AD
+					// simply add bias for add carbon in the case of atom type AC
+					if (t1 == XS_TYPE_C_P_CG0 || t1 == XS_TYPE_C_H_CG0 || t1 == XS_TYPE_C_P_CG1 || t1 == XS_TYPE_C_H_CG1
+					 || t1 == XS_TYPE_C_P_CG2 || t1 == XS_TYPE_C_H_CG2 || t1 == XS_TYPE_C_P_CG3 || t1 == XS_TYPE_C_H_CG3){
+						this_e += dE;
+					}
 					break;
 				}
 				case bias_element::itype::map: {
@@ -239,8 +243,8 @@ fl non_cache::eval_deriv(      model& m, fl v) const { // clean up
 			const fl rb2 = vec_distance_sqr(bias->coords, a_coords);
 			if (rb2 > cutoff_sqr) continue;
 			fl dE = bias->vset * exp(-rb2/bias->r/bias->r);
-			// TODO: calculate deriv of bias, we can get higher accuracy without using precalculate
-			vec bias_deriv = {0,0,0};
+			// calculate deriv of bias, we can get higher accuracy without using precalculate
+			vec bias_deriv = dE / (-bias->r * bias->r) * (a_coords - bias->coords);
 
 			if (dE >= -0.01) continue;
 			switch (bias->type){
@@ -255,7 +259,11 @@ fl non_cache::eval_deriv(      model& m, fl v) const { // clean up
 					break;
 				}
 				case bias_element::itype::aro: { // AC
-					// TODO: add atom type AD
+					// simply add bias for add carbon in the case of atom type AC
+					if (t1 == XS_TYPE_C_P_CG0 || t1 == XS_TYPE_C_H_CG0 || t1 == XS_TYPE_C_P_CG1 || t1 == XS_TYPE_C_H_CG1
+					 || t1 == XS_TYPE_C_P_CG2 || t1 == XS_TYPE_C_H_CG2 || t1 == XS_TYPE_C_P_CG3 || t1 == XS_TYPE_C_H_CG3){
+						this_e += dE; deriv += bias_deriv;
+					}
 					break;
 				}
 				case bias_element::itype::map: {
