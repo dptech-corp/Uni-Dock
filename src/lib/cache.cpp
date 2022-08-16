@@ -447,7 +447,7 @@ int cache::get_atu() const{
 }
 
 
-void cache::populate(const model &m, const precalculate &p, const szv &atom_types_needed) {
+void cache::populate(const model &m, const precalculate &p, const szv &atom_types_needed, const std::vector<bias_element> bias_list) {
 	szv needed;
 	bool got_C_H_already = false;
 	bool got_C_P_already = false;
@@ -521,6 +521,104 @@ void cache::populate(const model &m, const precalculate &p, const szv &atom_type
 					sz t = needed[j];
 					assert(t < nat);
 					m_grids[t].m_data(x, y, z) = affinities[j];
+				}
+
+				// add bias based on input bias file
+				for (auto bias = bias_list.begin(); bias != bias_list.end(); ++bias){
+					const fl rb2 = vec_distance_sqr(bias->coords, probe_coords);
+					DEBUG_PRINTF("bias type=%d x=%d y=%d z=%d\n",bias->type,x,y,z);
+					switch (bias->type){
+						case bias_element::itype::don: { // HD
+							break; // no polar H used in vina/vinardo docking
+						}
+						case bias_element::itype::acc: { // OA, NA
+							fl dE = bias->vset * exp(-rb2/bias->r/bias->r);
+							if (dE >= -0.01) break;
+							// std::cout << "dE=" << dE << std::endl;
+							// choose atom constants, XS
+							if (m_grids[XS_TYPE_O_A].initialized()) m_grids[XS_TYPE_O_A].m_data(x,y,z) += dE; // acceptor O
+							if (m_grids[XS_TYPE_N_A].initialized()) m_grids[XS_TYPE_N_A].m_data(x,y,z) += dE; // acceptor N
+							// FIX: donor acceptor which bonded to HD, necessary?
+							if (m_grids[XS_TYPE_O_DA].initialized()) m_grids[XS_TYPE_O_DA].m_data(x,y,z) += dE;
+							if (m_grids[XS_TYPE_N_DA].initialized()) m_grids[XS_TYPE_N_DA].m_data(x,y,z) += dE;
+							break;
+						}
+						case bias_element::itype::aro: { // AC
+							// TODO: add atom type AC
+							break;
+						}
+						case bias_element::itype::map: { // all or given by atom_list
+							fl dE = bias->vset * exp(-rb2/bias->r/bias->r);
+							if (dE >= -0.01) break;
+							if (bias->atom_list.size() == 0){ // all
+								// printf("nat=%d XS_TYPE_SIZE=%lu\n", nat, XS_TYPE_SIZE);
+								for (int t = 0; t < XS_TYPE_SIZE; ++t){
+									if (m_grids[t].initialized()){
+										std::cout << "t=" << t << " dE=" << dE << std::endl;
+										m_grids[t].m_data(x,y,z) += dE;
+									}
+								}
+							}
+							else{
+								// std::cout << "b 2\n";
+								bool xs_type_affected[XS_TYPE_SIZE] = {false};
+								for (int t = 0; t < bias->atom_list.size(); ++t){
+									if (bias->atom_list[t] == AD_TYPE_SIZE+1) xs_type_affected[XS_TYPE_Met_D] = true;
+									else {
+										sz ad = bias->atom_list[t];
+										sz el = ad_type_to_el_type(ad);
+										switch (el){
+											case EL_TYPE_H    : break;
+											case EL_TYPE_C    :{
+												if     (ad == AD_TYPE_CG0){ xs_type_affected[XS_TYPE_C_P_CG0] = true; xs_type_affected[XS_TYPE_C_H_CG0] = true;}
+												else if(ad == AD_TYPE_CG1){ xs_type_affected[XS_TYPE_C_P_CG1] = true; xs_type_affected[XS_TYPE_C_H_CG1] = true;}
+												else if(ad == AD_TYPE_CG2){ xs_type_affected[XS_TYPE_C_P_CG2] = true; xs_type_affected[XS_TYPE_C_H_CG2] = true;}
+												else if(ad == AD_TYPE_CG3){ xs_type_affected[XS_TYPE_C_P_CG3] = true; xs_type_affected[XS_TYPE_C_H_CG3] = true;}
+												else if(ad == AD_TYPE_C)  { // add bias for all kinds of Carbon
+													xs_type_affected[XS_TYPE_C_P_CG0] = true; xs_type_affected[XS_TYPE_C_H_CG0] = true;
+													xs_type_affected[XS_TYPE_C_P_CG1] = true; xs_type_affected[XS_TYPE_C_H_CG1] = true;
+													xs_type_affected[XS_TYPE_C_P_CG2] = true; xs_type_affected[XS_TYPE_C_H_CG2] = true;
+													xs_type_affected[XS_TYPE_C_P_CG3] = true; xs_type_affected[XS_TYPE_C_H_CG3] = true;
+													xs_type_affected[XS_TYPE_C_P] = xs_type_affected[XS_TYPE_C_H] = true;
+												}
+												else                      { xs_type_affected[XS_TYPE_C_P] = xs_type_affected[XS_TYPE_C_H] = true;}
+												break;
+											}
+											case EL_TYPE_N    : xs_type_affected[XS_TYPE_N_DA] = xs_type_affected[XS_TYPE_N_A] = xs_type_affected[XS_TYPE_N_D] = xs_type_affected[XS_TYPE_N_P] = true; break;
+											case EL_TYPE_O    : xs_type_affected[XS_TYPE_O_DA] = xs_type_affected[XS_TYPE_O_A] = xs_type_affected[XS_TYPE_O_D] = xs_type_affected[XS_TYPE_O_P] = true; break;
+											case EL_TYPE_S    : xs_type_affected[XS_TYPE_S_P] = true; break;
+											case EL_TYPE_P    : xs_type_affected[XS_TYPE_P_P] = true; break;
+											case EL_TYPE_F    : xs_type_affected[XS_TYPE_F_H] = true; break;
+											case EL_TYPE_Cl   : xs_type_affected[XS_TYPE_Cl_H] = true; break;
+											case EL_TYPE_Br   : xs_type_affected[XS_TYPE_Br_H] = true; break;
+											case EL_TYPE_I    : xs_type_affected[XS_TYPE_I_H] = true; break;
+											case EL_TYPE_Si   : xs_type_affected[XS_TYPE_Si] = true; break;
+											case EL_TYPE_At   : xs_type_affected[XS_TYPE_At] = true; break;
+											case EL_TYPE_Met  : xs_type_affected[XS_TYPE_Met_D] = true; break;
+											case EL_TYPE_Dummy: {
+												if      (ad == AD_TYPE_G0) xs_type_affected[XS_TYPE_G0] = true;
+												else if (ad == AD_TYPE_G1) xs_type_affected[XS_TYPE_G1] = true;
+												else if (ad == AD_TYPE_G2) xs_type_affected[XS_TYPE_G2] = true;
+												else if (ad == AD_TYPE_G3) xs_type_affected[XS_TYPE_G3] = true;
+												else if (ad == AD_TYPE_W)  xs_type_affected[XS_TYPE_SIZE] = true; // no W atoms in XS types
+												else VINA_CHECK(false);
+												break;
+											}
+											case EL_TYPE_SIZE : break;
+											default: VINA_CHECK(false);
+										}
+									}
+								}
+								// std::cout << "b 3\n";
+								for (int t = 0; t < XS_TYPE_SIZE; ++t){
+									if (xs_type_affected[t] && m_grids[t].initialized())
+										m_grids[t].m_data(x,y,z) += dE;
+								}
+							break;
+							}
+						}
+						default: break;
+					}
 				}
 			}
 		}

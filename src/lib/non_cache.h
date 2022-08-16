@@ -26,10 +26,11 @@
 #include "igrid.h"
 #include "szv_grid.h"
 #include "precalculate.h"
+#include "bias.h"
 
 struct non_cache : public igrid {
     non_cache() {}
-	non_cache(const model& m, const grid_dims& gd_, const precalculate* p_, fl slope_);
+	non_cache(const model& m, const grid_dims& gd_, const precalculate* p_, fl slope_, const std::vector<bias_element> bias_list_);
 	virtual fl eval      (const model& m, fl v) const; // needs m.coords // clean up
 	virtual fl eval_intra(      model& m, fl v) const;
 	virtual fl eval_deriv(      model& m, fl v) const; // needs m.coords, sets m.minus_forces // clean up
@@ -38,6 +39,7 @@ struct non_cache : public igrid {
 	float get_slope() const;
     bool within(const model& m, fl margin = 0.0001) const;
 	fl slope;
+    std::vector<bias_element> bias_list;
 private:
 	szv_grid sgrid;
 	grid_dims gd;
