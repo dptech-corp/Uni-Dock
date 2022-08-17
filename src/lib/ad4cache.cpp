@@ -39,6 +39,59 @@ int ad4cache::get_atu() const{
 	return atom_type::AD;
 }
 
+// set ad4 bias for one grid map
+void set_ad4_bias(grid &g, std::vector<bias_element>::const_iterator bias){
+	DEBUG_PRINTF("setting bias...\n");
+	VINA_FOR(x, g.m_data.dim0()) {
+		VINA_FOR(y, g.m_data.dim1()) {
+			VINA_FOR(z, g.m_data.dim2()) {
+				vec probe_coords; probe_coords = g.index_to_argument(x, y, z);
+				const fl rb2 = vec_distance_sqr(bias->coords, probe_coords);
+				fl dE = bias->vset * exp(-rb2/bias->r/bias->r);
+				if (dE >= -0.01) continue;
+				g.m_data(x,y,z) += dE;
+			}
+		}
+	}
+}
+
+
+void ad4cache::set_bias(const std::vector<bias_element> bias_list){
+	for (auto bias = bias_list.begin(); bias != bias_list.end(); ++bias){
+		DEBUG_PRINTF("bias info: type=%d, x=%f y=%f z=%f, Vset=%f, r=%f\n",
+			bias->type, bias->coords[0], bias->coords[1], bias->coords[2], bias->vset, bias->r);
+		switch (bias->type){
+			case bias_element::itype::don: { // HD
+				set_ad4_bias(m_grids[AD_TYPE_HD], bias);
+				break;
+			}
+			case bias_element::itype::acc: { // OA, NA
+				set_ad4_bias(m_grids[AD_TYPE_OA], bias);
+				set_ad4_bias(m_grids[AD_TYPE_NA], bias);
+				break;
+			}
+			case bias_element::itype::aro: { // AC
+				set_ad4_bias(m_grids[AD_TYPE_A], bias);
+				break;
+			}
+			case bias_element::itype::map: {
+				if (bias->atom_list.size() == 0){ // all
+					for (int t = 0; t < AD_TYPE_SIZE + 2; ++t){
+						set_ad4_bias(m_grids[t], bias);
+					}
+				}
+				else {
+					for (int t = 0; t < bias->atom_list.size(); ++t){
+						set_ad4_bias(m_grids[bias->atom_list[t]], bias);
+					}
+				}
+				break;
+			}
+			default: break;
+		}
+	}
+}
+
 std::string get_adtype_str(sz& t) {
 	switch(t) {
 		case AD_TYPE_C : return "C";
