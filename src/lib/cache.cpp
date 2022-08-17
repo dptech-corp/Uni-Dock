@@ -561,7 +561,7 @@ void cache::populate(const model &m, const precalculate &p, const szv &atom_type
 							}
 							else{
 								// std::cout << "b 2\n";
-								bool xs_type_affected[XS_TYPE_SIZE] = {false};
+								bool xs_type_affected[XS_TYPE_SIZE+1] = {false};
 								for (int t = 0; t < bias->atom_list.size(); ++t){
 									if (bias->atom_list[t] == AD_TYPE_SIZE+1) xs_type_affected[XS_TYPE_Met_D] = true;
 									else {
