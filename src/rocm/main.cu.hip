@@ -191,6 +191,9 @@ Thank you!\n";
 		bool autobox = false;
 		variables_map vm;
 
+		// bias
+		std::string bias_file;
+
 		positional_options_description positional; // remains empty
 
 		options_description inputs("Input");
@@ -250,6 +253,7 @@ Thank you!\n";
 			("weight_ad4_rot", value<double>(&weight_ad4_rot)->default_value(weight_ad4_rot), "ad4_rot weight")
 
 			("weight_glue", value<double>(&weight_glue)->default_value(weight_glue),                      "macrocycle glue weight")
+			("bias", value<std::string>(&bias_file), "bias configuration file name, content similar to BPF in AutoDock-bias")
 		;
 		options_description misc("Misc (optional)");
 		misc.add_options()
@@ -448,6 +452,20 @@ Thank you!\n";
 		if (vm.count("receptor") || vm.count("flex"))
 			v.set_receptor(rigid_name, flex_name);
 
+		if (vm.count("bias")){
+			std::ifstream bias_file_content(bias_file);
+			if (!bias_file_content.is_open()){
+				throw file_error(bias_file, true);
+			}
+
+			// initialize bias object
+			v.set_bias(bias_file_content);
+
+			bias_file_content.close();
+			
+		}
+
+		
 		// Technically we don't have to initialize weights,
 		// because they are initialized during the Vina object creation with the default weights
 		// but we still do it in case the user decided to change them
