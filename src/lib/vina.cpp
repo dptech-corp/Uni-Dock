@@ -255,7 +255,8 @@ void Vina::set_ligand_from_object_gpu(const std::vector<model>& ligands) {
 	m_model_gpu.resize(ligands.size(), m_receptor);// Initialize current model with receptor and reinitialize poses
 	m_precalculated_byatom_gpu.resize(ligands.size());
 
-	// Read ligand info and delete broken input
+	// Read ligand info and initialize precalculated_byatom
+	#pragma omp parallel for
 	for (int i = 0;i < ligands.size(); ++i){
 		m_model_gpu[i].append(ligands[i]);
 		m_precalculated_byatom_gpu[i].init_without_calculation(m_scoring_function, m_model_gpu[i]);
