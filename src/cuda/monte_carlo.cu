@@ -1607,6 +1607,8 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 	// Device to Host memcpy of precalculated_byatom, copy back data to p_gpu
     p_m_data_cuda_t *p_data;
     checkCUDA(cudaMallocHost(&p_data, sizeof(p_m_data_cuda_t) * MAX_P_DATA_M_DATA_SIZE));
+	output_type_cuda_t *results;
+	checkCUDA(cudaMallocHost(&results, thread * sizeof(output_type_cuda_t)));
 
 	for (int l = 0;l < num_of_ligands; ++l){
         // copy data to m_data on CPU, then to p_gpu[l]
@@ -1640,8 +1642,7 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 	/* Convert result data. Can be improved by mapping memory
 	*/
 	DEBUG_PRINTF("cuda to vina\n");
-	output_type_cuda_t *results;
-	checkCUDA(cudaMallocHost(&results, thread * sizeof(output_type_cuda_t)));
+
 	checkCUDA(cudaMemcpy(results, results_gpu, thread * sizeof(output_type_cuda_t), cudaMemcpyDeviceToHost));
 
 	std::vector<output_type> result_vina = cuda_to_vina(results, thread);
