@@ -1241,7 +1241,7 @@ void Vina::global_search(const int exhaustiveness, const int n_poses, const doub
 	m_poses = poses;
 }
 
-void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const double min_rmsd, const int max_evals, const int max_step, int num_of_ligands, unsigned long long seed) {
+void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const double min_rmsd, const int max_evals, const int max_step, int num_of_ligands, unsigned long long seed, const int refine_step) {
 	// Vina search (Monte-carlo and local optimization)
 	// Check if ff, box and ligand were initialized
 	if (!m_ligand_initialized) {
@@ -1334,7 +1334,7 @@ void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const 
 					VINA_FOR_IN(i, poses){
 						// DEBUG_PRINTF("poses i score=%lf\n", poses[i].e);
 						const fl slope_orig = m_non_cache.slope;
-						VINA_FOR(p, 5){
+						VINA_FOR(p, refine_step){
 							m_non_cache.slope = 100 * std::pow(10.0, 2.0*p);
 							quasi_newton_par(m_model_gpu[l], m_precalculated_byatom_gpu[l], m_non_cache, poses[i], g, authentic_v, evalcount);
 							if(m_non_cache.within(m_model_gpu[l]))
