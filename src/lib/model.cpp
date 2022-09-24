@@ -26,6 +26,7 @@
 #include "file.h"
 #include "curl.h"
 #include "precalculate.h"
+#include "utils.h"
 
 template<typename T>
 atom_range get_atom_range(const T& t) {
@@ -841,6 +842,9 @@ fl model::eval_deriv(const precalculate_byatom& p, const igrid& ig, const vec& v
 }
 
 fl model::eval_intramolecular(const precalculate_byatom& p, const igrid& ig, const vec& v) {
+	
+	ofile f(make_path("intra_model.txt"));
+	write_structure(f);
 	// printf("entering eval_intramolecular\n");
 	fl e = 0;
 	const fl cutoff_sqr = p.cutoff_sqr();
@@ -848,10 +852,10 @@ fl model::eval_intramolecular(const precalculate_byatom& p, const igrid& ig, con
 	// internal for each ligand
 	VINA_FOR_IN(i, ligands)
 		e += eval_interacting_pairs(p, v[0], ligands[i].pairs, coords); // coords instead of internal coords
-	// printf("e1=%f\n", e);
+	printf("e1=%f\n", e);
 	// flex - rigid
     e += ig.eval_intra(*this, v[1]);
-	// printf("e2=%f\n", e);
+	printf("e2=%f\n", e);
 
 	// flex_i - flex_i and flex_i - flex_j
 	VINA_FOR_IN(i, other_pairs) {
@@ -863,7 +867,7 @@ fl model::eval_intramolecular(const precalculate_byatom& p, const igrid& ig, con
 			e += this_e;
 		}
 	}
-	// printf("e3=%f\n", e);
+	printf("e3=%f\n", e);
 	// glue_i - glue_i and glue_i - glue_j interactions (no cutoff)
 	VINA_FOR_IN(i, glue_pairs) {
 		const interacting_pair& pair = glue_pairs[i];
@@ -872,7 +876,7 @@ fl model::eval_intramolecular(const precalculate_byatom& p, const igrid& ig, con
 		curl(this_e, v[2]);
 		e += this_e;
 	}
-	// printf("e4=%f\n", e);
+	printf("e4=%f\n", e);
 
 	return e;
 }

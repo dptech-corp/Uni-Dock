@@ -1414,6 +1414,7 @@ void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const 
 		DEBUG_PRINTF("num_output_poses=%lu\n", poses.size());
 
 		if (!poses.empty()) {
+			
 			DEBUG_PRINTF("energy=%lf\n", poses[0].e);
 			DEBUG_PRINTF("vina: poses not empty, poses.size()=%lu\n", poses.size());
 			// For the Vina scoring function, we take the intramolecular energy from the best pose
@@ -1444,6 +1445,9 @@ void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const 
 						m_non_cache.slope = slope;
 					}
 				}
+				poses.sort();
+				// probably for bug very negative score
+				m_model_gpu[l].set(poses[0].c);
 
 				if (m_no_refine || !m_receptor_initialized)
 					intramolecular_energy = m_model_gpu[l].eval_intramolecular(m_precalculated_byatom_gpu[l], m_grid, authentic_v);
@@ -1461,7 +1465,7 @@ void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const 
 				// For AD42 intramolecular_energy is equal to 0
 				// m_model = m_model_gpu[l]; // Vina::score() will use m_model and m_precalculated_byatom
 				// m_precalculated_byatom = m_precalculated_byatom_gpu[l];
-				// DEBUG_PRINTF("intramolecular_energy=%f\n", intramolecular_energy);
+				printf("intramolecular_energy=%f\n", intramolecular_energy);
 				std::vector<double> energies = score_gpu(l, intramolecular_energy);
 				// DEBUG_PRINTF("energies.size()=%d\n", energies.size());
 				// Store energy components in current pose
