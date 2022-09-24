@@ -194,6 +194,8 @@ public:
 
 	void set_forcefield();
 	std::vector<double> score(double intramolecular_energy);
+	std::vector<double> score_gpu(int i);
+	std::vector<double> score_gpu(int i, double intramolecular_energy);
 	std::vector<double> optimize(output_type& out, const int max_steps=0);
 	int generate_seed(const int seed=0);
 };
