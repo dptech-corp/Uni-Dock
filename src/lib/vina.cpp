@@ -1464,7 +1464,7 @@ void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const 
 				// For AD42 intramolecular_energy is equal to 0
 				// m_model = m_model_gpu[l]; // Vina::score() will use m_model and m_precalculated_byatom
 				// m_precalculated_byatom = m_precalculated_byatom_gpu[l];
-				printf("intramolecular_energy=%f\n", intramolecular_energy);
+				DEBUG_PRINTF("intramolecular_energy=%f\n", intramolecular_energy);
 				std::vector<double> energies = score_gpu(l, intramolecular_energy);
 				// DEBUG_PRINTF("energies.size()=%d\n", energies.size());
 				// Store energy components in current pose
