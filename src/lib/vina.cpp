@@ -1407,8 +1407,7 @@ void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const 
 	m_poses_gpu.resize(num_of_ligands);
 	non_cache m_non_cache_tmp = m_non_cache;
 
-	#pragma omp parallel for
-	for (int l = 0; l < num_of_ligands; ++l){ // TODO: parallel execution, rescoring for 40000+ ligands is costly
+	for (int l = 0; l < num_of_ligands; ++l){ 
 		DEBUG_PRINTF("num_output_poses before remove=%lu\n", poses_gpu[l].size());
 		poses = remove_redundant(poses_gpu[l], min_rmsd);
 		DEBUG_PRINTF("num_output_poses=%lu\n", poses.size());
