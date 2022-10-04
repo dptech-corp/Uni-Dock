@@ -192,7 +192,8 @@ struct atom_equivalence {
 };
 
 const atom_equivalence atom_equivalence_data[] = {
-	{"Se",  "S"}
+	{"Se",  "S"},
+	{"CL",  "Cl"}
 };
 
 const sz atom_equivalences_size = sizeof(atom_equivalence_data) / sizeof(const atom_equivalence);
@@ -400,6 +401,17 @@ inline sz string_to_ad_type(const std::string& name) { // returns AD_TYPE_SIZE i
 	VINA_FOR(i, atom_equivalences_size)
 		if(atom_equivalence_data[i].name == name)
 			return string_to_ad_type(atom_equivalence_data[i].to);
+    return AD_TYPE_SIZE;
+}
+
+inline sz string_to_ad_type_with_met(const std::string& name) { // returns AD_TYPE_SIZE if not found (no exceptions thrown, because metals unknown to AD4 are not exceptional)
+    VINA_FOR(i, atom_kinds_size)
+		if(atom_kind_data[i].name == name)
+			return i;
+	VINA_FOR(i, atom_equivalences_size)
+		if(atom_equivalence_data[i].name == name)
+			return string_to_ad_type(atom_equivalence_data[i].to);
+	if(is_non_ad_metal_name(name)) return AD_TYPE_SIZE+1; // met
     return AD_TYPE_SIZE;
 }
 

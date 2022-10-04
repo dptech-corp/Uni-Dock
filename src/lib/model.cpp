@@ -26,6 +26,7 @@
 #include "file.h"
 #include "curl.h"
 #include "precalculate.h"
+#include "utils.h"
 
 template<typename T>
 atom_range get_atom_range(const T& t) {
@@ -841,6 +842,7 @@ fl model::eval_deriv(const precalculate_byatom& p, const igrid& ig, const vec& v
 }
 
 fl model::eval_intramolecular(const precalculate_byatom& p, const igrid& ig, const vec& v) {
+	
 	// printf("entering eval_intramolecular\n");
 	fl e = 0;
 	const fl cutoff_sqr = p.cutoff_sqr();

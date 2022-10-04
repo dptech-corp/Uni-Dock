@@ -255,7 +255,8 @@ void Vina::set_ligand_from_object_gpu(const std::vector<model>& ligands) {
 	m_model_gpu.resize(ligands.size(), m_receptor);// Initialize current model with receptor and reinitialize poses
 	m_precalculated_byatom_gpu.resize(ligands.size());
 
-	// Read ligand info and delete broken input
+	// Read ligand info and initialize precalculated_byatom
+	#pragma omp parallel for
 	for (int i = 0;i < ligands.size(); ++i){
 		m_model_gpu[i].append(ligands[i]);
 		m_precalculated_byatom_gpu[i].init_without_calculation(m_scoring_function, m_model_gpu[i]);
@@ -438,6 +439,7 @@ std::vector<double> Vina::grid_dimensions_from_ligand(double buffer_size) {
 	return box_dimensions;
 }
 
+// set vina and vinardo bias
 void Vina::compute_vina_maps(double center_x, double center_y, double center_z, double size_x, double size_y, double size_z, double granularity, bool force_even_voxels) {
 	// Setup the search box
 	// Check first that the receptor was added
@@ -495,15 +497,15 @@ void Vina::compute_vina_maps(double center_x, double center_y, double center_z, 
 	else
 		doing("Computing Vinardo grid", m_verbosity, 0);
 
-	// Compute the Vina grids
+	// Compute the Vina grids and set bias
 	cache grid(gd, slope);
-	grid.populate(m_model, precalculated_sf, atom_types);
+	grid.populate(m_model, precalculated_sf, atom_types, bias_list);
 
 	done(m_verbosity, 0);
 
 	// create non_cache for scoring with explicit receptor atoms (instead of grids)
 	if (!m_no_refine) {
-		non_cache nc(m_model, gd, &m_precalculated_sf, slope);
+		non_cache nc(m_model, gd, &m_precalculated_sf, slope, bias_list);
 		m_non_cache = nc;
 	}
 
@@ -527,6 +529,11 @@ void Vina::load_maps(std::string maps) {
 		ad4cache grid(slope);
 		grid.read(maps);
 		done(m_verbosity, 0);
+		if (bias_list.size() > 0){
+			doing("Setting AD4.2 bias", m_verbosity, 0);
+			grid.set_bias(bias_list);
+			done(m_verbosity, 0);
+		}
 		m_ad4grid = grid;
 	}
 
@@ -960,6 +967,77 @@ std::vector<double> Vina::score(double intramolecular_energy) {
 	return energies;
 }
 
+
+std::vector<double> Vina::score_gpu(int i, double intramolecular_energy) {
+	// Score the current conf in the model
+	double total = 0;
+	double inter = 0;
+	double intra = 0;
+	double all_grids = 0; // ligand & flex
+	double lig_grids = 0;
+	double flex_grids = 0;
+	double lig_intra = 0;
+	double conf_independent = 0;
+	double inter_pairs = 0;
+	double intra_pairs = 0;
+	const vec authentic_v(1000, 1000, 1000);
+	std::vector<double> energies;
+
+	if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO) {
+		// Inter
+		if (m_no_refine || !m_receptor_initialized)
+			all_grids = m_grid.eval(m_model_gpu[i], authentic_v[1]); // [1] ligand & flex -- grid
+		else
+			all_grids = m_non_cache.eval(m_model_gpu[i], authentic_v[1]); // [1] ligand & flex -- grid
+		inter_pairs = m_model_gpu[i].eval_inter(m_precalculated_byatom_gpu[i], authentic_v); // [1] ligand -- flex
+		// Intra
+		if (m_no_refine || !m_receptor_initialized)
+			flex_grids = m_grid.eval_intra(m_model_gpu[i], authentic_v[1]); // [1] flex -- grid
+		else
+			flex_grids = m_non_cache.eval_intra(m_model_gpu[i], authentic_v[1]); // [1] flex -- grid
+		intra_pairs = m_model_gpu[i].evalo(m_precalculated_byatom_gpu[i], authentic_v); // [1] flex_i -- flex_i and flex_i -- flex_j
+		lig_grids = all_grids - flex_grids;
+		inter = lig_grids + inter_pairs;
+		lig_intra = m_model_gpu[i].evali(m_precalculated_byatom_gpu[i], authentic_v); // [2] ligand_i -- ligand_i
+		intra = flex_grids + intra_pairs + lig_intra;
+		// Total
+		total = m_scoring_function.conf_independent(m_model_gpu[i], inter + intra - intramolecular_energy); // we pass intermolecular energy from the best pose
+		// Torsion, we want to know how much torsion penalty was added to the total energy
+		conf_independent = total - (inter + intra - intramolecular_energy);
+	} else {
+		// Inter
+		lig_grids = m_ad4grid.eval(m_model_gpu[i], authentic_v[1]); // [1] ligand -- grid
+		inter_pairs = m_model_gpu[i].eval_inter(m_precalculated_byatom_gpu[i], authentic_v); // [1] ligand -- flex
+		inter = lig_grids + inter_pairs;
+		// Intra
+		flex_grids = m_ad4grid.eval_intra(m_model_gpu[i], authentic_v[1]); // [1] flex -- grid
+		intra_pairs = m_model_gpu[i].evalo(m_precalculated_byatom_gpu[i], authentic_v); // [1] flex_i -- flex_i and flex_i -- flex_j
+		lig_intra = m_model_gpu[i].evali(m_precalculated_byatom_gpu[i], authentic_v); // [2] ligand_i -- ligand_i
+		intra = flex_grids + intra_pairs + lig_intra;
+		// Torsion
+		conf_independent = m_scoring_function.conf_independent(m_model_gpu[i], 0); // [3] we can pass e=0 because we do not modify the energy like in vina
+		// Total
+		total = inter + conf_independent; // (+ intra - intra)
+	}
+
+	energies.push_back(total);
+	energies.push_back(lig_grids);
+	energies.push_back(inter_pairs);
+	energies.push_back(flex_grids);
+	energies.push_back(intra_pairs);
+	energies.push_back(lig_intra);
+	energies.push_back(conf_independent);
+
+	if (m_sf_choice == SF_VINA  || m_sf_choice == SF_VINARDO) {
+		energies.push_back(intramolecular_energy);
+	} else {
+		energies.push_back(-intra);
+	}
+
+	return energies;
+}
+
+
 std::vector<double> Vina::score() {
 	// Score the current conf in the model
 	// Check if ff and ligand were initialized
@@ -983,6 +1061,32 @@ std::vector<double> Vina::score() {
 	}
 
 	std::vector<double> energies = score(intramolecular_energy);
+	return energies;
+}
+
+std::vector<double> Vina::score_gpu(int i) {
+	// Score the current conf in the model
+	// Check if ff and ligand were initialized
+	// Check if the ligand is not outside the box
+	if (!m_ligand_initialized) {
+		std::cerr << "ERROR: Cannot score the pose. Ligand(s) was(ere) not initialized.\n";
+		exit(EXIT_FAILURE);
+	} else if (!m_map_initialized) {
+		std::cerr << "ERROR: Cannot score the pose. Affinity maps were not initialized.\n";
+		exit(EXIT_FAILURE);
+	} else if (!m_grid.is_in_grid(m_model_gpu[i])) {
+		std::cerr << "ERROR: The ligand is outside the grid box. Increase the size of the grid box or center it accordingly around the ligand.\n";
+		exit(EXIT_FAILURE);
+	}
+
+	double intramolecular_energy = 0;
+	const vec authentic_v(1000, 1000, 1000);
+
+	if(m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO) {
+		intramolecular_energy = m_model_gpu[i].eval_intramolecular(m_precalculated_byatom_gpu[i], m_grid, authentic_v);
+	}
+
+	std::vector<double> energies = score_gpu(i,intramolecular_energy);
 	return energies;
 }
 
@@ -1070,6 +1174,16 @@ output_container Vina::remove_redundant(const output_container &in, fl min_rmsd)
 	VINA_FOR_IN(i, in)
 	add_to_output_container(tmp, in[i], min_rmsd, in.size());
 	return tmp;
+}
+
+void Vina::set_bias(std::ifstream &bias_file_content){
+	std::string line;
+	std::getline(bias_file_content, line); // first line header
+	while (std::getline(bias_file_content, line)){
+		std::istringstream input(line);
+		bias_element bias_term(input);
+		bias_list.push_back(bias_term);
+	}
 }
 
 void Vina::global_search(const int exhaustiveness, const int n_poses, const double min_rmsd, const int max_evals) {
@@ -1224,7 +1338,7 @@ void Vina::global_search(const int exhaustiveness, const int n_poses, const doub
 	m_poses = poses;
 }
 
-void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const double min_rmsd, const int max_evals, const int max_step, int num_of_ligands, unsigned long long seed) {
+void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const double min_rmsd, const int max_evals, const int max_step, int num_of_ligands, unsigned long long seed, const int refine_step) {
 	// Vina search (Monte-carlo and local optimization)
 	// Check if ff, box and ligand were initialized
 	if (!m_ligand_initialized) {
@@ -1293,12 +1407,13 @@ void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const 
 	m_poses_gpu.resize(num_of_ligands);
 	non_cache m_non_cache_tmp = m_non_cache;
 
-	for (int l = 0; l < num_of_ligands; ++l){ // TODO: parallel execution, rescoring for 40000+ ligands is costly
+	for (int l = 0; l < num_of_ligands; ++l){ 
 		DEBUG_PRINTF("num_output_poses before remove=%lu\n", poses_gpu[l].size());
 		poses = remove_redundant(poses_gpu[l], min_rmsd);
 		DEBUG_PRINTF("num_output_poses=%lu\n", poses.size());
 
 		if (!poses.empty()) {
+			
 			DEBUG_PRINTF("energy=%lf\n", poses[0].e);
 			DEBUG_PRINTF("vina: poses not empty, poses.size()=%lu\n", poses.size());
 			// For the Vina scoring function, we take the intramolecular energy from the best pose
@@ -1317,7 +1432,7 @@ void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const 
 					VINA_FOR_IN(i, poses){
 						// DEBUG_PRINTF("poses i score=%lf\n", poses[i].e);
 						const fl slope_orig = m_non_cache.slope;
-						VINA_FOR(p, 5){
+						VINA_FOR(p, refine_step){
 							m_non_cache.slope = 100 * std::pow(10.0, 2.0*p);
 							quasi_newton_par(m_model_gpu[l], m_precalculated_byatom_gpu[l], m_non_cache, poses[i], g, authentic_v, evalcount);
 							if(m_non_cache.within(m_model_gpu[l]))
@@ -1329,6 +1444,9 @@ void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const 
 						m_non_cache.slope = slope;
 					}
 				}
+				poses.sort();
+				// probably for bug very negative score
+				m_model_gpu[l].set(poses[0].c);
 
 				if (m_no_refine || !m_receptor_initialized)
 					intramolecular_energy = m_model_gpu[l].eval_intramolecular(m_precalculated_byatom_gpu[l], m_grid, authentic_v);
@@ -1336,17 +1454,18 @@ void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const 
 					intramolecular_energy = m_model_gpu[l].eval_intramolecular(m_precalculated_byatom_gpu[l], m_non_cache, authentic_v);
 			}
 
-			VINA_FOR_IN(i, poses) {
+			
+			for (int i = 0;i < poses.size();++i) {
 				if (m_verbosity > 1)
 					std::cout << "ENERGY FROM SEARCH: " << poses[i].e << "\n";
 
 				m_model_gpu[l].set(poses[i].c);
 
 				// For AD42 intramolecular_energy is equal to 0
-				m_model = m_model_gpu[l]; // Vina::score() will use m_model and m_precalculated_byatom
-				m_precalculated_byatom = m_precalculated_byatom_gpu[l];
-				// DEBUG_PRINTF("intramolecular_energy=%f\n", intramolecular_energy);
-				std::vector<double> energies = score(intramolecular_energy);
+				// m_model = m_model_gpu[l]; // Vina::score() will use m_model and m_precalculated_byatom
+				// m_precalculated_byatom = m_precalculated_byatom_gpu[l];
+				DEBUG_PRINTF("intramolecular_energy=%f\n", intramolecular_energy);
+				std::vector<double> energies = score_gpu(l, intramolecular_energy);
 				// DEBUG_PRINTF("energies.size()=%d\n", energies.size());
 				// Store energy components in current pose
 				poses[i].e = energies[0]; // specific to each scoring function

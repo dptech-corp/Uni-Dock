@@ -158,6 +158,7 @@ Thank you!\n";
 		double buffer_size = 4;
 		int max_step = 0;
 		int max_gpu_memory = 0;
+		int refine_step = 5;
 
 		// autodock4.2 weights
 		double weight_ad4_vdw   = 0.1662;
@@ -193,6 +194,9 @@ Thank you!\n";
 		bool version = false; // FIXME
 		bool autobox = false;
 		variables_map vm;
+
+		// bias
+		std::string bias_file;
 
 		positional_options_description positional; // remains empty
 
@@ -253,6 +257,7 @@ Thank you!\n";
 			("weight_ad4_rot", value<double>(&weight_ad4_rot)->default_value(weight_ad4_rot), "ad4_rot weight")
 
 			("weight_glue", value<double>(&weight_glue)->default_value(weight_glue),                      "macrocycle glue weight")
+			("bias", value<std::string>(&bias_file), "bias configuration file name, content similar to BPF in AutoDock-bias")
 		;
 		options_description misc("Misc (optional)");
 		misc.add_options()
@@ -266,6 +271,7 @@ Thank you!\n";
 			("spacing", value<double>(&grid_spacing)->default_value(0.375), "grid spacing (Angstrom)")
 			("verbosity", value<int>(&verbosity)->default_value(1), "verbosity (0=no output, 1=normal, 2=verbose)")
 			("max_step", value<int>(&max_step)->default_value(0), "maximum number of steps in each MC run (if zero, which is the default, the number of MC steps is based on heuristics)")
+			("refine_step", value<int>(&refine_step)->default_value(5), "number of steps in refinement, default=5")
 			("max_gpu_memory", value<int>(&max_gpu_memory)->default_value(0), "maximum gpu memory to use (default=0, use all available GPU memory to optain maximum batch size)")
 			("search_mode", value<std::string>(&search_mode), "search mode of vina (fast, balance, detail), using recommended settings of exhaustiveness and search steps; the higher the computational complexity, the higher the accuracy, but the larger the computational cost")
 
@@ -451,6 +457,20 @@ Thank you!\n";
 		if (vm.count("receptor") || vm.count("flex"))
 			v.set_receptor(rigid_name, flex_name);
 
+		if (vm.count("bias")){
+			std::ifstream bias_file_content(bias_file);
+			if (!bias_file_content.is_open()){
+				throw file_error(bias_file, true);
+			}
+
+			// initialize bias object
+			v.set_bias(bias_file_content);
+
+			bias_file_content.close();
+			
+		}
+
+
 		// Technically we don't have to initialize weights,
 		// because they are initialized during the Vina object creation with the default weights
 		// but we still do it in case the user decided to change them
@@ -612,7 +632,7 @@ Thank you!\n";
 					gpu_out_name.push_back(default_output(get_filename(batch_ligand_names[i]), out_dir));
 				}
 				v1.set_ligand_from_object_gpu(batch_ligands);
-				v1.global_search_gpu(exhaustiveness, num_modes, min_rmsd, max_evals, max_step, batch_ligand_names.size(), (unsigned long long)seed);
+				v1.global_search_gpu(exhaustiveness, num_modes, min_rmsd, max_evals, max_step, batch_ligand_names.size(), (unsigned long long)seed, refine_step);
 				v1.write_poses_gpu(gpu_out_name, num_modes, energy_range);
 				auto end = std::chrono::system_clock::now();
 				std::cout << "Batch " << batch_id << " running time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;

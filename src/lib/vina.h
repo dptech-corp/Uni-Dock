@@ -54,6 +54,7 @@
 #include "utils.h"
 #include "scoring_function.h"
 #include "precalculate.h"
+#include "bias.h"
 
 #ifdef DEBUG
 #define DEBUG_PRINTF printf
@@ -138,7 +139,7 @@ public:
 	std::vector<double> score();
 	std::vector<double> optimize(const int max_steps=0);
 	void global_search(const int exhaustiveness=8, const int n_poses=20, const double min_rmsd=1.0, const int max_evals=0);
-	void global_search_gpu(const int exhaustiveness=8, const int n_poses=20, const double min_rmsd=1.0, const int max_evals=0, const int max_step=0, int num_of_ligands=1, unsigned long long seed = 181129);
+	void global_search_gpu(const int exhaustiveness=8, const int n_poses=20, const double min_rmsd=1.0, const int max_evals=0, const int max_step=0, int num_of_ligands=1, unsigned long long seed = 181129, const int refine_step=5);
 	std::string get_poses(int how_many=9, double energy_range=3.0);
 	std::string get_poses_gpu(int ligand_id, int how_many=9, double energy_range=3.0);
 	void enable_gpu(){ gpu = true;}
@@ -150,6 +151,7 @@ public:
 	void write_maps(const std::string& map_prefix="receptor", const std::string& gpf_filename="NULL",
 					    const std::string& fld_filename="NULL", const std::string& receptor_filename="NULL");
 	void show_score(const std::vector<double> energies);
+	void set_bias(std::ifstream &bias_file_content);
 
 	// model and poses
 	model m_receptor;
@@ -177,6 +179,8 @@ public:
 	ad4cache m_ad4grid;
 	non_cache m_non_cache;
 	bool m_map_initialized;
+	// bias
+	std::vector<bias_element> bias_list;
 	// global search
 	int m_cpu;
 	int m_seed;
@@ -190,6 +194,8 @@ public:
 
 	void set_forcefield();
 	std::vector<double> score(double intramolecular_energy);
+	std::vector<double> score_gpu(int i);
+	std::vector<double> score_gpu(int i, double intramolecular_energy);
 	std::vector<double> optimize(output_type& out, const int max_steps=0);
 	int generate_seed(const int seed=0);
 };
