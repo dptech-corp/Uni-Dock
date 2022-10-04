@@ -46,11 +46,12 @@ LIBS = -l boost_system${BOOST_LIB_VERSION} -l boost_thread${threadmt}${BOOST_LIB
 %.o : ../../../src/cuda/%.cu
 	$(CC) $(CFLAGS) -I ../../../src/lib -I ../../../src/cuda -o $@ -c $<
 
-all: unidock vina_split
+
+all: unidock_ad4 vina_split
 
 include dependencies
 
-unidock: $(MAINOBJ) $(LIBOBJ)
+unidock_ad4: $(MAINOBJ) $(LIBOBJ)
 	$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
 
 vina_split: $(SPLITOBJ)
