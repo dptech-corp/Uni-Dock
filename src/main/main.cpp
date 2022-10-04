@@ -74,7 +74,10 @@ int predict_peak_memory(int batch_size, int exhaustiveness, int all_atom2_number
 			return 1.214869*batch_size + .0038522*exhaustiveness*batch_size + .011978*all_atom2_numbers + 20017.72; // this is based on V100, 32G using vina/vinardo
 	}
 	else {
-		return 1.166067*batch_size + .0038676*exhaustiveness*batch_size + .0119598*all_atom2_numbers + 5313.848; // this is based on T4, 16G
+		if (ad4)
+			return 1.911645*batch_size + .0039108*exhaustiveness*batch_size + .0792161*all_atom2_numbers + 5314;     // thit is based on T4, 16G using ad4 (learned)
+		else
+			return 1.166067*batch_size + .0038676*exhaustiveness*batch_size + .0119598*all_atom2_numbers + 5313.848; // this is based on T4, 16G using vina/vinardo
 	}
 	return 0;
 }
