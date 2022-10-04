@@ -66,9 +66,12 @@ void check_occurrence(boost::program_options::variables_map& vm, boost::program_
 	}
 }
 
-int predict_peak_memory(int batch_size, int exhaustiveness, int all_atom2_numbers, bool use_v100 = true){
+int predict_peak_memory(int batch_size, int exhaustiveness, int all_atom2_numbers, bool use_v100 = true, bool ad4 = false){
 	if (use_v100){
-		return 1.214869*batch_size + .0038522*exhaustiveness*batch_size + .011978*all_atom2_numbers + 20017.72; // this is based on V100, 32G
+		if (ad4)
+			return 1.911645*batch_size + .0039108*exhaustiveness*batch_size + .0792161*all_atom2_numbers + 20052.64; // this is based on V100, 32G using ad4
+		else
+			return 1.214869*batch_size + .0038522*exhaustiveness*batch_size + .011978*all_atom2_numbers + 20017.72; // this is based on V100, 32G using vina/vinardo
 	}
 	else {
 		return 1.166067*batch_size + .0038676*exhaustiveness*batch_size + .0119598*all_atom2_numbers + 5313.848; // this is based on T4, 16G
@@ -553,6 +556,8 @@ Thank you!\n";
 			size_t total;
 			float max_memory = 32000;
 			bool use_v100 = true;
+			bool ad4 = false;
+			if (sf_name.compare("ad4") == 0) ad4 = true;
 			cudaGetDeviceCount(&deviceCount);
 			if (deviceCount > 0){
 				cudaSetDevice(0);
@@ -600,8 +605,8 @@ Thank you!\n";
 				int batch_size = 0;
 				int all_atom2_numbers = 0; // total number of atom^2 in current batch
 				std::vector<model> batch_ligands; // ligands in current batch
-				while (predict_peak_memory(batch_size, exhaustiveness, all_atom2_numbers, use_v100) < max_memory &&
-					 processed_ligands + batch_size < all_ligands.size())
+				while (predict_peak_memory(batch_size, exhaustiveness, all_atom2_numbers, use_v100, ad4) < max_memory && 
+					 processed_ligands + batch_size < ligand_names.size())
 				{
 					batch_ligands.emplace_back(all_ligands[processed_ligands + batch_size].second);
 					int next_atom_numbers = batch_ligands.back()
