@@ -1,8 +1,8 @@
-LIBS = ../build/linux/release/ad4cache.o ../build/linux/release/cache.o ../build/linux/release/non_cache.o ../build/linux/release/conf_independent.o ../build/linux/release/coords.o ../build/linux/release/grid.o ../build/linux/release/szv_grid.o ../build/linux/release/model.o ../build/linux/release/monte_carlo.o ../build/linux/release/mutate.o ../build/linux/release/parallel_mc.o ../build/linux/release/parse_pdbqt.o ../build/linux/release/quasi_newton.o ../build/linux/release/quaternion.o ../build/linux/release/random.o ../build/linux/release/utils.o ../build/linux/release/vina.o ../build/linux/release/precalculate.o
+LIBS = ../build/dcu/release/ad4cache.o ../build/dcu/release/cache.o ../build/dcu/release/non_cache.o ../build/dcu/release/conf_independent.o ../build/dcu/release/coords.o ../build/dcu/release/grid.o ../build/dcu/release/szv_grid.o ../build/dcu/release/model.o ../build/dcu/release/monte_carlo.o ../build/dcu/release/mutate.o ../build/dcu/release/parallel_mc.o ../build/dcu/release/parse_pdbqt.o ../build/dcu/release/quasi_newton.o ../build/dcu/release/quaternion.o ../build/dcu/release/random.o ../build/dcu/release/utils.o ../build/dcu/release/vina.o ../build/dcu/release/precalculate.o
 LIB_FLAG = -l boost_system -l boost_thread -l boost_serialization -l boost_filesystem -l boost_program_options -lgtest -lgtest_main
-C_INCLUDE_FLAG = -I /usr/local/include -L/usr/local/lib -I../src/lib -I../src/cuda -L.
+C_INCLUDE_FLAG = -I /usr/local/include -L/usr/local/lib -I../src/lib -I../src/rocm -I /public/software/apps/boost/intel/1.67.0/include  -L.
 C_FLAG = -O3  -std=c++11 -g -lineinfo -Xcompiler -fopenmp   -DVERSION=\"ef540d3-mod\"
-CC = nvcc
+CC = hipcc
 
 test: test_precalculate test_monte_carlo
 
@@ -16,4 +16,4 @@ clean:
 	rm -f test_precalculate test_monte_carlo
 
 dependency:
-	cd ../build/linux/release; make -j
+	cd ../build/dcu/release; make -j
