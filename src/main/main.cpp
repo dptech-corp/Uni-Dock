@@ -194,6 +194,7 @@ Thank you!\n";
 
 		// bias
 		std::string bias_file;
+		bool batch_bias;
 
 		positional_options_description positional; // remains empty
 
@@ -255,6 +256,8 @@ Thank you!\n";
 
 			("weight_glue", value<double>(&weight_glue)->default_value(weight_glue),                      "macrocycle glue weight")
 			("bias", value<std::string>(&bias_file), "bias configuration file name, content similar to BPF in AutoDock-bias")
+			("batch_bias", value<bool>(&batch_bias), "add ligand bias {ligand_name}.bpf for every input ligand {ligand_name}.pdbqt in batch, content similar to BPF in AutoDock-bias")
+
 		;
 		options_description misc("Misc (optional)");
 		misc.add_options()
@@ -467,6 +470,16 @@ Thank you!\n";
 			
 		}
 
+		v.multi_bias = false;
+		if (vm.count("bias_batch")){
+			if (!(vm.count("gpu_batch") || vm.count("ligand_index"))){
+				std::cerr << "ERROR: Batch bias must be set in batch mode.\n";
+				exit(EXIT_FAILURE);
+			}
+			v.multi_bias = true;
+	
+		}
+
 
 		// Technically we don't have to initialize weights,
 		// because they are initialized during the Vina object creation with the default weights
@@ -600,6 +613,7 @@ Thank you!\n";
 				int batch_size = 0;
 				int all_atom2_numbers = 0; // total number of atom^2 in current batch
 				std::vector<model> batch_ligands; // ligands in current batch
+				v1.bias_batch_list.clear();
 				while (predict_peak_memory(batch_size, exhaustiveness, all_atom2_numbers, use_v100) < max_memory &&
 					 processed_ligands + batch_size < all_ligands.size())
 				{
@@ -625,6 +639,16 @@ Thank you!\n";
 				VINA_RANGE(i, 0, batch_ligand_names.size())
 				{
 					gpu_out_name.push_back(default_output(get_filename(batch_ligand_names[i]), out_dir));
+					if (v1.multi_bias){
+						std::ifstream bias_file_content(get_biasname(batch_ligand_names[i]));
+						if (!bias_file_content.is_open()){
+							throw file_error(bias_file, true);
+						}
+
+						// initialize bias object
+						v1.set_batch_bias(bias_file_content);
+						bias_file_content.close();
+					}
 				}
 				v1.set_ligand_from_object_gpu(batch_ligands);
 				v1.global_search_gpu(exhaustiveness, num_modes, min_rmsd, max_evals, max_step, batch_ligand_names.size(), (unsigned long long)seed, refine_step);

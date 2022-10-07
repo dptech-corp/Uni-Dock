@@ -1182,8 +1182,22 @@ void Vina::set_bias(std::ifstream &bias_file_content){
 	while (std::getline(bias_file_content, line)){
 		std::istringstream input(line);
 		bias_element bias_term(input);
-		bias_list.push_back(bias_term);
+		bias_list.emplace_back(bias_term);
 	}
+}
+
+void Vina::set_batch_bias(std::ifstream &bias_file_content){
+	std::string line;
+	
+	std::vector<bias_element> bias_list_tmp;
+	std::getline(bias_file_content, line); // first line header
+	while (std::getline(bias_file_content, line)){
+		std::istringstream input(line);
+		bias_element bias_term(input);
+		bias_list_tmp.emplace_back(bias_term);
+	}
+	bias_batch_list.emplace_back(bias_list_tmp);
+	
 }
 
 void Vina::global_search(const int exhaustiveness, const int n_poses, const double min_rmsd, const int max_evals) {

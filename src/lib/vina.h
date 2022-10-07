@@ -152,6 +152,7 @@ public:
 					    const std::string& fld_filename="NULL", const std::string& receptor_filename="NULL");
 	void show_score(const std::vector<double> energies);
 	void set_bias(std::ifstream &bias_file_content);
+	void set_batch_bias(std::ifstream &bias_batch_file_content);
 
 	// model and poses
 	model m_receptor;
@@ -159,6 +160,7 @@ public:
 	output_container m_poses;
 	// gpu model vector and poses vector
 	bool gpu;
+	bool multi_bias;
 	std::vector<model> m_model_gpu; // list of m_model for gpu parallelism
 	std::vector<output_container> m_poses_gpu;
 	//OpenBabel::OBMol m_mol;
@@ -181,6 +183,7 @@ public:
 	bool m_map_initialized;
 	// bias
 	std::vector<bias_element> bias_list;
+	std::vector<std::vector<bias_element> > bias_batch_list;
 	// global search
 	int m_cpu;
 	int m_seed;

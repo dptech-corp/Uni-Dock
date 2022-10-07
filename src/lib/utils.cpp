@@ -91,6 +91,13 @@ std::string get_filename(const std::string& s) {
     return(s);
 }
 
+std::string get_biasname(const std::string& s) {
+    std::string tmp = s;
+    if (tmp.size() >= 6 && tmp.substr(tmp.size()-6, 6) == ".pdbqt")
+        tmp.resize(tmp.size() - 6); // FIXME?
+    return tmp + ".bpf";
+}
+
 std::string get_file_contents(const std::string& filename) {   
     ifile in(make_path(filename));
 
