@@ -1567,9 +1567,8 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 			ig_cuda_ptr->grids[i].m_j = tmp_grids[i].m_data.dim1(); assert(MAX_NUM_OF_GRID_MJ >= ig_cuda_ptr->grids[i].m_j);
 			ig_cuda_ptr->grids[i].m_k = tmp_grids[i].m_data.dim2(); assert(MAX_NUM_OF_GRID_MK >= ig_cuda_ptr->grids[i].m_k);
 
-			for (int j = 0; j < ig_cuda_ptr->grids[i].m_i * ig_cuda_ptr->grids[i].m_j * ig_cuda_ptr->grids[i].m_k; j++) {
-				ig_cuda_ptr->grids[i].m_data[j] = tmp_grids[i].m_data.m_data[j];
-			}
+			assert(tmp_grids[i].m_data.m_data.size()==ig_cuda_ptr->grids[i].m_i * ig_cuda_ptr->grids[i].m_j * ig_cuda_ptr->grids[i].m_k);
+			memcpy(ig_cuda_ptr->grids[i].m_data, tmp_grids[i].m_data.m_data.data(), tmp_grids[i].m_data.m_data.size());
 		}
 		else {
 			ig_cuda_ptr->grids[i].m_i = 0;
