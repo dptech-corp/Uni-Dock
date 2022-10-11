@@ -61,10 +61,10 @@ public:
     void set_bias(const std::vector<bias_element> bias_list);
     std::vector<grid> get_grids() const;
     int get_atu() const;
+	std::vector<grid> m_grids;
 private:
 	grid_dims m_gd;
 	fl m_slope; // does not get (de-)serialized
-	std::vector<grid> m_grids;
 };
 
 #endif

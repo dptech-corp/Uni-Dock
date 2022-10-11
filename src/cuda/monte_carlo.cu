@@ -34,6 +34,7 @@
 #include "model.h"
 #include "precalculate.h"
 #include "cache.h"
+#include "ad4cache.h"
 
 /* Below based on mutate_conf.cpp */
 
@@ -1559,19 +1560,19 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 		
 		checkCUDA(cudaMalloc(&ig_cuda_gpu, ig_cuda_size * num_of_ligands));
 		for (int l = 0;l < num_of_ligands;++l){
-			if (ig_cuda_ptr->atu == atom_type::XS)
+			if (ig.get_atu() == atom_type::XS)
 			{
 				cache ig_tmp(ig.get_gd(), ig.get_slope());
 				ig_tmp.m_grids = ig.get_grids();
 				// // debug
 				// if (l == 1){
 				// 	std::cout << "writing original grid map\n";
-				// 	ig_tmp.write(std::string("/root/Uni-Dock/test/multi_bias/ori"), szv(1,0));
+				// 	ig_tmp.write(std::string("./ori"), szv(1,0));
 				// }
-				// ig_tmp.compute_bias(m_gpu[l], bias_batch_list[l]);
+				ig_tmp.compute_bias(m_gpu[l], bias_batch_list[l]);
 				// // debug
 				// std::cout << "writing bias\n";
-				// ig_tmp.write(std::string("/root/Uni-Dock/test/multi_bias/")+std::to_string(l), szv(1,0));
+				// ig_tmp.write(std::string("./")+std::to_string(l), szv(1,0));
 				ig_cuda_ptr->atu = ig.get_atu(); // atu
 				DEBUG_PRINTF("ig_cuda_ptr->atu=%d\n", ig_cuda_ptr->atu);
 				ig_cuda_ptr->slope = ig.get_slope(); // slope
@@ -1603,10 +1604,46 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 				}
 			}
 			else{
-
+				ad4cache ig_tmp(ig.get_slope());
+				ig_tmp.m_grids = ig.get_grids();
+				// // debug
+				// if (l == 1){
+				// 	std::cout << "writing original grid map\n";
+				// 	ig_tmp.write(std::string("./ori"), szv(1,0));
+				// }
+				ig_tmp.set_bias(bias_batch_list[l]);
+				// // debug
+				// std::cout << "writing bias\n";
+				// ig_tmp.write(std::string("./")+std::to_string(l), szv(1,0));
 				ig_cuda_ptr->atu = ig.get_atu(); // atu
 				DEBUG_PRINTF("ig_cuda_ptr->atu=%d\n", ig_cuda_ptr->atu);
-				
+				ig_cuda_ptr->slope = ig.get_slope(); // slope
+				std::vector<grid> tmp_grids = ig.get_grids();
+				int grid_size = tmp_grids.size();
+				DEBUG_PRINTF("ig.size()=%d, GRIDS_SIZE=%d, should be 33\n", grid_size, GRIDS_SIZE);
+
+				for (int i = 0; i < grid_size; i++) {
+					// DEBUG_PRINTF("i=%d\n",i); //debug
+					for (int j = 0; j < 3; j++) {
+						ig_cuda_ptr->grids[i].m_init[j] = tmp_grids[i].m_init[j];
+						ig_cuda_ptr->grids[i].m_factor[j] = tmp_grids[i].m_factor[j];
+						ig_cuda_ptr->grids[i].m_dim_fl_minus_1[j] = tmp_grids[i].m_dim_fl_minus_1[j];
+						ig_cuda_ptr->grids[i].m_factor_inv[j] = tmp_grids[i].m_factor_inv[j];
+					}
+					if (tmp_grids[i].m_data.dim0() != 0) {
+						ig_cuda_ptr->grids[i].m_i = tmp_grids[i].m_data.dim0(); assert(MAX_NUM_OF_GRID_MI >= ig_cuda_ptr->grids[i].m_i);
+						ig_cuda_ptr->grids[i].m_j = tmp_grids[i].m_data.dim1(); assert(MAX_NUM_OF_GRID_MJ >= ig_cuda_ptr->grids[i].m_j);
+						ig_cuda_ptr->grids[i].m_k = tmp_grids[i].m_data.dim2(); assert(MAX_NUM_OF_GRID_MK >= ig_cuda_ptr->grids[i].m_k);
+
+						assert(tmp_grids[i].m_data.m_data.size()==ig_cuda_ptr->grids[i].m_i * ig_cuda_ptr->grids[i].m_j * ig_cuda_ptr->grids[i].m_k);
+						memcpy(ig_cuda_ptr->grids[i].m_data, tmp_grids[i].m_data.m_data.data(), tmp_grids[i].m_data.m_data.size());
+					}
+					else {
+						ig_cuda_ptr->grids[i].m_i = 0;
+						ig_cuda_ptr->grids[i].m_j = 0;
+						ig_cuda_ptr->grids[i].m_k = 0;
+					}
+				}
 			}
 			
 			checkCUDA(cudaMemcpy(ig_cuda_gpu+l, ig_cuda_ptr, ig_cuda_size, cudaMemcpyHostToDevice));
