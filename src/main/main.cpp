@@ -204,7 +204,7 @@ Thank you!\n";
 
 		// bias
 		std::string bias_file;
-		bool batch_bias;
+		bool multi_bias;
 
 		positional_options_description positional; // remains empty
 
@@ -266,7 +266,7 @@ Thank you!\n";
 
 			("weight_glue", value<double>(&weight_glue)->default_value(weight_glue),                      "macrocycle glue weight")
 			("bias", value<std::string>(&bias_file), "bias configuration file name, content similar to BPF in AutoDock-bias")
-			("batch_bias", value<bool>(&batch_bias), "add ligand bias {ligand_name}.bpf for every input ligand {ligand_name}.pdbqt in batch, content similar to BPF in AutoDock-bias")
+			("multi_bias", bool_switch(&multi_bias), "add ligand bias {ligand_name}.bpf for every input ligand {ligand_name}.pdbqt in batch, content similar to BPF in AutoDock-bias")
 
 		;
 		options_description misc("Misc (optional)");
@@ -481,7 +481,7 @@ Thank you!\n";
 		}
 
 		v.multi_bias = false;
-		if (vm.count("bias_batch")){
+		if (vm.count("multi_bias")){
 			if (!(vm.count("gpu_batch") || vm.count("ligand_index"))){
 				std::cerr << "ERROR: Batch bias must be set in batch mode.\n";
 				exit(EXIT_FAILURE);

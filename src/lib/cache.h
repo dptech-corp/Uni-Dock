@@ -50,7 +50,7 @@ public:
 	fl eval      (const model& m, fl v) const; // needs m.coords // clean up
 	fl eval_intra(      model& m, fl v) const; // needs m.coords // clean up
 	fl eval_deriv(      model& m, fl v) const; // needs m.coords, sets m.minus_forces // clean up
-    grid_dims gd() const { return m_gd; }
+    grid_dims get_gd() const { return m_gd; }
     vec corner1() const { vec corner(m_gd[0].begin, m_gd[1].begin, m_gd[2].begin); return corner; }
     vec corner2() const { vec corner(m_gd[0].end, m_gd[1].end, m_gd[2].end); return corner; }
     bool is_in_grid(const model &m, fl margin=0.0001) const;
