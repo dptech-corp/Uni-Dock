@@ -77,10 +77,10 @@ int predict_peak_memory(int batch_size, int exhaustiveness, int all_atom2_number
 	}
 	else{
 		if (use_v100){
-			return 265.214869*batch_size + .0038522*exhaustiveness*batch_size + .011978*all_atom2_numbers + 20017.72; // this is based on V100, 32G
+			return 65.214869*batch_size + .0038522*exhaustiveness*batch_size + .011978*all_atom2_numbers + 20017.72; // this is based on V100, 32G
 		}
 		else {
-			return 265.166067*batch_size + .0038676*exhaustiveness*batch_size + .0119598*all_atom2_numbers + 5313.848; // this is based on T4, 16G
+			return 65.166067*batch_size + .0038676*exhaustiveness*batch_size + .0119598*all_atom2_numbers + 5313.848; // this is based on T4, 16G
 		}
 	}
 	return 0;
