@@ -30,6 +30,7 @@
 #include "matrix.h"
 #include "igrid.h"
 #include "grid_dim.h"
+#include "bias.h"
 
 
 struct interacting_pair {
@@ -178,6 +179,8 @@ public:
 	interacting_pairs other_pairs; // INTRAmolecular interactions: flex_i - flex_j and flex_i - flex_i
 	interacting_pairs inter_pairs; // INTERmolecular interactions: ligand - flex and ligand_i - ligand_j
 	interacting_pairs glue_pairs;  // INTRAmolecular interactions: glue_i - glue_i
+	// bias
+	std::vector<bias_element> bias_list;
 
 private:
 	friend struct cache;

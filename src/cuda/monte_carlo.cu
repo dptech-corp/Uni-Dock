@@ -1286,7 +1286,8 @@ std::vector<output_type> monte_carlo::cuda_to_vina(output_type_cuda_t results_pt
 
 __host__
 void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_container>& out_gpu, std::vector<precalculate_byatom> & p_gpu,
-				triangular_matrix_cuda_t *m_data_list_gpu, const igrid& ig, const vec& corner1, const vec& corner2, rng& generator, int verbosity, unsigned long long seed) const {
+				triangular_matrix_cuda_t *m_data_list_gpu, const igrid& ig, const vec& corner1, const vec& corner2, rng& generator, 
+				int verbosity, unsigned long long seed, std::vector<std::vector<bias_element> > &bias_batch_list) const {
 
 
 	/* Definitions from vina1.2 */

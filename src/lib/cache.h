@@ -66,6 +66,11 @@ public:
     int get_atu() const;
     std::vector<grid> m_grids;
     // std::vector<grid> grids; 
+    // compute bias
+    void populate_no_bias(const model& m, const precalculate& p, const szv& atom_types_needed);
+    
+    void compute_bias(const model& m, const std::vector<bias_element> bias_list=std::vector<bias_element>());
+
 private:
 	grid_dims m_gd;
 	fl m_slope; // does not get (de-)serialized

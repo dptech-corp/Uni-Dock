@@ -40,6 +40,7 @@ struct non_cache : public igrid {
     bool within(const model& m, fl margin = 0.0001) const;
 	fl slope;
     std::vector<bias_element> bias_list;
+	
 private:
 	szv_grid sgrid;
 	grid_dims gd;

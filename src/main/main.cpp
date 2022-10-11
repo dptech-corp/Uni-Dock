@@ -66,12 +66,22 @@ void check_occurrence(boost::program_options::variables_map& vm, boost::program_
 	}
 }
 
-int predict_peak_memory(int batch_size, int exhaustiveness, int all_atom2_numbers, bool use_v100 = true){
-	if (use_v100){
-		return 1.214869*batch_size + .0038522*exhaustiveness*batch_size + .011978*all_atom2_numbers + 20017.72; // this is based on V100, 32G
+int predict_peak_memory(int batch_size, int exhaustiveness, int all_atom2_numbers, bool use_v100 = true, bool multi_bias = false){
+	if (!multi_bias){
+		if (use_v100){
+			return 1.214869*batch_size + .0038522*exhaustiveness*batch_size + .011978*all_atom2_numbers + 20017.72; // this is based on V100, 32G
+		}
+		else {
+			return 1.166067*batch_size + .0038676*exhaustiveness*batch_size + .0119598*all_atom2_numbers + 5313.848; // this is based on T4, 16G
+		}
 	}
-	else {
-		return 1.166067*batch_size + .0038676*exhaustiveness*batch_size + .0119598*all_atom2_numbers + 5313.848; // this is based on T4, 16G
+	else{
+		if (use_v100){
+			return 265.214869*batch_size + .0038522*exhaustiveness*batch_size + .011978*all_atom2_numbers + 20017.72; // this is based on V100, 32G
+		}
+		else {
+			return 265.166067*batch_size + .0038676*exhaustiveness*batch_size + .0119598*all_atom2_numbers + 5313.848; // this is based on T4, 16G
+		}
 	}
 	return 0;
 }
@@ -476,6 +486,10 @@ Thank you!\n";
 				std::cerr << "ERROR: Batch bias must be set in batch mode.\n";
 				exit(EXIT_FAILURE);
 			}
+			if (vm.count("bias")){
+				std::cerr << "ERROR: Batch bias is incompatible with receptor bias.\n";
+				exit(EXIT_FAILURE);
+			}
 			v.multi_bias = true;
 	
 		}
@@ -614,7 +628,7 @@ Thank you!\n";
 				int all_atom2_numbers = 0; // total number of atom^2 in current batch
 				std::vector<model> batch_ligands; // ligands in current batch
 				v1.bias_batch_list.clear();
-				while (predict_peak_memory(batch_size, exhaustiveness, all_atom2_numbers, use_v100) < max_memory &&
+				while (predict_peak_memory(batch_size, exhaustiveness, all_atom2_numbers, use_v100, v.multi_bias) < max_memory &&
 					 processed_ligands + batch_size < all_ligands.size())
 				{
 					batch_ligands.emplace_back(all_ligands[processed_ligands + batch_size].second);
