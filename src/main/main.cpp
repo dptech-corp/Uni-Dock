@@ -481,7 +481,7 @@ Thank you!\n";
 		}
 
 		v.multi_bias = false;
-		if (vm.count("multi_bias")){
+		if (multi_bias){
 			if (!(vm.count("gpu_batch") || vm.count("ligand_index"))){
 				std::cerr << "ERROR: Batch bias must be set in batch mode.\n";
 				exit(EXIT_FAILURE);
@@ -491,7 +491,6 @@ Thank you!\n";
 				exit(EXIT_FAILURE);
 			}
 			v.multi_bias = true;
-	
 		}
 
 
