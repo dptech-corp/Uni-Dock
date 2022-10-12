@@ -259,6 +259,9 @@ void Vina::set_ligand_from_object_gpu(const std::vector<model>& ligands) {
 	#pragma omp parallel for
 	for (int i = 0;i < ligands.size(); ++i){
 		m_model_gpu[i].append(ligands[i]);
+		if (multi_bias){
+			m_model_gpu[i].bias_list = bias_batch_list[i];
+		}
 		m_precalculated_byatom_gpu[i].init_without_calculation(m_scoring_function, m_model_gpu[i]);
 	}
 
@@ -499,7 +502,9 @@ void Vina::compute_vina_maps(double center_x, double center_y, double center_z, 
 
 	// Compute the Vina grids and set bias
 	cache grid(gd, slope);
-	grid.populate(m_model, precalculated_sf, atom_types, bias_list);
+	grid.populate_no_bias(m_model, precalculated_sf, atom_types);
+	if (bias_list.size() > 0)
+		grid.compute_bias(m_model, bias_list);
 
 	done(m_verbosity, 0);
 
@@ -1182,8 +1187,22 @@ void Vina::set_bias(std::ifstream &bias_file_content){
 	while (std::getline(bias_file_content, line)){
 		std::istringstream input(line);
 		bias_element bias_term(input);
-		bias_list.push_back(bias_term);
+		bias_list.emplace_back(bias_term);
 	}
+}
+
+void Vina::set_batch_bias(std::ifstream &bias_file_content){
+	std::string line;
+	
+	std::vector<bias_element> bias_list_tmp;
+	std::getline(bias_file_content, line); // first line header
+	while (std::getline(bias_file_content, line)){
+		std::istringstream input(line);
+		bias_element bias_term(input);
+		bias_list_tmp.emplace_back(bias_term);
+	}
+	bias_batch_list.emplace_back(bias_list_tmp);
+	
 }
 
 void Vina::global_search(const int exhaustiveness, const int n_poses, const double min_rmsd, const int max_evals) {
@@ -1395,9 +1414,11 @@ void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const 
 	doing(sstm.str(), m_verbosity, 0);
 	auto start = std::chrono::system_clock::now();
 	if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO) {
-		mc(m_model_gpu, poses_gpu, m_precalculated_byatom_gpu, m_data_list_gpu,    m_grid, m_grid.corner1(), m_grid.corner2(), generator, m_verbosity, seed);
+		mc(m_model_gpu, poses_gpu, m_precalculated_byatom_gpu, m_data_list_gpu,    m_grid, m_grid.corner1(), m_grid.corner2(), 
+			generator, m_verbosity, seed, bias_batch_list);
 	} else {
-		mc(m_model_gpu, poses_gpu, m_precalculated_byatom_gpu, m_data_list_gpu, m_ad4grid, m_ad4grid.corner1(), m_ad4grid.corner2(), generator, m_verbosity, seed);
+		mc(m_model_gpu, poses_gpu, m_precalculated_byatom_gpu, m_data_list_gpu, m_ad4grid, m_ad4grid.corner1(), m_ad4grid.corner2(), 
+			generator, m_verbosity, seed, bias_batch_list);
 	}
 	auto end = std::chrono::system_clock::now();
 	std::cout << "Kernel running time: " << std::chrono::duration_cast<std::chrono::seconds>(end - start).count() << std::endl;

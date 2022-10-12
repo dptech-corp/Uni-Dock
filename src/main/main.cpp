@@ -66,12 +66,22 @@ void check_occurrence(boost::program_options::variables_map& vm, boost::program_
 	}
 }
 
-int predict_peak_memory(int batch_size, int exhaustiveness, int all_atom2_numbers, bool use_v100 = true){
-	if (use_v100){
-		return 1.214869*batch_size + .0038522*exhaustiveness*batch_size + .011978*all_atom2_numbers + 20017.72; // this is based on V100, 32G
+int predict_peak_memory(int batch_size, int exhaustiveness, int all_atom2_numbers, bool use_v100 = true, bool multi_bias = false){
+	if (!multi_bias){
+		if (use_v100){
+			return 1.214869*batch_size + .0038522*exhaustiveness*batch_size + .011978*all_atom2_numbers + 20017.72; // this is based on V100, 32G
+		}
+		else {
+			return 1.166067*batch_size + .0038676*exhaustiveness*batch_size + .0119598*all_atom2_numbers + 5313.848; // this is based on T4, 16G
+		}
 	}
-	else {
-		return 1.166067*batch_size + .0038676*exhaustiveness*batch_size + .0119598*all_atom2_numbers + 5313.848; // this is based on T4, 16G
+	else{
+		if (use_v100){
+			return 65.214869*batch_size + .0038522*exhaustiveness*batch_size + .011978*all_atom2_numbers + 20017.72; // this is based on V100, 32G
+		}
+		else {
+			return 65.166067*batch_size + .0038676*exhaustiveness*batch_size + .0119598*all_atom2_numbers + 5313.848; // this is based on T4, 16G
+		}
 	}
 	return 0;
 }
@@ -194,6 +204,7 @@ Thank you!\n";
 
 		// bias
 		std::string bias_file;
+		bool multi_bias;
 
 		positional_options_description positional; // remains empty
 
@@ -255,6 +266,8 @@ Thank you!\n";
 
 			("weight_glue", value<double>(&weight_glue)->default_value(weight_glue),                      "macrocycle glue weight")
 			("bias", value<std::string>(&bias_file), "bias configuration file name, content similar to BPF in AutoDock-bias")
+			("multi_bias", bool_switch(&multi_bias), "add ligand bias {ligand_name}.bpf for every input ligand {ligand_name}.pdbqt in batch, content similar to BPF in AutoDock-bias")
+
 		;
 		options_description misc("Misc (optional)");
 		misc.add_options()
@@ -467,6 +480,19 @@ Thank you!\n";
 			
 		}
 
+		v.multi_bias = false;
+		if (multi_bias){
+			if (!(vm.count("gpu_batch") || vm.count("ligand_index"))){
+				std::cerr << "ERROR: Batch bias must be set in batch mode.\n";
+				exit(EXIT_FAILURE);
+			}
+			if (vm.count("bias")){
+				std::cerr << "ERROR: Batch bias is incompatible with receptor bias.\n";
+				exit(EXIT_FAILURE);
+			}
+			v.multi_bias = true;
+		}
+
 
 		// Technically we don't have to initialize weights,
 		// because they are initialized during the Vina object creation with the default weights
@@ -600,7 +626,8 @@ Thank you!\n";
 				int batch_size = 0;
 				int all_atom2_numbers = 0; // total number of atom^2 in current batch
 				std::vector<model> batch_ligands; // ligands in current batch
-				while (predict_peak_memory(batch_size, exhaustiveness, all_atom2_numbers, use_v100) < max_memory &&
+				v1.bias_batch_list.clear();
+				while (predict_peak_memory(batch_size, exhaustiveness, all_atom2_numbers, use_v100, v.multi_bias) < max_memory &&
 					 processed_ligands + batch_size < all_ligands.size())
 				{
 					batch_ligands.emplace_back(all_ligands[processed_ligands + batch_size].second);
@@ -625,6 +652,16 @@ Thank you!\n";
 				VINA_RANGE(i, 0, batch_ligand_names.size())
 				{
 					gpu_out_name.push_back(default_output(get_filename(batch_ligand_names[i]), out_dir));
+					if (v1.multi_bias){
+						std::ifstream bias_file_content(get_biasname(batch_ligand_names[i]));
+						if (!bias_file_content.is_open()){
+							throw file_error(bias_file, true);
+						}
+
+						// initialize bias object
+						v1.set_batch_bias(bias_file_content);
+						bias_file_content.close();
+					}
 				}
 				v1.set_ligand_from_object_gpu(batch_ligands);
 				v1.global_search_gpu(exhaustiveness, num_modes, min_rmsd, max_evals, max_step, batch_ligand_names.size(), (unsigned long long)seed, refine_step);
