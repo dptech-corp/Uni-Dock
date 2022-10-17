@@ -69,7 +69,7 @@ vec random_inside_sphere(rng& generator) {
 		fl r3 = random_fl(-1, 1, generator);
 
 		vec tmp(r1, r2, r3);
-		if(sqr(tmp) < 1)
+		if(sqr(tmp) < 1 and tmp.norm() > 10 * epsilon_fl)
 			return tmp;
 	}
 }
