@@ -42,6 +42,30 @@ cd ./build/linux/release
 make clean
 make -j 4
 ```
+
+## Build from source (DCU)
+1. Install dependencies (same as CUDA)
+- Boost 1.77.0
+```bash
+mkdir /opt/packages
+cd /opt/packages
+wget https://boostorg.jfrog.io/artifactory/main/release/1.77.0/source/boost_1_77_0.tar.gz
+tar -xzvf boost_1_77_0.tar.gz
+rm boost_1_77_0.tar.gz
+cd boost_1_77_0/
+./bootstrap.sh
+./b2
+./b2 install --prefix=/opt/lib/packages/boost1_77
+export LD_LIBRARY_PATH=/opt/lib/packages/boost1_77/lib/:$LD_LIBRARY_PATH
+```
+2. Clone GitHub repo or retrieve source code from release page (branch: dcu_compile)
+3. Build Uni-Dock
+```bash
+cd ./build/dcu/release
+make clean
+make -j 4
+```
+
 # Usage
 ## Example
 To launch a Uni-Dock job, the most important parameters are as follows:

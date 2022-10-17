@@ -8,7 +8,7 @@ void check(T result, char const *const func, const char *const file,
 	if (result)
 	{
 		printf("CUDA error at %s:%d code=%d(%s) \"%s\" \n", file, line,
-				static_cast<unsigned int>(result), cudaGetErrorName(result), func);
+				static_cast<unsigned int>(result), hipGetErrorName(result), func);
 		throw std::runtime_error("CUDA Runtime Error");
 	}
 }

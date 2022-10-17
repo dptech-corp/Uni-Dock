@@ -29,9 +29,9 @@
 #include "utils.h"
 #include "scoring_function.h"
 
-#include <cuda.h>
-#include <cuda_runtime.h>
-#include <device_launch_parameters.h>
+#include <hip/hip_runtime.h>
+#include <hip/hip_runtime.h>
+// #include <device_launch_parameters.h>
 
 struct usage_error : public std::runtime_error {
 	usage_error(const std::string& message) : std::runtime_error(message) {}
@@ -267,8 +267,7 @@ Thank you!\n";
 			("weight_glue", value<double>(&weight_glue)->default_value(weight_glue),                      "macrocycle glue weight")
 			("bias", value<std::string>(&bias_file), "bias configuration file name, content similar to BPF in AutoDock-bias")
 			("multi_bias", bool_switch(&multi_bias), "add ligand bias {ligand_name}.bpf for every input ligand {ligand_name}.pdbqt in batch, content similar to BPF in AutoDock-bias")
-
-		;
+;
 		options_description misc("Misc (optional)");
 		misc.add_options()
 			("cpu", value<int>(&cpu)->default_value(0), "the number of CPUs to use (the default is to try to detect the number of CPUs or, failing that, use 1)")
@@ -492,8 +491,7 @@ Thank you!\n";
 			}
 			v.multi_bias = true;
 		}
-
-
+		
 		// Technically we don't have to initialize weights,
 		// because they are initialized during the Vina object creation with the default weights
 		// but we still do it in case the user decided to change them
@@ -581,10 +579,10 @@ Thank you!\n";
 			bool use_v100 = true;
 			bool ad4 = false;
 			if (sf_name.compare("ad4") == 0) ad4 = true;
-			cudaGetDeviceCount(&deviceCount);
+			hipGetDeviceCount(&deviceCount);
 			if (deviceCount > 0){
-				cudaSetDevice(0);
-				cudaMemGetInfo(&avail, &total);
+				hipSetDevice(0);
+				hipMemGetInfo(&avail, &total);
 				printf("Avaliable Memory = %dMiB   Total Memory = %dMiB\n", int(avail/1024/1024), int(total / 1024 / 1024));
 				max_memory = avail / 1024 / 1024 * 0.95; // leave 5% to prevent error
 			}

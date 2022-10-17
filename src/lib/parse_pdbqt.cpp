@@ -663,7 +663,7 @@ model parse_ligand_pdbqt_from_file_no_failure(const std::string& name, atom_type
     }
     catch(pdbqt_parse_error& e) {
         std::cerr << e.what() << "Ligand name:" << name << "\n\n";
-        model m;
+        model m(atype);
         assert(m.num_ligands() == 0);
         return m; // return empty model as failure, ligand.size = 0
     }
@@ -711,7 +711,7 @@ model parse_ligand_pdbqt_from_string_no_failure(const std::string& string_name, 
     }
     catch(pdbqt_parse_error& e) {
         std::cerr << e.what() << '\n';
-        model m;
+        model m(atype);
         assert(m.num_ligands() == 0);
         return m; // return empty model as failure, ligand.size = 0
     }
