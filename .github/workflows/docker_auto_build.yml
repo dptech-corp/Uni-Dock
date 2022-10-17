@@ -8,7 +8,7 @@ jobs:
 
   docker_auto_build:
     name: build and push Docker image to DP docker image repo 
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     
     steps:
     - name: Get the version
