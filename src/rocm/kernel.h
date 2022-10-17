@@ -39,6 +39,7 @@ void check(T result, char const *const func, const char *const file,
 #define MAX_NUM_OF_GRID_MI 128 //55
 #define MAX_NUM_OF_GRID_MJ 128 //55
 #define MAX_NUM_OF_GRID_MK 128 //81
+#define MAX_NUM_OF_GRID_POINT 512000
 
 //#define GRID_MI 65//55
 //#define GRID_MJ 71//55
@@ -147,7 +148,7 @@ typedef struct {
 	int m_i;
 	int m_j;
 	int m_k;
-	float m_data [(MAX_NUM_OF_GRID_MI) * (MAX_NUM_OF_GRID_MJ) * (MAX_NUM_OF_GRID_MK)];
+	float m_data [MAX_NUM_OF_GRID_POINT];
 } grid_cuda_t;
 
 typedef struct {
