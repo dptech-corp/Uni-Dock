@@ -46,11 +46,11 @@ LIBS = -l boost_system${BOOST_LIB_VERSION} -l boost_thread${threadmt}${BOOST_LIB
 %.o : ../../../src/rocm/%.cu.hip
 	$(CC) $(CFLAGS) -I ../../../src/lib -I ../../../src/rocm -I /public/software/compiler/rocm/dtk-21.04/rocrand/include -I /public/software/compiler/rocm/dtk-21.04/hiprand/include/ -o $@ -c $<
 
-all: unidock_ad4 vina_split
+all: unidock vina_split
 
 include dependencies
 
-unidock_ad4: $(MAINOBJ) $(LIBOBJ)
+unidock: $(MAINOBJ) $(LIBOBJ)
 	$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
 
 vina_split: $(SPLITOBJ)
