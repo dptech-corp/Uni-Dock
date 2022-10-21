@@ -216,7 +216,7 @@ inline sz fl_to_sz(fl x, sz max_sz) { // return a value in [0, max_sz]
 	return (std::min)(tmp, max_sz); // sz -> fl cast loses precision. 'min' is to guard against returning values out of range
 }
 
-const fl fl_tolerance = fl(0.001);
+const fl fl_tolerance = fl(0.005);
 
 inline bool eq(fl a, fl b) {
 	return std::abs(a - b) < fl_tolerance; 

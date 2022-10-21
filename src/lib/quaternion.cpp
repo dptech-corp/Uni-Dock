@@ -21,6 +21,7 @@
 */
 
 #include "quaternion.h"
+#include <iostream>
 
 bool quaternion_is_normalized(const qt& q) { // not in the interface, used in assertions
 	return eq(quaternion_norm_sqr(q), 1) && eq(boost::math::abs(q), 1);
@@ -35,6 +36,9 @@ bool eq(const qt& a, const qt& b) { // elementwise approximate equality - may re
 
 qt angle_to_quaternion(const vec& axis, fl angle) { // axis is assumed to be a unit vector
 	// assert(eq(tvmet::norm2(axis), 1));
+	if (!eq(axis.norm(), 1)){
+		printf("angle_to_quaternion axis.norm=%f, failed\n", axis.norm());
+	}
 	assert(eq(axis.norm(), 1));
 	normalize_angle(angle); // this is probably only necessary if angles can be very big
 	fl c = std::cos(angle/2);

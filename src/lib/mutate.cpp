@@ -48,6 +48,11 @@ void mutate_conf(conf& c, const model& m, fl amplitude, rng& generator) { // ONE
 			if(gr > epsilon_fl) { // FIXME? just doing nothing for 0-radius molecules. do some other mutation?
 				vec rotation; 
 				rotation = amplitude / gr * random_inside_sphere(generator); 
+				if (eq(rotation.norm(),0)){
+					// debug
+					// std::cout << "gr=" << gr << "rotation.norm()=" << rotation.norm() << std::endl;
+					return;
+				}
 				quaternion_increment(c.ligands[i].rigid.orientation, rotation);
 			}
 			return; 
