@@ -82,7 +82,12 @@ void Vina::set_receptor(const std::string& rigid_name, const std::string& flex_n
 	}
 
 	// CONDITIONS 4, 5, 6, 7 (rigid_name and flex_name are empty strings per default)
-	m_receptor = parse_receptor_pdbqt(rigid_name, flex_name, m_scoring_function.get_atom_typing());
+	if (rigid_name.find("pdbqt") || flex_name.find("pdbqt")){
+		m_receptor = parse_receptor_pdbqt(rigid_name, flex_name, m_scoring_function.get_atom_typing());
+	}
+	else if (rigid_name.find("pdb") && (!rigid_name.find("pdbqt"))){
+		m_receptor = parse_receptor_pdb(rigid_name, flex_name, m_scoring_function.get_atom_typing());
+	}
 
 	m_model = m_receptor;
 	m_receptor_initialized = true;

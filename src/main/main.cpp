@@ -114,7 +114,7 @@ Thank you!\n";
 #################################################################\n\
 # If you used Uni-Dock in your work, please cite:               #\n\
 #                                                               #\n\
-# Uni-Dock, xxxx, (2022) DOI xxxx							    #\n\
+# Uni-Dock, xxxx, (2022) DOI xxxx                               #\n\
 #                                                               #\n\
 #                                                               #\n\
 # J. Eberhardt, D. Santos-Martins, A. F. Tillack, and S. Forli  #\n\
@@ -210,8 +210,8 @@ Thank you!\n";
 
 		options_description inputs("Input");
 		inputs.add_options()
-			("receptor", value<std::string>(&rigid_name), "rigid part of the receptor (PDBQT)")
-			("flex", value<std::string>(&flex_name), "flexible side chains, if any (PDBQT)")
+			("receptor", value<std::string>(&rigid_name), "rigid part of the receptor (PDBQT or PDB)")
+			("flex", value<std::string>(&flex_name), "flexible side chains, if any (PDBQT or PDB)")
 			("ligand", value< std::vector<std::string> >(&ligand_names)->multitoken(), "ligand (PDBQT)")
 			("ligand_index",value<std::string>(&ligand_index),"file containing paths to ligands")
 			("batch", value< std::vector<std::string> >(&batch_ligand_names)->multitoken(), "batch ligand (PDBQT)")
