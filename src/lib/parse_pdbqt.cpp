@@ -42,12 +42,12 @@
 
 struct parsed_atom : public atom {
     unsigned number;
-    int number_sdf;
     // sdf: number_sdf >= 1
-    parsed_atom(sz ad_, fl charge_, const vec& coords_, unsigned number_, int number_sdf_, ) : number(number_), number_sdf(number_sdf_) {
+    parsed_atom(sz ad_, fl charge_, const vec& coords_, unsigned number_, int number_sdf_ ) : number(number_) {
         ad = ad_;
         charge = charge_;
         coords = coords_;
+        number_sdf = number_sdf_;
     }
     // pdbqt
     parsed_atom(sz ad_, fl charge_, const vec& coords_, unsigned number_) : number(number_) {
@@ -125,54 +125,49 @@ parsed_atom parse_pdbqt_atom_string(const std::string& str) {
 // TODO sdf line check
 parsed_atom parse_sdf_atom_string(const std::string& str, int number) {
     // unsigned number = checked_convert_substring<unsigned>(str, 0, 10, "Atom number");
-    vec coords(checked_convert_substring<fl>(str,  0, 10, "Coordinate"),
-               checked_convert_substring<fl>(str, 10, 20, "Coordinate"),
-               checked_convert_substring<fl>(str, 20, 30, "Coordinate"));
-    std::string name = omit_whitespace(str, 31, 34);
-    sz ad = string_to_ad_type(name);
+    vec coords(checked_convert_substring<fl>(str,  1, 10, "Coordinate"),
+               checked_convert_substring<fl>(str, 11, 20, "Coordinate"),
+               checked_convert_substring<fl>(str, 21, 30, "Coordinate"));
+    // std::string name = omit_whitespace(str, 31, 35);
+    sz ad = 0;
     fl charge = 0;
-    if(!substring_is_blank(str, 36, 39)){
-        // TODO: use a optional field as partial charge
-        charge = checked_convert_substring<fl>(str, 36, 39, "Charge");
-        switch (charge)
-        {
-        case 1:
-            charge = 3.0;
-            break;
-        case 2:
-            charge = 2.0;
-            break;
-        case 3:
-            charge = 1.0;
-            break;
-        case 4:
-            charge = 0; // double radical
-            break;
-        case 5:
-            charge = -1;
-            break;
-        case 6:
-            charge = -2;
-            break;
-        case 7:
-            charge = -3;
-            break;
-        default:
-            charge = 0;
-            break;
-        }
-    }
+    // if(!substring_is_blank(str, 36, 39)){
+    //     // TODO: use a optional field as partial charge
+    //     charge = checked_convert_substring<fl>(str, 36, 39, "Charge");
+    //     switch (int(charge))
+    //     {
+    //     case 1:
+    //         charge = 3.0;
+    //         break;
+    //     case 2:
+    //         charge = 2.0;
+    //         break;
+    //     case 3:
+    //         charge = 1.0;
+    //         break;
+    //     case 4:
+    //         charge = 0; // double radical
+    //         break;
+    //     case 5:
+    //         charge = -1;
+    //         break;
+    //     case 6:
+    //         charge = -2;
+    //         break;
+    //     case 7:
+    //         charge = -3;
+    //         break;
+    //     default:
+    //         charge = 0;
+    //         break;
+    //     }
+    // }
 
     // TODO: may parse other field of sdf atom line, such as type including A,NA,OA
     
     parsed_atom tmp(ad, charge, coords, 0, number);
 
-    if(is_non_ad_metal_name(name))
-        tmp.xs = XS_TYPE_Met_D;
-    if(tmp.acceptable_type())
-        return tmp;
-    else
-        throw struct_parse_error("Atom type " + name + " is not a valid AutoDock type (atom types are case-sensitive).", str);
+    return tmp;
 }
 
 struct atom_reference {
@@ -382,6 +377,8 @@ void parse_pdbqt_root(std::istream& in, parsing_struct& p, context& c) {
 }
 
 void parse_pdbqt_branch(std::istream& in, parsing_struct& p, context& c, unsigned from, unsigned to); // forward declaration
+void parse_sdf_branch(std::vector<std::vector<int> > &frags, std::vector<std::vector<int> > torsions, int frag_id, 
+    parsing_struct& new_p, parsing_struct& p, context& c, unsigned &number, unsigned from, unsigned to);
 
 void parse_pdbqt_branch_aux(std::istream& in, const std::string& str, parsing_struct& p, context& c) {
     unsigned first, second;
@@ -390,13 +387,28 @@ void parse_pdbqt_branch_aux(std::istream& in, const std::string& str, parsing_st
 
     for(; i < p.atoms.size(); ++i)
         if(p.atoms[i].a.number == first) {
-            p.atoms[i].ps.push_back(parsing_torsdofstruct());
+            p.atoms[i].ps.push_back(parsing_struct());
             parse_pdbqt_branch(in, p.atoms[i].ps.back(), c, first, second);
             break;
         }
 
     if(i == p.atoms.size())
         throw struct_parse_error("Atom number " + std::to_string(first) + " is missing in this branch.", str);
+}
+
+void parse_sdf_branch_aux(std::vector<std::vector<int> > &frags, std::vector<std::vector<int> > &torsions, int frag_id,
+     parsing_struct& new_p, parsing_struct& p, context& c, unsigned &number, int from, int to) {
+    sz i = 0;
+
+    for(; i < new_p.atoms.size(); ++i)
+        if(new_p.atoms[i].a.number_sdf == from) {
+            new_p.atoms[i].ps.push_back(parsing_struct());
+            parse_sdf_branch(frags, torsions, frag_id, new_p.atoms[i].ps.back(), p, c, number, from, to);
+            break;
+        }
+
+    if(i == p.atoms.size())
+        throw struct_parse_error("Atom number " + std::to_string(from) + " is missing in this branch.", "Branch error");
 }
 
 void parse_pdbqt_aux(std::istream& in, parsing_struct& p, context& c, boost::optional<unsigned>& torsdof, bool residue) {
@@ -508,13 +520,13 @@ void postprocess_ligand(non_rigid_parsed& nr, parsing_struct& p, context& c, uns
     nr_update_matrixes(nr); // FIXME ?
 }
 
-// TODO
-void postprocess_ligand_sdf(parsing_struct& p, context& c, model &m, unsigned torsdof) {
-    VINA_CHECK(!p.atoms.empty());
-    m.ligands.push_back(ligand(flexible_body(rigid_body(p.atoms[0].a.coords, 0, 0)), torsdof)); // postprocess_branch will assign begin and end
-    // TODO: initialize model directly, without nrp 'initialize_from_nrp'
+// // TODO
+// void postprocess_ligand_sdf(parsing_struct& p, context& c, model &m, unsigned torsdof) {
+//     VINA_CHECK(!p.atoms.empty());
+//     m.ligands.push_back(ligand(flexible_body(rigid_body(p.atoms[0].a.coords, 0, 0)), torsdof)); // postprocess_branch will assign begin and end
+//     // TODO: initialize model directly, without nrp 'initialize_from_nrp'
     
-}
+// }
 
 void postprocess_residue(non_rigid_parsed& nr, parsing_struct& p, context& c) {
     VINA_FOR_IN(i, p.atoms) { // iterate over "root" of a "residue"
@@ -588,54 +600,168 @@ void parse_pdbqt_ligand(const path& name, non_rigid_parsed& nr, context& c) {
 }
 
 // TODO
-void parse_sdf_aux(std::istream& in, parsing_struct& p, context& c, bool residue) {
+void parse_sdf_aux(std::istream& in, parsing_struct& p, context& c, unsigned &torsdof, bool residue) {
     std::string str;
     // sdf header has three lines
     for (int i = 0; i < 3; ++i){
         std::getline(in, str);
+        std::cout << "read sdf line:" << str << std::endl;
         add_context(c, str);
     }
 
     // parse counts line
     
     std::getline(in, str);
+    std::cout << "read sdf line:" << str << std::endl;
     add_context(c, str);
-    int atom_num = checked_convert_substring<fl>(str,  0, 3, "Atom num");
-    int bond_num = checked_convert_substring<fl>(str,  3, 6, "Bond num");
-    int property_num = checked_convert_substring<fl>(str,  33, 36, "Property num");
+    int atom_num = checked_convert_substring<fl>(str,  1, 3, "Atom num");
+    int bond_num = checked_convert_substring<fl>(str,  4, 6, "Bond num");
+    // int property_num = checked_convert_substring<fl>(str,  34, 36, "Property num");
 
     for (int i = 0;i < atom_num; ++i){
         std::getline(in, str);
         add_context(c, str);
+        std::cout << "read sdf line:" << str << std::endl;
+        parsed_atom a = parse_sdf_atom_string(str, i+1);
+        p.add(a, c);
+    }
+
+    for (int i = 0;i < bond_num; ++i){
+        std::getline(in, str);
+        add_context(c, str);
+        std::cout << "read sdf bond line:" << str << std::endl;
 
     }
+
+    // read property
     while(std::getline(in, str)) {
         add_context(c, str);
+        std::cout << "read sdf property line:" << str << ' ' << str.find("M  END") << std::endl;
 
-        if(str.empty()) {} // ignore ""
-        if(str[0] == '\0') {} // ignore a different kind of emptiness (potential issues on Windows)
-        else 
-            return;
-        else if(starts_with(str, "$$$$"))
-            throw struct_parse_error("Unexpected multi-MODEL tag found in flex residue or ligand SDF file. ");
-        else
-            throw struct_parse_error("Unknown or inappropriate tag found in flex residue or ligand.", str);
+        if (str.find("M  END") < str.length()){
+            break;
+        }
+    }
+
+    // use property given by ligprep to construct tree
+    std::vector<std::vector<int> > frags;
+    std::vector<std::vector<int> > torsions;
+    while(std::getline(in, str)) {
+        add_context(c, str);
+        std::cout << "read sdf line:" << str << std::endl;
+
+        if (str[0]=='>'){
+            std::string data_type = str.substr(6,str.length()-7);
+            if (str.find("atomInfo") < str.length()){
+                // TODO: update p.atoms[num].a.charge
+                while(std::getline(in, str)) {
+                    add_context(c, str);
+                    std::cout << "read info sdf line:" << str << std::endl;
+                    
+                    if (str.empty()){
+                        break;
+                    }
+                }
+            }
+            else if (str.find("torsion") < str.length()){
+                // update p.atoms[num].a.charge
+                std::cout << "start torsion" << std::endl;
+                while(std::getline(in, str)) {
+                    add_context(c, str);
+                    std::cout << "read torsion sdf line:" << str << std::endl;
+                    if (str.empty()){
+                        break;
+                    }
+
+                    std::vector<int> torsion;
+                    int num = int(str[0])-int('0');
+
+                    for (int i = 1;i < str.length();++i){
+                        if (str[i] == ' '){
+                            torsion.emplace_back(num);
+                            num = 0;
+                        }
+                        else{
+                            num = num * 10 + int(str[i])-int('0');
+                        }
+                    }
+                    torsions.emplace_back(torsion);
+                }
+            }
+            else if (str.find("frag") < str.length()){
+                while(std::getline(in, str)) {
+                    add_context(c, str);        
+                    std::cout << "read frag sdf line:" << str << std::endl;
+                    if (str.empty()){
+                        break;
+                    }
+                    std::vector<int> frag;
+                    int num = int(str[0])-int('0');
+
+                    for (int i = 1;i < str.length();++i){
+                        if (str[i] == ' '){
+                            frag.emplace_back(num);
+                            num = 0;
+                        }
+                        else{
+                            num = num * 10 + int(str[i])-int('0');
+                        }
+                    }
+                    frags.emplace_back(frag);
+                }
+            }
+            else{
+                while(std::getline(in, str)) {
+                    add_context(c, str);
+                    std::cout << "read und sdf line:" << str << std::endl;
+                    if (str.empty()){
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    // build new parsing_struct
+    parsing_struct new_p;
+    torsdof = unsigned(torsions.size());
+
+    // similar to parse_pdbqt_root
+    for (int i = 0;i < frags[0].size();++i){
+        p.atoms[frags[0][i]].a.number = i; // assign new number of tree structure
+        new_p.atoms.push_back(p.atoms[frags[0][i]]);
+    }
+    // similar to parse_pdbqt_branch_aux
+    // if(starts_with(str, "BRANCH")) parse_pdbqt_branch_aux(in, str, p, c);
+    unsigned number = frags[0].size();
+    for (int i = 0;i < frags[0].size();++i){
+        for (int j = 0;j < torsions.size();++j){
+            if (torsions[j][0] == frags[0][i]){
+                int frag_id = torsions[j][3];
+                parse_sdf_branch_aux(frags, torsions, frag_id, new_p, p, c, number, torsions[j][0], torsions[j][1]);
+
+            }
+        }
     }
 }
 
+
 // TODO
-void parse_sdf_ligand(const path& name, model &m, context& c) {
+void parse_sdf_ligand(const path& name, non_rigid_parsed& nr, context& c) {
     ifile in(name);
     parsing_struct p;
+    unsigned int torsdof;
 
-    parse_sdf_aux(in, p, c, false);
+    // transfer_parsing_struct
+    parse_sdf_aux(in, p, c, torsdof, false);
 
     if(p.atoms.empty())
         throw struct_parse_error("No atoms in this ligand.");
+    if(!torsdof)
+        throw struct_parse_error("Missing TORSDOF keyword in this ligand.");
 
-    // TODO update matrix?
     try{
-        postprocess_ligand_sdf(p, c, m, torsdof); // bizarre size_t -> unsigned compiler complaint
+        postprocess_ligand(nr, p, c, unsigned(torsdof)); // bizarre size_t -> unsigned compiler complaint
     }
     catch (int e){
         if (e == 1){
@@ -643,6 +769,8 @@ void parse_sdf_ligand(const path& name, model &m, context& c) {
 
         }
     }
+
+    VINA_CHECK(nr.atoms_atoms_bonds.dim() == nr.atoms.size());
 
 }
 
@@ -707,6 +835,28 @@ void parse_pdbqt_branch(std::istream& in, parsing_struct& p, context& c, unsigne
         else
             throw struct_parse_error("Unknown or inappropriate tag found in flex residue or ligand.", str);
     }
+}
+
+void parse_sdf_branch(std::vector<std::vector<int> > &frags, std::vector<std::vector<int> > torsions, int frag_id, 
+    parsing_struct& new_p, parsing_struct& p, context& c, unsigned &number, unsigned from, unsigned to){
+    for (int i = 0;i < frags[frag_id].size();++i){
+        if (p.atoms[frags[frag_id][i]].a.number_sdf == to){
+            new_p.immobile_atom = new_p.atoms.size();
+        }
+        p.atoms[frags[frag_id][i]].a.number = number;
+        ++number;
+        new_p.atoms.push_back(p.atoms[frags[frag_id][i]]); // equal to p.add()
+    }
+    for (int i = 0;i < frags[frag_id].size();++i){
+        for (int j = 0;j < torsions.size();++j){
+            if (torsions[j][0] == frags[frag_id][i]){
+                int next_frag_id = torsions[j][3];
+                std::cout << "current frag id=" << frag_id << " next frag id=" << next_frag_id << std::endl;
+                parse_sdf_branch_aux(frags, torsions, next_frag_id, new_p, p, c, number, torsions[j][0], torsions[j][1]);
+            }
+        }
+    }
+    return;
 }
 
 
@@ -787,10 +937,11 @@ model parse_ligand_pdbqt_from_file(const std::string& name, atom_type::t atype) 
 
 
 model parse_ligand_from_file_no_failure(const std::string& name, atom_type::t atype) { // can throw parse_error
-    if (name.find("pdbqt")){
+    printf("ligand name: %s\n", name.c_str()); // debug
+    if (name.find("pdbqt") < name.length()){
         return parse_ligand_pdbqt_from_file_no_failure(name, atype);
     }
-    else if (name.find("sdf")){
+    else if (name.find("sdf") < name.length()){
         return parse_ligand_sdf_from_file_no_failure(name, atype);
     }
     model m(atype);
@@ -826,11 +977,11 @@ model parse_ligand_pdbqt_from_file_no_failure(const std::string& name, atom_type
 }
 
 model parse_ligand_sdf_from_file_no_failure(const std::string& name, atom_type::t atype) { // can throw parse_error
-    model m(atype); // return model directly
+    non_rigid_parsed nrp;
     context c;
 
     try {
-        parse_sdf_ligand(make_path(name), m, c);
+        parse_sdf_ligand(make_path(name), nrp, c);
     }
     catch(struct_parse_error& e) {
         std::cerr << e.what() << "Ligand name:" << name << "\n\n";
@@ -839,15 +990,29 @@ model parse_ligand_sdf_from_file_no_failure(const std::string& name, atom_type::
         return m_; // return empty model as failure, ligand.size = 0
     }
 
-    assert(m.ligands.count_torsions().size()==1);
-    if(m.ligands.count_torsions()[0] > MAX_NUM_OF_LIG_TORSION)
+    // the rest is the same
+    pdbqt_initializer tmp(atype);
+    tmp.initialize_from_nrp(nrp, c, true);
+    tmp.initialize(nrp.mobility_matrix());
+    assert(tmp.m.ligands.count_torsions().size()==1);
+    if(tmp.m.ligands.count_torsions()[0] > MAX_NUM_OF_LIG_TORSION)
     {
-        std::cerr << "Ligand " << name << " exceed max torsion counts. " << m.ligands.count_torsions()[0] << std::endl;
-        model m_(atype);
-        assert(m_.num_ligands() == 0);
-        return m_;
+        std::cerr << "Ligand " << name << " exceed max torsion counts. " << tmp.m.ligands.count_torsions()[0] << std::endl;
+        model m(atype);
+        assert(m.num_ligands() == 0);
+        return m;
     }
-    return m;
+    return tmp.m;
+
+    // assert(m.ligands.count_torsions().size()==1);
+    // if(m.ligands.count_torsions()[0] > MAX_NUM_OF_LIG_TORSION)
+    // {
+    //     std::cerr << "Ligand " << name << " exceed max torsion counts. " << m.ligands.count_torsions()[0] << std::endl;
+    //     model m_(atype);
+    //     assert(m_.num_ligands() == 0);
+    //     return m_;
+    // }
+    // return m;
 }
 
 model parse_ligand_pdbqt_from_string(const std::string& string_name, atom_type::t atype) { // can throw parse_error

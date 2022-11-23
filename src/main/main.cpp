@@ -611,7 +611,7 @@ Thank you!\n";
 			for (int ligand_count=batch_index;ligand_count<next_batch_index;++ligand_count)
 			{
 				auto& ligand=ligand_names[ligand_count];
-				auto l = parse_ligand_pdbqt_from_file_no_failure(
+				auto l = parse_ligand_from_file_no_failure(
 						ligand, v.m_scoring_function.get_atom_typing());
 				#pragma omp critical
 				all_ligands.emplace_back(std::make_pair(ligand,l));
