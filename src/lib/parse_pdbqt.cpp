@@ -58,6 +58,10 @@ struct parsed_atom : public atom {
     }
 };
 
+void print_zero(){
+    std::cout << "zero" << std::endl;
+}
+
 void add_context(context& c, std::string& str) {
     c.push_back(parsed_line(str, boost::optional<sz>()));
 }
@@ -399,15 +403,17 @@ void parse_pdbqt_branch_aux(std::istream& in, const std::string& str, parsing_st
 void parse_sdf_branch_aux(std::vector<std::vector<int> > &frags, std::vector<std::vector<int> > &torsions, int frag_id,
      parsing_struct& new_p, parsing_struct& p, context& c, unsigned &number, int from, int to) {
     sz i = 0;
+    std::cout << "entering parse_sdf_branch_aux " << from << ' '  << to << std::endl;
 
-    for(; i < new_p.atoms.size(); ++i)
+    for(; i < new_p.atoms.size(); ++i){
+        DEBUG_PRINTF("new_p.atoms[i].a.number_sdf=%d\n",new_p.atoms[i].a.number_sdf);
         if(new_p.atoms[i].a.number_sdf == from) {
             new_p.atoms[i].ps.push_back(parsing_struct());
             parse_sdf_branch(frags, torsions, frag_id, new_p.atoms[i].ps.back(), p, c, number, from, to);
             break;
         }
-
-    if(i == p.atoms.size())
+    }
+    if(i == new_p.atoms.size())
         throw struct_parse_error("Atom number " + std::to_string(from) + " is missing in this branch.", "Branch error");
 }
 
@@ -657,7 +663,7 @@ void parse_sdf_aux(std::istream& in, parsing_struct& p, context& c, unsigned &to
                 while(std::getline(in, str)) {
                     add_context(c, str);
                     std::cout << "read info sdf line:" << str << std::endl;
-                    
+
                     if (str.empty()){
                         break;
                     }
@@ -685,6 +691,7 @@ void parse_sdf_aux(std::istream& in, parsing_struct& p, context& c, unsigned &to
                             num = num * 10 + int(str[i])-int('0');
                         }
                     }
+                    torsion.emplace_back(num);
                     torsions.emplace_back(torsion);
                 }
             }
@@ -707,6 +714,7 @@ void parse_sdf_aux(std::istream& in, parsing_struct& p, context& c, unsigned &to
                             num = num * 10 + int(str[i])-int('0');
                         }
                     }
+                    frag.emplace_back(num);
                     frags.emplace_back(frag);
                 }
             }
@@ -726,16 +734,18 @@ void parse_sdf_aux(std::istream& in, parsing_struct& p, context& c, unsigned &to
     parsing_struct new_p;
     torsdof = unsigned(torsions.size());
 
+    print_zero();
     // similar to parse_pdbqt_root
     for (int i = 0;i < frags[0].size();++i){
         p.atoms[frags[0][i]].a.number = i; // assign new number of tree structure
-        new_p.atoms.push_back(p.atoms[frags[0][i]]);
+        new_p.atoms.push_back(p.atoms[frags[0][i]-1]);
     }
     // similar to parse_pdbqt_branch_aux
     // if(starts_with(str, "BRANCH")) parse_pdbqt_branch_aux(in, str, p, c);
     unsigned number = frags[0].size();
     for (int i = 0;i < frags[0].size();++i){
         for (int j = 0;j < torsions.size();++j){
+            std::cout << "j=" << j << std::endl;
             if (torsions[j][0] == frags[0][i]){
                 int frag_id = torsions[j][3];
                 parse_sdf_branch_aux(frags, torsions, frag_id, new_p, p, c, number, torsions[j][0], torsions[j][1]);
@@ -743,8 +753,8 @@ void parse_sdf_aux(std::istream& in, parsing_struct& p, context& c, unsigned &to
             }
         }
     }
+    p = new_p;
 }
-
 
 // TODO
 void parse_sdf_ligand(const path& name, non_rigid_parsed& nr, context& c) {
@@ -755,6 +765,7 @@ void parse_sdf_ligand(const path& name, non_rigid_parsed& nr, context& c) {
     // transfer_parsing_struct
     parse_sdf_aux(in, p, c, torsdof, false);
 
+    print_zero();
     if(p.atoms.empty())
         throw struct_parse_error("No atoms in this ligand.");
     if(!torsdof)
@@ -839,13 +850,15 @@ void parse_pdbqt_branch(std::istream& in, parsing_struct& p, context& c, unsigne
 
 void parse_sdf_branch(std::vector<std::vector<int> > &frags, std::vector<std::vector<int> > torsions, int frag_id, 
     parsing_struct& new_p, parsing_struct& p, context& c, unsigned &number, unsigned from, unsigned to){
+    std::cout << "entering parse_sdf_branch frag= "<< frag_id << ' ' << from << ' '  << to << std::endl;
+
     for (int i = 0;i < frags[frag_id].size();++i){
-        if (p.atoms[frags[frag_id][i]].a.number_sdf == to){
+        if (p.atoms[frags[frag_id][i]-1].a.number_sdf == to){
             new_p.immobile_atom = new_p.atoms.size();
         }
-        p.atoms[frags[frag_id][i]].a.number = number;
+        p.atoms[frags[frag_id][i]-1].a.number = number;
         ++number;
-        new_p.atoms.push_back(p.atoms[frags[frag_id][i]]); // equal to p.add()
+        new_p.atoms.push_back(p.atoms[frags[frag_id][i]-1]); // equal to p.add()
     }
     for (int i = 0;i < frags[frag_id].size();++i){
         for (int j = 0;j < torsions.size();++j){

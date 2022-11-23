@@ -141,7 +141,9 @@ public:
 	void global_search(const int exhaustiveness=8, const int n_poses=20, const double min_rmsd=1.0, const int max_evals=0);
 	void global_search_gpu(const int exhaustiveness=8, const int n_poses=20, const double min_rmsd=1.0, const int max_evals=0, const int max_step=0, int num_of_ligands=1, unsigned long long seed = 181129, const int refine_step=5);
 	std::string get_poses(int how_many=9, double energy_range=3.0);
+	std::string get_sdf_poses(int how_many=9, double energy_range=3.0);
 	std::string get_poses_gpu(int ligand_id, int how_many=9, double energy_range=3.0);
+	// std::string get_sdf_poses_gpu(int ligand_id, int how_many=9, double energy_range=3.0);
 	void enable_gpu(){ gpu = true;}
 	std::vector< std::vector<double> > get_poses_coordinates(int how_many=9, double energy_range=3.0);
 	std::vector< std::vector<double> > get_poses_energies(int how_many=9, double energy_range=3.0);
