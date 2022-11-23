@@ -115,22 +115,42 @@ public:
 		if(num_flex() > 0) // otherwise remark is written in vain
 			write_context(flex_context, out);
 	}
+	void write_sdf_structure(ofile& out) const {
+		VINA_FOR_IN(i, ligands)
+			write_sdf_context(ligands[i].cont, out);
+		if(num_flex() > 0) // otherwise remark is written in vain
+			write_sdf_context(flex_context, out);
+	}
 	void write_structure(ofile& out, const std::string& remark) const {
 		out << remark;
 		write_structure(out);
+	}
+	void write_sdf_structure(ofile& out, const std::string& remark) const {
+		write_sdf_structure(out);
+		out << remark;
 	}
 	void write_structure(ofile& out, std::vector<std::string>& remarks) const {
 		VINA_FOR_IN(i, remarks) out << remarks[i];
 		write_structure(out);
 	}
+	void write_sdf_structure(ofile& out, std::vector<std::string>& remarks) const {
+		write_sdf_structure(out);
+		VINA_FOR_IN(i, remarks) out << remarks[i];
+	}
 
 	void write_structure(const path& name) const { ofile out(name); write_structure(out); }
+	void write_sdf_structure(const path& name) const { ofile out(name); write_sdf_structure(out); }
 	void write_model(ofile& out, sz model_number, const std::string& remark) const {
 		out << "MODEL " << model_number << '\n';
 		write_structure(out, remark);
 		out << "ENDMDL\n";
 	}
+	void write_sdf_model(ofile& out, sz model_number, const std::string& remark) const {
+		write_sdf_structure(out, remark);
+		// out << "$$$$\n";
+	}
 	std::string write_model(sz model_number, const std::string &remark);
+	std::string write_sdf_model(sz model_number, const std::string &remark);
 
 	void set (const conf& c);
 
@@ -191,17 +211,30 @@ private:
 	friend struct pdbqt_initializer;
 
 	void write_context(const context &c, std::ostringstream& out) const;
+	void write_sdf_context(const context &c, std::ostringstream& out) const;
 	void write_context(const context& c, ofile& out) const;
+	void write_sdf_context(const context& c, ofile& out) const;
 	void write_context(const context& c, ofile& out, const std::string& remark) const {
+		out << remark;
+	}
+	void write_sdf_context(const context& c, ofile& out, const std::string& remark) const {
 		out << remark;
 	}
 	void write_context(const context& c, const path& name) const {
 		ofile out(name);
 		write_context(c, out);
 	}
+	void write_sdf_context(const context& c, const path& name) const {
+		ofile out(name);
+		write_sdf_context(c, out);
+	}
 	void write_context(const context& c, const path& name, const std::string& remark) const {
 		ofile out(name);
 		write_context(c, out, remark);
+	}
+	void write_sdf_context(const context& c, const path& name, const std::string& remark) const {
+		ofile out(name);
+		write_sdf_context(c, out, remark);
 	}
 	fl rmsd_lower_bound_asymmetric(const model& x, const model& y) const; // actually static
 

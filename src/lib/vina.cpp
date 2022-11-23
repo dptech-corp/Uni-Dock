@@ -702,6 +702,29 @@ std::string Vina::vina_remarks(output_type &pose, fl lb, fl ub) {
 	return remark.str();
 }
 
+std::string Vina::sdf_remarks(output_type &pose, fl lb, fl ub) {
+	std::ostringstream remark;
+
+	remark.setf(std::ios::fixed, std::ios::floatfield);
+	remark.setf(std::ios::showpoint);
+
+	remark << "> <Uni-Dock RESULT> \nENERGY="
+		   << std::setw(9) << std::setprecision(3) << pose.e
+		   << "  LOWER_BOUND=" << std::setw(9) << std::setprecision(3) << lb
+		   << "  UPPER_BOUND=" << std::setw(9) << std::setprecision(3) << ub
+		   << '\n';
+
+	remark << "INTER + INTRA:    " << std::setw(12) << std::setprecision(3) << pose.total << "\n";
+	remark << "INTER:            " << std::setw(12) << std::setprecision(3) << pose.inter << "\n";
+	remark << "INTRA:            " << std::setw(12) << std::setprecision(3) << pose.intra << "\n";
+	if (m_sf_choice == SF_AD42)
+		remark << "CONF_INDEPENDENT: " << std::setw(12) << std::setprecision(3) << pose.conf_independent << "\n";
+	remark << "UNBOUND:          " << std::setw(12) << std::setprecision(3) << pose.unbound << "\n";
+	remark << '\n';
+
+	return remark.str();
+}
+
 std::string Vina::get_poses(int how_many, double energy_range) {
 	int n = 0;
 	double best_energy = 0;
@@ -784,8 +807,8 @@ std::string Vina::get_sdf_poses(int how_many, double energy_range) {
 			m_model.set(m_poses[i].c);
 
 			// Write conf
-			remarks = vina_remarks(m_poses[i], m_poses[i].lb, m_poses[i].ub);
-			out << m_model.write_model(n + 1, remarks);
+			remarks = sdf_remarks(m_poses[i], m_poses[i].lb, m_poses[i].ub);
+			out << m_model.write_sdf_model(n + 1, remarks);
 
 			n++;
 		}
@@ -852,6 +875,57 @@ std::string Vina::get_poses_gpu(int ligand_id, int how_many, double energy_range
 	return out.str();
 }
 
+std::string Vina::get_sdf_poses_gpu(int ligand_id, int how_many, double energy_range) {
+	int n = 0;
+	double best_energy = 0;
+	std::ostringstream out;
+	std::string remarks;
+
+	if (how_many < 0) {
+		std::cerr << "Error: number of poses written must be greater than zero.\n";
+		exit(EXIT_FAILURE);
+	}
+
+	if (energy_range < 0) {
+		std::cerr << "Error: energy range must be greater than zero.\n";
+		exit(EXIT_FAILURE);
+	}
+
+	if (!m_poses_gpu[ligand_id].empty()) {
+		// Get energy from the best conf
+
+		best_energy = m_poses_gpu[ligand_id][0].e;
+
+		VINA_FOR_IN(i, m_poses_gpu[ligand_id]) {
+			/* Stop if:
+				- We wrote the number of conf asked
+				- If there is no conf to write
+				- The energy of the current conf is superior than best_energy + energy_range
+			*/
+			if (n >= how_many || !not_max(m_poses_gpu[ligand_id][i].e) || m_poses_gpu[ligand_id][i].e > best_energy + energy_range)
+				break; // check energy_range sanity FIXME
+
+			// Push the current pose to model
+			m_model_gpu[ligand_id].set(m_poses_gpu[ligand_id][i].c);
+
+			// Write conf
+			remarks = sdf_remarks(m_poses_gpu[ligand_id][i], m_poses_gpu[ligand_id][i].lb, m_poses_gpu[ligand_id][i].ub);
+			out << m_model_gpu[ligand_id].write_sdf_model(n + 1, remarks);
+
+			n++;
+		}
+
+		// Push back the best conf in model
+		m_model_gpu[ligand_id].set(m_poses_gpu[ligand_id][0].c);
+
+	} else {
+		std::cerr << "WARNING: Could not find any poses. No poses were written.\n";
+	}
+	// DEBUG_PRINTF("out poses: %s\n", out.str());
+
+	return out.str();
+}
+
 void Vina::write_poses(const std::string& output_name, int how_many, double energy_range) {
 	std::string out;
 
@@ -880,8 +954,12 @@ void Vina::write_poses_gpu(const std::vector<std::string> & gpu_output_name, int
 		if (!m_poses_gpu[i].empty()) {
 			// Open output file
 			ofile f(make_path(gpu_output_name[i]));
-		
-			out = get_poses_gpu(i, how_many, energy_range);
+			if (gpu_output_name[i].substr(gpu_output_name[i].size()-4,4)==".sdf"){
+				out = get_sdf_poses_gpu(i, how_many, energy_range);
+			}
+			else{
+				out = get_poses_gpu(i, how_many, energy_range);
+			}
 			f << out;
 		} else {
 			std::cerr << "WARNING: Could not find any poses. No poses were written.\n";

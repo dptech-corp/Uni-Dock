@@ -653,6 +653,7 @@ void parse_sdf_aux(std::istream& in, parsing_struct& p, context& c, unsigned &to
     std::vector<std::vector<int> > frags;
     std::vector<std::vector<int> > torsions;
     while(std::getline(in, str)) {
+        if (str.find("$$$$") < str.length()) continue;
         add_context(c, str);
         std::cout << "read sdf line:" << str << std::endl;
 
