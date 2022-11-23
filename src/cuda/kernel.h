@@ -45,7 +45,7 @@ void check(T result, char const *const func, const char *const file,
 //#define GRID_MJ 71//55
 //#define GRID_MK 61//81
 #define MAX_PRECAL_NUM_ATOM 30
-#define MAX_P_DATA_M_DATA_SIZE  11325 // modified for vina1.2, should be larger, n*(n+1)/2, n=num_of_atom, select n=140
+#define MAX_P_DATA_M_DATA_SIZE  45150 // modified for vina1.2, should be larger, n*(n+1)/2, n=num_of_atom, select n=140
 //#define MAX_NUM_OF_GRID_ATOMS 150
 #define FAST_SIZE 2051 // modified for vina1.2 m_max_cutoff^2 * factor + 3, ad4=13424
 #define SMOOTH_SIZE 2051

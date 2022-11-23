@@ -675,7 +675,14 @@ model parse_ligand_pdbqt_from_file_no_failure(const std::string& name, atom_type
     if(tmp.m.ligands.count_torsions()[0] > MAX_NUM_OF_LIG_TORSION)
     {
         std::cerr << "Ligand " << name << " exceed max torsion counts. " << tmp.m.ligands.count_torsions()[0] << std::endl;
-        model m;
+        model m(atype);
+        assert(m.num_ligands() == 0);
+        return m;
+    }
+    if(tmp.m.atoms.size() > MAX_NUM_OF_ATOMS)
+    {
+        std::cerr << "Ligand " << name << " exceed max atom counts. " << tmp.m.atoms.size() << std::endl;
+        model m(atype);
         assert(m.num_ligands() == 0);
         return m;
     }
