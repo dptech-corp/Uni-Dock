@@ -26,11 +26,13 @@
 #include <string>
 #include "model.h"
 
-model parse_receptor_pdbqt(const std::string &rigid=std::string(), const std::string &flex=std::string(), atom_type::t atype=atom_type::XS); // can throw pdbqt_parse_error
-model parse_receptor_pdb(const std::string &rigid=std::string(), const std::string &flex=std::string(), atom_type::t atype=atom_type::XS); // can throw pdbqt_parse_error
+model parse_receptor_pdbqt(const std::string &rigid=std::string(), const std::string &flex=std::string(), atom_type::t atype=atom_type::XS); // can throw struct_parse_error
+model parse_receptor_pdb(const std::string &rigid=std::string(), const std::string &flex=std::string(), atom_type::t atype=atom_type::XS); // can throw struct_parse_error
 
-model parse_ligand_pdbqt_from_file(const std::string& name, atom_type::t atype); // can throw pdbqt_parse_error
-model parse_ligand_pdbqt_from_file_no_failure(const std::string& name, atom_type::t atype); // can throw pdbqt_parse_error
+model parse_ligand_pdbqt_from_file(const std::string& name, atom_type::t atype); // can throw struct_parse_error
+model parse_ligand_pdbqt_from_file_no_failure(const std::string& name, atom_type::t atype); // can throw struct_parse_error
+model parse_ligand_from_file_no_failure(const std::string& name, atom_type::t atype); // can throw struct_parse_error
+model parse_ligand_sdf_from_file_no_failure(const std::string& name, atom_type::t atype); // can throw struct_parse_error
 
 model parse_ligand_pdbqt_from_string(const std::string &string_name, atom_type::t atype); // can exit with code EXIT_FAILURE
 model parse_ligand_pdbqt_from_string_no_failure(const std::string &string_name, atom_type::t atype); // can return empty model as failure

@@ -144,6 +144,8 @@ Thank you!\n";
 		std::string ligand_index; // path to a text file, containing paths to ligands files
 		std::vector<std::string> batch_ligand_names;
 		std::vector<std::string> gpu_batch_ligand_names;
+		// std::vector<std::string> gpu_batch_ligand_names_sdf;
+		bool use_sdf_ligand = false;
 		std::string maps;
 		std::string sf_name = "vina";
 		std::string search_mode;
@@ -213,9 +215,11 @@ Thank you!\n";
 			("receptor", value<std::string>(&rigid_name), "rigid part of the receptor (PDBQT or PDB)")
 			("flex", value<std::string>(&flex_name), "flexible side chains, if any (PDBQT or PDB)")
 			("ligand", value< std::vector<std::string> >(&ligand_names)->multitoken(), "ligand (PDBQT)")
-			("ligand_index",value<std::string>(&ligand_index),"file containing paths to ligands")
+			("ligand_index",value<std::string>(&ligand_index),"file containing paths to ligands (PDBQT or SDF")
 			("batch", value< std::vector<std::string> >(&batch_ligand_names)->multitoken(), "batch ligand (PDBQT)")
-			("gpu_batch", value< std::vector<std::string> >(&gpu_batch_ligand_names)->multitoken(), "gpu batch ligand (PDBQT)")
+			("gpu_batch", value< std::vector<std::string> >(&gpu_batch_ligand_names)->multitoken(), "gpu batch ligand (PDBQT or SDF)")
+			// ("gpu_batch_sdf", value< std::vector<std::string> >(&gpu_batch_ligand_names_sdf)->multitoken(), "gpu batch ligand (SDF)")
+
 			("scoring", value<std::string>(&sf_name)->default_value(sf_name), "scoring function (ad4, vina or vinardo)")
 		;
 		//options_description search_area("Search area (required, except with --score_only)");
@@ -386,7 +390,7 @@ Thank you!\n";
 			exit(EXIT_FAILURE);
 		}
 
-		if (!vm.count("ligand") && !vm.count("batch") && !vm.count("gpu_batch") && !vm.count("ligand_index")) {
+		if (!vm.count("ligand") && !vm.count("batch") && !vm.count("gpu_batch") && !vm.count("ligand_index") && !vm.count("gpu_batch_sdf")) {
 			std::cerr << desc_simple << "\n\nERROR: Missing ligand(s).\n";
 			exit(EXIT_FAILURE);
 		} else if (vm.count("ligand") && (vm.count("batch") || vm.count("gpu_batch"))) {

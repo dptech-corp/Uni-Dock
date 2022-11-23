@@ -26,11 +26,11 @@
 #include "common.h"
 
 
-class pdbqt_parse_error : public std::exception {
+class struct_parse_error : public std::exception {
     public:    
-        explicit pdbqt_parse_error(const std::string & message)
+        explicit struct_parse_error(const std::string & message)
             : m_message("\n\nPDBQT parsing error: " + message + "\n") {}
-        explicit pdbqt_parse_error(const std::string & message, const std::string & pdbqt_line)
+        explicit struct_parse_error(const std::string & message, const std::string & pdbqt_line)
             : m_message("\n\nPDBQT parsing error: " + message + "\n > " + pdbqt_line + "\n") {}
 
         virtual const char* what() const throw () {
