@@ -737,6 +737,12 @@ void parse_sdf_aux(std::istream& in, parsing_struct& p, context& c, unsigned &to
 
     print_zero();
     // similar to parse_pdbqt_root
+    // missing frags
+    if (frags.size() == 0){
+        std::cerr << "No fragment info, using rigid docking" << std::endl;
+        torsdof = 0;
+        return; // do not use new p
+    }
     for (int i = 0;i < frags[0].size();++i){
         p.atoms[frags[0][i]].a.number = i; // assign new number of tree structure
         new_p.atoms.push_back(p.atoms[frags[0][i]-1]);
@@ -769,8 +775,6 @@ void parse_sdf_ligand(const path& name, non_rigid_parsed& nr, context& c) {
     print_zero();
     if(p.atoms.empty())
         throw struct_parse_error("No atoms in this ligand.");
-    if(!torsdof)
-        throw struct_parse_error("Missing TORSDOF keyword in this ligand.");
 
     try{
         postprocess_ligand(nr, p, c, unsigned(torsdof)); // bizarre size_t -> unsigned compiler complaint

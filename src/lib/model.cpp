@@ -731,6 +731,7 @@ void model::write_sdf_context(const context& c, ofile& out) const {
 	verify_bond_lengths();
 	VINA_FOR_IN(i, c) {
 		const std::string& str = c[i].first;
+		// TODO: sort by number_sdf
 		if(c[i].second) {
 			out << coords_to_sdf_string(coords[c[i].second.get()], str) << '\n';
 		}
@@ -784,7 +785,7 @@ std::string model::write_sdf_model(sz model_number, const std::string &remark) {
 
 	// out << "MODEL " << model_number << '\n';
 	
-
+	// TODO: sort by number_sdf
 	VINA_FOR_IN(i, ligands)
 		write_sdf_context(ligands[i].cont, out);
 	if (num_flex() > 0) // otherwise remark is written in vain
