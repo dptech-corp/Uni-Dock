@@ -664,7 +664,15 @@ void parse_sdf_aux(std::istream& in, parsing_struct& p, context& c, unsigned &to
                 while(std::getline(in, str)) {
                     add_context(c, str);
                     std::cout << "read info sdf line:" << str << std::endl;
-
+                    if (str.empty()){
+                        break;
+                    }
+                    std::string ad_name = omit_whitespace(str,14,14);
+                    int atomid = checked_convert_substring<int>(str,  1, std::min(int(str.find(' ')), 3), "AtomId");
+                    fl charge = checked_convert_substring<fl>(str,  4, 13, "Partial Charge");
+                    sz ad = string_to_ad_type(ad_name);
+                    p.atoms[atomid].a.charge = charge;
+                    p.atoms[atomid].a.ad = ad;
                     if (str.empty()){
                         break;
                     }
