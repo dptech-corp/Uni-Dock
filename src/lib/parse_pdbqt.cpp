@@ -126,7 +126,7 @@ parsed_atom parse_pdbqt_atom_string(const std::string& str) {
         throw struct_parse_error("Atom type " + name + " is not a valid AutoDock type (atom types are case-sensitive).", str);
 }
 
-// TODO sdf line check
+// sdf line parsing
 parsed_atom parse_sdf_atom_string(const std::string& str, int number) {
     // unsigned number = checked_convert_substring<unsigned>(str, 0, 10, "Atom number");
     vec coords(checked_convert_substring<fl>(str,  1, 10, "Coordinate"),
@@ -135,39 +135,6 @@ parsed_atom parse_sdf_atom_string(const std::string& str, int number) {
     // std::string name = omit_whitespace(str, 31, 35);
     sz ad = 0;
     fl charge = 0;
-    // if(!substring_is_blank(str, 36, 39)){
-    //     // TODO: use a optional field as partial charge
-    //     charge = checked_convert_substring<fl>(str, 36, 39, "Charge");
-    //     switch (int(charge))
-    //     {
-    //     case 1:
-    //         charge = 3.0;
-    //         break;
-    //     case 2:
-    //         charge = 2.0;
-    //         break;
-    //     case 3:
-    //         charge = 1.0;
-    //         break;
-    //     case 4:
-    //         charge = 0; // double radical
-    //         break;
-    //     case 5:
-    //         charge = -1;
-    //         break;
-    //     case 6:
-    //         charge = -2;
-    //         break;
-    //     case 7:
-    //         charge = -3;
-    //         break;
-    //     default:
-    //         charge = 0;
-    //         break;
-    //     }
-    // }
-
-    // TODO: may parse other field of sdf atom line, such as type including A,NA,OA
     
     parsed_atom tmp(ad, charge, coords, 0, number);
 
@@ -535,13 +502,6 @@ void postprocess_ligand(non_rigid_parsed& nr, parsing_struct& p, context& c, uns
     nr_update_matrixes(nr); // FIXME ?
 }
 
-// // TODO
-// void postprocess_ligand_sdf(parsing_struct& p, context& c, model &m, unsigned torsdof) {
-//     VINA_CHECK(!p.atoms.empty());
-//     m.ligands.push_back(ligand(flexible_body(rigid_body(p.atoms[0].a.coords, 0, 0)), torsdof)); // postprocess_branch will assign begin and end
-//     // TODO: initialize model directly, without nrp 'initialize_from_nrp'
-    
-// }
 
 void postprocess_residue(non_rigid_parsed& nr, parsing_struct& p, context& c) {
     VINA_FOR_IN(i, p.atoms) { // iterate over "root" of a "residue"
@@ -614,7 +574,6 @@ void parse_pdbqt_ligand(const path& name, non_rigid_parsed& nr, context& c) {
     VINA_CHECK(nr.atoms_atoms_bonds.dim() == nr.atoms.size());
 }
 
-// TODO
 void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, context& c, unsigned &torsdof, bool residue) {
     std::string str;
     // sdf header has three lines
@@ -669,7 +628,7 @@ void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, c
         if (str[0]=='>'){
             std::string data_type = str.substr(6,str.length()-7);
             if (str.find("atomInfo") < str.length()){
-                // TODO: update p.atoms[num].a.charge
+                // update p.atoms[num].a.charge and type
                 while(std::getline(in, str)) {
                     add_context(c, str);
                     std::cout << "read info sdf line:" << str << std::endl;
@@ -786,10 +745,8 @@ void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, c
             }
         }
     }
-    // p = new_p;
 }
 
-// TODO
 void parse_sdf_ligand(const path& name, non_rigid_parsed& nr, context& c) {
     ifile in(name);
     parsing_struct *p = new parsing_struct();
