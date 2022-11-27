@@ -62,7 +62,7 @@ private:
 struct atom : public atom_base {
     vec coords;
 	std::vector<bond> bonds;
-	int number_sdf;
+	unsigned short number_sdf;
 	atom() : coords(max_vec) {}
 private:
 	friend class boost::serialization::access;

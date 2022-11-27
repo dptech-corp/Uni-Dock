@@ -211,7 +211,8 @@ struct non_rigid_parsed {
     }
 };
 
-struct parsing_struct {
+class parsing_struct {
+public:
     // start reading after this class
     template<typename T> // T == parsing_struct
     struct node_t {
@@ -219,6 +220,7 @@ struct parsing_struct {
         parsed_atom a;
         std::vector<T> ps;
         node_t(const parsed_atom& a_, sz context_index_) : context_index(context_index_), a(a_) {}
+        // node_t(const parsing_struct::node_t<T> &n): context_index(n.context_index), a(n.a), ps(n.ps) {}
 
         // inflex atom insertion
         void insert_inflex(non_rigid_parsed& nr) {
@@ -254,6 +256,10 @@ struct parsing_struct {
     void add(const parsed_atom& a, const context& c) {
         VINA_CHECK(c.size() > 0);
         atoms.push_back(node(a, c.size()-1));
+    }
+    void add(const parsed_atom& a, const sz context_index) {
+        VINA_CHECK(context_index > 0);
+        atoms.emplace_back(node(a, context_index));
     }
     const vec& immobile_atom_coords() const {
         VINA_CHECK(immobile_atom);
@@ -381,7 +387,7 @@ void parse_pdbqt_root(std::istream& in, parsing_struct& p, context& c) {
 }
 
 void parse_pdbqt_branch(std::istream& in, parsing_struct& p, context& c, unsigned from, unsigned to); // forward declaration
-void parse_sdf_branch(std::vector<std::vector<int> > &frags, std::vector<std::vector<int> > torsions, int frag_id, 
+void parse_sdf_branch(std::vector<std::vector<int> > &frags, std::vector<std::vector<int> > &torsions, int frag_id, 
     parsing_struct& new_p, parsing_struct& p, context& c, unsigned &number, unsigned from, unsigned to);
 
 void parse_pdbqt_branch_aux(std::istream& in, const std::string& str, parsing_struct& p, context& c) {
@@ -391,7 +397,8 @@ void parse_pdbqt_branch_aux(std::istream& in, const std::string& str, parsing_st
 
     for(; i < p.atoms.size(); ++i)
         if(p.atoms[i].a.number == first) {
-            p.atoms[i].ps.push_back(parsing_struct());
+            parsing_struct p0;
+            p.atoms[i].ps.push_back(p0);
             parse_pdbqt_branch(in, p.atoms[i].ps.back(), c, first, second);
             break;
         }
@@ -406,9 +413,11 @@ void parse_sdf_branch_aux(std::vector<std::vector<int> > &frags, std::vector<std
     std::cout << "entering parse_sdf_branch_aux " << from << ' '  << to << std::endl;
 
     for(; i < new_p.atoms.size(); ++i){
-        DEBUG_PRINTF("new_p.atoms[i].a.number_sdf=%d\n",new_p.atoms[i].a.number_sdf);
+        // printf("new_p.atoms[i].a.number_sdf=%d\n",new_p.atoms[i].a.number_sdf);
         if(new_p.atoms[i].a.number_sdf == from) {
-            new_p.atoms[i].ps.push_back(parsing_struct());
+            std::cout << "pushing atom in parse_sdf_branch_aux i=" << i << ' '  << new_p.atoms.size() << std::endl;
+            parsing_struct p0;
+            new_p.atoms[i].ps.push_back(p0);
             parse_sdf_branch(frags, torsions, frag_id, new_p.atoms[i].ps.back(), p, c, number, from, to);
             break;
         }
@@ -606,7 +615,7 @@ void parse_pdbqt_ligand(const path& name, non_rigid_parsed& nr, context& c) {
 }
 
 // TODO
-void parse_sdf_aux(std::istream& in, parsing_struct& p, context& c, unsigned &torsdof, bool residue) {
+void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, context& c, unsigned &torsdof, bool residue) {
     std::string str;
     // sdf header has three lines
     for (int i = 0; i < 3; ++i){
@@ -669,10 +678,11 @@ void parse_sdf_aux(std::istream& in, parsing_struct& p, context& c, unsigned &to
                     }
                     std::string ad_name = omit_whitespace(str,14,14);
                     int atomid = checked_convert_substring<int>(str,  1, std::min(int(str.find(' ')), 3), "AtomId");
+                    std::cout << "atomid=" << atomid << std::endl;
                     fl charge = checked_convert_substring<fl>(str,  4, 13, "Partial Charge");
                     sz ad = string_to_ad_type(ad_name);
-                    p.atoms[atomid].a.charge = charge;
-                    p.atoms[atomid].a.ad = ad;
+                    p.atoms[atomid-1].a.charge = charge;
+                    p.atoms[atomid-1].a.ad = ad;
                     if (str.empty()){
                         break;
                     }
@@ -693,15 +703,15 @@ void parse_sdf_aux(std::istream& in, parsing_struct& p, context& c, unsigned &to
 
                     for (int i = 1;i < str.length();++i){
                         if (str[i] == ' '){
-                            torsion.emplace_back(num);
+                            torsion.push_back(num);
                             num = 0;
                         }
                         else{
                             num = num * 10 + int(str[i])-int('0');
                         }
                     }
-                    torsion.emplace_back(num);
-                    torsions.emplace_back(torsion);
+                    torsion.push_back(num);
+                    torsions.push_back(torsion);
                 }
             }
             else if (str.find("frag") < str.length()){
@@ -716,15 +726,15 @@ void parse_sdf_aux(std::istream& in, parsing_struct& p, context& c, unsigned &to
 
                     for (int i = 1;i < str.length();++i){
                         if (str[i] == ' '){
-                            frag.emplace_back(num);
+                            frag.push_back(num);
                             num = 0;
                         }
                         else{
                             num = num * 10 + int(str[i])-int('0');
                         }
                     }
-                    frag.emplace_back(num);
-                    frags.emplace_back(frag);
+                    frag.push_back(num);
+                    frags.push_back(frag);
                 }
             }
             else{
@@ -740,24 +750,30 @@ void parse_sdf_aux(std::istream& in, parsing_struct& p, context& c, unsigned &to
     }
 
     // build new parsing_struct
-    parsing_struct new_p;
+    // parsing_struct new_p;
     torsdof = unsigned(torsions.size());
 
     print_zero();
     // similar to parse_pdbqt_root
     // missing frags
-    if (frags.size() == 0){
+    if (frags.size() == 0)
+    {
         std::cerr << "No fragment info, using rigid docking" << std::endl;
         torsdof = 0;
+        new_p = p;
         return; // do not use new p
     }
+    // new_p.atoms.reserve(frags[0].size());
     for (int i = 0;i < frags[0].size();++i){
-        p.atoms[frags[0][i]].a.number = i; // assign new number of tree structure
-        new_p.atoms.push_back(p.atoms[frags[0][i]-1]);
+        p.atoms[frags[0][i]-1].a.number = i; // assign new number of tree structure
+        std::cout << "pushing atom in parse_sdf_aux i=" << i << ' '  << frags[0].size() << std::endl;
+
+        new_p.add(p.atoms[frags[0][i]-1].a, p.atoms[frags[0][i]-1].context_index);
     }
     // similar to parse_pdbqt_branch_aux
     // if(starts_with(str, "BRANCH")) parse_pdbqt_branch_aux(in, str, p, c);
     unsigned number = frags[0].size();
+    
     for (int i = 0;i < frags[0].size();++i){
         for (int j = 0;j < torsions.size();++j){
             std::cout << "j=" << j << std::endl;
@@ -768,24 +784,26 @@ void parse_sdf_aux(std::istream& in, parsing_struct& p, context& c, unsigned &to
             }
         }
     }
-    p = new_p;
+    // p = new_p;
 }
 
 // TODO
 void parse_sdf_ligand(const path& name, non_rigid_parsed& nr, context& c) {
     ifile in(name);
-    parsing_struct p;
+    parsing_struct *p = new parsing_struct();
+    parsing_struct *new_p = new parsing_struct();
     unsigned int torsdof;
 
     // transfer_parsing_struct
-    parse_sdf_aux(in, p, c, torsdof, false);
+    parse_sdf_aux(in, *new_p, *p, c, torsdof, false);
+    // free(p);
 
     print_zero();
-    if(p.atoms.empty())
+    if(new_p->atoms.empty())
         throw struct_parse_error("No atoms in this ligand.");
 
     try{
-        postprocess_ligand(nr, p, c, unsigned(torsdof)); // bizarre size_t -> unsigned compiler complaint
+        postprocess_ligand(nr, *new_p, c, unsigned(torsdof)); // bizarre size_t -> unsigned compiler complaint
     }
     catch (int e){
         if (e == 1){
@@ -861,17 +879,22 @@ void parse_pdbqt_branch(std::istream& in, parsing_struct& p, context& c, unsigne
     }
 }
 
-void parse_sdf_branch(std::vector<std::vector<int> > &frags, std::vector<std::vector<int> > torsions, int frag_id, 
+void parse_sdf_branch(std::vector<std::vector<int> > &frags, std::vector<std::vector<int> > &torsions, int frag_id, 
     parsing_struct& new_p, parsing_struct& p, context& c, unsigned &number, unsigned from, unsigned to){
     std::cout << "entering parse_sdf_branch frag= "<< frag_id << ' ' << from << ' '  << to << std::endl;
 
+    // push new fragment atoms into new_p
+    // new_p.atoms.reserve(frags[frag_id].size());
     for (int i = 0;i < frags[frag_id].size();++i){
         if (p.atoms[frags[frag_id][i]-1].a.number_sdf == to){
             new_p.immobile_atom = new_p.atoms.size();
         }
         p.atoms[frags[frag_id][i]-1].a.number = number;
         ++number;
-        new_p.atoms.push_back(p.atoms[frags[frag_id][i]-1]); // equal to p.add()
+        //debug
+        std::cout << "pushing atom in parse_sdf_branch i=" << i << "frag id=" << frag_id << ' ' << frags[frag_id].size() << std::endl;
+        new_p.add(p.atoms[frags[frag_id][i]-1].a, p.atoms[frags[frag_id][i]-1].context_index);
+        // new_p.atoms.push_back(p.atoms[frags[frag_id][i]-1]); // equal to p.add()
     }
     for (int i = 0;i < frags[frag_id].size();++i){
         for (int j = 0;j < torsions.size();++j){
@@ -963,7 +986,7 @@ model parse_ligand_pdbqt_from_file(const std::string& name, atom_type::t atype) 
 
 
 model parse_ligand_from_file_no_failure(const std::string& name, atom_type::t atype) { // can throw parse_error
-    printf("ligand name: %s\n", name.c_str()); // debug
+    DEBUG_PRINTF("ligand name: %s\n", name.c_str()); // debug
     if (name.find("pdbqt") < name.length()){
         return parse_ligand_pdbqt_from_file_no_failure(name, atype);
     }
