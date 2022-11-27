@@ -25,6 +25,7 @@
 
 #include <string>
 #include "model.h"
+#include <set>
 
 model parse_receptor_pdbqt(const std::string &rigid=std::string(), const std::string &flex=std::string(), atom_type::t atype=atom_type::XS); // can throw struct_parse_error
 model parse_receptor_pdb(const std::string &rigid=std::string(), const std::string &flex=std::string(), atom_type::t atype=atom_type::XS); // can throw struct_parse_error

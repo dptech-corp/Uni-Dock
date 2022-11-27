@@ -388,7 +388,7 @@ void parse_pdbqt_root(std::istream& in, parsing_struct& p, context& c) {
 
 void parse_pdbqt_branch(std::istream& in, parsing_struct& p, context& c, unsigned from, unsigned to); // forward declaration
 void parse_sdf_branch(std::vector<std::vector<int> > &frags, std::vector<std::vector<int> > &torsions, int frag_id, 
-    parsing_struct& new_p, parsing_struct& p, context& c, unsigned &number, unsigned from, unsigned to);
+    parsing_struct& new_p, parsing_struct& p, context& c, unsigned &number, unsigned from, unsigned to, std::set<int> &been_frags);
 
 void parse_pdbqt_branch_aux(std::istream& in, const std::string& str, parsing_struct& p, context& c) {
     unsigned first, second;
@@ -408,17 +408,17 @@ void parse_pdbqt_branch_aux(std::istream& in, const std::string& str, parsing_st
 }
 
 void parse_sdf_branch_aux(std::vector<std::vector<int> > &frags, std::vector<std::vector<int> > &torsions, int frag_id,
-     parsing_struct& new_p, parsing_struct& p, context& c, unsigned &number, int from, int to) {
+     parsing_struct& new_p, parsing_struct& p, context& c, unsigned &number, int from, int to, std::set<int> &been_frags) {
     sz i = 0;
     std::cout << "entering parse_sdf_branch_aux " << from << ' '  << to << std::endl;
-
+    
     for(; i < new_p.atoms.size(); ++i){
         // printf("new_p.atoms[i].a.number_sdf=%d\n",new_p.atoms[i].a.number_sdf);
         if(new_p.atoms[i].a.number_sdf == from) {
             std::cout << "pushing atom in parse_sdf_branch_aux i=" << i << ' '  << new_p.atoms.size() << std::endl;
             parsing_struct p0;
             new_p.atoms[i].ps.push_back(p0);
-            parse_sdf_branch(frags, torsions, frag_id, new_p.atoms[i].ps.back(), p, c, number, from, to);
+            parse_sdf_branch(frags, torsions, frag_id, new_p.atoms[i].ps.back(), p, c, number, from, to, been_frags);
             break;
         }
     }
@@ -773,13 +773,15 @@ void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, c
     // similar to parse_pdbqt_branch_aux
     // if(starts_with(str, "BRANCH")) parse_pdbqt_branch_aux(in, str, p, c);
     unsigned number = frags[0].size();
+    std::set<int> been_frags = {0}; // prevent dead loop caused by fraginfo errors
+
     
     for (int i = 0;i < frags[0].size();++i){
         for (int j = 0;j < torsions.size();++j){
             std::cout << "j=" << j << std::endl;
             if (torsions[j][0] == frags[0][i]){
                 int frag_id = torsions[j][3];
-                parse_sdf_branch_aux(frags, torsions, frag_id, new_p, p, c, number, torsions[j][0], torsions[j][1]);
+                parse_sdf_branch_aux(frags, torsions, frag_id, new_p, p, c, number, torsions[j][0], torsions[j][1], been_frags);
 
             }
         }
@@ -880,7 +882,7 @@ void parse_pdbqt_branch(std::istream& in, parsing_struct& p, context& c, unsigne
 }
 
 void parse_sdf_branch(std::vector<std::vector<int> > &frags, std::vector<std::vector<int> > &torsions, int frag_id, 
-    parsing_struct& new_p, parsing_struct& p, context& c, unsigned &number, unsigned from, unsigned to){
+    parsing_struct& new_p, parsing_struct& p, context& c, unsigned &number, unsigned from, unsigned to, std::set<int> &been_frags){
     std::cout << "entering parse_sdf_branch frag= "<< frag_id << ' ' << from << ' '  << to << std::endl;
 
     // push new fragment atoms into new_p
@@ -901,7 +903,11 @@ void parse_sdf_branch(std::vector<std::vector<int> > &frags, std::vector<std::ve
             if (torsions[j][0] == frags[frag_id][i]){
                 int next_frag_id = torsions[j][3];
                 std::cout << "current frag id=" << frag_id << " next frag id=" << next_frag_id << std::endl;
-                parse_sdf_branch_aux(frags, torsions, next_frag_id, new_p, p, c, number, torsions[j][0], torsions[j][1]);
+                if (been_frags.find(next_frag_id) != been_frags.end()){
+                    throw struct_parse_error("Fragment Information error", std::to_string(frag_id));
+                }
+                been_frags.insert(next_frag_id);
+                parse_sdf_branch_aux(frags, torsions, next_frag_id, new_p, p, c, number, torsions[j][0], torsions[j][1], been_frags);
             }
         }
     }
