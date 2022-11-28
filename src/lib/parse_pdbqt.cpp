@@ -950,10 +950,11 @@ model parse_ligand_pdbqt_from_file(const std::string& name, atom_type::t atype) 
 
 model parse_ligand_from_file_no_failure(const std::string& name, atom_type::t atype) { // can throw parse_error
     DEBUG_PRINTF("ligand name: %s\n", name.c_str()); // debug
-    if (name.find("pdbqt") < name.length()){
+    // std::cout << name.substr(name.length()-5,5) << std::endl;
+    if (strcmp("pdbqt", name.substr(name.length()-5,5).c_str()) == 0){
         return parse_ligand_pdbqt_from_file_no_failure(name, atype);
     }
-    else if (name.find("sdf") < name.length()){
+    else if (strcmp("sdf", name.substr(name.length()-3,3).c_str()) == 0){
         return parse_ligand_sdf_from_file_no_failure(name, atype);
     }
     model m(atype);
