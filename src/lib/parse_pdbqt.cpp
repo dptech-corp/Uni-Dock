@@ -741,7 +741,10 @@ void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, c
             if (torsions[j][0] == frags[0][i]){
                 int frag_id = torsions[j][3];
                 parse_sdf_branch_aux(frags, torsions, frag_id, new_p, p, c, number, torsions[j][0], torsions[j][1], been_frags);
-
+            }
+            else if (torsions[j][1] == frags[0][i]){
+                int frag_id = torsions[j][2];
+                parse_sdf_branch_aux(frags, torsions, frag_id, new_p, p, c, number, torsions[j][1], torsions[j][0], been_frags);
             }
         }
     }
@@ -859,12 +862,25 @@ void parse_sdf_branch(std::vector<std::vector<int> > &frags, std::vector<std::ve
         for (int j = 0;j < torsions.size();++j){
             if (torsions[j][0] == frags[frag_id][i]){
                 int next_frag_id = torsions[j][3];
-                std::cout << "current frag id=" << frag_id << " next frag id=" << next_frag_id << std::endl;
                 if (been_frags.find(next_frag_id) != been_frags.end()){
-                    throw struct_parse_error("Fragment Information error", std::to_string(frag_id));
+                    // throw struct_parse_error("Fragment Information error", std::to_string(frag_id));
                 }
-                been_frags.insert(next_frag_id);
-                parse_sdf_branch_aux(frags, torsions, next_frag_id, new_p, p, c, number, torsions[j][0], torsions[j][1], been_frags);
+                else{
+                    std::cout << "current frag id=" << frag_id << " next frag id=" << next_frag_id << std::endl;
+                    been_frags.insert(next_frag_id);
+                    parse_sdf_branch_aux(frags, torsions, next_frag_id, new_p, p, c, number, torsions[j][0], torsions[j][1], been_frags);
+                }
+            }
+            else if (torsions[j][1] == frags[frag_id][i]){
+                int next_frag_id = torsions[j][2];
+                if (been_frags.find(next_frag_id) != been_frags.end()){
+                    // throw struct_parse_error("Fragment Information error", std::to_string(frag_id));
+                }
+                else{
+                    std::cout << "current frag id=" << frag_id << " next frag id=" << next_frag_id << std::endl;
+                    been_frags.insert(next_frag_id);
+                    parse_sdf_branch_aux(frags, torsions, next_frag_id, new_p, p, c, number, torsions[j][1], torsions[j][0], been_frags);
+                }
             }
         }
     }
