@@ -207,6 +207,8 @@ Thank you!\n";
 		// bias
 		std::string bias_file;
 		bool multi_bias;
+		// sdf
+		bool keep_H;
 
 		positional_options_description positional; // remains empty
 
@@ -271,6 +273,7 @@ Thank you!\n";
 			("weight_glue", value<double>(&weight_glue)->default_value(weight_glue),                      "macrocycle glue weight")
 			("bias", value<std::string>(&bias_file), "bias configuration file name, content similar to BPF in AutoDock-bias")
 			("multi_bias", bool_switch(&multi_bias), "add ligand bias {ligand_name}.bpf for every input ligand {ligand_name}.pdbqt in batch, content similar to BPF in AutoDock-bias")
+			("keep_nonpolar_H", bool_switch(&keep_H), "keep non polar H in sdf")
 
 		;
 		options_description misc("Misc (optional)");
@@ -612,7 +615,7 @@ Thank you!\n";
 			{
 				auto& ligand=ligand_names[ligand_count];
 				auto l = parse_ligand_from_file_no_failure(
-						ligand, v.m_scoring_function.get_atom_typing());
+						ligand, v.m_scoring_function.get_atom_typing(), keep_H);
 				#pragma omp critical
 				all_ligands.emplace_back(std::make_pair(ligand,l));
 			}

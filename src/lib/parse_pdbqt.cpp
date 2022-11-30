@@ -381,16 +381,16 @@ void parse_sdf_branch_aux(std::vector<std::vector<int> > &frags, std::vector<std
     
     for(; i < new_p.atoms.size(); ++i){
         // printf("new_p.atoms[i].a.number_sdf=%d\n",new_p.atoms[i].a.number_sdf);
-        if(new_p.atoms[i].a.number_sdf == from) {
+        if(new_p.atoms[i].a.number_sdf == from && been_frags.find(frag_id) == been_frags.end()) {
             std::cout << "pushing atom in parse_sdf_branch_aux i=" << i << ' '  << new_p.atoms.size() << std::endl;
             parsing_struct p0;
             new_p.atoms[i].ps.push_back(p0);
+            been_frags.insert(frag_id);
+            std::cout << "current frag id=" << frag_id << ", from=" << from << std::endl;
             parse_sdf_branch(frags, torsions, frag_id, new_p.atoms[i].ps.back(), p, c, number, from, to, been_frags);
             break;
         }
     }
-    if(i == new_p.atoms.size())
-        throw struct_parse_error("Atom number " + std::to_string(from) + " is missing in this branch.", "Branch error");
 }
 
 void parse_pdbqt_aux(std::istream& in, parsing_struct& p, context& c, boost::optional<unsigned>& torsdof, bool residue) {
@@ -574,7 +574,7 @@ void parse_pdbqt_ligand(const path& name, non_rigid_parsed& nr, context& c) {
     VINA_CHECK(nr.atoms_atoms_bonds.dim() == nr.atoms.size());
 }
 
-void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, context& c, unsigned &torsdof, bool residue) {
+void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, context& c, unsigned &torsdof, bool residue, bool keep_H=false) {
     std::string str;
     // sdf header has three lines
     for (int i = 0; i < 3; ++i){
@@ -620,6 +620,8 @@ void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, c
     // use property given by ligprep to construct tree
     std::vector<std::vector<int> > frags;
     std::vector<std::vector<int> > torsions;
+    int max_torsion_atom_id, max_torsion_frag_id;
+    int max_torsion = -1;
     while(std::getline(in, str)) {
         if (str.find("$$$$") < str.length()) continue;
         add_context(c, str);
@@ -708,13 +710,10 @@ void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, c
         }
     }
 
-    // build new parsing_struct
-    // parsing_struct new_p;
     torsdof = unsigned(torsions.size());
 
-    print_zero();
+    // print_zero();
     // similar to parse_pdbqt_root
-    // missing frags
     if (frags.size() == 0)
     {
         std::cerr << "No fragment info, using rigid docking" << std::endl;
@@ -722,45 +721,88 @@ void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, c
         new_p = p;
         return; // do not use new p
     }
-    // new_p.atoms.reserve(frags[0].size());
-    for (int i = 0;i < frags[0].size();++i){
-        p.atoms[frags[0][i]-1].a.number = i; // assign new number of tree structure
-        std::cout << "pushing atom in parse_sdf_aux i=" << i << ' '  << frags[0].size() << std::endl;
+    print_zero();
+    if (!keep_H){
+        for (int i = 0;i < frags.size();++i){
+            std::vector<int> new_frag_nonH;
+            for (int j = 0;j < frags[i].size();++j){
+                if (p.atoms[frags[i][j]-1].a.ad != AD_TYPE_H){
+                    new_frag_nonH.push_back(frags[i][j]);
+                }
+                else{
+                    std::cout << "atom num=" << frags[i][j] << " is H, omitted" << std::endl;
+                }
+            }
+            frags[i] = new_frag_nonH;
+        }
+    }
+    print_zero();
+    for (int i = 1;i <= atom_num;++i){
+        int cnt_torsion = 0;
+        for (int j = 0;j < torsions.size();++j){
+            if (torsions[j][0] == i || torsions[j][1] == i){
+                ++cnt_torsion;
+            }
+        }
+        if (cnt_torsion > max_torsion){
+            max_torsion = cnt_torsion;
+            max_torsion_atom_id = i;
+        }
+    }
+    for (int i = 0;i < frags.size();++i){
+        for (int j = 0;j < frags[i].size();++j){
+            if (frags[i][j] == max_torsion_atom_id){
+                max_torsion_frag_id = i;
+                break;
+            }
+        }
+    }
+    
 
-        new_p.add(p.atoms[frags[0][i]-1].a, p.atoms[frags[0][i]-1].context_index);
+    // new_p.atoms.reserve(frags[0].size());
+    p.atoms[max_torsion_atom_id-1].a.number = 0;
+    new_p.add(p.atoms[max_torsion_atom_id-1].a, p.atoms[max_torsion_atom_id-1].context_index);
+    unsigned number = 1;
+
+    for (int i = 0;i < frags[max_torsion_frag_id].size();++i){
+        if (frags[max_torsion_frag_id][i] == max_torsion_atom_id) continue;
+        p.atoms[frags[max_torsion_frag_id][i]-1].a.number = number; // assign new number of tree structure
+        ++number;
+        std::cout << "pushing atom in parse_sdf_aux i=" << i << ' '  << frags[max_torsion_frag_id].size() << std::endl;
+
+        new_p.add(p.atoms[frags[max_torsion_frag_id][i]-1].a, p.atoms[frags[max_torsion_frag_id][i]-1].context_index);
     }
     // similar to parse_pdbqt_branch_aux
     // if(starts_with(str, "BRANCH")) parse_pdbqt_branch_aux(in, str, p, c);
-    unsigned number = frags[0].size();
-    std::set<int> been_frags = {0}; // prevent dead loop caused by fraginfo errors
-
     
-    for (int i = 0;i < frags[0].size();++i){
+    std::set<int> been_frags = {max_torsion_frag_id}; // prevent dead loop caused by fraginfo errors
+    for (int i = 0;i < frags[max_torsion_frag_id].size();++i){
         for (int j = 0;j < torsions.size();++j){
             std::cout << "j=" << j << std::endl;
-            if (torsions[j][0] == frags[0][i]){
+            if (torsions[j][0] == frags[max_torsion_frag_id][i]){
                 int frag_id = torsions[j][3];
                 parse_sdf_branch_aux(frags, torsions, frag_id, new_p, p, c, number, torsions[j][0], torsions[j][1], been_frags);
             }
-            else if (torsions[j][1] == frags[0][i]){
+            else if (torsions[j][1] == frags[max_torsion_frag_id][i]){
                 int frag_id = torsions[j][2];
                 parse_sdf_branch_aux(frags, torsions, frag_id, new_p, p, c, number, torsions[j][1], torsions[j][0], been_frags);
             }
         }
     }
+
 }
 
-void parse_sdf_ligand(const path& name, non_rigid_parsed& nr, context& c) {
+void parse_sdf_ligand(const path& name, non_rigid_parsed& nr, context& c, bool keep_H=false) {
     ifile in(name);
     parsing_struct *p = new parsing_struct();
     parsing_struct *new_p = new parsing_struct();
     unsigned int torsdof;
 
     // transfer_parsing_struct
-    parse_sdf_aux(in, *new_p, *p, c, torsdof, false);
+    parse_sdf_aux(in, *new_p, *p, c, torsdof, false, keep_H);
     // free(p);
 
-    print_zero();
+    // print_zero();
     if(new_p->atoms.empty())
         throw struct_parse_error("No atoms in this ligand.");
 
@@ -862,25 +904,11 @@ void parse_sdf_branch(std::vector<std::vector<int> > &frags, std::vector<std::ve
         for (int j = 0;j < torsions.size();++j){
             if (torsions[j][0] == frags[frag_id][i]){
                 int next_frag_id = torsions[j][3];
-                if (been_frags.find(next_frag_id) != been_frags.end()){
-                    // throw struct_parse_error("Fragment Information error", std::to_string(frag_id));
-                }
-                else{
-                    std::cout << "current frag id=" << frag_id << " next frag id=" << next_frag_id << std::endl;
-                    been_frags.insert(next_frag_id);
-                    parse_sdf_branch_aux(frags, torsions, next_frag_id, new_p, p, c, number, torsions[j][0], torsions[j][1], been_frags);
-                }
+                parse_sdf_branch_aux(frags, torsions, next_frag_id, new_p, p, c, number, torsions[j][0], torsions[j][1], been_frags);
             }
             else if (torsions[j][1] == frags[frag_id][i]){
                 int next_frag_id = torsions[j][2];
-                if (been_frags.find(next_frag_id) != been_frags.end()){
-                    // throw struct_parse_error("Fragment Information error", std::to_string(frag_id));
-                }
-                else{
-                    std::cout << "current frag id=" << frag_id << " next frag id=" << next_frag_id << std::endl;
-                    been_frags.insert(next_frag_id);
-                    parse_sdf_branch_aux(frags, torsions, next_frag_id, new_p, p, c, number, torsions[j][1], torsions[j][0], been_frags);
-                }
+                parse_sdf_branch_aux(frags, torsions, next_frag_id, new_p, p, c, number, torsions[j][1], torsions[j][0], been_frags);
             }
         }
     }
@@ -964,14 +992,14 @@ model parse_ligand_pdbqt_from_file(const std::string& name, atom_type::t atype) 
 }
 
 
-model parse_ligand_from_file_no_failure(const std::string& name, atom_type::t atype) { // can throw parse_error
+model parse_ligand_from_file_no_failure(const std::string& name, atom_type::t atype, bool keep_H) { // can throw parse_error
     DEBUG_PRINTF("ligand name: %s\n", name.c_str()); // debug
     // std::cout << name.substr(name.length()-5,5) << std::endl;
     if (strcmp("pdbqt", name.substr(name.length()-5,5).c_str()) == 0){
         return parse_ligand_pdbqt_from_file_no_failure(name, atype);
     }
     else if (strcmp("sdf", name.substr(name.length()-3,3).c_str()) == 0){
-        return parse_ligand_sdf_from_file_no_failure(name, atype);
+        return parse_ligand_sdf_from_file_no_failure(name, atype, keep_H);
     }
     model m(atype);
     return m;
@@ -1005,12 +1033,12 @@ model parse_ligand_pdbqt_from_file_no_failure(const std::string& name, atom_type
     return tmp.m;
 }
 
-model parse_ligand_sdf_from_file_no_failure(const std::string& name, atom_type::t atype) { // can throw parse_error
+model parse_ligand_sdf_from_file_no_failure(const std::string& name, atom_type::t atype, bool keep_H) { // can throw parse_error
     non_rigid_parsed nrp;
     context c;
 
     try {
-        parse_sdf_ligand(make_path(name), nrp, c);
+        parse_sdf_ligand(make_path(name), nrp, c, keep_H);
     }
     catch(struct_parse_error& e) {
         std::cerr << e.what() << "Ligand name:" << name << "\n\n";
