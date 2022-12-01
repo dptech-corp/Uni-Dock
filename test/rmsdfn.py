@@ -62,7 +62,44 @@ def get_coor_from_pdbqt(ligfile: str) -> dict:
             break
     # print(coor)
     return coor
-
+  
+def get_coor_from_sdf(ligfile: str) -> dict:
+    '''
+    Get coordinates of the atoms in the ligand from a pdb file.
+    
+    Args:
+      ligfile (str): the pdbqt file of the ligand
+    
+    Returns:
+      A list of coordinates of atoms in the ligand.
+    '''
+    with open(ligfile, "r") as f:
+        lines = f.readlines()
+    coor = []
+    cnt = 0
+    for line in lines:
+      cnt += 1
+      if 'atomInfo' in line:
+        break
+    print('cnt=',cnt)
+    if cnt == len(lines):
+      cnt = 4
+    natom = int(lines[3][:3].strip())
+    for i in range(natom):
+        line = lines[i+4]
+        infoline = lines[i+cnt]
+        if infoline[13:16] != 'H  ':
+          # print(infoline[13:16])
+          coor.append([
+              float(line[0 :10].strip()), 
+              float(line[10:20].strip()), 
+              float(line[20:30].strip())
+          ])
+        else:
+          print(infoline, line)
+    print(coor)
+    return coor, natom
+  
 def _calc_rmsd(coor_lig1: list, coor_lig2: list) -> float:
     '''
     Calculate the root mean square deviation between two ligands.
@@ -113,6 +150,23 @@ def fast_rmsd(ligfile1: str, ligfile2: str) -> float:
     coor_lig2 = get_coor_from_pdbqt(ligfile2)
     # print(coor_lig2)
     return _calc_rmsd(coor_lig1, coor_lig2)
+
+def fast_rmsd_sdf(ligfile1: str, ligfile2: str):
+    '''
+    Calculate the RMSD between two ligands.
+    
+    Args:
+      ligfile1 (str): the pdb file of the first ligand
+      ligfile2 (str): the pdb file of the second ligand
+    
+    Returns:
+      The RMSD value.
+    '''
+    coor_lig1, atomnum = get_coor_from_sdf(ligfile1)
+    # print(coor_lig1)
+    coor_lig2, atomnum = get_coor_from_sdf(ligfile2)
+    # print(coor_lig2)
+    return _calc_rmsd(coor_lig1, coor_lig2), atomnum
 
 
 def main():
