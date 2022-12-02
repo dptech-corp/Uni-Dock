@@ -754,6 +754,8 @@ void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, c
     //     }
     // }
     
+    // use fragment #0 as root fragment and root is atom #0
+    max_atom_frag_id = 0;
     
     unsigned number = 0;
 
