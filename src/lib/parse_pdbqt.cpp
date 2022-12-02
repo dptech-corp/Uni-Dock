@@ -620,8 +620,7 @@ void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, c
     // use property given by ligprep to construct tree
     std::vector<std::vector<int> > frags;
     std::vector<std::vector<int> > torsions;
-    int max_torsion_atom_id, max_torsion_frag_id;
-    int max_torsion = -1;
+    
     while(std::getline(in, str)) {
         if (str.find("$$$$") < str.length()) continue;
         add_context(c, str);
@@ -734,53 +733,49 @@ void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, c
         }
     }
     print_zero();
-    for (int i = 1;i <= atom_num;++i){
-        int cnt_torsion = 0;
-        for (int j = 0;j < torsions.size();++j){
-            if (torsions[j][0] == i || torsions[j][1] == i){
-                ++cnt_torsion;
-            }
-        }
-        if (cnt_torsion > max_torsion){
-            max_torsion = cnt_torsion;
-            max_torsion_atom_id = i;
-        }
-    }
+    int max_torsion_frag_id, max_atom_frag_id;
+    int max_atom_frag = -1;
     for (int i = 0;i < frags.size();++i){
-        for (int j = 0;j < frags[i].size();++j){
-            if (frags[i][j] == max_torsion_atom_id){
-                max_torsion_frag_id = i;
-                break;
-            }
+        if (frags[i].size() > max_atom_frag){
+            max_atom_frag_id = i;
+            max_atom_frag = frags[i].size();
         }
     }
+    // for (int i = 1;i <= atom_num;++i){
+    //     int cnt_torsion = 0;
+    //     for (int j = 0;j < torsions.size();++j){
+    //         if (torsions[j][0] == i || torsions[j][1] == i){
+    //             ++cnt_torsion;
+    //         }
+    //     }
+    //     if (cnt_torsion > max_torsion){
+    //         max_torsion = cnt_torsion;
+    //         max_torsion_frag_id = i;
+    //     }
+    // }
     
+    
+    unsigned number = 0;
 
-    // new_p.atoms.reserve(frags[0].size());
-    p.atoms[max_torsion_atom_id-1].a.number = 0;
-    new_p.add(p.atoms[max_torsion_atom_id-1].a, p.atoms[max_torsion_atom_id-1].context_index);
-    unsigned number = 1;
-
-    for (int i = 0;i < frags[max_torsion_frag_id].size();++i){
-        if (frags[max_torsion_frag_id][i] == max_torsion_atom_id) continue;
-        p.atoms[frags[max_torsion_frag_id][i]-1].a.number = number; // assign new number of tree structure
+    for (int i = 0;i < frags[max_atom_frag_id].size();++i){
+        p.atoms[frags[max_atom_frag_id][i]-1].a.number = number; // assign new number of tree structure
         ++number;
-        std::cout << "pushing atom in parse_sdf_aux i=" << i << ' '  << frags[max_torsion_frag_id].size() << std::endl;
+        std::cout << "pushing atom in parse_sdf_aux i=" << i << ' '  << frags[max_atom_frag_id].size() << std::endl;
 
-        new_p.add(p.atoms[frags[max_torsion_frag_id][i]-1].a, p.atoms[frags[max_torsion_frag_id][i]-1].context_index);
+        new_p.add(p.atoms[frags[max_atom_frag_id][i]-1].a, p.atoms[frags[max_atom_frag_id][i]-1].context_index);
     }
     // similar to parse_pdbqt_branch_aux
     // if(starts_with(str, "BRANCH")) parse_pdbqt_branch_aux(in, str, p, c);
     
-    std::set<int> been_frags = {max_torsion_frag_id}; // prevent dead loop caused by fraginfo errors
-    for (int i = 0;i < frags[max_torsion_frag_id].size();++i){
+    std::set<int> been_frags = {max_atom_frag_id}; // prevent dead loop caused by fraginfo errors
+    for (int i = 0;i < frags[max_atom_frag_id].size();++i){
         for (int j = 0;j < torsions.size();++j){
             std::cout << "j=" << j << std::endl;
-            if (torsions[j][0] == frags[max_torsion_frag_id][i]){
+            if (torsions[j][0] == frags[max_atom_frag_id][i]){
                 int frag_id = torsions[j][3];
                 parse_sdf_branch_aux(frags, torsions, frag_id, new_p, p, c, number, torsions[j][0], torsions[j][1], been_frags);
             }
-            else if (torsions[j][1] == frags[max_torsion_frag_id][i]){
+            else if (torsions[j][1] == frags[max_atom_frag_id][i]){
                 int frag_id = torsions[j][2];
                 parse_sdf_branch_aux(frags, torsions, frag_id, new_p, p, c, number, torsions[j][1], torsions[j][0], been_frags);
             }
