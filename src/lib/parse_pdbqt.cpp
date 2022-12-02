@@ -629,7 +629,7 @@ void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, c
 
         if (str[0]=='>'){
             std::string data_type = str.substr(6,str.length()-7);
-            if (str.find("atomInfo") < str.length()){
+            if (str.find("atomInfo") < str.length() || str.find("atom_info") < str.length()){
                 // update p.atoms[num].a.charge and type
                 while(std::getline(in, str)) {
                     add_context(c, str);
@@ -644,9 +644,6 @@ void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, c
                     sz ad = string_to_ad_type(ad_name);
                     p.atoms[atomid-1].a.charge = charge;
                     p.atoms[atomid-1].a.ad = ad;
-                    if (str.empty()){
-                        break;
-                    }
                 }
             }
             else if (str.find("torsion") < str.length()){
