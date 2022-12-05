@@ -96,6 +96,10 @@ T checked_convert_substring(const std::string& str, sz i, sz j, const std::strin
     // omit leading whitespace
     while(i <= j && std::isspace(str[i-1]))
         ++i;
+    
+    // omit ending whitespace
+    while(i <= j && std::isspace(str[j-1]))
+        --j;
 
     const std::string substr = str.substr(i-1, j-i+1);
     try {
@@ -132,8 +136,12 @@ parsed_atom parse_sdf_atom_string(const std::string& str, int number) {
     vec coords(checked_convert_substring<fl>(str,  1, 10, "Coordinate"),
                checked_convert_substring<fl>(str, 11, 20, "Coordinate"),
                checked_convert_substring<fl>(str, 21, 30, "Coordinate"));
-    // std::string name = omit_whitespace(str, 31, 35);
-    sz ad = 0;
+    std::string name = str.substr(31,2);
+    if (name[1] == ' '){
+        name = name.substr(0,1);
+    }
+    sz ad = string_to_ad_type(name);
+    std::cout << "parse_sdf_atom_string, name=" << name << ", ad=" << ad << std::endl;
     fl charge = 0;
     
     parsed_atom tmp(ad, charge, coords, 0, number);
@@ -579,14 +587,14 @@ void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, c
     // sdf header has three lines
     for (int i = 0; i < 3; ++i){
         std::getline(in, str);
-        std::cout << "read sdf line:" << str << std::endl;
+        // std::cout << "read sdf line:" << str << std::endl;
         add_context(c, str);
     }
 
     // parse counts line
     
     std::getline(in, str);
-    std::cout << "read sdf line:" << str << std::endl;
+    // std::cout << "read sdf line:" << str << std::endl;
     add_context(c, str);
     int atom_num = checked_convert_substring<fl>(str,  1, 3, "Atom num");
     int bond_num = checked_convert_substring<fl>(str,  4, 6, "Bond num");
@@ -603,7 +611,7 @@ void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, c
     for (int i = 0;i < bond_num; ++i){
         std::getline(in, str);
         add_context(c, str);
-        std::cout << "read sdf bond line:" << str << std::endl;
+        // std::cout << "read sdf bond line:" << str << std::endl;
 
     }
 
@@ -638,7 +646,7 @@ void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, c
                     }
                     std::string ad_name = omit_whitespace(str,14,14);
                     int atomid = checked_convert_substring<int>(str,  1, std::min(int(str.find(' ')), 3), "AtomId");
-                    std::cout << "atomid=" << atomid << std::endl;
+                    std::cout << "atomid=" << atomid << ",  ad_name=" << ad_name << std::endl;
                     fl charge = checked_convert_substring<fl>(str,  4, 13, "Partial Charge");
                     sz ad = string_to_ad_type(ad_name);
                     p.atoms[atomid-1].a.charge = charge;
@@ -710,20 +718,14 @@ void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, c
 
     // print_zero();
     // similar to parse_pdbqt_root
-    if (frags.size() == 0)
-    {
-        std::cerr << "No fragment info, using rigid docking" << std::endl;
-        torsdof = 0;
-        new_p = p;
-        return; // do not use new p
-    }
-    print_zero();
+    
     if (!keep_H){
         for (int i = 0;i < frags.size();++i){
             std::vector<int> new_frag_nonH;
             for (int j = 0;j < frags[i].size();++j){
                 if (p.atoms[frags[i][j]-1].a.ad != AD_TYPE_H){
                     new_frag_nonH.push_back(frags[i][j]);
+                    std::cout << "atom num=" << frags[i][j] << " , AD type = " << p.atoms[frags[i][j]-1].a.ad << std::endl;
                 }
                 else{
                     std::cout << "atom num=" << frags[i][j] << " is H, omitted" << std::endl;
@@ -732,13 +734,48 @@ void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, c
             frags[i] = new_frag_nonH;
         }
     }
-    print_zero();
+    if (frags.size() == 0)
+    {
+        std::cerr << "No fragment info, using rigid docking" << std::endl;
+        torsdof = 0;
+        new_p = p;
+        return; // do not use new p
+    }
+    // print_zero();
+    // print_zero();
     int max_torsion_frag_id, max_atom_frag_id;
+    int center_atom_id, center_atom_frag_id=0;
     int max_atom_frag = -1;
+    float center_distance2 = 1000;
+
+
     for (int i = 0;i < frags.size();++i){
         if (frags[i].size() > max_atom_frag){
             max_atom_frag_id = i;
             max_atom_frag = frags[i].size();
+        }
+    }
+
+    vec center = {0,0,0};
+    for (int i = 0;i < p.atoms.size();++i){
+        center = center + p.atoms[i].a.coords;
+    }
+    center = center / float(p.atoms.size());
+    for (int i = 0;i < p.atoms.size();++i){
+        vec dvec = center - p.atoms[i].a.coords;
+        float dist2 = dvec.norm_sqr();
+        if (dist2 < center_distance2 && p.atoms[i].a.ad != AD_TYPE_H){
+            center_distance2 = dist2;
+            center_atom_id = i;
+        }
+    }
+    std::cout << center[0] << ' ' << center[1] << ' ' << center[2] << "atom:" << center_atom_id << std::endl;
+    for (int i = 0;i < frags.size();++i){
+        for (int j = 0;j < frags[i].size();++j){
+            if (frags[i][j]-1 == center_atom_id){
+                center_atom_frag_id = i;
+                break;
+            }
         }
     }
     // for (int i = 1;i <= atom_num;++i){
@@ -756,13 +793,17 @@ void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, c
     
     // use fragment #0 as root fragment and root is atom #0
     max_atom_frag_id = 0;
-    
+
+    // use center frag as root frag
+    // max_atom_frag_id = center_atom_frag_id;
+    // std::cout << "start with " << max_atom_frag_id << std::endl;
+
     unsigned number = 0;
 
     for (int i = 0;i < frags[max_atom_frag_id].size();++i){
         p.atoms[frags[max_atom_frag_id][i]-1].a.number = number; // assign new number of tree structure
         ++number;
-        std::cout << "pushing atom in parse_sdf_aux i=" << i << ' '  << frags[max_atom_frag_id].size() << std::endl;
+        // std::cout << "pushing atom in parse_sdf_aux i=" << i << ' '  << frags[max_atom_frag_id].size() << std::endl;
 
         new_p.add(p.atoms[frags[max_atom_frag_id][i]-1].a, p.atoms[frags[max_atom_frag_id][i]-1].context_index);
     }
@@ -772,7 +813,7 @@ void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, c
     std::set<int> been_frags = {max_atom_frag_id}; // prevent dead loop caused by fraginfo errors
     for (int i = 0;i < frags[max_atom_frag_id].size();++i){
         for (int j = 0;j < torsions.size();++j){
-            std::cout << "j=" << j << std::endl;
+            // std::cout << "j=" << j << std::endl;
             if (torsions[j][0] == frags[max_atom_frag_id][i]){
                 int frag_id = torsions[j][3];
                 parse_sdf_branch_aux(frags, torsions, frag_id, new_p, p, c, number, torsions[j][0], torsions[j][1], been_frags);
@@ -906,6 +947,12 @@ void parse_sdf_branch(std::vector<std::vector<int> > &frags, std::vector<std::ve
             }
         }
     }
+
+
+    if(!new_p.immobile_atom)
+        throw struct_parse_error("Atom " + boost::lexical_cast<std::string>(to) + " has not been found in this branch.");
+    
+            
     return;
 }
 
@@ -1053,6 +1100,10 @@ model parse_ligand_sdf_from_file_no_failure(const std::string& name, atom_type::
     tmp.initialize_from_nrp(nrp, c, true);
     tmp.initialize(nrp.mobility_matrix());
     assert(tmp.m.ligands.count_torsions().size()==1);
+    // // debug
+    // for (int i = 0;i < tmp.m.atoms.size(); ++i){
+    //     printf("atom type of model ad=%lu, xs=%lu, numsdf=%d\n", tmp.m.atoms[i].ad, tmp.m.atoms[i].xs, tmp.m.atoms[i].number_sdf);
+    // }
     if(tmp.m.ligands.count_torsions()[0] > MAX_NUM_OF_LIG_TORSION)
     {
         std::cerr << "Ligand " << name << " exceed max torsion counts. " << tmp.m.ligands.count_torsions()[0] << std::endl;
