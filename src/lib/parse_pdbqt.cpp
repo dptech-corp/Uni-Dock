@@ -645,7 +645,7 @@ void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, c
                         break;
                     }
                     std::string ad_name = omit_whitespace(str,14,14);
-                    int atomid = checked_convert_substring<int>(str,  1, std::min(int(str.find(' ')), 3), "AtomId");
+                    int atomid = checked_convert_substring<int>(str,  1, std::min(unsigned(str.find(' ')), 3U), "AtomId");
                     std::cout << "atomid=" << atomid << ",  ad_name=" << ad_name << std::endl;
                     fl charge = checked_convert_substring<fl>(str,  4, 13, "Partial Charge");
                     sz ad = string_to_ad_type(ad_name);
