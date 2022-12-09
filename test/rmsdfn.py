@@ -81,23 +81,20 @@ def get_coor_from_sdf(ligfile: str) -> dict:
       cnt += 1
       if 'atomInfo' in line:
         break
-    print('cnt=',cnt)
+    # print('cnt=',cnt)
     if cnt == len(lines):
       cnt = 4
     natom = int(lines[3][:3].strip())
     for i in range(natom):
         line = lines[i+4]
-        infoline = lines[i+cnt]
-        if infoline[13:16] != 'H  ':
+        if line[31:34] != 'H  ':
           # print(infoline[13:16])
           coor.append([
               float(line[0 :10].strip()), 
               float(line[10:20].strip()), 
               float(line[20:30].strip())
           ])
-        else:
-          print(infoline, line)
-    print(coor)
+    # print(coor)
     return coor, natom
   
 def _calc_rmsd(coor_lig1: list, coor_lig2: list) -> float:
