@@ -228,12 +228,14 @@ public:
     boost::optional<atom_reference> axis_end; // if immobile atom has been pushed into non_rigid_parsed::atoms, this is its index there
     std::vector<node> atoms;
 
-    void add(const parsed_atom& a, const context& c) {
+    void add(const parsed_atom& a, const context& c, bool keep_H=false) {
         VINA_CHECK(c.size() > 0);
-        atoms.push_back(node(a, c.size()-1));
+        if (a.ad == AD_TYPE_H && keep_H == false) return;
+        atoms.emplace_back(node(a, c.size()-1));
     }
-    void add(const parsed_atom& a, const sz context_index) {
+    void add(const parsed_atom& a, const sz context_index, bool keep_H=false) {
         VINA_CHECK(context_index > 0);
+        if (a.ad == AD_TYPE_H && keep_H == false) return;
         atoms.emplace_back(node(a, context_index));
     }
     const vec& immobile_atom_coords() const {
@@ -319,7 +321,7 @@ void parse_pdbqt_rigid(const path& name, rigid& r) {
     }
 }
 
-void parse_pdbqt_root_aux(std::istream& in, parsing_struct& p, context& c) {
+void parse_pdbqt_root_aux(std::istream& in, parsing_struct& p, context& c, bool keep_H=false) {
     std::string str;
 
     while(std::getline(in, str)) {
@@ -329,7 +331,7 @@ void parse_pdbqt_root_aux(std::istream& in, parsing_struct& p, context& c) {
         else if(starts_with(str, "WARNING")) {} // ignore - AutoDockTools bug workaround
         else if(starts_with(str, "REMARK")) {} // ignore
         else if(starts_with(str, "ATOM  ") || starts_with(str, "HETATM"))
-            p.add(parse_pdbqt_atom_string(str), c);
+            p.add(parse_pdbqt_atom_string(str), c, keep_H);
         else if(starts_with(str, "ENDROOT"))
             return;
         else if(starts_with(str, "MODEL"))
@@ -340,7 +342,7 @@ void parse_pdbqt_root_aux(std::istream& in, parsing_struct& p, context& c) {
     }
 }
 
-void parse_pdbqt_root(std::istream& in, parsing_struct& p, context& c) {
+void parse_pdbqt_root(std::istream& in, parsing_struct& p, context& c, bool keep_H=false) {
     std::string str;
 
     while(std::getline(in, str)) {
@@ -350,7 +352,7 @@ void parse_pdbqt_root(std::istream& in, parsing_struct& p, context& c) {
         else if(starts_with(str, "WARNING")) {} // ignore - AutoDockTools bug workaround
         else if(starts_with(str, "REMARK")) {} // ignore
         else if(starts_with(str, "ROOT")) {
-            parse_pdbqt_root_aux(in, p, c);
+            parse_pdbqt_root_aux(in, p, c, keep_H);
             break;
         }
         else if(starts_with(str, "MODEL"))
@@ -361,11 +363,11 @@ void parse_pdbqt_root(std::istream& in, parsing_struct& p, context& c) {
     }
 }
 
-void parse_pdbqt_branch(std::istream& in, parsing_struct& p, context& c, unsigned from, unsigned to); // forward declaration
+void parse_pdbqt_branch(std::istream& in, parsing_struct& p, context& c, unsigned from, unsigned to, bool keep_H=false); // forward declaration
 void parse_sdf_branch(std::vector<std::vector<int> > &frags, std::vector<std::vector<int> > &torsions, int frag_id, 
     parsing_struct& new_p, parsing_struct& p, context& c, unsigned &number, unsigned from, unsigned to, std::set<int> &been_frags);
 
-void parse_pdbqt_branch_aux(std::istream& in, const std::string& str, parsing_struct& p, context& c) {
+void parse_pdbqt_branch_aux(std::istream& in, const std::string& str, parsing_struct& p, context& c, bool keep_H=false) {
     unsigned first, second;
     parse_two_unsigneds(str, "BRANCH", first, second);
     sz i = 0;
@@ -374,7 +376,7 @@ void parse_pdbqt_branch_aux(std::istream& in, const std::string& str, parsing_st
         if(p.atoms[i].a.number == first) {
             parsing_struct p0;
             p.atoms[i].ps.push_back(p0);
-            parse_pdbqt_branch(in, p.atoms[i].ps.back(), c, first, second);
+            parse_pdbqt_branch(in, p.atoms[i].ps.back(), c, first, second, keep_H);
             break;
         }
 
@@ -401,8 +403,8 @@ void parse_sdf_branch_aux(std::vector<std::vector<int> > &frags, std::vector<std
     }
 }
 
-void parse_pdbqt_aux(std::istream& in, parsing_struct& p, context& c, boost::optional<unsigned>& torsdof, bool residue) {
-    parse_pdbqt_root(in, p, c);
+void parse_pdbqt_aux(std::istream& in, parsing_struct& p, context& c, boost::optional<unsigned>& torsdof, bool residue, bool keep_H=false) {
+    parse_pdbqt_root(in, p, c, keep_H);
 
     std::string str;
 
@@ -413,7 +415,7 @@ void parse_pdbqt_aux(std::istream& in, parsing_struct& p, context& c, boost::opt
         if(str[0] == '\0') {} // ignore a different kind of emptiness (potential issues on Windows)
         else if(starts_with(str, "WARNING")) {} // ignore - AutoDockTools bug workaround
         else if(starts_with(str, "REMARK")) {} // ignore
-        else if(starts_with(str, "BRANCH")) parse_pdbqt_branch_aux(in, str, p, c);
+        else if(starts_with(str, "BRANCH")) parse_pdbqt_branch_aux(in, str, p, c, keep_H);
         else if(!residue && starts_with(str, "TORSDOF")) {
             if(torsdof)
                 throw struct_parse_error("TORSDOF keyword can be defined only once.");
@@ -557,12 +559,12 @@ void parse_pdbqt_ligand(std::istream& in, non_rigid_parsed& nr, context& c) {
     VINA_CHECK(nr.atoms_atoms_bonds.dim() == nr.atoms.size());
 }
 
-void parse_pdbqt_ligand(const path& name, non_rigid_parsed& nr, context& c) {
+void parse_pdbqt_ligand(const path& name, non_rigid_parsed& nr, context& c, bool keep_H=false) {
     ifile in(name);
     parsing_struct p;
     boost::optional<unsigned> torsdof;
 
-    parse_pdbqt_aux(in, p, c, torsdof, false);
+    parse_pdbqt_aux(in, p, c, torsdof, false, keep_H);
 
     if(p.atoms.empty())
         throw struct_parse_error("No atoms in this ligand.");
@@ -885,7 +887,7 @@ void parse_pdbqt_flex(const path& name, non_rigid_parsed& nr, context& c) {
     VINA_CHECK(nr.atoms_atoms_bonds.dim() == nr.atoms.size());
 }
 
-void parse_pdbqt_branch(std::istream& in, parsing_struct& p, context& c, unsigned from, unsigned to) {
+void parse_pdbqt_branch(std::istream& in, parsing_struct& p, context& c, unsigned from, unsigned to, bool keep_H) {
     std::string str;
 
     while(std::getline(in, str)) {
@@ -894,7 +896,7 @@ void parse_pdbqt_branch(std::istream& in, parsing_struct& p, context& c, unsigne
         if(str.empty()) {} //ignore ""
         else if(starts_with(str, "WARNING")) {} // ignore - AutoDockTools bug workaround
         else if(starts_with(str, "REMARK")) {} // ignore
-        else if(starts_with(str, "BRANCH")) parse_pdbqt_branch_aux(in, str, p, c);
+        else if(starts_with(str, "BRANCH")) parse_pdbqt_branch_aux(in, str, p, c, keep_H);
         else if(starts_with(str, "ENDBRANCH")) {
             unsigned first, second;
             parse_two_unsigneds(str, "ENDBRANCH", first, second);
@@ -908,7 +910,7 @@ void parse_pdbqt_branch(std::istream& in, parsing_struct& p, context& c, unsigne
             parsed_atom a = parse_pdbqt_atom_string(str);
             if(a.number == to)
                 p.immobile_atom = p.atoms.size();
-            p.add(a, c);
+            p.add(a, c, keep_H);
         }
         else if(starts_with(str, "MODEL"))
             throw struct_parse_error("Unexpected multi-MODEL tag found in flex residue or ligand PDBQT file. "
@@ -1037,7 +1039,7 @@ model parse_ligand_from_file_no_failure(const std::string& name, atom_type::t at
     DEBUG_PRINTF("ligand name: %s\n", name.c_str()); // debug
     // std::cout << name.substr(name.length()-5,5) << std::endl;
     if (strcmp("pdbqt", name.substr(name.length()-5,5).c_str()) == 0){
-        return parse_ligand_pdbqt_from_file_no_failure(name, atype);
+        return parse_ligand_pdbqt_from_file_no_failure(name, atype, keep_H);
     }
     else if (strcmp("sdf", name.substr(name.length()-3,3).c_str()) == 0){
         return parse_ligand_sdf_from_file_no_failure(name, atype, keep_H);
@@ -1046,12 +1048,12 @@ model parse_ligand_from_file_no_failure(const std::string& name, atom_type::t at
     return m;
 }
 
-model parse_ligand_pdbqt_from_file_no_failure(const std::string& name, atom_type::t atype) { // can throw parse_error
+model parse_ligand_pdbqt_from_file_no_failure(const std::string& name, atom_type::t atype, bool keep_H) { // can throw parse_error
     non_rigid_parsed nrp;
     context c;
 
     try {
-        parse_pdbqt_ligand(make_path(name), nrp, c);
+        parse_pdbqt_ligand(make_path(name), nrp, c, keep_H);
     }
     catch(struct_parse_error& e) {
         std::cerr << e.what() << "Ligand name:" << name << "\n\n";
