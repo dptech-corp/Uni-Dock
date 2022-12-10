@@ -607,7 +607,7 @@ void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, c
         add_context(c, str);
         std::cout << "read sdf line:" << str << std::endl;
         parsed_atom a = parse_sdf_atom_string(str, i+1);
-        p.add(a, c);
+        p.add(a, c, true);
     }
 
     for (int i = 0;i < bond_num; ++i){
@@ -807,7 +807,7 @@ void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, c
         ++number;
         // std::cout << "pushing atom in parse_sdf_aux i=" << i << ' '  << frags[max_atom_frag_id].size() << std::endl;
 
-        new_p.add(p.atoms[frags[max_atom_frag_id][i]-1].a, p.atoms[frags[max_atom_frag_id][i]-1].context_index);
+        new_p.add(p.atoms[frags[max_atom_frag_id][i]-1].a, p.atoms[frags[max_atom_frag_id][i]-1].context_index, true); // keep_H is set to true, controled by frag
     }
     // similar to parse_pdbqt_branch_aux
     // if(starts_with(str, "BRANCH")) parse_pdbqt_branch_aux(in, str, p, c);
