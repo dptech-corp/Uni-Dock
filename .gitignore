@@ -2,4 +2,6 @@
 __pycache__
 build/
 .cache
+test/ligands
+test/results
 .vscode

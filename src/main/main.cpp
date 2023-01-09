@@ -114,7 +114,7 @@ Thank you!\n";
 #################################################################\n\
 # If you used Uni-Dock in your work, please cite:               #\n\
 #                                                               #\n\
-# Uni-Dock, xxxx, (2022) DOI xxxx							    #\n\
+# Uni-Dock, xxxx, (2022) DOI xxxx                               #\n\
 #                                                               #\n\
 #                                                               #\n\
 # J. Eberhardt, D. Santos-Martins, A. F. Tillack, and S. Forli  #\n\
@@ -144,6 +144,8 @@ Thank you!\n";
 		std::string ligand_index; // path to a text file, containing paths to ligands files
 		std::vector<std::string> batch_ligand_names;
 		std::vector<std::string> gpu_batch_ligand_names;
+		// std::vector<std::string> gpu_batch_ligand_names_sdf;
+		bool use_sdf_ligand = false;
 		std::string maps;
 		std::string sf_name = "vina";
 		std::string search_mode;
@@ -205,17 +207,21 @@ Thank you!\n";
 		// bias
 		std::string bias_file;
 		bool multi_bias;
+		// sdf
+		bool keep_H;
 
 		positional_options_description positional; // remains empty
 
 		options_description inputs("Input");
 		inputs.add_options()
-			("receptor", value<std::string>(&rigid_name), "rigid part of the receptor (PDBQT)")
-			("flex", value<std::string>(&flex_name), "flexible side chains, if any (PDBQT)")
+			("receptor", value<std::string>(&rigid_name), "rigid part of the receptor (PDBQT or PDB)")
+			("flex", value<std::string>(&flex_name), "flexible side chains, if any (PDBQT or PDB)")
 			("ligand", value< std::vector<std::string> >(&ligand_names)->multitoken(), "ligand (PDBQT)")
-			("ligand_index",value<std::string>(&ligand_index),"file containing paths to ligands")
+			("ligand_index",value<std::string>(&ligand_index),"file containing paths to ligands (PDBQT or SDF")
 			("batch", value< std::vector<std::string> >(&batch_ligand_names)->multitoken(), "batch ligand (PDBQT)")
-			("gpu_batch", value< std::vector<std::string> >(&gpu_batch_ligand_names)->multitoken(), "gpu batch ligand (PDBQT)")
+			("gpu_batch", value< std::vector<std::string> >(&gpu_batch_ligand_names)->multitoken(), "gpu batch ligand (PDBQT or SDF)")
+			// ("gpu_batch_sdf", value< std::vector<std::string> >(&gpu_batch_ligand_names_sdf)->multitoken(), "gpu batch ligand (SDF)")
+
 			("scoring", value<std::string>(&sf_name)->default_value(sf_name), "scoring function (ad4, vina or vinardo)")
 		;
 		//options_description search_area("Search area (required, except with --score_only)");
@@ -267,6 +273,7 @@ Thank you!\n";
 			("weight_glue", value<double>(&weight_glue)->default_value(weight_glue),                      "macrocycle glue weight")
 			("bias", value<std::string>(&bias_file), "bias configuration file name, content similar to BPF in AutoDock-bias")
 			("multi_bias", bool_switch(&multi_bias), "add ligand bias {ligand_name}.bpf for every input ligand {ligand_name}.pdbqt in batch, content similar to BPF in AutoDock-bias")
+			("keep_nonpolar_H", bool_switch(&keep_H), "keep non polar H in sdf")
 
 		;
 		options_description misc("Misc (optional)");
@@ -386,7 +393,7 @@ Thank you!\n";
 			exit(EXIT_FAILURE);
 		}
 
-		if (!vm.count("ligand") && !vm.count("batch") && !vm.count("gpu_batch") && !vm.count("ligand_index")) {
+		if (!vm.count("ligand") && !vm.count("batch") && !vm.count("gpu_batch") && !vm.count("ligand_index") && !vm.count("gpu_batch_sdf")) {
 			std::cerr << desc_simple << "\n\nERROR: Missing ligand(s).\n";
 			exit(EXIT_FAILURE);
 		} else if (vm.count("ligand") && (vm.count("batch") || vm.count("gpu_batch"))) {
@@ -607,8 +614,8 @@ Thank you!\n";
 			for (int ligand_count=batch_index;ligand_count<next_batch_index;++ligand_count)
 			{
 				auto& ligand=ligand_names[ligand_count];
-				auto l = parse_ligand_pdbqt_from_file_no_failure(
-						ligand, v.m_scoring_function.get_atom_typing());
+				auto l = parse_ligand_from_file_no_failure(
+						ligand, v.m_scoring_function.get_atom_typing(), keep_H);
 				#pragma omp critical
 				all_ligands.emplace_back(std::make_pair(ligand,l));
 			}

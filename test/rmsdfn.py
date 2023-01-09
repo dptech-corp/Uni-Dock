@@ -19,8 +19,8 @@ def get_coor_from_pdb(ligfile: str) -> dict:
     df = pd.concat([ppdb.df["ATOM"], ppdb.df["HETATM"]])
     coor = []
     for i in range(len(df)):
-        if df.loc[i, "atom_name"] == "H":
-            continue
+        # if df.loc[i, "atom_name"] == "H":
+        #     continue
         try:
             coor.append([
                 df.loc[i, "x_coord"].item(), 
@@ -32,6 +32,71 @@ def get_coor_from_pdb(ligfile: str) -> dict:
     return coor
 
 
+def get_coor_from_pdbqt(ligfile: str) -> dict:
+    '''
+    Get coordinates of the atoms in the ligand from a pdb file.
+    
+    Args:
+      ligfile (str): the pdbqt file of the ligand
+    
+    Returns:
+      A list of coordinates of atoms in the ligand.
+    '''
+    with open(ligfile, "r") as f:
+        lines = f.readlines()
+    coor = []
+    for line in lines:
+        # print(line)
+        # if df.loc[i, "atom_name"] == "H":
+        #     continue
+        if len(line) > 60 and line[0:4]=='ATOM':
+            # print(line)
+            if line[13] == 'H':
+                continue
+            coor.append([
+                float(line[30:38].strip()), 
+                float(line[38:46].strip()), 
+                float(line[46:54].strip())
+            ])
+        if line[:7] == 'MODEL 2':
+            break
+    # print(coor)
+    return coor
+  
+def get_coor_from_sdf(ligfile: str) -> dict:
+    '''
+    Get coordinates of the atoms in the ligand from a pdb file.
+    
+    Args:
+      ligfile (str): the pdbqt file of the ligand
+    
+    Returns:
+      A list of coordinates of atoms in the ligand.
+    '''
+    with open(ligfile, "r") as f:
+        lines = f.readlines()
+    coor = []
+    cnt = 0
+    for line in lines:
+      cnt += 1
+      if 'atomInfo' in line:
+        break
+    # print('cnt=',cnt)
+    if cnt == len(lines):
+      cnt = 4
+    natom = int(lines[3][:3].strip())
+    for i in range(natom):
+        line = lines[i+4]
+        if line[31:34] != 'H  ':
+          # print(infoline[13:16])
+          coor.append([
+              float(line[0 :10].strip()), 
+              float(line[10:20].strip()), 
+              float(line[20:30].strip())
+          ])
+    # print(coor)
+    return coor, natom
+  
 def _calc_rmsd(coor_lig1: list, coor_lig2: list) -> float:
     '''
     Calculate the root mean square deviation between two ligands.
@@ -61,8 +126,44 @@ def rmsd(ligfile1: str, ligfile2: str) -> float:
       The RMSD value.
     '''
     coor_lig1 = get_coor_from_pdb(ligfile1)
+    # print(coor_lig1)
     coor_lig2 = get_coor_from_pdb(ligfile2)
+    # print(coor_lig2)
     return _calc_rmsd(coor_lig1, coor_lig2)
+
+def fast_rmsd(ligfile1: str, ligfile2: str) -> float:
+    '''
+    Calculate the RMSD between two ligands.
+    
+    Args:
+      ligfile1 (str): the pdb file of the first ligand
+      ligfile2 (str): the pdb file of the second ligand
+    
+    Returns:
+      The RMSD value.
+    '''
+    coor_lig1 = get_coor_from_pdbqt(ligfile1)
+    # print(coor_lig1)
+    coor_lig2 = get_coor_from_pdbqt(ligfile2)
+    # print(coor_lig2)
+    return _calc_rmsd(coor_lig1, coor_lig2)
+
+def fast_rmsd_sdf(ligfile1: str, ligfile2: str):
+    '''
+    Calculate the RMSD between two ligands.
+    
+    Args:
+      ligfile1 (str): the pdb file of the first ligand
+      ligfile2 (str): the pdb file of the second ligand
+    
+    Returns:
+      The RMSD value.
+    '''
+    coor_lig1, atomnum = get_coor_from_sdf(ligfile1)
+    # print(coor_lig1)
+    coor_lig2, atomnum = get_coor_from_sdf(ligfile2)
+    # print(coor_lig2)
+    return _calc_rmsd(coor_lig1, coor_lig2), atomnum
 
 
 def main():

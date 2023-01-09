@@ -686,11 +686,32 @@ void string_write_coord(sz i, fl x, std::string& str) {
 		str[i+j] = out.str()[j];
 }
 
+void string_write_sdf_coord(sz i, fl x, std::string& str) {
+	VINA_CHECK(i > 0);
+	--i;
+	std::ostringstream out;
+	out.setf(std::ios::fixed, std::ios::floatfield);
+	out.setf(std::ios::showpoint);
+	out << std::setw(10) << std::setprecision(4) << x;
+	VINA_CHECK(out.str().size() == 10); 
+	VINA_CHECK(str.size() > i + 10);
+	VINA_FOR(j, 10)
+		str[i+j] = out.str()[j];
+}
+
 std::string coords_to_pdbqt_string(const vec& coords, const std::string& str) {
 	std::string tmp(str);
 	string_write_coord(31, coords[0], tmp);
 	string_write_coord(39, coords[1], tmp);
 	string_write_coord(47, coords[2], tmp);
+	return tmp;
+}
+
+std::string coords_to_sdf_string(const vec& coords, const std::string& str) {
+	std::string tmp(str);
+	string_write_sdf_coord(1, coords[0], tmp);
+	string_write_sdf_coord(11, coords[1], tmp);
+	string_write_sdf_coord(21, coords[2], tmp);
 	return tmp;
 }
 
@@ -700,6 +721,19 @@ void model::write_context(const context& c, ofile& out) const {
 		const std::string& str = c[i].first;
 		if(c[i].second) {
 			out << coords_to_pdbqt_string(coords[c[i].second.get()], str) << '\n';
+		}
+		else
+			out << str << '\n';
+	}
+}
+
+void model::write_sdf_context(const context& c, ofile& out) const {
+	verify_bond_lengths();
+	VINA_FOR_IN(i, c) {
+		const std::string& str = c[i].first;
+		// TODO: sort by number_sdf
+		if(c[i].second) {
+			out << coords_to_sdf_string(coords[c[i].second.get()], str) << '\n';
 		}
 		else
 			out << str << '\n';
@@ -718,6 +752,18 @@ void model::write_context(const context &c, std::ostringstream& out) const {
 	}
 }
 
+void model::write_sdf_context(const context &c, std::ostringstream& out) const {
+	verify_bond_lengths();
+
+	VINA_FOR_IN(i, c) {
+		const std::string &str = c[i].first;
+		if (c[i].second)
+			out << coords_to_sdf_string(coords[c[i].second.get()], str) << '\n';
+		else
+			out << str << '\n';
+	}
+}
+
 std::string model::write_model(sz model_number, const std::string &remark) {
 	std::ostringstream out;
 
@@ -730,6 +776,23 @@ std::string model::write_model(sz model_number, const std::string &remark) {
 		write_context(flex_context, out);
 
 	out << "ENDMDL\n";
+
+	return out.str();
+}
+
+std::string model::write_sdf_model(sz model_number, const std::string &remark) {
+	std::ostringstream out;
+
+	// out << "MODEL " << model_number << '\n';
+	
+	// TODO: sort by number_sdf
+	VINA_FOR_IN(i, ligands)
+		write_sdf_context(ligands[i].cont, out);
+	if (num_flex() > 0) // otherwise remark is written in vain
+		write_sdf_context(flex_context, out);
+
+	out << remark;
+	out << "$$$$\n";
 
 	return out.str();
 }

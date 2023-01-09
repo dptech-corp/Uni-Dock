@@ -59,6 +59,7 @@ struct atom_type {
 	fl covalent_radius() const {
 		if(ad < AD_TYPE_SIZE)        return ad_type_property(ad).covalent_radius;
 		else if(xs == XS_TYPE_Met_D) return metal_covalent_radius;
+		else if (ad == AD_TYPE_SIZE) return ad_type_property(0).covalent_radius; // in case sdf is wrong
 		VINA_CHECK(false);           return 0; // never happens - placating the compiler
 	}
 	fl optimal_covalent_bond_length(const atom_type& x) const {
