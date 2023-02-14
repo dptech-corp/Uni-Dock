@@ -521,7 +521,12 @@ Thank you!\n";
 		}
 
 		if (vm.count("ligand")) {
-			v.set_ligand_from_file(ligand_names);
+			std::vector<model> ligands;
+			VINA_FOR_IN(i, ligand_names){
+				ligands.emplace_back(parse_ligand_from_file_no_failure(ligand_names[i],
+					v.m_scoring_function.get_atom_typing(), keep_H));
+			}
+			v.set_ligand_from_object(ligands);
 
 			if (sf_name.compare("vina") == 0 || sf_name.compare("vinardo") == 0) {
 				if (vm.count("maps")) {

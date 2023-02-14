@@ -117,6 +117,7 @@ public:
 	void set_ligand_from_file(const std::vector<std::string>& ligand_name);
 	void set_ligand_from_file_gpu(const std::vector<std::string>& ligand_name);
 	void set_ligand_from_object_gpu(const std::vector<model>& ligands);
+	void set_ligand_from_object(const std::vector<model>& ligands);
 	//void set_ligand(OpenBabel::OBMol* mol);
 	//void set_ligand(std::vector<OpenBabel::OBMol*> mol);
 	void set_vina_weights(double weight_gauss1=-0.035579, double weight_gauss2=-0.005156,
