@@ -373,6 +373,10 @@ Thank you!\n";
 				max_step = 40;
 			}
 		}
+		else if (vm.count("gpu_batch") || vm.count("ligand_index") && !vm.count("exhaustiveness")){
+			exhaustiveness = 384;
+			max_step = 40;
+		}
 
 		if (sf_name.compare("vina") == 0 || sf_name.compare("vinardo") == 0) {
 			if (!vm.count("receptor") && !vm.count("maps")) {
