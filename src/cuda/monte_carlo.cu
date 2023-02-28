@@ -1167,7 +1167,10 @@ void write_back(output_type_cuda_t* results, const output_type_cuda_t* best_out)
 	}
 }
 
+#define MAX_THREADS_PER_BLOCK 32
+#define MIN_BLOCKS_PER_MP     32
 __global__
+__launch_bounds__(MAX_THREADS_PER_BLOCK, MIN_BLOCKS_PER_MP)
 void kernel(	m_cuda_t*			m_cuda_global,
 				ig_cuda_t*			ig_cuda_gpu,
 				p_cuda_t*			p_cuda_gpu,
