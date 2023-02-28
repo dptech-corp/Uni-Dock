@@ -141,7 +141,7 @@ parsed_atom parse_sdf_atom_string(const std::string& str, int number) {
         name = name.substr(0,1);
     }
     sz ad = string_to_ad_type(name);
-    std::cout << "parse_sdf_atom_string, name=" << name << ", ad=" << ad << std::endl;
+    // std::cout << "parse_sdf_atom_string, name=" << name << ", ad=" << ad << std::endl;
     fl charge = 0;
     
     parsed_atom tmp(ad, charge, coords, 0, number);
@@ -387,16 +387,16 @@ void parse_pdbqt_branch_aux(std::istream& in, const std::string& str, parsing_st
 void parse_sdf_branch_aux(std::vector<std::vector<int> > &frags, std::vector<std::vector<int> > &torsions, int frag_id,
      parsing_struct& new_p, parsing_struct& p, context& c, unsigned &number, int from, int to, std::set<int> &been_frags) {
     sz i = 0;
-    std::cout << "entering parse_sdf_branch_aux " << from << ' '  << to << std::endl;
+    // std::cout << "entering parse_sdf_branch_aux " << from << ' '  << to << std::endl;
     
     for(; i < new_p.atoms.size(); ++i){
         // printf("new_p.atoms[i].a.number_sdf=%d\n",new_p.atoms[i].a.number_sdf);
         if(new_p.atoms[i].a.number_sdf == from && been_frags.find(frag_id) == been_frags.end()) {
-            std::cout << "pushing atom in parse_sdf_branch_aux i=" << i << ' '  << new_p.atoms.size() << std::endl;
+            // std::cout << "pushing atom in parse_sdf_branch_aux i=" << i << ' '  << new_p.atoms.size() << std::endl;
             parsing_struct p0;
             new_p.atoms[i].ps.push_back(p0);
             been_frags.insert(frag_id);
-            std::cout << "current frag id=" << frag_id << ", from=" << from << std::endl;
+            // std::cout << "current frag id=" << frag_id << ", from=" << from << std::endl;
             parse_sdf_branch(frags, torsions, frag_id, new_p.atoms[i].ps.back(), p, c, number, from, to, been_frags);
             break;
         }
@@ -605,7 +605,7 @@ void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, c
     for (int i = 0;i < atom_num; ++i){
         std::getline(in, str);
         add_context(c, str);
-        std::cout << "read sdf line:" << str << std::endl;
+        // std::cout << "read sdf line:" << str << std::endl;
         parsed_atom a = parse_sdf_atom_string(str, i+1);
         p.add(a, c, true);
     }
@@ -620,7 +620,7 @@ void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, c
     // read property
     while(std::getline(in, str)) {
         add_context(c, str);
-        std::cout << "read sdf property line:" << str << ' ' << str.find("M  END") << std::endl;
+        // std::cout << "read sdf property line:" << str << ' ' << str.find("M  END") << std::endl;
 
         if (str.find("M  END") < str.length()){
             break;
@@ -634,7 +634,7 @@ void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, c
     while(std::getline(in, str)) {
         if (str.find("$$$$") < str.length()) continue;
         add_context(c, str);
-        std::cout << "read sdf line:" << str << std::endl;
+        // std::cout << "read sdf line:" << str << std::endl;
 
         if (str[0]=='>'){
             std::string data_type = str.substr(6,str.length()-7);
@@ -642,13 +642,13 @@ void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, c
                 // update p.atoms[num].a.charge and type
                 while(std::getline(in, str)) {
                     add_context(c, str);
-                    std::cout << "read info sdf line:" << str << std::endl;
+                    // std::cout << "read info sdf line:" << str << std::endl;
                     if (str.empty()){
                         break;
                     }
                     std::string ad_name = omit_whitespace(str,14,14);
                     int atomid = checked_convert_substring<int>(str,  1, std::min(unsigned(str.find(' ')), 3U), "AtomId");
-                    std::cout << "atomid=" << atomid << ",  ad_name=" << ad_name << std::endl;
+                    // std::cout << "atomid=" << atomid << ",  ad_name=" << ad_name << std::endl;
                     fl charge = checked_convert_substring<fl>(str,  4, 13, "Partial Charge");
                     sz ad = string_to_ad_type(ad_name);
                     p.atoms[atomid-1].a.charge = charge;
@@ -657,10 +657,10 @@ void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, c
             }
             else if (str.find("torsion") < str.length()){
                 // update p.atoms[num].a.charge
-                std::cout << "start torsion" << std::endl;
+                // std::cout << "start torsion" << std::endl;
                 while(std::getline(in, str)) {
                     add_context(c, str);
-                    std::cout << "read torsion sdf line:" << str << std::endl;
+                    // std::cout << "read torsion sdf line:" << str << std::endl;
                     if (str.empty()){
                         break;
                     }
@@ -684,7 +684,7 @@ void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, c
             else if (str.find("frag") < str.length()){
                 while(std::getline(in, str)) {
                     add_context(c, str);        
-                    std::cout << "read frag sdf line:" << str << std::endl;
+                    // std::cout << "read frag sdf line:" << str << std::endl;
                     if (str.empty()){
                         break;
                     }
@@ -707,7 +707,7 @@ void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, c
             else{
                 while(std::getline(in, str)) {
                     add_context(c, str);
-                    std::cout << "read und sdf line:" << str << std::endl;
+                    // std::cout << "read und sdf line:" << str << std::endl;
                     if (str.empty()){
                         break;
                     }
@@ -727,10 +727,10 @@ void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, c
             for (int j = 0;j < frags[i].size();++j){
                 if (p.atoms[frags[i][j]-1].a.ad != AD_TYPE_H){
                     new_frag_nonH.push_back(frags[i][j]);
-                    std::cout << "atom num=" << frags[i][j] << " , AD type = " << p.atoms[frags[i][j]-1].a.ad << std::endl;
+                    // std::cout << "atom num=" << frags[i][j] << " , AD type = " << p.atoms[frags[i][j]-1].a.ad << std::endl;
                 }
                 else{
-                    std::cout << "atom num=" << frags[i][j] << " is H, omitted" << std::endl;
+                    // std::cout << "atom num=" << frags[i][j] << " is H, omitted" << std::endl;
                 }
             }
             frags[i] = new_frag_nonH;
@@ -771,7 +771,7 @@ void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, c
             center_atom_id = i;
         }
     }
-    std::cout << center[0] << ' ' << center[1] << ' ' << center[2] << "atom:" << center_atom_id << std::endl;
+    // std::cout << center[0] << ' ' << center[1] << ' ' << center[2] << "atom:" << center_atom_id << std::endl;
     for (int i = 0;i < frags.size();++i){
         for (int j = 0;j < frags[i].size();++j){
             if (frags[i][j]-1 == center_atom_id){
@@ -922,7 +922,7 @@ void parse_pdbqt_branch(std::istream& in, parsing_struct& p, context& c, unsigne
 
 void parse_sdf_branch(std::vector<std::vector<int> > &frags, std::vector<std::vector<int> > &torsions, int frag_id, 
     parsing_struct& new_p, parsing_struct& p, context& c, unsigned &number, unsigned from, unsigned to, std::set<int> &been_frags){
-    std::cout << "entering parse_sdf_branch frag= "<< frag_id << ' ' << from << ' '  << to << std::endl;
+    // std::cout << "entering parse_sdf_branch frag= "<< frag_id << ' ' << from << ' '  << to << std::endl;
 
     // push new fragment atoms into new_p
     // new_p.atoms.reserve(frags[frag_id].size());
@@ -933,7 +933,7 @@ void parse_sdf_branch(std::vector<std::vector<int> > &frags, std::vector<std::ve
         p.atoms[frags[frag_id][i]-1].a.number = number;
         ++number;
         //debug
-        std::cout << "pushing atom in parse_sdf_branch i=" << i << "frag id=" << frag_id << ' ' << frags[frag_id].size() << std::endl;
+        // std::cout << "pushing atom in parse_sdf_branch i=" << i << "frag id=" << frag_id << ' ' << frags[frag_id].size() << std::endl;
         new_p.add(p.atoms[frags[frag_id][i]-1].a, p.atoms[frags[frag_id][i]-1].context_index);
         // new_p.atoms.push_back(p.atoms[frags[frag_id][i]-1]); // equal to p.add()
     }

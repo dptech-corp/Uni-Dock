@@ -147,7 +147,7 @@ void precalculate_parallel(triangular_matrix_cuda_t *m_data_list_cpu, std::vecto
         precalculate_matrix_size[i] = atom_num[i] * (atom_num[i] + 1) / 2;
         for (int j = 0; j < atoms.size(); ++j){
             atom_xs[i * max_atom_num + j] = atoms[j].xs;
-            printf("atom[%d] on CPU: xs=%lu %lu\n", j, atoms[j].xs, atom_xs[i * max_atom_num + j]);
+            DEBUG_PRINTF("atom[%d] on CPU: xs=%lu %lu\n", j, atoms[j].xs, atom_xs[i * max_atom_num + j]);
             atom_ad[i * max_atom_num + j] = atoms[j].ad;
             atom_charge[i * max_atom_num + j] = atoms[j].charge;
         }

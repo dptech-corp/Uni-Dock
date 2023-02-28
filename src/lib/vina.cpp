@@ -302,6 +302,51 @@ void Vina::set_ligand_from_object_gpu(const std::vector<model>& ligands) {
 	m_ligand_initialized = true;
 }
 
+void Vina::set_ligand_from_object(const std::vector<model>& ligands) {
+	// Read ligand PDBQT strings and add them to the model
+	if (ligands.empty()) {
+		std::cerr << "ERROR: Cannot read ligand list. Ligands list is empty.\n";
+		exit(EXIT_FAILURE);
+	}
+
+	atom_type::t atom_typing = m_scoring_function.get_atom_typing();
+
+	if (!m_receptor_initialized) {
+		// This situation will happen if we don't need a receptor and we are using affinity maps
+		model m(atom_typing);
+		m_model = m;
+		m_receptor = m;
+	} else {
+		// Replace current model with receptor and reinitialize poses
+		m_model = m_receptor;
+	}
+
+	VINA_RANGE(i, 0, ligands.size())
+		m_model.append(ligands[i]);
+
+	// Because we precalculate ligand atoms interactions
+	precalculate_byatom precalculated_byatom(m_scoring_function, m_model);
+
+	// Check that all atom types are in the grid (if initialized)
+	if (m_map_initialized) {
+		szv atom_types = m_model.get_movable_atom_types(atom_typing);
+
+		if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO) {
+			if(!m_grid.are_atom_types_grid_initialized(atom_types))
+				exit(EXIT_FAILURE);
+		} else {
+			if(!m_ad4grid.are_atom_types_grid_initialized(atom_types))
+				exit(EXIT_FAILURE);
+		}
+	}
+
+	// Store in Vina object
+	output_container poses;
+	m_poses = poses;
+	m_precalculated_byatom = precalculated_byatom;
+	m_ligand_initialized = true;
+}
+
 void Vina::set_ligand_from_file(const std::string& ligand_name) {
 	set_ligand_from_string(get_file_contents(ligand_name));
 }

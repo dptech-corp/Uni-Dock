@@ -373,6 +373,10 @@ Thank you!\n";
 				max_step = 40;
 			}
 		}
+		else if (vm.count("gpu_batch") || vm.count("ligand_index") && !vm.count("exhaustiveness")){
+			exhaustiveness = 384;
+			max_step = 40;
+		}
 
 		if (sf_name.compare("vina") == 0 || sf_name.compare("vinardo") == 0) {
 			if (!vm.count("receptor") && !vm.count("maps")) {
@@ -521,7 +525,12 @@ Thank you!\n";
 		}
 
 		if (vm.count("ligand")) {
-			v.set_ligand_from_file(ligand_names);
+			std::vector<model> ligands;
+			VINA_FOR_IN(i, ligand_names){
+				ligands.emplace_back(parse_ligand_from_file_no_failure(ligand_names[i],
+					v.m_scoring_function.get_atom_typing(), keep_H));
+			}
+			v.set_ligand_from_object(ligands);
 
 			if (sf_name.compare("vina") == 0 || sf_name.compare("vinardo") == 0) {
 				if (vm.count("maps")) {
