@@ -373,7 +373,7 @@ Thank you!\n";
 				max_step = 40;
 			}
 		}
-		else if (vm.count("gpu_batch") || vm.count("ligand_index") && !vm.count("exhaustiveness")){
+		else if ((vm.count("gpu_batch") || vm.count("ligand_index")) && !vm.count("exhaustiveness")){
 			exhaustiveness = 384;
 			max_step = 40;
 		}
