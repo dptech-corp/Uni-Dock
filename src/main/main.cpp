@@ -115,8 +115,12 @@ If you used Uni-Dock in your work, please cite:               \n \
 \n\
 Yu, Y., Cai, C., Wang, J., Bo, Z., Zhu, Z., & Zheng, H. (2023). \n\
 Uni-Dock: GPU-Accelerated Docking Enables Ultralarge Virtual Screening. \n\
-Journal of Chemical Theory and Computation.\n\
-https://doi.org/10.1021/acs.jctc.2c01145 \n\
+Journal of Chemical Theory and Computation.                    \n\
+https://doi.org/10.1021/acs.jctc.2c01145                       \n\
+\n\
+Tang, S., Chen, R., Lin, M., Lin, Q., Zhu, Y., Ding, J., ... & Wu, J. (2022). \n\
+Accelerating autodock vina with gpus. Molecules, 27(9), 3041. \n\
+DOI 10.3390/molecules27093041                                 \n\
 \n\
 J. Eberhardt, D. Santos-Martins, A. F. Tillack, and S. Forli  \n\
 AutoDock Vina 1.2.0: New Docking Methods, Expanded Force      \n\
