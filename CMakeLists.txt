@@ -10,6 +10,7 @@ set(CMAKE_CXX_STANDARD 14)
 if(NOT CMAKE_BUILD_TYPE)
 	set(CMAKE_BUILD_TYPE Release)
 endif()
+Option(Boost_USE_STATIC_LIBS "Whether to use static libs for boost" OFF)
 
 include(CheckLanguage)
 check_language(CUDA)
