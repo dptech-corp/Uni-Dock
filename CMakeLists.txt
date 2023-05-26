@@ -26,7 +26,7 @@ if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
 	)
 endif()
 
-set(VINA_BIN_NAME vina)
+set(VINA_BIN_NAME unidock)
 add_compile_definitions(ENABLE_CUDA)
 add_compile_definitions(VERSION="v${PROJECT_VERSION}")
 
