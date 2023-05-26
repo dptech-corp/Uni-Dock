@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.16)
 project(
 	Vina-GPU
 	VERSION 0.1.0
-	DESCRIPTION "AutoDock Vina 1.2 with GPU acceleration up to 400x."
-	HOMEPAGE_URL "https://github.com/dptech-corp/Vina1.2-GPU"
+	DESCRIPTION "GPU-Accelerated Docking with 1000-fold speedup"
+	HOMEPAGE_URL "https://github.com/dptech-corp/Uni-Dock"
 	LANGUAGES CXX CUDA
 )
 set(CMAKE_CXX_STANDARD 14)

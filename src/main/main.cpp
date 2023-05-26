@@ -110,27 +110,27 @@ your problem report:\n\
 \n\
 Thank you!\n";
 
-	const std::string cite_message = "\
-#################################################################\n\
-# If you used Uni-Dock in your work, please cite:               #\n\
-#                                                               #\n\
-# Uni-Dock, xxxx, (2022) DOI xxxx                               #\n\
-#                                                               #\n\
-#                                                               #\n\
-# J. Eberhardt, D. Santos-Martins, A. F. Tillack, and S. Forli  #\n\
-# AutoDock Vina 1.2.0: New Docking Methods, Expanded Force      #\n\
-# Field, and Python Bindings, J. Chem. Inf. Model. (2021)       #\n\
-# DOI 10.1021/acs.jcim.1c00203                                  #\n\
-#                                                               #\n\
-# O. Trott, A. J. Olson,                                        #\n\
-# AutoDock Vina: improving the speed and accuracy of docking    #\n\
-# with a new scoring function, efficient optimization and       #\n\
-# multithreading, J. Comp. Chem. (2010)                         #\n\
-# DOI 10.1002/jcc.21334                                         #\n\
-#                                                               #\n\
-# Please see https://github.com/dptech-corp/Uni-Dock/ for       #\n\
-# more information.                                             #\n\
-#################################################################\n";
+	const std::string cite_message = "\n\
+If you used Uni-Dock in your work, please cite:               \n \
+\n\
+Yu, Y., Cai, C., Wang, J., Bo, Z., Zhu, Z., & Zheng, H. (2023). \n\
+Uni-Dock: GPU-Accelerated Docking Enables Ultralarge Virtual Screening. \n\
+Journal of Chemical Theory and Computation.\n\
+https://doi.org/10.1021/acs.jctc.2c01145 \n\
+\n\
+J. Eberhardt, D. Santos-Martins, A. F. Tillack, and S. Forli  \n\
+AutoDock Vina 1.2.0: New Docking Methods, Expanded Force      \n\
+Field, and Python Bindings, J. Chem. Inf. Model. (2021)       \n\
+DOI 10.1021/acs.jcim.1c00203                                  \n\
+\n\
+O. Trott, A. J. Olson,                                        \n\
+AutoDock Vina: improving the speed and accuracy of docking    \n\
+with a new scoring function, efficient optimization and        \n\
+multithreading, J. Comp. Chem. (2010)                         \n\
+DOI 10.1002/jcc.21334                                         \n\
+\n\
+Please refer to https://github.com/dptech-corp/Uni-Dock/ for  \n\
+bug reporting, license agreements, and more information.      \n";
 
 	try {
 		std::string rigid_name;
@@ -488,7 +488,7 @@ Thank you!\n";
 			v.set_bias(bias_file_content);
 
 			bias_file_content.close();
-			
+
 		}
 
 		v.multi_bias = false;
