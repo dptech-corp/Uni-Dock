@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 project(
-	Vina-GPU
+	Uni-Dock
 	VERSION 0.1.0
 	DESCRIPTION "GPU-Accelerated Docking with 1000-fold speedup"
 	HOMEPAGE_URL "https://github.com/dptech-corp/Uni-Dock"
