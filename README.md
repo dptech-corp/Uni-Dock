@@ -195,6 +195,8 @@ cd example/screening_test
 python run_dock_yyj.py
 ```
 
+If you want to use other search mode, specify the parameter `search_mode` in `config.json` and delete `nt` and `ns` in `config.json`.
+
 # Troubleshooting
 
 1. Some bugs are triggered when I run Uni-Dock in Docker, but no such problems when running directly on the server.
