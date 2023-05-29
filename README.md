@@ -188,6 +188,13 @@ Information (optional):
   --version                  display program version
 ```
 
+## Screening speed test
+We have provided a target from DUD-E dataset for screening test. Please run:
+```
+cd example/screening_test
+python run_dock_yyj.py
+```
+
 # Troubleshooting
 
 1. Some bugs are triggered when I run Uni-Dock in Docker, but no such problems when running directly on the server.
