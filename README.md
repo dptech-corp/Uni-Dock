@@ -21,8 +21,9 @@ We provides an [online Uni-Dock service](https://labs.dp.tech/projects/uni-dock-
 
 ## Installation
 
-For using Uni-Dock, an NVIDIA GPU with an appropriate CUDA runtime environment is required.
-Download the latest binary from [the Release page](https://github.com/dptech-corp/Uni-Dock/releases).
+Uni-Dock supports NVIDIA GPUs on Linux platform.
+CUDA runtime environment is required.
+Please download the latest binary at the assets tab of [the Release page](https://github.com/dptech-corp/Uni-Dock/releases).
 
 ## Examples
 
