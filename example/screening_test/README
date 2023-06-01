@@ -1,0 +1,6 @@
+We have provided a target from DUD-E dataset for screening test. Python version `>=3.6` is recommended. Please run:
+```
+python run_dock_yyj.py
+```
+
+If you want to use other search mode, specify the parameter `search_mode` in `config.json` and delete `nt` and `ns` in `config.json`.
