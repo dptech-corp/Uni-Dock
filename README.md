@@ -9,7 +9,7 @@ The [paper](https://pubs.acs.org/doi/10.1021/acs.jctc.2c01145) has been accepted
 
 ## Usage Guideline
 
-We offer the software **for academic purposes only**. By downloading and using Uni-Dock, you are agreeing to the usage guideline under our GitHub repository.
+We offer the software **for academic purposes only**. By downloading and using Uni-Dock, you are agreeing to the usage guideline ([en](https://github.com/dptech-corp/Uni-Dock/blob/main/license/usage-guidelines-en.md), [zh](https://github.com/dptech-corp/Uni-Dock/blob/main/license/usage-guidelines-zh.md)).
 
 Developed by [DP Technology](https://dp.tech/en), [Hermite®](https://dp.tech/en/product/hermite) is a new-generation drug computing design platform which integrates artificial intelligence, physical modeling and high-performance computing to provide a one-stop computing solution for preclinical drug research and development. It integrates the features of Uni-Dock, along with virtual screening workflow for an efficient drug discovery process.
 
