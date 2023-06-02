@@ -135,6 +135,13 @@ Please make sure that `unidock` is in your `PATH` environment variable.
 
 ```bash
 cd example/screening_test
+
+# target def
+cp config_def.json config.json
+python run_dock.py
+
+# target mmp13
+cp config_mmp13.json config.json
 python run_dock.py
 ```
 

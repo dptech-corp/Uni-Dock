@@ -2,11 +2,6 @@ import os
 import time
 import json
 import glob
-# import pandas
-
-
-for _,dns,_ in os.walk("./data"):
-    break
 
 with open("config.json", "r") as f:
     config = json.load(f)
