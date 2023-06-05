@@ -13,7 +13,7 @@ We offer the software **for academic purposes only**. By downloading and using U
 
 Developed by [DP Technology](https://dp.tech/en), [Hermite®](https://dp.tech/en/product/hermite) is a new-generation drug computing design platform which integrates artificial intelligence, physical modeling and high-performance computing to provide a one-stop computing solution for preclinical drug research and development. It integrates the features of Uni-Dock, along with virtual screening workflow for an efficient drug discovery process.
 
-We provides an online Uni-Dock [academic service](https://labs.dp.tech/projects/uni-dock-serving/) for free and a new-generation drug computing design platform called [Hermite®](https://dp.tech/en/product/hermite).
+Uni-Dock is now available on the new-generation drug computing design platform [Hermite®](https://dp.tech/en/product/hermite) for ultralarge virtual screening.
 
 For commercial usage and further cooperations, please contact us at bd@dp.tech .
 
