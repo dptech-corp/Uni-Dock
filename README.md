@@ -136,7 +136,8 @@ Information (optional):
 We have provided a target from DUD-E dataset for screening test. Python version `>=3.6` is recommended.
 
 ```bash
-cd example/screening_test
+git clone https://github.com/dptech-corp/Uni-Dock.git
+cd Uni-Dock/example/screening_test
 
 # target def
 cp config_def.json config.json
