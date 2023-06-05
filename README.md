@@ -20,9 +20,12 @@ For commercial usage and further cooperations, please contact us at bd@dp.tech .
 ## Installation
 
 Uni-Dock supports NVIDIA GPUs on Linux platform.
-CUDA runtime environment is required.
-Please download the latest binary at the assets tab of [the Release page](https://github.com/dptech-corp/Uni-Dock/releases).
+[CUDA toolkit](https://developer.nvidia.com/cuda-downloads) is required.
+
+Please download the latest binary of Uni-Dock at the assets tab of [the Release page](https://github.com/dptech-corp/Uni-Dock/releases).
 Executable `unidock` supports vina and vinardo scoring functions, and `unidock_ad4` supports ad4 scoring function.
+
+After downloading, please make sure that the path to `unidock` is in your `PATH` environment variable.
 
 ## Usage
 
@@ -131,7 +134,6 @@ Information (optional):
 ## Examples
 
 We have provided a target from DUD-E dataset for screening test. Python version `>=3.6` is recommended.
-Please make sure that `unidock` is in your `PATH` environment variable.
 
 ```bash
 cd example/screening_test
