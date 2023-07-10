@@ -100,7 +100,13 @@ std::string get_filename(const std::string& s) {
 std::string get_biasname(const std::string& s) {
     std::string tmp = s;
     if (tmp.size() >= 6 && tmp.substr(tmp.size()-6, 6) == ".pdbqt")
-        tmp.resize(tmp.size() - 6); // FIXME?
+    {
+	    tmp.resize(tmp.size() - 6); // FIXME?
+    }
+    else if (tmp.size() >= 4 && tmp.substr(tmp.size()-4, 4) == ".sdf")
+    {
+        tmp.resize(tmp.size() - 4);
+    }
     return tmp + ".bpf";
 }
 
