@@ -686,7 +686,7 @@ bug reporting, license agreements, and more information.      \n";
 					}
 				}
 				v1.set_ligand_from_object_gpu(batch_ligands);
-				v1.global_search_gpu(exhaustiveness, num_modes, min_rmsd, max_evals, max_step, batch_ligand_names.size(), (unsigned long long)seed, refine_step);
+				v1.global_search_gpu(exhaustiveness, num_modes, min_rmsd, max_evals, max_step, batch_ligand_names.size(), (unsigned long long)seed, refine_step, local_only);
 				v1.write_poses_gpu(gpu_out_name, num_modes, energy_range);
 				auto end = std::chrono::system_clock::now();
 				std::cout << "Batch " << batch_id << " running time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;

@@ -1517,7 +1517,9 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 			// uniform_data.resize(thread);
 
 			for (int i = 0; i < threads_per_ligand; ++i){
-				tmp.c.randomize(corner1, corner2, generator); // generate a random structure, can move to GPU if necessary
+				if (!local_only){
+					tmp.c.randomize(corner1, corner2, generator); // generate a random structure, can move to GPU if necessary
+				}
 				for (int j = 0; j < 3; j++) rand_molec_struc_tmp->position[j] = tmp.c.ligands[0].rigid.position[j];
 				assert(lig_torsion_size <= MAX_NUM_OF_LIG_TORSION);
 				for (int j = 0; j < lig_torsion_size; j++) rand_molec_struc_tmp->lig_torsion[j] = tmp.c.ligands[0].torsions[j];// Only support one ligand
