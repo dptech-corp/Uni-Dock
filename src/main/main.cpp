@@ -572,7 +572,7 @@ bug reporting, license agreements, and more information.      \n";
 				v.write_poses(out_name, num_modes, energy_range);
 			}
 		} else if (vm.count("gpu_batch") || vm.count("ligand_index")) {
-			if (randomize_only || score_only || local_only ){
+			if (randomize_only || score_only){
 				printf("Not available under gpu_batch mode.\n");
 				return 0;
 			}
