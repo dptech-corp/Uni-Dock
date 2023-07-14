@@ -1087,6 +1087,25 @@ void Vina::show_score(const std::vector<double> energies) {
 	}
 }
 
+void Vina::write_score(const std::vector<double> energies, const std::string input_name) {
+	ofile f(make_path(default_score_output(input_name)));
+	f << "File name                          : " << input_name << "\n";
+	f << "Estimated Free Energy of Binding   : " << std::fixed << std::setprecision(3) << energies[0] << " (kcal/mol) [=(1)+(2)+(3)+(4)]\n";
+	f << "(1) Final Intermolecular Energy    : " << std::fixed << std::setprecision(3) << energies[1] + energies[2] << " (kcal/mol)\n";
+	f << "    Ligand - Receptor              : " << std::fixed << std::setprecision(3) << energies[1] << " (kcal/mol)\n";
+	f << "    Ligand - Flex side chains      : " << std::fixed << std::setprecision(3) << energies[2] << " (kcal/mol)\n";
+	f << "(2) Final Total Internal Energy    : " << std::fixed << std::setprecision(3) << energies[3] + energies[4] + energies[5] << " (kcal/mol)\n";
+	f << "    Ligand                         : " << std::fixed << std::setprecision(3) << energies[5] << " (kcal/mol)\n";
+	f << "    Flex   - Receptor              : " << std::fixed << std::setprecision(3) << energies[3] << " (kcal/mol)\n";
+	f << "    Flex   - Flex side chains      : " << std::fixed << std::setprecision(3) << energies[4] << " (kcal/mol)\n";
+	f << "(3) Torsional Free Energy          : " << std::fixed << std::setprecision(3) << energies[6] << " (kcal/mol)\n";
+	if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO) {
+		f << "(4) Unbound System's Energy        : " << std::fixed << std::setprecision(3) << energies[7] << " (kcal/mol)\n";
+	} else {
+		f << "(4) Unbound System's Energy [=(2)] : " << std::fixed << std::setprecision(3) << energies[7] << " (kcal/mol)\n";
+	}
+}
+
 std::vector<double> Vina::score(double intramolecular_energy) {
 	// Score the current conf in the model
 	double total = 0;

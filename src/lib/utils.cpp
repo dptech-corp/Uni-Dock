@@ -68,6 +68,19 @@ std::string default_output(const std::string& input_name) {
     return tmp + "_out.pdbqt";
 }
 
+std::string default_score_output(const std::string& input_name) {
+    std::string tmp = input_name;
+    if (tmp.size() >= 6 && tmp.substr(tmp.size()-6, 6) == ".pdbqt"){
+        tmp.resize(tmp.size() - 6); // FIXME?
+        return tmp + "_score.txt";
+    }
+    else if (tmp.size() >= 4 && tmp.substr(tmp.size()-4, 4) == ".sdf"){
+        tmp.resize(tmp.size() - 4); // FIXME?
+        return tmp + "_score.txt";
+    }
+    return tmp + "_score.txt";
+}
+
 
 std::string default_output(const std::string& input_name, const std::string& directory_pathname) {
     return directory_pathname + separator() + default_output(input_name);

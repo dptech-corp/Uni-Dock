@@ -561,6 +561,7 @@ bug reporting, license agreements, and more information.      \n";
 				std::vector<double> energies;
 				energies = v.score();
 				v.show_score(energies);
+				v.write_score(energies, ligand_names[0]);
 			} else if (local_only) {
 				std::vector<double> energies;
 				energies = v.optimize();
