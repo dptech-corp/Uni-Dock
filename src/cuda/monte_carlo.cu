@@ -1420,6 +1420,7 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 		conf_size s = m.get_size();
 		change g(s);
 		output_type tmp(s, 0);
+		tmp.c = m.get_initial_conf();
 
 		assert(m.atoms.size() < MAX_NUM_OF_ATOMS);
 
