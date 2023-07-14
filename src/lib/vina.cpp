@@ -1089,7 +1089,7 @@ void Vina::show_score(const std::vector<double> energies) {
 
 void Vina::write_score(const std::vector<double> energies, const std::string input_name) {
 	ofile f(make_path(default_score_output(input_name)));
-	f << "File name                          : " << input_name << "\n";
+	f << "REMARK " << get_filename(input_name) << ' ' << std::fixed << std::setprecision(3) << energies[0]<< " (kcal/mol)\n";
 	f << "Estimated Free Energy of Binding   : " << std::fixed << std::setprecision(3) << energies[0] << " (kcal/mol) [=(1)+(2)+(3)+(4)]\n";
 	f << "(1) Final Intermolecular Energy    : " << std::fixed << std::setprecision(3) << energies[1] + energies[2] << " (kcal/mol)\n";
 	f << "    Ligand - Receptor              : " << std::fixed << std::setprecision(3) << energies[1] << " (kcal/mol)\n";
