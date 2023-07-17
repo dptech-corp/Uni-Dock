@@ -155,6 +155,7 @@ public:
 					    const std::string& fld_filename="NULL", const std::string& receptor_filename="NULL");
 	void show_score(const std::vector<double> energies);
 	void write_score(const std::vector<double> energies, const std::string input_name);
+	void write_score_to_file(const std::vector<double> energies, const std::string out_dir, const std::string score_file, const std::string input_name);
 	void set_bias(std::ifstream &bias_file_content);
 	void set_batch_bias(std::ifstream &bias_batch_file_content);
 

@@ -214,6 +214,9 @@ bug reporting, license agreements, and more information.      \n";
 		// sdf
 		bool keep_H;
 
+		// score only in batch
+		std::string score_file("scores.txt");
+
 		positional_options_description positional; // remains empty
 
 		options_description inputs("Input");
@@ -250,6 +253,7 @@ bug reporting, license agreements, and more information.      \n";
 		options_description advanced("Advanced options (see the manual)");
 		advanced.add_options()
 			("score_only",     bool_switch(&score_only),     "score only - search space can be omitted")
+			("score_file",	   value<std::string>(&score_file)->default_value(score_file), "score only output file in batch mode, with 'score_only' option")
 			("local_only",     bool_switch(&local_only),     "do local search only")
 			("no_refine", bool_switch(&no_refine),  "when --receptor is provided, do not use explicit receptor atoms (instead of precalculated grids) for: (1) local optimization and scoring after docking, (2) --local_only jobs, and (3) --score_only jobs")
 			("force_even_voxels", bool_switch(&force_even_voxels),  "calculated grid maps will have an even number of voxels (intervals) in each dimension (odd number of grid points)")
@@ -573,7 +577,7 @@ bug reporting, license agreements, and more information.      \n";
 				v.write_poses(out_name, num_modes, energy_range);
 			}
 		} else if (vm.count("gpu_batch") || vm.count("ligand_index")) {
-			if (randomize_only || score_only){
+			if (randomize_only){
 				printf("Not available under gpu_batch mode.\n");
 				return 0;
 			}
@@ -589,10 +593,27 @@ bug reporting, license agreements, and more information.      \n";
 						v.write_maps(out_maps);
 				}
 			}
+
 			// Vina worker[2]{v,v}; // Do CPU works on one worker while GPU works on another
 			// bool index = 0; // indicate which worker occupies GPU
 			std::vector<std::string> ligand_names {std::move(gpu_batch_ligand_names)};
 			std::cout << "Total ligands: " << ligand_names.size() << std::endl;
+
+
+			if (score_only){
+				VINA_FOR_IN(i, ligand_names){
+					std::vector<model> ligands;
+					ligands.emplace_back(parse_ligand_from_file_no_failure(ligand_names[i],
+						v.m_scoring_function.get_atom_typing(), keep_H));
+					Vina v1(v);
+					v1.set_ligand_from_object(ligands);
+					std::vector<double> energies;
+					energies = v1.score();
+					v1.show_score(energies);
+					v1.write_score_to_file(energies, out_dir, score_file, ligand_names[i]);
+				}
+				return 0;
+			}
 
 			int receptor_atom_numbers = v.m_receptor.get_atoms().size();
 			int deviceCount=0;
