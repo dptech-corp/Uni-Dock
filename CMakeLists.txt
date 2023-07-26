@@ -33,7 +33,7 @@ add_compile_definitions(VERSION="v${PROJECT_VERSION}")
 find_package(OpenMP REQUIRED) # OpenMP only required in main.cpp
 find_package(Boost REQUIRED
 	COMPONENTS system thread serialization filesystem program_options)
-
+include_directories(${Boost_INCLUDE_DIRS})
 include_directories(src/lib src/cuda)
 add_executable(${VINA_BIN_NAME} src/main/main.cpp)
 add_executable(split src/split/split.cpp)
@@ -50,3 +50,4 @@ add_library(lib OBJECT
 add_library(cuda OBJECT src/cuda/monte_carlo.cu src/cuda/precalculate.cu)
 target_link_libraries(${VINA_BIN_NAME} cuda lib)
 target_include_directories(${VINA_BIN_NAME} PUBLIC ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}) # For detecting CUDA memory size
+install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/${VINA_BIN_NAME} TYPE BIN)
