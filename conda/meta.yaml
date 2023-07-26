@@ -1,0 +1,60 @@
+{% set version = os.popen('git describe --tags --abbrev=0').read().strip('\n').lstrip('v').replace('-', '_') %}
+
+package:
+  name: unidock
+  version: {{ version }}
+
+source:
+  path: ..
+
+# To build a conda package locally: `conda build . -c conda-forge`
+build:
+  skip: true  # [not linux]
+
+  # ${CMAKE_ARGS} applys restrictions for CMake to search libs under conda building env.
+  # See https://conda-forge.org/docs/maintainer/knowledge_base.html#using-cmake .
+  script: |
+    mkdir build && cd build
+    cmake ${CMAKE_ARGS} ${SRC_DIR}
+    make unidock -j`nproc`
+    make install
+
+  string: {{ GIT_BUILD_STR }}
+  number: {{ GIT_DESCRIBE_NUMBER }}
+
+requirements:
+  build:
+    - {{ compiler('cxx') }}
+    - {{ compiler('cuda') }} # https://conda-forge.org/docs/maintainer/knowledge_base.html#cuda-builds
+    - cmake
+
+  host:
+    - boost-cpp
+
+  run:
+    - boost
+
+
+test:
+  commands:
+    # Dry run to verify dynamic libs are present.
+    - unidock --version
+
+about:
+  home: https://github.com/dptech-corp/Uni-Dock
+  # doc_url: https://github.com/dptech-corp/Uni-Dock
+  # dev_url: https://github.com/dptech-corp/Uni-Dock
+  license: LGPL-3.0
+  license_family: LGPL
+  license_file: LICENSE
+  summary: A GPU-accelerated molecular docking program
+  description: >
+    Uni-Dock is a GPU-accelerated molecular docking program developed by DP Technology. 
+    It supports various scoring functions including vina, vinardo, and ad4. 
+    Uni-Dock achieves more than 1000-fold speed-up on V100 GPU with high-accuracy, 
+    compared with the AutoDock Vina running in single CPU core. 
+    The paper has been accepted by JCTC (doi: 10.1021/acs.jctc.2c01145).
+
+extra:
+  recipe-maintainers:
+    - caic99
