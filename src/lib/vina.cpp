@@ -1541,7 +1541,7 @@ void Vina::global_search(const int exhaustiveness, const int n_poses, const doub
 	m_poses = poses;
 }
 
-void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const double min_rmsd, const int max_evals, const int max_step, int num_of_ligands, unsigned long long seed, const int refine_step) {
+void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const double min_rmsd, const int max_evals, const int max_step, int num_of_ligands, unsigned long long seed, const int refine_step, const bool local_only) {
 	// Vina search (Monte-carlo and local optimization)
 	// Check if ff, box and ligand were initialized
 	if (!m_ligand_initialized) {
@@ -1592,7 +1592,8 @@ void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const 
 	mc.threads_per_ligand = exhaustiveness;
 	mc.num_of_ligands = num_of_ligands;
 	mc.thread = exhaustiveness * num_of_ligands;
-
+	mc.local_only = local_only;
+	
 	// Docking search
 	sstm << "Performing docking (random seed: " << m_seed << ")";
 	doing(sstm.str(), m_verbosity, 0);
