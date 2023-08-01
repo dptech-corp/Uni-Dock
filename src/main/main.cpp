@@ -212,7 +212,7 @@ bug reporting, license agreements, and more information.      \n";
 		std::string bias_file;
 		bool multi_bias;
 		// sdf
-		bool keep_H;
+		bool keep_H = true;
 
 		positional_options_description positional; // remains empty
 
@@ -277,7 +277,7 @@ bug reporting, license agreements, and more information.      \n";
 			("weight_glue", value<double>(&weight_glue)->default_value(weight_glue),                      "macrocycle glue weight")
 			("bias", value<std::string>(&bias_file), "bias configuration file name, content similar to BPF in AutoDock-bias")
 			("multi_bias", bool_switch(&multi_bias), "add ligand bias {ligand_name}.bpf for every input ligand {ligand_name}.pdbqt in batch, content similar to BPF in AutoDock-bias")
-			("keep_nonpolar_H", bool_switch(&keep_H), "keep non polar H in sdf")
+			("keep_nonpolar_H", bool_switch(&keep_H)->default_value(keep_H), "keep non polar H in sdf")
 
 		;
 		options_description misc("Misc (optional)");
@@ -292,7 +292,7 @@ bug reporting, license agreements, and more information.      \n";
 			("spacing", value<double>(&grid_spacing)->default_value(0.375), "grid spacing (Angstrom)")
 			("verbosity", value<int>(&verbosity)->default_value(1), "verbosity (0=no output, 1=normal, 2=verbose)")
 			("max_step", value<int>(&max_step)->default_value(0), "maximum number of steps in each MC run (if zero, which is the default, the number of MC steps is based on heuristics)")
-			("refine_step", value<int>(&refine_step)->default_value(5), "number of steps in refinement, default=5")
+			("refine_step", value<int>(&refine_step)->default_value(3), "number of steps in refinement, default=5")
 			("max_gpu_memory", value<int>(&max_gpu_memory)->default_value(0), "maximum gpu memory to use (default=0, use all available GPU memory to optain maximum batch size)")
 			("search_mode", value<std::string>(&search_mode), "search mode of vina (fast, balance, detail), using recommended settings of exhaustiveness and search steps; the higher the computational complexity, the higher the accuracy, but the larger the computational cost")
 

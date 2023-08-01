@@ -228,12 +228,12 @@ public:
     boost::optional<atom_reference> axis_end; // if immobile atom has been pushed into non_rigid_parsed::atoms, this is its index there
     std::vector<node> atoms;
 
-    void add(const parsed_atom& a, const context& c, bool keep_H=false) {
+    void add(const parsed_atom& a, const context& c, bool keep_H=true) {
         VINA_CHECK(c.size() > 0);
         if (a.ad == AD_TYPE_H && keep_H == false) return;
         atoms.emplace_back(node(a, c.size()-1));
     }
-    void add(const parsed_atom& a, const sz context_index, bool keep_H=false) {
+    void add(const parsed_atom& a, const sz context_index, bool keep_H=true) {
         VINA_CHECK(context_index > 0);
         if (a.ad == AD_TYPE_H && keep_H == false) return;
         atoms.emplace_back(node(a, context_index));
@@ -321,7 +321,7 @@ void parse_pdbqt_rigid(const path& name, rigid& r) {
     }
 }
 
-void parse_pdbqt_root_aux(std::istream& in, parsing_struct& p, context& c, bool keep_H=false) {
+void parse_pdbqt_root_aux(std::istream& in, parsing_struct& p, context& c, bool keep_H=true) {
     std::string str;
 
     while(std::getline(in, str)) {
@@ -342,7 +342,7 @@ void parse_pdbqt_root_aux(std::istream& in, parsing_struct& p, context& c, bool 
     }
 }
 
-void parse_pdbqt_root(std::istream& in, parsing_struct& p, context& c, bool keep_H=false) {
+void parse_pdbqt_root(std::istream& in, parsing_struct& p, context& c, bool keep_H=true) {
     std::string str;
 
     while(std::getline(in, str)) {
@@ -363,11 +363,11 @@ void parse_pdbqt_root(std::istream& in, parsing_struct& p, context& c, bool keep
     }
 }
 
-void parse_pdbqt_branch(std::istream& in, parsing_struct& p, context& c, unsigned from, unsigned to, bool keep_H=false); // forward declaration
+void parse_pdbqt_branch(std::istream& in, parsing_struct& p, context& c, unsigned from, unsigned to, bool keep_H=true); // forward declaration
 void parse_sdf_branch(std::vector<std::vector<int> > &frags, std::vector<std::vector<int> > &torsions, int frag_id, 
-    parsing_struct& new_p, parsing_struct& p, context& c, unsigned &number, unsigned from, unsigned to, std::set<int> &been_frags);
+    parsing_struct& new_p, parsing_struct& p, context& c, unsigned &number, unsigned from, unsigned to, std::set<int> &been_frags, bool keep_H=true);
 
-void parse_pdbqt_branch_aux(std::istream& in, const std::string& str, parsing_struct& p, context& c, bool keep_H=false) {
+void parse_pdbqt_branch_aux(std::istream& in, const std::string& str, parsing_struct& p, context& c, bool keep_H=true) {
     unsigned first, second;
     parse_two_unsigneds(str, "BRANCH", first, second);
     sz i = 0;
@@ -385,7 +385,7 @@ void parse_pdbqt_branch_aux(std::istream& in, const std::string& str, parsing_st
 }
 
 void parse_sdf_branch_aux(std::vector<std::vector<int> > &frags, std::vector<std::vector<int> > &torsions, int frag_id,
-     parsing_struct& new_p, parsing_struct& p, context& c, unsigned &number, int from, int to, std::set<int> &been_frags) {
+     parsing_struct& new_p, parsing_struct& p, context& c, unsigned &number, int from, int to, std::set<int> &been_frags, bool keep_H=true) {
     sz i = 0;
     // std::cout << "entering parse_sdf_branch_aux " << from << ' '  << to << std::endl;
     
@@ -397,13 +397,13 @@ void parse_sdf_branch_aux(std::vector<std::vector<int> > &frags, std::vector<std
             new_p.atoms[i].ps.push_back(p0);
             been_frags.insert(frag_id);
             // std::cout << "current frag id=" << frag_id << ", from=" << from << std::endl;
-            parse_sdf_branch(frags, torsions, frag_id, new_p.atoms[i].ps.back(), p, c, number, from, to, been_frags);
+            parse_sdf_branch(frags, torsions, frag_id, new_p.atoms[i].ps.back(), p, c, number, from, to, been_frags, keep_H);
             break;
         }
     }
 }
 
-void parse_pdbqt_aux(std::istream& in, parsing_struct& p, context& c, boost::optional<unsigned>& torsdof, bool residue, bool keep_H=false) {
+void parse_pdbqt_aux(std::istream& in, parsing_struct& p, context& c, boost::optional<unsigned>& torsdof, bool residue, bool keep_H=true) {
     parse_pdbqt_root(in, p, c, keep_H);
 
     std::string str;
@@ -559,7 +559,7 @@ void parse_pdbqt_ligand(std::istream& in, non_rigid_parsed& nr, context& c) {
     VINA_CHECK(nr.atoms_atoms_bonds.dim() == nr.atoms.size());
 }
 
-void parse_pdbqt_ligand(const path& name, non_rigid_parsed& nr, context& c, bool keep_H=false) {
+void parse_pdbqt_ligand(const path& name, non_rigid_parsed& nr, context& c, bool keep_H=true) {
     ifile in(name);
     parsing_struct p;
     boost::optional<unsigned> torsdof;
@@ -584,7 +584,7 @@ void parse_pdbqt_ligand(const path& name, non_rigid_parsed& nr, context& c, bool
     VINA_CHECK(nr.atoms_atoms_bonds.dim() == nr.atoms.size());
 }
 
-void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, context& c, unsigned &torsdof, bool residue, bool keep_H=false) {
+void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, context& c, unsigned &torsdof, bool residue, bool keep_H=true) {
     std::string str;
     // sdf header has three lines
     for (int i = 0; i < 3; ++i){
@@ -736,6 +736,16 @@ void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, c
             frags[i] = new_frag_nonH;
         }
     }
+    else {
+        for (int i = 0;i < frags.size();++i){
+            std::vector<int> new_frag_keep_H;
+            for (int j = 0;j < frags[i].size();++j){
+                new_frag_keep_H.push_back(frags[i][j]);
+                // std::cout << "atom num=" << frags[i][j] << " , AD type = " << p.atoms[frags[i][j]-1].a.ad << std::endl;
+            }
+            frags[i] = new_frag_keep_H;
+        }
+    }
     if (frags.size() == 0)
     {
         std::cerr << "No fragment info, using rigid docking" << std::endl;
@@ -818,18 +828,18 @@ void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, c
             // std::cout << "j=" << j << std::endl;
             if (torsions[j][0] == frags[max_atom_frag_id][i]){
                 int frag_id = torsions[j][3];
-                parse_sdf_branch_aux(frags, torsions, frag_id, new_p, p, c, number, torsions[j][0], torsions[j][1], been_frags);
+                parse_sdf_branch_aux(frags, torsions, frag_id, new_p, p, c, number, torsions[j][0], torsions[j][1], been_frags, keep_H);
             }
             else if (torsions[j][1] == frags[max_atom_frag_id][i]){
                 int frag_id = torsions[j][2];
-                parse_sdf_branch_aux(frags, torsions, frag_id, new_p, p, c, number, torsions[j][1], torsions[j][0], been_frags);
+                parse_sdf_branch_aux(frags, torsions, frag_id, new_p, p, c, number, torsions[j][1], torsions[j][0], been_frags, keep_H);
             }
         }
     }
 
 }
 
-void parse_sdf_ligand(const path& name, non_rigid_parsed& nr, context& c, bool keep_H=false) {
+void parse_sdf_ligand(const path& name, non_rigid_parsed& nr, context& c, bool keep_H=true) {
     ifile in(name);
     parsing_struct *p = new parsing_struct();
     parsing_struct *new_p = new parsing_struct();
@@ -921,7 +931,7 @@ void parse_pdbqt_branch(std::istream& in, parsing_struct& p, context& c, unsigne
 }
 
 void parse_sdf_branch(std::vector<std::vector<int> > &frags, std::vector<std::vector<int> > &torsions, int frag_id, 
-    parsing_struct& new_p, parsing_struct& p, context& c, unsigned &number, unsigned from, unsigned to, std::set<int> &been_frags){
+    parsing_struct& new_p, parsing_struct& p, context& c, unsigned &number, unsigned from, unsigned to, std::set<int> &been_frags, bool keep_H){
     // std::cout << "entering parse_sdf_branch frag= "<< frag_id << ' ' << from << ' '  << to << std::endl;
 
     // push new fragment atoms into new_p
@@ -934,18 +944,18 @@ void parse_sdf_branch(std::vector<std::vector<int> > &frags, std::vector<std::ve
         ++number;
         //debug
         // std::cout << "pushing atom in parse_sdf_branch i=" << i << "frag id=" << frag_id << ' ' << frags[frag_id].size() << std::endl;
-        new_p.add(p.atoms[frags[frag_id][i]-1].a, p.atoms[frags[frag_id][i]-1].context_index);
+        new_p.add(p.atoms[frags[frag_id][i]-1].a, p.atoms[frags[frag_id][i]-1].context_index, keep_H);
         // new_p.atoms.push_back(p.atoms[frags[frag_id][i]-1]); // equal to p.add()
     }
     for (int i = 0;i < frags[frag_id].size();++i){
         for (int j = 0;j < torsions.size();++j){
             if (torsions[j][0] == frags[frag_id][i]){
                 int next_frag_id = torsions[j][3];
-                parse_sdf_branch_aux(frags, torsions, next_frag_id, new_p, p, c, number, torsions[j][0], torsions[j][1], been_frags);
+                parse_sdf_branch_aux(frags, torsions, next_frag_id, new_p, p, c, number, torsions[j][0], torsions[j][1], been_frags, keep_H);
             }
             else if (torsions[j][1] == frags[frag_id][i]){
                 int next_frag_id = torsions[j][2];
-                parse_sdf_branch_aux(frags, torsions, next_frag_id, new_p, p, c, number, torsions[j][1], torsions[j][0], been_frags);
+                parse_sdf_branch_aux(frags, torsions, next_frag_id, new_p, p, c, number, torsions[j][1], torsions[j][0], been_frags, keep_H);
             }
         }
     }
