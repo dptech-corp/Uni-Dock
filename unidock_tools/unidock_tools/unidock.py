@@ -30,9 +30,8 @@ class UniDock():
         self.command_ligand = ''
 
         # delete output directory if it already exists
-        if os.path.exists(self.output_dir) and os.path.isdir(self.output_dir):
-            shutil.rmtree(self.output_dir)
-        os.makedirs(self.output_dir, exist_ok=True)
+        if not os.path.exists(self.output_dir):
+            os.makedirs(self.output_dir, exist_ok=True)
 
         self.ligands_prepared_dir = "%s/ligands_prepared"%self.output_dir
         os.makedirs(self.ligands_prepared_dir, exist_ok=True)
@@ -170,7 +169,9 @@ class UniDock():
         subprocess.run(" ".join(self.config), shell=True)
     
     def _call_gnina(self):
-        docking_poses = glob.glob("%s/*_out.sdf"%self.output_dir)
+        ligands_basename = [get_file_prefix(filename) for filename in self.ligands]
+        docking_poses = ["%s_out.sdf"%basename for basename in ligands_basename]
+        
         for pose in docking_poses:
             result = subprocess.run("gnina -r %s -l %s --score_only"%(self.receptor, pose), shell=True, stdout=subprocess.PIPE, text=True)
             print(result.stdout)
@@ -228,6 +229,11 @@ class UniDock():
         self.config.append(self.command_scoring)
         self.config.append(self.command_ligand)
         self.config.append(self.command_line)
+
+def get_file_prefix(file_path):
+    file_name = os.path.basename(file_path)  
+    file_prefix, _ = os.path.splitext(file_name)
+    return file_prefix
 
 def main():
     parser = argparse.ArgumentParser(description="Docking program")
