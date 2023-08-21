@@ -30,6 +30,7 @@ Check this [subfolder](./unidock_tools/) for more details.
 
 ## Changelog
 
+- 2023-08-21: Upload source codes of Uni-Dock.
 - 2023-08-14: Add unidock_tools to support SDF format input for vina and vinardo scoring functions.
 
 ## Citation
