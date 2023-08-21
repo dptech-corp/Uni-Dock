@@ -1,6 +1,6 @@
 <p align="center">
     <a href="https://github.com/deepmodeling">
-        <img src="​https://avatars.githubusercontent.com/u/32671488?s=200&v=4" width=30>
+        <img src="https://unpkg.com/@njzjz/icons@0.0.5/logos/deepmodeling.svg" alt="DeepModeling logo" width=50>
     </a>
 </p>
 <p align="center">
@@ -13,18 +13,18 @@
 
 ## Uni-Dock
 
-**Uni-Dock** is a GPU-accelerated molecular docking program developed by DP Technology.   
-It supports various scoring functions including vina, vinardo, and ad4. Uni-Dock achieves more than 1000-fold speed-up on V100 GPU with high-accuracy compared with the AutoDock Vina running in single CPU core.  
+**Uni-Dock** is a GPU-accelerated molecular docking program developed by DP Technology.
+It supports various scoring functions including vina, vinardo, and ad4. Uni-Dock achieves more than 1000-fold speed-up on V100 GPU with high-accuracy compared with the AutoDock Vina running in single CPU core.
 The [paper](https://pubs.acs.org/doi/10.1021/acs.jctc.2c01145) has been accepted by JCTC (doi: 10.1021/acs.jctc.2c01145).
 
-![Runtime performance of Uni-Dock on different GPUs in three modes](./unidock/assets/gpu_speeds.png)  
+![Runtime performance of Uni-Dock on different GPUs in three modes](./unidock/assets/gpu_speeds.png)
 
 Check this [subfolder](./unidock/) for instructions on installing Uni-Dock.
 
 ## UniDockTools
 
-**UniDockTools** is a python package developed to handle the inputs and outputs of Uni-Dock.   
-In the future, UniDockTools will support more input formats and scoring functions. We hope it could be an easy-to-use virtual screening workflow for all users.  
+**UniDockTools** is a python package developed to handle the inputs and outputs of Uni-Dock.
+In the future, UniDockTools will support more input formats and scoring functions. We hope it could be an easy-to-use virtual screening workflow for all users.
 
 Check this [subfolder](./unidock_tools/) for more details.
 
