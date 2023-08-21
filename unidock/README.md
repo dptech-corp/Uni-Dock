@@ -1,94 +1,70 @@
-# Introduction
+# Uni-Dock
 
-[AutoDock Vina](https://github.com/ccsb-scripps/AutoDock-Vina) is one of the fastest and most widely used open-source docking engines. It is a turnkey computational docking program that is based on a simple scoring function and rapid gradient-optimization conformational search.
+Uni-Dock is a GPU-accelerated molecular docking program developed by DP Technology.
+It supports various scoring functions including vina, vinardo, and ad4.
+Uni-Dock achieves more than 1000-fold speed-up on V100 GPU with high-accuracy compared with the AutoDock Vina running in single CPU core.
+The [paper](https://pubs.acs.org/doi/10.1021/acs.jctc.2c01145) has been accepted by JCTC (doi: 10.1021/acs.jctc.2c01145).
 
-**Uni-Dock**, developed by DP Technology, carries out extreme performance optimization based on GPU acceleration, increasing AutoDock Vina's computing speed by more than **1000 times** on one Nvidia V100 32G GPU compared with one CPU core.
+![Runtime performance of Uni-Dock on different GPUs in three modes](assets/gpu_speeds.png)
 
-# Installation
+## Changelog
 
-Uni-Dock requires an NVIDIA GPU. It works best on V100 32G machines (no matter how many CPU cores there are), and we recommend running on it.
+- 2023-08-14: Add `unidock_tools` to support SDF format input for vina and vinardo scoring functions.
 
-## Docker Image
+## License
 
-We recommend that you use Docker to run the Uni-Dock, with all the required environments and dependencies configured in Docker image.
+This project is licensed under the terms of the GNU Lesser General Public License v3.0. See [LICENSE](./LICENSE) for details.
 
-1. Install nvidia-container (a GPU supported version of docker): Refer to the [installation tutorial](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker) provided by nvidia
+Developed by [DP Technology](https://dp.tech/en), [Hermite®](https://dp.tech/en/product/hermite) is a new-generation drug computing design platform which integrates artificial intelligence, physical modeling and high-performance computing to provide a one-stop computing solution for preclinical drug research and development. It integrates the features of Uni-Dock, along with virtual screening workflow for an efficient drug discovery process.
 
-2. Pull image of Uni-Dock from DP image registry
+Uni-Dock is now available on the new-generation drug computing design platform [Hermite®](https://dp.tech/en/product/hermite) for ultralarge virtual screening.
 
-```bash
-docker pull dp-harbor-registry.cn-zhangjiakou.cr.aliyuncs.com/dplc/vina_gpu:latest
-```
+For further cooperations on developing Uni-Dock and trying out Hermite®, please contact us at bd@dp.tech .
 
-## Binary
+## Installation
 
-Refer to the releases page of this repo to download binary of Uni-Dock: <https://github.com/dptech-corp/Uni-Dock/releases>
+Uni-Dock supports NVIDIA GPUs on Linux platform.
+[CUDA toolkit](https://developer.nvidia.com/cuda-downloads) is required.
 
-## Build from source
+### Building from source
 
 1. Install dependencies
-
 - Boost 1.77.0
-
-```bash
-mkdir /opt/packages
-cd /opt/packages
-wget https://boostorg.jfrog.io/artifactory/main/release/1.77.0/source/boost_1_77_0.tar.gz
-tar -xzvf boost_1_77_0.tar.gz
-rm boost_1_77_0.tar.gz
-cd boost_1_77_0/
-./bootstrap.sh
-./b2
-./b2 install --prefix=/opt/lib/packages/boost1_77
-export LD_LIBRARY_PATH=/opt/lib/packages/boost1_77/lib/:$LD_LIBRARY_PATH
-```
-
-Alternatively, install from a package management system:
 
 ```bash
 sudo apt install libboost-system-dev libboost-thread-dev libboost-serialization-dev libboost-filesystem-dev libboost-program-options-dev
 ```
 
-- CUDA toolkit
+Alternatively, install from [boost source codes](https://www.boost.org/users/download/).
 
-Please refer to the [installation tutorial](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html) provided by nvidia.   
-
+- CUDA toolkit: Please refer to the [installation tutorial](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html) provided by nvidia.
 
 2. Clone GitHub repo or retrieve source code from release page
-     
-3. Build Uni-Dock
 
-```bash
-cd ./build/linux/release
-make clean
-make -j 4
-```
-
-Or build with CMake:
+3. Build Uni-Dock using CMake:
 
 ```bash
 cmake -B build
 cmake --build build -j4
 ```
 
-## Build from source (DCU)
-
-1. Install dependencies (same as CUDA)
-
-Boost 1.77.0
-
-2. Clone GitHub repo or retrieve source code from release page (branch: dcu_compile)
-3. Build Uni-Dock
-
+Or build with Makefile:
 ```bash
-cd ./build/dcu/release
+cd ./build/linux/release
 make clean
 make -j 4
 ```
 
-# Usage
+### Using binary
 
-## Example
+Please download the latest binary of Uni-Dock at the assets tab of [the Release page](https://github.com/dptech-corp/Uni-Dock/releases).
+Executable `unidock` supports vina and vinardo scoring functions, and `unidock_ad4` supports ad4 scoring function.
+
+After downloading, please make sure that the path to `unidock` is in your `PATH` environment variable.
+
+## Usage
+
+### Example
 
 To launch a Uni-Dock job, the most important parameters are as follows:
 
@@ -120,18 +96,18 @@ unidock --receptor <receptor.pdbqt> \
      --dir <save dir>
 ```
 
-## Parameters
+### Parameters
 
 ```shell
 >> unidock --help
 
 Input:
-  --receptor arg             rigid part of the receptor (PDBQT)
-  --flex arg                 flexible side chains, if any (PDBQT)
+  --receptor arg             rigid part of the receptor (PDBQT or PDB)
+  --flex arg                  flexible side chains, if any (PDBQT or PDB)
   --ligand arg               ligand (PDBQT)
-  --ligand_index arg         file containing paths to ligands
+  --ligand_index arg         file containing paths to ligands (PDBQT or SDF)
   --batch arg                batch ligand (PDBQT)
-  --gpu_batch arg            gpu batch ligand (PDBQT)
+  --gpu_batch arg            gpu batch ligand (PDBQT or SDF)
   --scoring arg (=vina)      scoring function (ad4, vina or vinardo)
 
 Search space (required):
@@ -173,6 +149,7 @@ Misc (optional):
   --max_step arg (=0)        maximum number of steps in each MC run (if zero,
                              which is the default, the number of MC steps is
                              based on heuristics)
+  --refine_step arg (=5)     number of steps in refinement, default=5
   --max_gpu_memory arg (=0)  maximum gpu memory to use (default=0, use all
                              available GPU memory to optain maximum batch size)
   --search_mode arg          search mode of unidock (fast, balance, detail), using
@@ -190,23 +167,57 @@ Information (optional):
   --version                  display program version
 ```
 
-## Screening speed test
-We have provided a target from DUD-E dataset for screening test. Please run:
+## Examples
+
+We have provided a target from DUD-E dataset for screening test. Python version `>=3.6` is recommended.
+
+```bash
+git clone https://github.com/dptech-corp/Uni-Dock.git
+cd Uni-Dock/example/screening_test
+
+# target def
+cp config_def.json config.json
+python run_dock.py
+
+# target mmp13
+cp config_mmp13.json config.json
+python run_dock.py
 ```
-cd example/screening_test
-python run_dock_yyj.py
-```
 
-If you want to use other search mode, specify the parameter `search_mode` in `config.json` and delete `nt` and `ns` in `config.json`.
+If you want to use search mode presets, specify the parameter `search_mode` in `config.json` and delete `nt` and `ns` in `config.json`.
 
-# Troubleshooting
+## Bug Report
 
-1. Some bugs are triggered when I run Uni-Dock in Docker, but no such problems when running directly on the server.
-    - We did find that when running Uni-Dock in docker, there will be additional GPU memory usage. When you use docker to run Uni-Dock on a machine with V100 32G, please use `--max_gpu_memory 27000` to limit the usage of GPU memory size by Uni-Dock.
+Please report bugs to [Issues](https://github.com/dptech-corp/Uni-Dock/issues) page.
+
+## Ackowledgement
+
+If you used Uni-Dock in your work, please cite:
+
+Yu, Y., Cai, C., Wang, J., Bo, Z., Zhu, Z., & Zheng, H. (2023).
+Uni-Dock: GPU-Accelerated Docking Enables Ultralarge Virtual Screening.
+Journal of Chemical Theory and Computation.
+https://doi.org/10.1021/acs.jctc.2c01145
+
+Tang, S., Chen, R., Lin, M., Lin, Q., Zhu, Y., Ding, J., ... & Wu, J. (2022).
+Accelerating autodock vina with gpus. Molecules, 27(9), 3041.
+DOI 10.3390/molecules27093041
+
+J. Eberhardt, D. Santos-Martins, A. F. Tillack, and S. Forli
+AutoDock Vina 1.2.0: New Docking Methods, Expanded Force
+Field, and Python Bindings, J. Chem. Inf. Model. (2021)
+DOI 10.1021/acs.jcim.1c00203
+
+O. Trott, A. J. Olson,
+AutoDock Vina: improving the speed and accuracy of docking
+with a new scoring function, efficient optimization and
+multithreading, J. Comp. Chem. (2010)
+DOI 10.1002/jcc.21334
+
+## FAQ
+
+1. The GPU encounters out-of-memory error.
+Uni-Dock estimates the number of ligands put into GPU memory in one pass based on the available GPU memory size. If it fails, please use `--max_gpu_memory` to limit the usage of GPU memory size by Uni-Dock.
 2. I want to put all my ligands in `--gpu_batch`, but it exceeds the maximum command line length that linux can accept.
-    - You can save your command in a shell script like run.sh, and run the command by `bash run.sh`.
-    - You can save your ligands path in a file (separated by spaces) by `ls . | tee index.txt`, and use `--ligand_index <ligands path file>` in place of `--gpu_batch`.
-
-# License
-
-This project is licensed under the terms of the GNU Lesser General Public License v3.0. See [LICENSE](./LICENSE) for additional details.
+    - You can save your command in a shell script like `run.sh`, and run the command by `bash run.sh`.
+    - You can save your ligands path in a file (separated by spaces) by `ls *.pdbqt > index.txt`, and use `--ligand_index index.txt` in place of `--gpu_batch`.
