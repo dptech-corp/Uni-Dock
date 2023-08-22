@@ -332,16 +332,16 @@ const fl xs_vinardo_vdw_radii[] = {
 };
 
 inline fl xs_radius(sz t) {
-	const sz n = sizeof(xs_vdw_radii) / sizeof(const fl);
-	assert(n == XS_TYPE_SIZE);
-	assert(t < n);
+
+	assert(sizeof(xs_vdw_radii) / sizeof(const fl) == XS_TYPE_SIZE);
+	assert(t < sizeof(xs_vdw_radii) / sizeof(const fl));
 	return xs_vdw_radii[t];
 }
 
 inline fl xs_vinardo_radius(sz t) {
-	const sz n = sizeof(xs_vdw_radii) / sizeof(const fl);
-	assert(n == XS_TYPE_SIZE);
-	assert(t < n);
+
+	assert(sizeof(xs_vdw_radii) / sizeof(const fl) == XS_TYPE_SIZE);
+	assert(t < sizeof(xs_vdw_radii) / sizeof(const fl));
 	return xs_vinardo_vdw_radii[t];
 }
 

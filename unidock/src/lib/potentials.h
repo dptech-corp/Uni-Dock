@@ -446,7 +446,7 @@ public:
             return (std::min)(cap, c_12 / r12 - c_6 / r6);
         else
             return cap;
-        VINA_CHECK(false);
+        // VINA_CHECK(false);
         return 0.0; // placating the compiler
     };
     fl eval(sz t1, sz t2, fl r) { return 0; }
@@ -480,7 +480,7 @@ public:
             return (std::min)(cap, c_12 / r12 - c_10 / r10);
         else
             return cap;
-        VINA_CHECK(false);
+        // VINA_CHECK(false);
         return 0.0; // placating the compiler
     };
     fl eval(sz t1, sz t2, fl r) { return 0; }
