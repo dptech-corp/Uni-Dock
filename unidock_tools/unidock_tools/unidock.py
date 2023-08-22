@@ -165,8 +165,8 @@ class UniDock():
         self.rescoring=rescoring
     
     def writeBpf(self):
-        for ligand in self.SDF:
-            bpf = Bpf(ligand)
+        for ligand1, ligand2 in zip(self.SDF, self.ligands):
+            bpf = Bpf(ligand1, ligand2)
             bpf.genBpf()
 
     def dock(self):
