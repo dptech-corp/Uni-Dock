@@ -26,22 +26,18 @@ jobs:
         cd build
         cmake ..
         make -j4
+        make install
         cd ../..
 
     - name: validation
       run: |
-        echo $(pwd)
         unidock --version
-      env:
-        PATH: $(pwd)/unidock/build:$PATH
 
     - name: perform unit-test
       run: |
         pip install pytest coverage
         pytest unidock/test/ut -v --junitxml=report.xml
         coverage report.xml
-      env:
-        PATH: $(pwd)/unidock/build:$PATH
   
   build_docker_image:
     needs: unidock_test
