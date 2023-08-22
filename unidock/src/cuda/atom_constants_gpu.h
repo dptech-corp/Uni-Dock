@@ -302,16 +302,17 @@ __device__ __constant__ fl xs_vinardo_vdw_radii_gpu[] = {
 };
 
 __device__ __forceinline__  fl xs_radius_gpu(sz t) {
-	sz n = sizeof(xs_vdw_radii_gpu) / sizeof(fl);
-	assert(n == XS_TYPE_SIZE);
-	assert(t < n);
+	
+	assert(sizeof(xs_vdw_radii_gpu) / sizeof(const fl) == XS_TYPE_SIZE);
+	assert(t < sizeof(xs_vdw_radii_gpu) / sizeof(const fl));
 	return xs_vdw_radii_gpu[t];
 }
 
 __device__ __forceinline__  fl xs_vinardo_radius_gpu(sz t) {
-	sz n = sizeof(xs_vdw_radii_gpu) / sizeof(fl);
-	assert(n == XS_TYPE_SIZE);
-	assert(t < n);
+	
+	assert(sizeof(xs_vdw_radii_gpu) / sizeof(const fl) == XS_TYPE_SIZE);
+	assert(t < sizeof(xs_vdw_radii_gpu) / sizeof(const fl));
+
 	return xs_vinardo_vdw_radii_gpu[t];
 }
 
