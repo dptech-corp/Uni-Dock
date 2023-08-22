@@ -8,7 +8,7 @@ setup(
     url='https://github.com/UR-Free/unidock_tools',
     description="A data processing tool for Uni-Dock input and output",
     packages=find_packages(),
-    install_requires=['rdkit', 'networkx', 'numpy', 'MDAnalysis'],
+    install_requires=['rdkit', 'networkx', 'numpy'],
     include_package_data=True,
 
     entry_points={

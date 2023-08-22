@@ -2,7 +2,6 @@ import os
 import shutil
 from pathlib import Path
 import subprocess
-from .receptor_pdb_reader import ReceptorPDBReader
 
 
 class DockingProteinPrepare:
