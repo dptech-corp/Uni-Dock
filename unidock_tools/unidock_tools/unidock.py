@@ -22,7 +22,7 @@ class UniDock():
             self.scoring = 'vina'
             self.rescoring = scoring
 
-        self.receptor = self.set_receptor(receptor)
+        self.set_receptor(receptor)
         self.output_dir = output_dir
         self.ligand_input_method = ["ligand", "batch", "gpu_batch", "ligand_index"]
 
@@ -172,7 +172,12 @@ class UniDock():
     def _call_unidock(self):
         command = " ".join(self.config)
         print("command:", command)
-        subprocess.run(" ".join(self.config), shell=True)
+        resp = subprocess.run(" ".join(self.config), shell=True, 
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, 
+            encoding="utf-8")
+        print(resp.stdout)
+        if resp.stderr:
+            print(resp.stderr)
     
     def _call_gnina(self):
         ligands_basename = [get_file_prefix(filename) for filename in self.ligands]
