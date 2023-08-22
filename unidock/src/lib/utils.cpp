@@ -14,8 +14,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 
-   Author: Dr. Oleg Trott <ot14@columbia.edu>, 
-           The Olson Lab, 
+   Author: Dr. Oleg Trott <ot14@columbia.edu>,
+           The Olson Lab,
            The Scripps Research Institute
 
 */
@@ -47,11 +47,9 @@ void doing(const std::string& str, int verbosity, int level) {
 
 
 void done(int verbosity, int level) {
-    printf("entering done\n");
     if(verbosity > level) {
         std::cout << "done.\n" << std::flush;
     }
-    printf("exiting done\n");
 }
 
 
@@ -91,9 +89,9 @@ bool is_directory(const std::string& directory_pathname) {
   //Source: https://stackoverflow.com/questions/18100097/portable-way-to-check-if-directory-exists-windows-linux-c
   struct stat info;
 
-    if (stat(directory_pathname.c_str(), &info) != 0) 
+    if (stat(directory_pathname.c_str(), &info) != 0)
         return false;
-    else if (info.st_mode & S_IFDIR)  // S_ISDIR() doesn't exist on my windows 
+    else if (info.st_mode & S_IFDIR)  // S_ISDIR() doesn't exist on my windows
         return true;
     else
         return false;
@@ -123,7 +121,7 @@ std::string get_biasname(const std::string& s) {
     return tmp + ".bpf";
 }
 
-std::string get_file_contents(const std::string& filename) {   
+std::string get_file_contents(const std::string& filename) {
     ifile in(make_path(filename));
 
     if (in) {
