@@ -8,7 +8,9 @@ on:
 jobs:
   unidock_test:
     runs-on: nvidia
-    container: nvidia/cuda:12.2.0-devel-ubuntu22.04
+    container: 
+      image: nvidia/cuda:12.2.0-devel-ubuntu22.04
+      options: --gpus all
     steps:
     - name: checkout repo
       uses: actions/checkout@v3
@@ -31,6 +33,7 @@ jobs:
 
     - name: validation
       run: |
+        nvidia-smi
         unidock --version
 
     - name: Set up Python 3.8
