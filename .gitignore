@@ -5,3 +5,9 @@ build/
 test/ligands
 test/results
 .vscode
+unidock/build/
+unidock/example/screening_test/indata
+unidock/example/screening_test/result
+unidock/example/screening_test/def_ligands.txt
+unidock/example/screening_test/rundock.sh
+unidock/example/screening_test/unidock
