@@ -46,8 +46,8 @@ jobs:
         python -m pip install --upgrade pip
         pip install pytest coverage
         pytest unidock/test/ut -v --junitxml=report.xml
-        coverage report.xml
-  
+        coverage xml
+
   build_docker_image:
     needs: unidock_test
     runs-on: ubuntu-latest
