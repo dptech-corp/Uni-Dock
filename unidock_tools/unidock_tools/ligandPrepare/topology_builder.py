@@ -1,4 +1,5 @@
 import os
+import shutil
 import re
 
 import numpy as np
@@ -443,5 +444,6 @@ def prepare_ligands(SDFFiles, output_dir='./ligands_prepared'):
     ligands_num = len(SDFFiles)
     ligands_prepared_num = len(ligands_prepared)
     print("%d sdf format ligands have been prepared successfully in total %d"%(ligands_prepared_num, ligands_num))
+    shutil.rmtree(tmp_dir, ignore_errors=True)
 
     return ligands_prepared
