@@ -11,20 +11,20 @@ Now, UniDockTools has two new functions:
 
 # Installation
 
-## 1. install Uni-Dock and UniDockTools
-UniDock and UniDockTools have been uploaded to the Anaconda repository. To install them, please use the following command:
+## 1. install UniDockTools
+To install UniDockTools, please use the following command:
 
-    conda create -n unidock -c https://conda.mlops.dp.tech:443/caic unidock
+    cd unidock_tools
+    python setup.py install
 
-If you have already installed Uni-Dock and want to install UniDockTools separately, you can use the command:
 
-    pip install unidock_tools
+## 2. install mgltools
 
 If you want ro run Uni-Dock with receptor in PDB format, you need to install mgltools, you can use th command:
 
     conda create -n mgltools mgltools -c bioconda
 
-## 2. install gnina
+## 3. install gnina
 If you want to use gnina CNNscores to rescore docking poses, you should install gnina.
 - binary   
 install gnina by download binary file from [gnina's release website](https://github.com/gnina/gnina/releases)
@@ -36,13 +36,18 @@ By installing UniDockTools, you have obtained an executable file called **Unidoc
 
 ## 1. input ligands with origin sdf format
 
-    Unidock --receptor receptor.pdbqt --gpu_batch ligand1.sdf ligand2.sdf --center_x 9 --center_y -5  --center_z -5 --size_x 20  --size_y 20 --size_z 20 --search_mode banlance --num_modes 9 --seed 123 --dir .
+    Unidock --receptor receptor.pdbqt --gpu_batch ligand1.sdf ligand2.sdf --center_x 9 --center_y -5  --center_z -5 --size_x 20  --size_y 20 --size_z 20 --search_mode banlance  --dir .
 
 
 ## 2. use gnina CNNscores to rescore docking poses
 
-    Unidock --receptor receptor.pdbqt --gpu_batch ligand1.sdf ligand2.sdf  --scoring gnina --center_x 9 --center_y -5  --center_z -5 --size_x 20  --size_y 20 --size_z 20 --search_mode banlance --num_modes 9 --seed 123 --dir .
-## 3. other usage
+    Unidock --receptor receptor.pdbqt --gpu_batch ligand1.sdf ligand2.sdf  --scoring gnina --center_x 9 --center_y -5  --center_z -5 --size_x 20  --size_y 20 --size_z 20 --search_mode banlance  --dir .
+
+
+## 3. use ligands structure as bias
+    Unidock --receptor receptor.pdbqt --gpu_batch ligand1.sdf ligand2.sdf  --scoring gnina --center_x 9 --center_y -5  --center_z -5 --size_x 20  --size_y 20 --size_z 20 --search_mode banlance  --dir . --ligand_bias
+
+## 4. other usage
 
 To lower users' learning cost, the other usage methods of **Unidock** remain consistent with the usage of **unidock**.
 
