@@ -1,7 +1,7 @@
 name: Uni-Dock Tools CI/CD
 on:
   push:
-    branches: [ ci ]
+    branches: [ ci2 ]
   pull_request:
     branches: [ master ]
 
