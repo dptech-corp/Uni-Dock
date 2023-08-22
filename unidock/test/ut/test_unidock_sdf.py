@@ -10,8 +10,8 @@ class TestUniDockSDF(ut.TestCase):
     def setUp(self):
         self.workdir = Path(f"/tmp/{uuid.uuid4()}")
         self.workdir.mkdir(parents=True, exist_ok=True)
-        self.receptor = os.path.join(os.path.dirname(__file__), "..", "receptor", "1a30_protein.pdbqt")
-        self.ligand = os.path.join(os.path.dirname(__file__), "..", "ligands", "1a30_ligand.sdf")
+        self.receptor = os.path.join(os.path.dirname(os.path.dirname(__file__)), "receptor", "1a30_protein.pdbqt")
+        self.ligand = os.path.join(os.path.dirname(os.path.dirname(__file__)), "ligands", "1a30_ligand.sdf")
         self.pocket = [8.729, 25.62, 4.682, 19.12, 16.56, 18.65]
 
     def tearDown(self):
