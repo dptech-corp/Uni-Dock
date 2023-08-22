@@ -20,6 +20,10 @@ If you have already installed Uni-Dock and want to install UniDockTools separate
 
     pip install unidock_tools
 
+If you want ro run Uni-Dock with receptor in PDB format, you need to install mgltools, you can use th command:
+
+    conda create -n mgltools mgltools -c bioconda
+
 ## 2. install gnina
 If you want to use gnina CNNscores to rescore docking poses, you should install gnina.
 - binary   
