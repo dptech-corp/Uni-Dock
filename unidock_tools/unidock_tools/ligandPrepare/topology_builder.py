@@ -396,7 +396,7 @@ def add_hydrogen_from_sdf(ligand_file:str, output_file:str):
     props_dict = mol.GetPropsAsDict()
 
     mol_block = Chem.MolToMolBlock(mol, kekulize=True)
-    mol_str = subprocess.check_output(["obabel", "-imol", "-osdf", "-h"],
+    mol_str = subprocess.check_output(["obabel", "-imol", "-osdf", "-h", "--gen3d"],
                                     text=True, input=mol_block, stderr=subprocess.DEVNULL)
     bstr = BytesIO(bytes(mol_str, encoding='utf-8'))
     addH_mol = next(Chem.ForwardSDMolSupplier(bstr, removeHs=False, sanitize=True))
