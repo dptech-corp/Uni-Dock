@@ -413,6 +413,7 @@ def prepare_ligands(SDFFiles, output_dir='./ligands_prepared'):
     os.makedirs(tmp_dir, exist_ok=True)
     for sdf_file in SDFFiles:
         addh_path = os.path.join(tmp_dir, os.path.basename(sdf_file))
+        add_hydrogen_from_sdf(sdf_file, addh_path)
         addh_sdf_files.append(addh_path)
 
     def _convert_file(ligand):
