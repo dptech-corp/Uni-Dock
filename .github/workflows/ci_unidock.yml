@@ -33,8 +33,14 @@ jobs:
       run: |
         unidock --version
 
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v3
+      with:
+        python-version: 3.8
+
     - name: perform unit-test
       run: |
+        python -m pip install --upgrade pip
         pip install pytest coverage
         pytest unidock/test/ut -v --junitxml=report.xml
         coverage report.xml
