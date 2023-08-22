@@ -1,4 +1,5 @@
 import os
+import shutil
 import re
 
 import numpy as np
@@ -377,8 +378,44 @@ class TopologyBuilder(object):
         writer.flush()
         writer.close()
 
+
+def set_properties(mol, props_dict):
+    for key, value in props_dict.items():
+        if isinstance(value, int):
+            mol.SetIntProp(key, value)
+        elif isinstance(value, float):
+            mol.SetDoubleProp(key, value)
+        elif isinstance(value, str):
+            mol.SetProp(key, value)
+
+
+def add_hydrogen_from_sdf(ligand_file:str, output_file:str):
+    import subprocess
+    from io import BytesIO
+
+    mol = Chem.SDMolSupplier(ligand_file, removeHs=False, sanitize=True)[0]
+    props_dict = mol.GetPropsAsDict()
+
+    mol_block = Chem.MolToMolBlock(mol, kekulize=True)
+    mol_str = subprocess.check_output(["obabel", "-imol", "-osdf", "-h", "--gen3d"],
+                                    text=True, input=mol_block, stderr=subprocess.DEVNULL)
+    bstr = BytesIO(bytes(mol_str, encoding='utf-8'))
+    addH_mol = next(Chem.ForwardSDMolSupplier(bstr, removeHs=False, sanitize=True))
+    set_properties(mol=addH_mol, props_dict=props_dict)
+    with Chem.SDWriter(output_file) as writer:
+        writer.write(addH_mol)
+
+
 def prepare_ligands(SDFFiles, output_dir='./ligands_prepared'):
     os.makedirs(output_dir, exist_ok=True)
+
+    addh_sdf_files = []
+    tmp_dir = f'./addh_dir'
+    os.makedirs(tmp_dir, exist_ok=True)
+    for sdf_file in SDFFiles:
+        addh_path = os.path.join(tmp_dir, os.path.basename(sdf_file))
+        add_hydrogen_from_sdf(sdf_file, addh_path)
+        addh_sdf_files.append(addh_path)
 
     def _convert_file(ligand):
         basename =  os.path.basename(ligand)
@@ -393,7 +430,7 @@ def prepare_ligands(SDFFiles, output_dir='./ligands_prepared'):
 
 
     with ThreadPoolExecutor() as executor:
-        executor.map(_convert_file, SDFFiles)
+        executor.map(_convert_file, addh_sdf_files)
     
     basenames =  [os.path.basename(ligand) for ligand in SDFFiles]
     basename_prefixs = [basename.split('.')[0] for basename in basenames]
@@ -407,5 +444,6 @@ def prepare_ligands(SDFFiles, output_dir='./ligands_prepared'):
     ligands_num = len(SDFFiles)
     ligands_prepared_num = len(ligands_prepared)
     print("%d sdf format ligands have been prepared successfully in total %d"%(ligands_prepared_num, ligands_num))
+    shutil.rmtree(tmp_dir, ignore_errors=True)
 
     return ligands_prepared

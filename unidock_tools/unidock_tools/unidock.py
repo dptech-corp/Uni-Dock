@@ -22,7 +22,7 @@ class UniDock():
             self.scoring = 'vina'
             self.rescoring = scoring
 
-        self.receptor = receptor
+        self.set_receptor(receptor)
         self.output_dir = output_dir
         self.ligand_input_method = ["ligand", "batch", "gpu_batch", "ligand_index"]
 
@@ -42,7 +42,13 @@ class UniDock():
 
         :param receptor: Path to the receptor file (PDBQT format).
         """
-        self.receptor = receptor
+        if os.path.splitext(receptor)[1] == ".pdb":
+            from unidock_tools.protein_prepare.protein_prepare import DockingProteinPrepare
+
+            preparer = DockingProteinPrepare(input_protein_path=receptor, output_protein_path=os.path.splitext(receptor)[0] + '.pdbqt')
+            self.receptor = preparer.run()
+        else:
+            self.receptor = receptor
 
     def set_ligand_index(self, ligand_index:str):
         """
@@ -166,7 +172,12 @@ class UniDock():
     def _call_unidock(self):
         command = " ".join(self.config)
         print("command:", command)
-        subprocess.run(" ".join(self.config), shell=True)
+        resp = subprocess.run(" ".join(self.config), shell=True, 
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, 
+            encoding="utf-8")
+        print(resp.stdout)
+        if resp.stderr:
+            print(resp.stderr)
     
     def _call_gnina(self):
         ligands_basename = [get_file_prefix(filename) for filename in self.ligands]
