@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import os
 import time
 import json
@@ -57,6 +58,3 @@ for fn in fns:
     elif fn.startswith("decoys"):
         idx = int(fn.split("_")[0].replace("decoys", ""))
         os.system("echo '{},{},{}'>> {}".format(idx, "decoy", score, csv_name))
-
-
-

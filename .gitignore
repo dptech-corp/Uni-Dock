@@ -5,3 +5,4 @@ build/
 test/ligands
 test/results
 .vscode
+example/
