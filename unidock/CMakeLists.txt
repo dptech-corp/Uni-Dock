@@ -31,15 +31,15 @@ add_compile_definitions(ENABLE_CUDA)
 add_compile_definitions(VERSION="v${PROJECT_VERSION}")
 
 find_package(OpenMP REQUIRED) # OpenMP only required in main.cpp
-find_package(Boost REQUIRED
-	COMPONENTS system thread serialization filesystem program_options)
+find_package(Boost 1.72 REQUIRED
+	COMPONENTS system thread serialization filesystem program_options timer)
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(src/lib src/cuda)
 add_executable(${VINA_BIN_NAME} src/main/main.cpp)
 add_executable(split src/split/split.cpp)
 
-target_link_libraries(${VINA_BIN_NAME} Boost::system Boost::thread Boost::serialization Boost::filesystem Boost::program_options)
-target_link_libraries(split Boost::system Boost::thread Boost::serialization Boost::filesystem Boost::program_options)
+target_link_libraries(${VINA_BIN_NAME} Boost::system Boost::thread Boost::serialization Boost::filesystem Boost::program_options Boost::timer)
+target_link_libraries(split Boost::system Boost::thread Boost::serialization Boost::filesystem Boost::program_options Boost::timer)
 target_link_libraries(${VINA_BIN_NAME} OpenMP::OpenMP_CXX)
 
 # set(CMAKE_CURRENT_SOURCE_DIR ${CMAKE_SOURCE_DIR}/src/lib)

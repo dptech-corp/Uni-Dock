@@ -1166,7 +1166,7 @@ void write_back(output_type_cuda_t* results, const output_type_cuda_t* best_out)
 		}
 	}
 }
-
+// MAX_THREADS_PER_BLOCK and MIN_BLOCKS_PER_MP should be adjusted according to the profiling results 
 #define MAX_THREADS_PER_BLOCK 32
 #define MIN_BLOCKS_PER_MP     32
 __global__
@@ -1329,8 +1329,7 @@ void monte_carlo::operator()(std::vector<model>& m_gpu, std::vector<output_conta
 	DEBUG_PRINTF("m_cuda_size=%lu\n", m_cuda_size);
 	size_t ig_cuda_size = sizeof(ig_cuda_t);
 	DEBUG_PRINTF("ig_cuda_size=%lu\n", ig_cuda_size);
-	size_t p_cuda_size_cpu = sizeof(p_cuda_t_cpu);
-	DEBUG_PRINTF("p_cuda_size_cpu=%lu\n", p_cuda_size_cpu);
+	DEBUG_PRINTF("p_cuda_size_cpu=%lu\n",sizeof(p_cuda_t_cpu));
 
 	size_t p_cuda_size_gpu = sizeof(p_cuda_t);
 	DEBUG_PRINTF("p_cuda_size_gpu=%lu\n", p_cuda_size_gpu);

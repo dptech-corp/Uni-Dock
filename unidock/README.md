@@ -29,10 +29,11 @@ Uni-Dock supports NVIDIA GPUs on Linux platform.
 ### Building from source
 
 1. Install dependencies
-- Boost 1.77.0
+
+- Boost >= 1.72
 
 ```bash
-sudo apt install libboost-system-dev libboost-thread-dev libboost-serialization-dev libboost-filesystem-dev libboost-program-options-dev
+sudo apt install libboost-system-dev libboost-thread-dev libboost-serialization-dev libboost-filesystem-dev libboost-program-options-dev libboost-timer-dev
 ```
 
 Alternatively, install from [boost source codes](https://www.boost.org/users/download/).

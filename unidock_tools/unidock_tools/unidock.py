@@ -1,10 +1,12 @@
-from unidock_tools.ligandPrepare import prepare_ligands
 import os, shutil
 import subprocess
 import glob
 import argparse
 
 from rdkit import Chem
+
+from unidock_tools.ligand_prepare import prepare_ligands
+from unidock_tools.generate_bias import Bpf
 
 
 class UniDock():
@@ -22,9 +24,10 @@ class UniDock():
             self.scoring = 'vina'
             self.rescoring = scoring
 
-        self.receptor = receptor
+        self.set_receptor(receptor)
         self.output_dir = output_dir
         self.ligand_input_method = ["ligand", "batch", "gpu_batch", "ligand_index"]
+        self.mode = ["ligand_bias"]
 
         self.command_scoring = '--scoring  %s'%self.scoring
         self.command_ligand = ''
@@ -42,7 +45,13 @@ class UniDock():
 
         :param receptor: Path to the receptor file (PDBQT format).
         """
-        self.receptor = receptor
+        if os.path.splitext(receptor)[1] == ".pdb":
+            from unidock_tools.protein_prepare.protein_prepare import DockingProteinPrepare
+
+            preparer = DockingProteinPrepare(input_protein_path=receptor, output_protein_path=os.path.splitext(receptor)[0] + '.pdbqt')
+            self.receptor = preparer.run()
+        else:
+            self.receptor = receptor
 
     def set_ligand_index(self, ligand_index:str):
         """
@@ -154,6 +163,11 @@ class UniDock():
         :param rescoring: Rescoring function. Options: 'gnina'. 
         """
         self.rescoring=rescoring
+    
+    def writeBpf(self):
+        for ligand1, ligand2 in zip(self.SDF, self.ligands):
+            bpf = Bpf(ligand1, ligand2)
+            bpf.genBpf()
 
     def dock(self):
         """
@@ -166,7 +180,12 @@ class UniDock():
     def _call_unidock(self):
         command = " ".join(self.config)
         print("command:", command)
-        subprocess.run(" ".join(self.config), shell=True)
+        resp = subprocess.run(" ".join(self.config), shell=True, 
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, 
+            encoding="utf-8")
+        print(resp.stdout)
+        if resp.stderr:
+            print(resp.stderr)
     
     def _call_gnina(self):
         ligands_basename = [get_file_prefix(filename) for filename in self.ligands]
@@ -200,6 +219,8 @@ class UniDock():
         self.command_line = ""
         for arg, value in vars(args).items():
             if arg in ['scoring'] or arg in self.ligand_input_method:
+                continue
+            if arg in self.mode:
                 continue
             if value is not None:
                 if isinstance(value, list):
@@ -265,6 +286,7 @@ def main():
     parser.add_argument("--write_maps", type=str, help="output filename (directory + prefix name) for maps. Option --force_even_voxels may be needed to comply with .map format")
 
     # Misc
+    parser.add_argument("--ligand_bias", action="store_true")
     parser.add_argument("--score_only", action="store_true")
     parser.add_argument("--local_only", action="store_true")
     parser.add_argument("--keep_nonpolar_H", action="store_true")
@@ -296,10 +318,17 @@ def main():
     elif ligand_input_method == "ligand_index":
         unidock.set_ligand_index(args.ligand_index)
     print("command_ligand: ",unidock.command_ligand)
-    
+
     unidock._get_config(args)
+
+    ##############################################
+    # this part must write after unidock._get_config()
+    if args.ligand_bias:
+        unidock.writeBpf()
+        unidock.config.append("--multi_bias")
+    ##############################################
+
     unidock.dock()
     
-
 if __name__ == "__main__":
     main()

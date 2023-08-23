@@ -1,0 +1,7 @@
+source leaprc.protein.ff19SB
+set default PBRadii mbondi3
+
+protein = loadPdb protein_pdb4amber.pdb
+savePdb protein protein_tleap.pdb
+
+quit

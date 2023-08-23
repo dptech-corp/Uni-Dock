@@ -23,7 +23,8 @@
 #ifndef VINA_PARALLEL_PROGRESS_H
 #define VINA_PARALLEL_PROGRESS_H
 
-#include <boost/progress.hpp>
+#include <boost/timer/progress_display.hpp>
+
 #include <boost/thread/mutex.hpp>
 
 #include <functional>
@@ -34,7 +35,7 @@ struct parallel_progress : public incrementable {
 	parallel_progress(std::function<void(double)>* c = NULL) : p(NULL), callback(c) {}
 	void init(unsigned long n) {
         count = n;
-        p = new boost::progress_display(count);
+        p = new boost::timer::progress_display(count);
     }
 	void operator++() {
 		if(p) {
@@ -47,7 +48,7 @@ struct parallel_progress : public incrementable {
 	virtual ~parallel_progress() { delete p; }
 private:
 	boost::mutex self;
-	boost::progress_display* p;
+	boost::timer::progress_display* p;
     std::function<void(double)>* callback;
     unsigned long count;
 };
