@@ -59,29 +59,30 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-    - name: Log in to Docker Hub
+    - name: log in to docker hub
       uses: docker/login-action@v2
       with:
         username: dptechnology
         password: ${{ secrets.DOCKERHUB_PAT }}
 
-    - name: Set up QEMU
+    - name: set up QEMU
       uses: docker/setup-qemu-action@v2
 
-    - name: Set up Docker Buildx
+    - name: set up docker buildx
       id: buildx
       uses: docker/setup-buildx-action@v2
 
-    # - name: read version
-    #   id: read
-    #   uses: juliangruber/read-file-action@v1
-    #   with:
-    #     path: ./VERSION
+    - name: set commit short sha
+      id: short_sha
+      run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
-    - name: Build and Push Container
+    - name: check commit short sha
+      run: echo ${{ steps.short_sha.outputs.sha_short }}
+
+    - name: build and push container
       uses: docker/build-push-action@v4
       with:
-        tags: v0.0.1
+        tags: ${{ steps.short_sha.outputs.sha_short }}
         file: Dockerfile
-        context: ./unidock
+        context: "{{defaultContext}}:unidock"
         push: true
