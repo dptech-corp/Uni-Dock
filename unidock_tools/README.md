@@ -50,7 +50,7 @@ By installing UniDockTools, you have obtained an executable file called **Unidoc
 
 ## Use ligands structure as bias
 
-`Unidock --receptor receptor.pdbqt --gpu_batch ligand1.sdf ligand2.sdf  --scoring gnina --center_x 9 --center_y -5  --center_z -5 --size_x 20  --size_y 20 --size_z 20 --search_mode balance  --dir . --ligand_bias`
+`Unidock --receptor receptor.pdbqt --gpu_batch ligand1.sdf ligand2.sdf --reference ref1.sdf ref2.sdf --scoring gnina --center_x 9 --center_y -5  --center_z -5 --size_x 20  --size_y 20 --size_z 20 --search_mode balance  --dir . `
 
 ## Other usage
 
