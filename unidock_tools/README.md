@@ -12,7 +12,7 @@ Now, UniDockTools has two new functions:
 # Installation
 
 ## 1. Install Uni-Dock and UniDockTools
-To install UniDock, please follow [Uni-Dock installation](../unidock/README.md): 
+To install UniDock, please follow [Uni-Dock installation](../unidock/README.md)
 
 To install UniDockTools, please execute the  following command at ```/Uni-Dock/unidock_tools``` directory
 
