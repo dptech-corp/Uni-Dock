@@ -27,7 +27,7 @@ class UniDock():
         self.set_receptor(receptor)
         self.output_dir = output_dir
         self.ligand_input_method = ["ligand", "batch", "gpu_batch", "ligand_index"]
-        self.mode = ["ligand_bias"]
+        self.mode = ["ligand_bias", "reference"]
 
         self.command_scoring = '--scoring  %s'%self.scoring
         self.command_ligand = ''
@@ -164,8 +164,8 @@ class UniDock():
         """
         self.rescoring=rescoring
     
-    def writeBpf(self):
-        for ligand1, ligand2 in zip(self.SDF, self.ligands):
+    def writeBpf(self, references):
+        for ligand1, ligand2 in zip(references, self.ligands):
             bpf = Bpf(ligand1, ligand2)
             bpf.genBpf()
 
@@ -266,7 +266,7 @@ def main():
     parser.add_argument("--ligand_index", type=str, help="file containing paths to ligands")
     parser.add_argument("--batch", dest="batch",nargs='+', help="batch ligand (SDF)")
     parser.add_argument("--gpu_batch", dest="gpu_batch",nargs='+', help="gpu batch ligand (SDF)")
-
+    parser.add_argument("--reference", dest="reference",nargs='+', help="get reference ligands (SDF) which are used for constrain docking")
     # Scoring function
     parser.add_argument("--scoring", type=str, default="vina", help="scoring function (ad4, vina or vinardo)")
 
@@ -322,9 +322,9 @@ def main():
     unidock._get_config(args)
 
     ##############################################
-    # this part must write after unidock._get_config()
-    if args.ligand_bias:
-        unidock.writeBpf()
+    # this part must execute after unidock._get_config()
+    if args.reference is not None:
+        unidock.writeBpf(args.reference)
         unidock.config.append("--multi_bias")
     ##############################################
 
