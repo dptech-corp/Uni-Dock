@@ -72,17 +72,18 @@ jobs:
       id: buildx
       uses: docker/setup-buildx-action@v2
 
-    - name: set commit short sha
-      id: short_sha
-      run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+    - uses: benjlevesque/short-sha@v2
+      id: short-sha
+      with:
+        length: 7
 
     - name: check commit short sha
-      run: echo ${{ steps.short_sha.outputs.sha_short }}
+      run: echo ${{ steps.short-sha.outputs.sha }}
 
     - name: build and push container
       uses: docker/build-push-action@v4
       with:
-        tags: ${{ steps.short_sha.outputs.sha_short }}
+        tags: ${{ steps.short-sha.outputs.sha }}
         file: Dockerfile
         context: "{{defaultContext}}:unidock"
         push: true
