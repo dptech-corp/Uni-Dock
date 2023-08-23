@@ -306,29 +306,32 @@ def main():
 
     args = parser.parse_args()
 
-    unidock = UniDock(args.receptor, args.scoring, args.dir)
+    if args.receptor is None or (args.ligand is None and args.batch is None and args.gpu_batch is None and args.index is None):
+        print(parser.print_help())
+    else:
+        unidock = UniDock(args.receptor, args.scoring, args.dir)
 
-    ligand_input_method = unidock._check_args_and_return(args)
-    if ligand_input_method == "ligand":
-        unidock.set_ligand(args.ligand)
-    elif ligand_input_method == "batch":
-        unidock.set_batch(args.batch)
-    elif ligand_input_method == "gpu_batch":
-        unidock.set_gpu_batch(args.gpu_batch)
-    elif ligand_input_method == "ligand_index":
-        unidock.set_ligand_index(args.ligand_index)
-    print("command_ligand: ",unidock.command_ligand)
+        ligand_input_method = unidock._check_args_and_return(args)
+        if ligand_input_method == "ligand":
+            unidock.set_ligand(args.ligand)
+        elif ligand_input_method == "batch":
+            unidock.set_batch(args.batch)
+        elif ligand_input_method == "gpu_batch":
+            unidock.set_gpu_batch(args.gpu_batch)
+        elif ligand_input_method == "ligand_index":
+            unidock.set_ligand_index(args.ligand_index)
+        print("command_ligand: ",unidock.command_ligand)
 
-    unidock._get_config(args)
+        unidock._get_config(args)
 
-    ##############################################
-    # this part must execute after unidock._get_config()
-    if args.reference is not None:
-        unidock.writeBpf(args.reference)
-        unidock.config.append("--multi_bias")
-    ##############################################
+        ##############################################
+        # this part must execute after unidock._get_config()
+        if args.reference is not None:
+            unidock.writeBpf(args.reference)
+            unidock.config.append("--multi_bias")
+        ##############################################
 
-    unidock.dock()
-    
+        unidock.dock()
+        
 if __name__ == "__main__":
     main()
