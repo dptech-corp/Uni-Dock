@@ -1,0 +1,3 @@
+rdkit
+networkx
+numpy

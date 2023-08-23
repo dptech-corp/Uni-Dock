@@ -1,0 +1,2 @@
+[console_scripts]
+Unidock = unidock_tools.unidock:main
