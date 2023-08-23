@@ -25,14 +25,14 @@ class UniDock():
             self.rescoring = scoring
 
         self.set_receptor(receptor)
-        self.output_dir = output_dir
         self.ligand_input_method = ["ligand", "batch", "gpu_batch", "ligand_index"]
         self.mode = ["ligand_bias", "reference"]
 
         self.command_scoring = '--scoring  %s'%self.scoring
         self.command_ligand = ''
 
-        # delete output directory if it already exists
+        self.output_dir = output_dir
+        # delete output directory if it already exists ?
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir, exist_ok=True)
 
@@ -189,7 +189,7 @@ class UniDock():
     
     def _call_gnina(self):
         ligands_basename = [get_file_prefix(filename) for filename in self.ligands]
-        docking_poses = ["%s_out.sdf"%basename for basename in ligands_basename]
+        docking_poses = [os.path.join(self.output_dir, "%s_out.sdf"%basename) for basename in ligands_basename]
         
         for pose in docking_poses:
             result = subprocess.run("gnina -r %s -l %s --score_only"%(self.receptor, pose), shell=True, stdout=subprocess.PIPE, text=True)
