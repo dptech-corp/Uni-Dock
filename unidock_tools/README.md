@@ -14,7 +14,6 @@ Now, UniDockTools has two new functions:
 ## 1. install UniDockTools
 To install UniDockTools, please use the following command:
 
-    cd unidock_tools
     python setup.py install
 
 
