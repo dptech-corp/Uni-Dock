@@ -58,11 +58,12 @@ jobs:
     needs: unidock_test
     runs-on: ubuntu-latest
     steps:
+
     - name: Log in to Docker Hub
-      uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+      uses: docker/login-action@v2
       with:
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
+        username: dptechnology
+        password: ${{ secrets.DOCKERHUB_PAT }}
 
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v2
@@ -71,14 +72,15 @@ jobs:
       id: buildx
       uses: docker/setup-buildx-action@v2
 
-    - name: read version
-      id: read
-      uses: juliangruber/read-file-action@v1
-      with:
-        path: ./VERSION
+    # - name: read version
+    #   id: read
+    #   uses: juliangruber/read-file-action@v1
+    #   with:
+    #     path: ./VERSION
 
-    - name: build docker image
-      run: |
-        cd unidock
-        docker buildx build . --push --platform linux/arm64,linux/amd64 -t xmyyn/unidock:v${{ steps.read.outputs.content }}
-        docker buildx build . --push --platform linux/arm64,linux/amd64 -t xmyyn/unidock:latest
+    - name: Build and Push Container
+      uses: docker/build-push-action@v4
+      with:
+        tags: v0.0.1
+        file: Dockerfile
+        push: true
