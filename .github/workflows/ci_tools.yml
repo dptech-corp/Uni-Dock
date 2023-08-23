@@ -24,7 +24,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install flake8
 
-    - name: Run flask8 formating
+    - name: Run flake8 formating
       run: |
         flake8 unidock_tools/unidock_tools
     
