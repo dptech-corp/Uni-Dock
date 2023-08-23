@@ -1,3 +1,4 @@
+from typing import Union
 import os
 import shutil
 import re
@@ -18,21 +19,9 @@ from unidock_tools.ligandPrepare import utils
 
 class TopologyBuilder(object):
     def __init__(self,
-                 ligand_sdf_file_name,
-                 working_dir_name='.'):
+                 input_sdf_file_path: Union[str, bytes, os.PathLike],):
 
-        self.ligand_sdf_file_name = ligand_sdf_file_name
-
-        self.working_dir_name = os.path.abspath(working_dir_name)
-
-        ligand_sdf_base_file_name = os.path.basename(self.ligand_sdf_file_name)
-        ligand_file_name_prefix = ligand_sdf_base_file_name.split('.')[0]
-
-        ligand_pdbqt_base_file_name = ligand_file_name_prefix + '.pdbqt'
-        self.ligand_pdbqt_file_name = os.path.join(self.working_dir_name, ligand_pdbqt_base_file_name)
-
-        ligand_torsion_tree_sdf_base_file_name = ligand_file_name_prefix + '_prepared.sdf'
-        self.ligand_torsion_tree_sdf_file_name = os.path.join(self.working_dir_name, ligand_torsion_tree_sdf_base_file_name)
+        self.ligand_sdf_file_name = input_sdf_file_path
 
         self.atom_typer = AtomType()
         self.rotatable_bond_finder = RotatableBond()
@@ -307,7 +296,7 @@ class TopologyBuilder(object):
             for pdbqt_line in self.pdbqt_line_list:
                 ligand_pdbqt_file.write(pdbqt_line)
 
-    def write_constraint_bpf_file(self):
+    def write_constraint_bpf_file(self, out_path:Union[str, bytes, os.PathLike]=''):
         self.core_bpf_remark_line_list = []
         self.core_bpf_atom_line_list = []
         self.core_bpf_atom_line_format = '{:8.3f}\t{:8.3f}\t{:8.3f}\t{:6.2f}\t{:6.2f}\t{:3s}\t{:<2s}\n'
@@ -328,7 +317,8 @@ class TopologyBuilder(object):
 
         self.core_bpf_line_list = self.core_bpf_remark_line_list + self.core_bpf_atom_line_list
 
-        with open(self.ligand_core_bpf_file_name, 'w') as ligand_core_bpf_file:
+        os.makedirs(os.path.dirname(os.path.abspath(out_path)), exist_ok=True)
+        with open(out_path, 'w') as ligand_core_bpf_file:
             for core_bpf_line in self.core_bpf_line_list:
                 ligand_core_bpf_file.write(core_bpf_line)
 
