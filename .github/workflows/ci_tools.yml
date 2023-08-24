@@ -73,8 +73,8 @@ jobs:
 
     - name: Run mypy check
       run: |
-        echo "[tool.mypy]\nignore_errors = 'True'" > mypy.toml
-        mypy unidock_tools/unidock_tools --config_file ./mypy.toml
+        echo "[tool.mypy]\nignore_errors = 'True'" > pyproject.toml
+        mypy unidock_tools/unidock_tools
 
   ut:
     if: ${{ always() }}
