@@ -83,7 +83,7 @@ jobs:
     - name: build and push container
       uses: docker/build-push-action@v4
       with:
-        tags: dptechnology/unidock:${{ steps.short-sha.outputs.sha }}
+        tags: dptechnology/unidock:${{ steps.short-sha.outputs.sha }},dptechnology/unidock:latest
         file: Dockerfile
         context: "{{defaultContext}}:unidock"
         push: true
