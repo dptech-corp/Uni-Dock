@@ -86,10 +86,22 @@ jobs:
     - name: checkout repo
       uses: actions/checkout@v3
 
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
+    - name: Setup conda
+      uses: s-weigand/setup-conda@v1
       with:
+        update-conda: true
         python-version: ${{ matrix.python-version }}
+        conda-channels: anaconda, conda-forge
+
+    - name: check python version
+      run: | 
+        conda --version
+        which python
+        python --version
+
+    - name: install dependency
+      run: |
+        conda create -n mgltools mgltools -c bioconda -y
 
     - name: install package
       run: |
