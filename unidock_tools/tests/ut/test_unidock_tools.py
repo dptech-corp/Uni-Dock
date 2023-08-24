@@ -1,6 +1,7 @@
 import os
 import shutil
 from pathlib import Path
+import glob
 import uuid
 import subprocess
 from argparse import Namespace
@@ -9,7 +10,7 @@ import unittest as ut
 
 class TestUniDockTools(ut.TestCase):
     def setUp(self):
-        self.workdir = Path(f"./tmp/{uuid.uuid4()}")
+        self.workdir = Path(f"./tmp+{uuid.uuid4()}")
         self.workdir.mkdir(parents=True, exist_ok=True)
         self.receptor = os.path.join(os.path.dirname(__file__), "1bcu_protein.pdb")
         self.ligand = os.path.join(os.path.dirname(__file__), "1bcu_ligand.sdf")
@@ -31,14 +32,14 @@ class TestUniDockTools(ut.TestCase):
             "search_mode": "fast",
             "num_modes": 1,
             "receptor": self.receptor,
+            "dir": self.workdir.as_posix(),
         })
         unidock_runner = UniDock(self.receptor, "vina", self.workdir.as_posix())
         unidock_runner.set_gpu_batch([self.ligand])
         unidock_runner._get_config(args)
         unidock_runner.dock()
 
-        result_ligand = os.path.join(self.workdir, "ligands_prepared", 
-                os.path.splitext(os.path.basename(self.ligand))[0] + "_out.sdf")
+        result_ligand = glob.glob(os.path.join(self.workdir, "*_out.sdf"))[0]
         self.assertTrue(os.path.exists(result_ligand))
 
         score_line = ""
@@ -67,8 +68,7 @@ class TestUniDockTools(ut.TestCase):
         if resp.stderr:
             print(resp.stderr)
 
-        result_ligand = os.path.join(self.workdir, "ligands_prepared", 
-                os.path.splitext(os.path.basename(self.ligand))[0] + "_out.sdf")
+        result_ligand = glob.glob(os.path.join(self.workdir, "*_out.sdf"))[0]
         self.assertTrue(os.path.exists(result_ligand))
 
         score_line = ""

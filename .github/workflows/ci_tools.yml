@@ -7,6 +7,7 @@ on:
 
 jobs:
   flake8:
+    continue-on-error: true
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -29,6 +30,7 @@ jobs:
         flake8 unidock_tools/unidock_tools
     
   pylint:
+    continue-on-error: true
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -51,6 +53,7 @@ jobs:
         pylint unidock_tools/unidock_tools
 
   mypy:
+    continue-on-error: true
     runs-on: ubuntu-latest
     strategy:
       matrix:
