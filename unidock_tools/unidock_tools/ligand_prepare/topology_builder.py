@@ -12,9 +12,9 @@ from rdkit import Chem
 from rdkit.Chem import GetMolFrags, FragmentOnBonds
 from rdkit.Chem.rdPartialCharges import ComputeGasteigerCharges
 
-from unidock_tools.ligandPrepare.atom_type import AtomType
-from unidock_tools.ligandPrepare.rotatable_bond import RotatableBond
-from unidock_tools.ligandPrepare import utils
+from unidock_tools.ligand_prepare.atom_type import AtomType
+from unidock_tools.ligand_prepare.rotatable_bond import RotatableBond
+from unidock_tools.ligand_prepare import utils
 
 class TopologyBuilder(object):
     def __init__(self,

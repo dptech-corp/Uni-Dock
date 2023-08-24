@@ -25,14 +25,14 @@ class UniDock():
             self.rescoring = scoring
 
         self.set_receptor(receptor)
-        self.output_dir = output_dir
         self.ligand_input_method = ["ligand", "batch", "gpu_batch", "ligand_index"]
-        self.mode = ["ligand_bias"]
+        self.mode = ["ligand_bias", "reference"]
 
         self.command_scoring = '--scoring  %s'%self.scoring
         self.command_ligand = ''
 
-        # delete output directory if it already exists
+        self.output_dir = output_dir
+        # delete output directory if it already exists ?
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir, exist_ok=True)
 
@@ -164,8 +164,8 @@ class UniDock():
         """
         self.rescoring=rescoring
     
-    def writeBpf(self):
-        for ligand1, ligand2 in zip(self.SDF, self.ligands):
+    def writeBpf(self, references):
+        for ligand1, ligand2 in zip(references, self.ligands):
             bpf = Bpf(ligand1, ligand2)
             bpf.genBpf()
 
@@ -189,7 +189,7 @@ class UniDock():
     
     def _call_gnina(self):
         ligands_basename = [get_file_prefix(filename) for filename in self.ligands]
-        docking_poses = ["%s_out.sdf"%basename for basename in ligands_basename]
+        docking_poses = [os.path.join(self.output_dir, "%s_out.sdf"%basename) for basename in ligands_basename]
         
         for pose in docking_poses:
             result = subprocess.run("gnina -r %s -l %s --score_only"%(self.receptor, pose), shell=True, stdout=subprocess.PIPE, text=True)
@@ -266,7 +266,7 @@ def main():
     parser.add_argument("--ligand_index", type=str, help="file containing paths to ligands")
     parser.add_argument("--batch", dest="batch",nargs='+', help="batch ligand (SDF)")
     parser.add_argument("--gpu_batch", dest="gpu_batch",nargs='+', help="gpu batch ligand (SDF)")
-
+    parser.add_argument("--reference", dest="reference",nargs='+', help="get reference ligands (SDF) which are used for constrain docking")
     # Scoring function
     parser.add_argument("--scoring", type=str, default="vina", help="scoring function (ad4, vina or vinardo)")
 
@@ -306,29 +306,32 @@ def main():
 
     args = parser.parse_args()
 
-    unidock = UniDock(args.receptor, args.scoring, args.dir)
+    if args.receptor is None or (args.ligand is None and args.batch is None and args.gpu_batch is None and args.index is None):
+        print(parser.print_help())
+    else:
+        unidock = UniDock(args.receptor, args.scoring, args.dir)
 
-    ligand_input_method = unidock._check_args_and_return(args)
-    if ligand_input_method == "ligand":
-        unidock.set_ligand(args.ligand)
-    elif ligand_input_method == "batch":
-        unidock.set_batch(args.batch)
-    elif ligand_input_method == "gpu_batch":
-        unidock.set_gpu_batch(args.gpu_batch)
-    elif ligand_input_method == "ligand_index":
-        unidock.set_ligand_index(args.ligand_index)
-    print("command_ligand: ",unidock.command_ligand)
+        ligand_input_method = unidock._check_args_and_return(args)
+        if ligand_input_method == "ligand":
+            unidock.set_ligand(args.ligand)
+        elif ligand_input_method == "batch":
+            unidock.set_batch(args.batch)
+        elif ligand_input_method == "gpu_batch":
+            unidock.set_gpu_batch(args.gpu_batch)
+        elif ligand_input_method == "ligand_index":
+            unidock.set_ligand_index(args.ligand_index)
+        print("command_ligand: ",unidock.command_ligand)
 
-    unidock._get_config(args)
+        unidock._get_config(args)
 
-    ##############################################
-    # this part must write after unidock._get_config()
-    if args.ligand_bias:
-        unidock.writeBpf()
-        unidock.config.append("--multi_bias")
-    ##############################################
+        ##############################################
+        # this part must execute after unidock._get_config()
+        if args.reference is not None:
+            unidock.writeBpf(args.reference)
+            unidock.config.append("--multi_bias")
+        ##############################################
 
-    unidock.dock()
-    
+        unidock.dock()
+        
 if __name__ == "__main__":
     main()
