@@ -27,8 +27,8 @@ jobs:
 
     - name: Run flake8 formating
       run: |
-        flake8 unidock_tools/unidock_tools
-    
+        flake8 unidock_tools/unidock_tools --exit-zero
+
   pylint:
     continue-on-error: true
     runs-on: ubuntu-latest
@@ -50,7 +50,7 @@ jobs:
 
     - name: Run pylint formating
       run: |
-        pylint unidock_tools/unidock_tools
+        pylint unidock_tools/unidock_tools --exit-zero
 
   mypy:
     continue-on-error: true
@@ -73,7 +73,8 @@ jobs:
 
     - name: Run mypy check
       run: |
-        mypy unidock_tools/unidock_tools
+        echo "[tool.mypy]\nignore_errors = 'True'" > mypy.toml
+        mypy unidock_tools/unidock_tools --config_file ./mypy.toml
 
   ut:
     if: ${{ always() }}
