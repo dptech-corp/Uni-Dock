@@ -6,7 +6,7 @@ on:
     branches: [ master ]
 
 jobs:
-  flask8:
+  flake8:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -73,7 +73,12 @@ jobs:
         mypy unidock_tools/unidock_tools
 
   ut:
+    if: ${{ always() }}
+    needs: [flake8, pylint, mypy]
     runs-on: nvidia
+    strategy:
+      matrix:
+        python-version: ["3.8"]
     container: 
       image: docker.io/dptechnology/unidock:latest
       options: --gpus all
@@ -81,10 +86,10 @@ jobs:
     - name: checkout repo
       uses: actions/checkout@v3
 
-    - name: Set up Python 3.8
+    - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v3
       with:
-        python-version: 3.8
+        python-version: ${{ matrix.python-version }}
 
     - name: install package
       run: |
