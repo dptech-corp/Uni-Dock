@@ -90,8 +90,6 @@ jobs:
       uses: conda-incubator/setup-miniconda@v2
       with:
         miniconda-version: "latest"
-        auto-activate-base: true
-        activate-environment: ""
         python-version: ${{ matrix.python-version }}
 
     - name: install dependency
@@ -100,13 +98,12 @@ jobs:
 
     - name: install package
       run: |
-        python -m pip install --upgrade pip
+        conda run -n test python -m pip install --upgrade pip
         cd unidock_tools
-        python setup.py install
+        conda run -n test python setup.py install
 
     - name: perform unit-test
       run: |
-        python -m pip install --upgrade pip
-        pip install pytest coverage
-        coverage run -m pytest unidock_tools/tests/ut -v
-        coverage xml
+        conda run -n test pip install pytest coverage
+        conda run -n test coverage run -m pytest unidock_tools/tests/ut -v
+        conda run -n test coverage xml
