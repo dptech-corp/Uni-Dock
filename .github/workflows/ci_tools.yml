@@ -72,9 +72,14 @@ jobs:
         pip install mypy
 
     - name: Run mypy check
+      id: mypy_check
       run: |
         echo "[tool.mypy]\nignore_errors = 'True'" > pyproject.toml
         mypy unidock_tools/unidock_tools
+
+    - name: Check on failures
+      if: steps.mypy_check.outcome != 'success'
+      run: echo "Mypy failed, please check the logs"
 
   ut:
     if: ${{ always() }}
