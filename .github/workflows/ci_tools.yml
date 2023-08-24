@@ -90,13 +90,9 @@ jobs:
       uses: conda-incubator/setup-miniconda@v2
       with:
         miniconda-version: "latest"
+        auto-activate-base: true
+        activate-environment: ""
         python-version: ${{ matrix.python-version }}
-
-    - name: check python version
-      run: | 
-        conda --version
-        which python
-        python --version
 
     - name: install dependency
       run: |
