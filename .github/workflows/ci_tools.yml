@@ -99,10 +99,8 @@ jobs:
         conda run -n test pip install pytest
 
     - name: install package
-      run: |
-        cd unidock_tools
-        conda run -n test python setup.py install
+      working-directory: ./unidock_tools
+      run: conda run -n test python setup.py install
 
     - name: perform unit-test
-      run: |
-        conda run -n test pytest unidock_tools/tests/ut -v
+      run: conda run -n test pytest unidock_tools/tests/ut -v
