@@ -100,7 +100,11 @@ jobs:
 
     - name: install package
       working-directory: ./unidock_tools
-      run: conda run -n test python setup.py install
+      run: |
+        export PATH=/__w/Uni-Dock/Uni-Dock/3/envs/test/bin:$PATH
+        python setup.py install
 
     - name: perform unit-test
-      run: conda run -n test pytest unidock_tools/tests/ut -v
+      run: |
+        export PATH=/__w/Uni-Dock/Uni-Dock/3/envs/test/bin:$PATH
+        pytest unidock_tools/tests/ut -v
