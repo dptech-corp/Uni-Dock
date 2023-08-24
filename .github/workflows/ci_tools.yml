@@ -95,6 +95,7 @@ jobs:
     - name: install dependency
       run: |
         conda create -n mgltools mgltools -c bioconda -y
+        conda install -n test -c conda-forge -y openbabel
         conda run -n test pip install --upgrade pip
         conda run -n test pip install pytest
 
