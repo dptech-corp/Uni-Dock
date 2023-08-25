@@ -11,3 +11,7 @@ unidock/example/screening_test/result
 unidock/example/screening_test/def_ligands.txt
 unidock/example/screening_test/rundock.sh
 unidock/example/screening_test/unidock
+unidock_tools/dist
+unidock_tools/dist/*
+unidock_tools/unidock_tools.egg-info
+unidock_tools/unidock_tools.egg-info/*
