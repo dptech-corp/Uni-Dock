@@ -389,18 +389,23 @@ def set_properties(mol, props_dict):
             mol.SetProp(key, value)
 
 
-def add_hydrogen_from_sdf(ligand_file:str, output_file:str):
+def add_hydrogen_from_sdf(ligand_file:str, output_file:str, rdkit: bool = True):
     import subprocess
     from io import BytesIO
 
     mol = Chem.SDMolSupplier(ligand_file, removeHs=False, sanitize=True)[0]
     props_dict = mol.GetPropsAsDict()
 
-    mol_block = Chem.MolToMolBlock(mol, kekulize=True)
-    mol_str = subprocess.check_output(["obabel", "-imol", "-osdf", "-h", "--gen3d"],
-                                    text=True, input=mol_block, stderr=subprocess.DEVNULL)
-    bstr = BytesIO(bytes(mol_str, encoding='utf-8'))
-    addH_mol = next(Chem.ForwardSDMolSupplier(bstr, removeHs=False, sanitize=True))
+    if rdkit:
+        addH_mol = Chem.AddHs(mol, addCoords=True)
+    else:
+        mol_block = Chem.MolToMolBlock(mol, kekulize=True)
+        assert subprocess.call("which obabel", shell=True) == 0, "OpenBabel is not installed. Please install it first"
+        mol_str = subprocess.check_output(["obabel", "-imol", "-osdf", "-h", "--gen3d"],
+                                        text=True, input=mol_block, stderr=subprocess.DEVNULL)
+        bstr = BytesIO(bytes(mol_str, encoding='utf-8'))
+        addH_mol = next(Chem.ForwardSDMolSupplier(bstr, removeHs=False, sanitize=True))
+
     set_properties(mol=addH_mol, props_dict=props_dict)
     with Chem.SDWriter(output_file) as writer:
         writer.write(addH_mol)
