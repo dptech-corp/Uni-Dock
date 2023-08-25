@@ -14,8 +14,8 @@ class DockingProteinPrepare:
     def pdb2pdbqt(self, protein_path:str, output_path:str):
         conda_env_path = shutil.which("conda")
         if not conda_env_path:
-            raise KeyError("To prepare a PDB format protein, you need to install MGLTools first.\
-                           (First install conda, then run 'conda create -n mgltools mgltools -c bioconda')")
+            raise KeyError("Conda env not found. Please install conda first.")
+        conda_env_path = str(conda_env_path)
         mgl_env_path = os.path.join(os.path.dirname(os.path.dirname(conda_env_path)), "envs", "mgltools")
         pythonsh_path = os.path.join(mgl_env_path, "bin", "pythonsh")
         prepare_script_path = os.path.join(mgl_env_path, "MGLToolsPckgs", "AutoDockTools", "Utilities24", "prepare_receptor4.py")
