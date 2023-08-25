@@ -13,7 +13,11 @@ class DockingProteinPrepare:
     
     def pdb2pdbqt(self, protein_path:str, output_path:str, active_name_env: str = "mgltools") -> None:
         """ Locates mgltools and converts the pdb receptor file to pdbqt format"""
-        mgl_env_path = Path(shutil.which("conda")) / "envs" / active_name_env
+        conda_bin_env = shutil.which("conda")
+        if not conda_bin_env:
+            raise KeyError("Conda env not found, please install conda first.")
+        conda_env = str(os.path.dirname(os.path.dirname(conda_bin_env)))
+        mgl_env_path = Path(conda_env) / "envs" / active_name_env
         env_not_found = False
         if not mgl_env_path.exists():
             env_not_found = True
