@@ -1,0 +1,115 @@
+name: Uni-Dock Tools CI/CD
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  flake8:
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9"]
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python  ${{ matrix.python-version }}
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install flake8
+
+    - name: Run flake8 formating
+      run: |
+        flake8 unidock_tools/unidock_tools --exit-zero
+
+  pylint:
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9"]
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python  ${{ matrix.python-version }}
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pylint
+
+    - name: Run pylint formating
+      run: |
+        pylint unidock_tools/unidock_tools --exit-zero
+
+  mypy:
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9"]
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python  ${{ matrix.python-version }}
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install mypy
+
+    - name: Run mypy check
+      id: mypy_check
+      run: |
+        mypy unidock_tools/unidock_tools --ignore-missing-imports
+
+  ut:
+    if: ${{ always() }}
+    needs: [flake8, pylint]
+    runs-on: nvidia
+    strategy:
+      matrix:
+        python-version: ["3.9"]
+    container: 
+      image: docker.io/dptechnology/unidock:latest
+      options: --gpus all
+    steps:
+    - name: checkout repo
+      uses: actions/checkout@v3
+
+    - name: Setup conda
+      uses: conda-incubator/setup-miniconda@v2
+      with:
+        miniconda-version: "latest"
+        python-version: ${{ matrix.python-version }}
+
+    - name: install dependency
+      run: |
+        conda create -n mgltools mgltools -c bioconda -y
+        conda install -n test -c conda-forge -y openbabel
+        conda run -n test pip install --upgrade pip
+        conda run -n test pip install pytest
+
+    - name: install package
+      working-directory: ./unidock_tools
+      run: |
+        export PATH=/__w/Uni-Dock/Uni-Dock/3/envs/test/bin:$PATH
+        python setup.py install
+
+    - name: perform unit-test
+      run: |
+        export PATH=/__w/Uni-Dock/Uni-Dock/3/envs/test/bin:$PATH
+        pytest unidock_tools/tests/ut -v

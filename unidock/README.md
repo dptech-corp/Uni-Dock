@@ -36,7 +36,7 @@ Uni-Dock supports NVIDIA GPUs on Linux platform.
 sudo apt install libboost-system-dev libboost-thread-dev libboost-serialization-dev libboost-filesystem-dev libboost-program-options-dev libboost-timer-dev
 ```
 
-Alternatively, install from [boost source codes](https://www.boost.org/users/download/).
+Alternatively, install from [boost source codes](https://www.boost.org/users/download/) or from [anaconda](https://anaconda.org/anaconda/libboost) with `conda install -c anaconda libboost`
 
 - CUDA toolkit: Please refer to the [installation tutorial](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html) provided by nvidia.
 
@@ -55,6 +55,8 @@ cd ./build/linux/release
 make clean
 make -j 4
 ```
+
+Add the build directory to your `PATH` environment variable.
 
 ### Using binary
 
