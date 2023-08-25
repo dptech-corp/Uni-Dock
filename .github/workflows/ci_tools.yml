@@ -1,9 +1,9 @@
 name: Uni-Dock Tools CI/CD
 on:
   push:
-    branches: [ ci2 ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 
 jobs:
   flake8:
