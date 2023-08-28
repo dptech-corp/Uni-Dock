@@ -66,23 +66,36 @@ void check_occurrence(boost::program_options::variables_map& vm, boost::program_
 	}
 }
 
-int predict_peak_memory(int batch_size, int exhaustiveness, int all_atom2_numbers, bool use_v100 = true, bool multi_bias = false){
+int predict_peak_memory(int batch_size, int exhaustiveness, int all_atom2_numbers, bool use_v100 = true, bool ad4 = false, bool multi_bias = false){
 	if (!multi_bias){
-		if (use_v100){
-			return 1.214869*batch_size + .0038522*exhaustiveness*batch_size + .011978*all_atom2_numbers + 20017.72; // this is based on V100, 32G
-		}
-		else {
-			return 1.166067*batch_size + .0038676*exhaustiveness*batch_size + .0119598*all_atom2_numbers + 5313.848; // this is based on T4, 16G
-		}
+    if (use_v100){
+      if (ad4)
+        return 1.911645*batch_size + .0039108*exhaustiveness*batch_size + .0792161*all_atom2_numbers + 20052.64; // this is based on V100, 32G using ad4
+      else
+        return 1.214869*batch_size + .0038522*exhaustiveness*batch_size + .011978*all_atom2_numbers + 20017.72; // this is based on V100, 32G using vina/vinardo
+    }
+    else {
+      if (ad4)
+        return 1.911645*batch_size + .0039108*exhaustiveness*batch_size + .0792161*all_atom2_numbers + 5314;     // thit is based on T4, 16G using ad4 (learned)
+      else
+        return 1.166067*batch_size + .0038676*exhaustiveness*batch_size + .0119598*all_atom2_numbers + 5313.848; // this is based on T4, 16G using vina/vinardo
+    }
 	}
 	else{
 		if (use_v100){
-			return 65.214869*batch_size + .0038522*exhaustiveness*batch_size + .011978*all_atom2_numbers + 20017.72; // this is based on V100, 32G
-		}
+			if (ad4)
+        return 65.911645*batch_size + .0039108*exhaustiveness*batch_size + .0792161*all_atom2_numbers + 20052.64; // this is based on V100, 32G using ad4
+      else
+        return 65.214869*batch_size + .0038522*exhaustiveness*batch_size + .011978*all_atom2_numbers + 20017.72; // this is based on V100, 32G using vina/vinardo
+      }
 		else {
-			return 65.166067*batch_size + .0038676*exhaustiveness*batch_size + .0119598*all_atom2_numbers + 5313.848; // this is based on T4, 16G
-		}
+			if (ad4)
+        return 65.911645*batch_size + .0039108*exhaustiveness*batch_size + .0792161*all_atom2_numbers + 5314;     // thit is based on T4, 16G using ad4 (learned)
+      else
+        return 65.166067*batch_size + .0038676*exhaustiveness*batch_size + .0119598*all_atom2_numbers + 5313.848; // this is based on T4, 16G using vina/vinardo
+      }
 	}
+
 	return 0;
 }
 
@@ -671,7 +684,7 @@ bug reporting, license agreements, and more information.      \n";
 				int all_atom2_numbers = 0; // total number of atom^2 in current batch
 				std::vector<model> batch_ligands; // ligands in current batch
 				v1.bias_batch_list.clear();
-				while (predict_peak_memory(batch_size, exhaustiveness, all_atom2_numbers, use_v100, v.multi_bias) < max_memory &&
+				while (predict_peak_memory(batch_size, exhaustiveness, all_atom2_numbers, use_v100, ad4, v.multi_bias) < max_memory &&
 					 processed_ligands + batch_size < all_ligands.size())
 				{
 					batch_ligands.emplace_back(all_ligands[processed_ligands + batch_size].second);

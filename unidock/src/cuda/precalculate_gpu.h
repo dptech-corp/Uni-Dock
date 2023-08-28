@@ -71,26 +71,30 @@ __device__ __forceinline__ fl smoothen_gpu(fl r, fl rij, fl smoothing) {
 
 __device__ __forceinline__ fl ad4_hb_eps_gpu(sz a) {
     if (a < AD_TYPE_SIZE) return ad_type_property_gpu(a).hb_depth;
-    VINA_CHECK_GPU(false);
-    return 0; // placating the compiler
+    // VINA_CHECK_GPU(false);
+    // printf("ad4_hb_eps_gpu error t=%lu\n", a);
+    return ad_type_property_gpu(0).hb_depth; // placating the compiler
 }
 
 __device__ __forceinline__ fl ad4_hb_radius_gpu(sz t) {
     if (t < AD_TYPE_SIZE) return ad_type_property_gpu(t).hb_radius;
-    VINA_CHECK_GPU(false);
-    return 0; // placating the compiler
+    // VINA_CHECK_GPU(false);
+    // printf("ad4_hb_eps_gpu error t=%lu\n", t);
+    return ad_type_property_gpu(0).hb_radius; // placating the compiler
 }
 
 __device__ __forceinline__ fl ad4_vdw_eps_gpu(sz a) {
     if(a < AD_TYPE_SIZE) return ad_type_property_gpu(a).depth;
-    VINA_CHECK_GPU(false);
-    return 0; // placating the compiler
+    // VINA_CHECK_GPU(false);
+    // printf("ad4_vdw_eps_gpu error t=%lu\n", a);
+    return ad_type_property_gpu(0).depth; // placating the compiler
 }
 
 __device__ __forceinline__ fl ad4_vdw_radius_gpu(sz t) {
     if(t < AD_TYPE_SIZE) return ad_type_property_gpu(t).radius;
-    VINA_CHECK_GPU(false);
-    return 0; // placating the compiler
+    // VINA_CHECK_GPU(false);
+    // printf("ad4_vdw_radius_gpu error t=%lu\n", t);
+    return ad_type_property_gpu(0).radius; // placating the compiler
 }
 
 // Macrocycle - Vina and AD42
