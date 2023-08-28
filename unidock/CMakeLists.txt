@@ -10,6 +10,7 @@ set(CMAKE_CXX_STANDARD 14)
 if(NOT CMAKE_BUILD_TYPE)
 	set(CMAKE_BUILD_TYPE Release)
 endif()
+Option(AD4 "Use AD4 scoring function" OFF)
 Option(Boost_USE_STATIC_LIBS "Whether to use static libs for boost" OFF)
 
 include(CheckLanguage)
@@ -26,21 +27,24 @@ if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
 	)
 endif()
 
-set(VINA_BIN_NAME unidock)
+set(BIN_NAME unidock)
 add_compile_definitions(ENABLE_CUDA)
 add_compile_definitions(VERSION="v${PROJECT_VERSION}")
+if(AD4)
+	add_compile_options(-DAD4)
+endif()
 
 find_package(OpenMP REQUIRED) # OpenMP only required in main.cpp
 find_package(Boost 1.72 REQUIRED
 	COMPONENTS system thread serialization filesystem program_options timer)
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(src/lib src/cuda)
-add_executable(${VINA_BIN_NAME} src/main/main.cpp)
+add_executable(${BIN_NAME} src/main/main.cpp)
 add_executable(split src/split/split.cpp)
 
-target_link_libraries(${VINA_BIN_NAME} Boost::system Boost::thread Boost::serialization Boost::filesystem Boost::program_options Boost::timer)
+target_link_libraries(${BIN_NAME} Boost::system Boost::thread Boost::serialization Boost::filesystem Boost::program_options Boost::timer)
 target_link_libraries(split Boost::system Boost::thread Boost::serialization Boost::filesystem Boost::program_options Boost::timer)
-target_link_libraries(${VINA_BIN_NAME} OpenMP::OpenMP_CXX)
+target_link_libraries(${BIN_NAME} OpenMP::OpenMP_CXX)
 
 # set(CMAKE_CURRENT_SOURCE_DIR ${CMAKE_SOURCE_DIR}/src/lib)
 add_library(lib OBJECT
@@ -48,6 +52,6 @@ add_library(lib OBJECT
 	# src/lib/monte_carlo
 # set(CMAKE_CURRENT_SOURCE_DIR ${CMAKE_SOURCE_DIR}/src/cuda)
 add_library(cuda OBJECT src/cuda/monte_carlo.cu src/cuda/precalculate.cu)
-target_link_libraries(${VINA_BIN_NAME} cuda lib)
-target_include_directories(${VINA_BIN_NAME} PUBLIC ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}) # For detecting CUDA memory size
-install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/${VINA_BIN_NAME} TYPE BIN)
+target_link_libraries(${BIN_NAME} cuda lib)
+target_include_directories(${BIN_NAME} PUBLIC ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}) # For detecting CUDA memory size
+install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/${BIN_NAME} TYPE BIN)

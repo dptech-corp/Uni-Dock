@@ -45,11 +45,12 @@ Alternatively, install from [boost source codes](https://www.boost.org/users/dow
 3. Build Uni-Dock using CMake:
 
 ```bash
-cmake -B build
+cmake -B build # Please add `-D AD4=ON` to enable ad4 scoring function
 cmake --build build -j4
 ```
 
 Or build with Makefile:
+
 ```bash
 cd ./build/linux/release
 make clean
@@ -73,7 +74,7 @@ To launch a Uni-Dock job, the most important parameters are as follows:
 
 - `--receptor`: filepath of the receptor (PDBQT)
 - `--gpu_batch`: filepath of the ligands to dock with GPU (PDBQT), enter multiple at a time, separated by spaces (" ")
-- `--search_mode`: computational complexity, choice in [*`fast`*, *`balance`*, and *`detail`*].
+- `--search_mode`: computational complexity, choice in `fast`, `balance`, and `detail`.
 
 ***Advanced options***
 `--search_mode` is the recommended setting of `--exhaustiveness` and `--max_step`, with three combinations called `fast`, `balance`, and `detail`.
