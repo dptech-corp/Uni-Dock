@@ -59,7 +59,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        cuda-version: ["11.4", "12.2"]
+        cuda-version: ["11.8", "12.2"]
 
     steps:
 
