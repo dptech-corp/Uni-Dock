@@ -1,3 +1,4 @@
+from typing import Dict
 from rdkit import Chem
 
 ATOM_TYPE_DEFINITION_LIST = [{'smarts': '[#1]',                   'atype': 'H',  'comment': 'invisible'},
@@ -38,3 +39,15 @@ class AtomType(object):
             for pattern_match in pattern_matches:
                 atom = mol.GetAtomWithIdx(pattern_match[0])
                 atom.SetProp('atom_type', atom_type)
+
+    def get_docking_atom_types(self, mol:Chem.rdchem.Mol) -> Dict[int, str]:
+        atom_ind_type_map = dict()
+        for atom_type_dict in self.atom_type_definition_list:
+            smarts = atom_type_dict["smarts"]
+            atom_type = atom_type_dict["atype"]
+            pattern_mol = Chem.MolFromSmarts(smarts)
+            pattern_matches = mol.GetSubstructMatches(pattern_mol)
+            for pattern_match in pattern_matches:
+                atom_ind = pattern_match[0]
+                atom_ind_type_map[atom_ind] = atom_type
+        return atom_ind_type_map

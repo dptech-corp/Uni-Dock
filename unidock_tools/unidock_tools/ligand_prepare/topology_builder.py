@@ -18,17 +18,15 @@ from unidock_tools.ligand_prepare.rotatable_bond import RotatableBond
 from unidock_tools.ligand_prepare import utils
 
 class TopologyBuilder(object):
-    def __init__(self,
-                 input_sdf_file_path: Union[str, bytes, os.PathLike],):
-
-        self.ligand_sdf_file_name = input_sdf_file_path
+    def __init__(self, input_sdf_file_path:str):
+        self.input_sdf_file_path = input_sdf_file_path
+        self.file_name = os.path.splitext(os.path.basename(self.input_sdf_file_path))[0]
 
         self.atom_typer = AtomType()
         self.rotatable_bond_finder = RotatableBond()
 
     def build_molecular_graph(self):
-        mol = Chem.SDMolSupplier(self.ligand_sdf_file_name, removeHs=False)[0]
-
+        mol = Chem.SDMolSupplier(self.input_sdf_file_path, removeHs=False)[0]
 
         self.atom_typer.assign_atom_types(mol)
         ComputeGasteigerCharges(mol)
@@ -250,7 +248,10 @@ class TopologyBuilder(object):
                 self.__deep_first_search__(neighbor_node_idx)
                 self.pdbqt_atom_line_list.append(self.pdbqt_end_branch_line_format.format('ENDBRANCH', parent_atom_idx, offspring_atom_idx))
 
-    def write_pdbqt_file(self):
+    def write_pdbqt_file(self, out_file:str=''):
+        if not out_file:
+            out_file = self.file_name + ".pdbqt"
+
         self.pdbqt_remark_line_list = []
         self.pdbqt_atom_line_list = []
 
@@ -292,11 +293,14 @@ class TopologyBuilder(object):
 
         self.pdbqt_line_list = self.pdbqt_remark_line_list + self.pdbqt_atom_line_list
 
-        with open(self.ligand_pdbqt_file_name, 'w') as ligand_pdbqt_file:
+        with open(out_file, 'w') as f:
             for pdbqt_line in self.pdbqt_line_list:
-                ligand_pdbqt_file.write(pdbqt_line)
+                f.write(pdbqt_line)
 
-    def write_constraint_bpf_file(self, out_path:Union[str, bytes, os.PathLike]=''):
+    def write_constraint_bpf_file(self, out_path:str=''):
+        if not out_path:
+            out_path = self.file_name + "bpf"
+
         self.core_bpf_remark_line_list = []
         self.core_bpf_atom_line_list = []
         self.core_bpf_atom_line_format = '{:8.3f}\t{:8.3f}\t{:8.3f}\t{:6.2f}\t{:6.2f}\t{:3s}\t{:<2s}\n'
@@ -322,7 +326,10 @@ class TopologyBuilder(object):
             for core_bpf_line in self.core_bpf_line_list:
                 ligand_core_bpf_file.write(core_bpf_line)
 
-    def write_torsion_tree_sdf_file(self):
+    def write_torsion_tree_sdf_file(self, out_path:str=''):
+        if not out_path:
+            out_path = self.file_name + "_prepared.sdf"
+
         fragment_info_string = ''
         torsion_info_string = ''
         atom_info_string = ''
@@ -363,10 +370,8 @@ class TopologyBuilder(object):
         self.mol.SetProp('torsionInfo', torsion_info_string)
         self.mol.SetProp('atomInfo', atom_info_string)
 
-        writer = Chem.SDWriter(self.ligand_torsion_tree_sdf_file_name)
+        writer = Chem.SDWriter(out_path)
         writer.write(self.mol)
-        writer.flush()
-        writer.close()
 
 
 def set_properties(mol, props_dict):

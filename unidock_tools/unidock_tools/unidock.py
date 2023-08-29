@@ -25,6 +25,8 @@ class UniDock():
             self.rescoring = scoring
 
         self.set_receptor(receptor)
+        self.command_receptor = f'--receptor {self.receptor}'
+
         self.ligand_input_method = ["ligand", "batch", "gpu_batch", "ligand_index"]
         self.mode = ["ligand_bias", "reference"]
 
@@ -218,7 +220,7 @@ class UniDock():
     def _recreate_command_line(self, args):
         self.command_line = ""
         for arg, value in vars(args).items():
-            if arg in ['scoring'] or arg in self.ligand_input_method:
+            if arg in ['scoring', 'receptor'] or arg in self.ligand_input_method:
                 continue
             if arg in self.mode:
                 continue
@@ -248,6 +250,7 @@ class UniDock():
 
         self.config=['unidock']
         self.config.append(self.command_scoring)
+        self.config.append(self.command_receptor)
         self.config.append(self.command_ligand)
         self.config.append(self.command_line)
 

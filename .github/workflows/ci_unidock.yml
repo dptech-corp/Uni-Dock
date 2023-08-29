@@ -1,7 +1,7 @@
 name: Uni-Dock CI/CD
 on:
   push:
-    branches: [ main ]
+    branches: [ fix_ligand_topo ]
   pull_request:
     branches: [ main ]
 
@@ -57,6 +57,10 @@ jobs:
   build_docker_image:
     needs: unidock_test
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        cuda-version: ["11.4", "12.2"]
+
     steps:
 
     - name: log in to docker hub
@@ -83,7 +87,7 @@ jobs:
     - name: build and push container
       uses: docker/build-push-action@v4
       with:
-        tags: dptechnology/unidock:${{ steps.short-sha.outputs.sha }},dptechnology/unidock:latest
-        file: Dockerfile
+        tags: dptechnology/unidock:${{ steps.short-sha.outputs.sha }}_cuda${{ matrix.cuda-version }}
+        file: docker/Dockerfile.cuda${{ matrix.cuda-version }}
         context: "{{defaultContext}}:unidock"
         push: true
