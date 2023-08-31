@@ -54,7 +54,14 @@ void check(T result, char const *const func, const char *const file,
 #endif
 
 //#define MAX_NUM_OF_GRID_ATOMS 150
-#define FAST_SIZE 2051 // modified for vina1.2 m_max_cutoff^2 * factor + 3, ad4=13424
+
+// modified for vina1.2 m_max_cutoff^2 * factor + 3
+#ifdef AD4
+#define FAST_SIZE 13424
+#else
+#define FAST_SIZE 2051
+#endif
+
 #define SMOOTH_SIZE 2051
 #define MAX_CONTAINER_SIZE_EVERY_WI 5
 
