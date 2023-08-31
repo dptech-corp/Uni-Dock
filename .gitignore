@@ -5,6 +5,7 @@ build/
 test/ligands
 test/results
 .vscode
+.idea
 unidock/build/
 unidock/example/screening_test/indata
 unidock/example/screening_test/result
