@@ -642,78 +642,114 @@ bug reporting, license agreements, and more information.      \n";
 			std::vector<named_model> all_ligands;
 			const int ligand_batch_limit = 1e6; // ~20GB for 100,000 lig obj
 			int batch_index=0;
-			while(batch_index<ligand_names.size()){
-			all_ligands.clear();
-			int next_batch_index = std::min(int(batch_index+ligand_batch_limit),int(ligand_names.size()));
-			#pragma omp parallel for
-			for (int ligand_count=batch_index;ligand_count<next_batch_index;++ligand_count)
-			{
-				auto& ligand=ligand_names[ligand_count];
-				auto l = parse_ligand_from_file_no_failure(
-						ligand, v.m_scoring_function.get_atom_typing(), keep_H);
-				#pragma omp critical
-				all_ligands.emplace_back(std::make_pair(ligand,l));
-			}
-			batch_index=next_batch_index;
-			/*
-			std::sort(all_ligands.begin(), all_ligands.end(),
-				  [](named_model a, named_model b)
-				  { return a.second.get_atoms().size() < b.second.get_atoms().size(); });
-			*/
-			DEBUG_PRINTF("%d\n",next_batch_index);
-			int processed_ligands = 0;
-			int batch_id = 0;
-			while (processed_ligands < all_ligands.size()) {
-				++batch_id;
-				auto start = std::chrono::system_clock::now();
-				Vina v1(v); // reuse init'ed maps
-				int batch_size = 0;
-				int all_atom2_numbers = 0; // total number of atom^2 in current batch
-				std::vector<model> batch_ligands; // ligands in current batch
-				v1.bias_batch_list.clear();
-				while (predict_peak_memory(batch_size, exhaustiveness, all_atom2_numbers, use_v100, v.multi_bias) < max_memory &&
-					 processed_ligands + batch_size < all_ligands.size())
-				{
-					batch_ligands.emplace_back(all_ligands[processed_ligands + batch_size].second);
-					int next_atom_numbers = batch_ligands.back()
-												.get_atoms()
-												.size()
-											+ receptor_atom_numbers;
-					int next_atom2_numbers = next_atom_numbers * next_atom_numbers; // Memory ~ atom numbers^2
-					all_atom2_numbers += next_atom2_numbers;
-					batch_size++;
-				}
-				DEBUG_PRINTF("batch size=%d, all_atom2_numbers=%d\n", batch_size, all_atom2_numbers);
+			int occurrences=0;
+			std::vector<std::string> all_ligand_names;
+			for (int file_count=0;file_count<ligand_names.size();file_count++){
+			try {
+					std::ifstream infile(ligand_names[file_count]);
+					std::string file_content((std::istreambuf_iterator<char>(infile)), std::istreambuf_iterator<char>());
 
-				std::cout << "Batch " << batch_id << " size: " << batch_size << std::endl;
-				std::vector<std::string> batch_ligand_names;
-				for (int i = processed_ligands; i < processed_ligands + batch_size; i++)
-				{
-					batch_ligand_names.push_back(all_ligands[i].first);
-				}
-				processed_ligands += batch_size;
-				gpu_out_name = {};
-				VINA_RANGE(i, 0, batch_ligand_names.size())
-				{
-					gpu_out_name.push_back(default_output(get_filename(batch_ligand_names[i]), out_dir));
-					if (v1.multi_bias){
-						std::ifstream bias_file_content(get_biasname(batch_ligand_names[i]));
-						if (!bias_file_content.is_open()){
-							throw file_error(bias_file, true);
+					occurrences = count_occurrences(file_content, "$$$$");
+					std::cout << "The number of ligands is " << occurrences << " in the file "<<ligand_names[file_count]<<".\n";
+					std::vector<std::string> molecules = split(file_content, "$$$$\n");
+					int index = 1;
+					for (const auto& molecule : molecules) {
+						std::string filename = ligand_names[file_count].substr(0,ligand_names[file_count].length()-4)+"_" + std::to_string(index) + ".sdf";
+						std::ofstream outfile(filename);
+						if (!outfile) {
+							std::cerr << "Could not open the file " << filename << " for writing." << std::endl;
+							return 1;
 						}
-
-						// initialize bias object
-						v1.set_batch_bias(bias_file_content);
-						bias_file_content.close();
+						outfile << molecule;
+						outfile << "$$$$\n";  
+						outfile.close();
+						std::cout << "Written molecule " << index << " to " << filename << std::endl;
+						++index;
+						all_ligand_names.push_back(filename);
 					}
-				}
-				v1.set_ligand_from_object_gpu(batch_ligands);
-				v1.global_search_gpu(exhaustiveness, num_modes, min_rmsd, max_evals, max_step, batch_ligand_names.size(), (unsigned long long)seed, refine_step, local_only);
-				v1.write_poses_gpu(gpu_out_name, num_modes, energy_range);
-				auto end = std::chrono::system_clock::now();
-				std::cout << "Batch " << batch_id << " running time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
+					} 
+					catch (const std::exception& e) {
+					std::cerr << "Error: " << e.what() << '\n';
+					}
 			}
-		}
+			ligand_names = all_ligand_names;
+			while(batch_index<ligand_names.size()){
+				all_ligands.clear();
+				int next_batch_index = std::min(int(batch_index+ligand_batch_limit),int(ligand_names.size()));
+				#pragma omp parallel for
+				for (int ligand_count=batch_index;ligand_count<next_batch_index;++ligand_count)
+				{
+					auto& ligand=ligand_names[ligand_count];
+					auto l = parse_ligand_from_file_no_failure(
+							ligand, v.m_scoring_function.get_atom_typing(), keep_H);
+					#pragma omp critical
+					all_ligands.emplace_back(std::make_pair(ligand,l));
+					if (std::remove(ligand_names[ligand_count].c_str()) == 0) {
+            			std::cout << "Successfully deleted " << ligand_names[ligand_count] << std::endl;
+					}
+					else {
+            std::perror(("Error deleting " + ligand_names[ligand_count]).c_str());}
+        }
+				batch_index=next_batch_index;
+				/*
+				std::sort(all_ligands.begin(), all_ligands.end(),
+					[](named_model a, named_model b)
+					{ return a.second.get_atoms().size() < b.second.get_atoms().size(); });
+				*/
+				DEBUG_PRINTF("%d\n",next_batch_index);
+				int processed_ligands = 0;
+				int batch_id = 0;
+				while (processed_ligands < all_ligands.size()) {
+					++batch_id;
+					auto start = std::chrono::system_clock::now();
+					Vina v1(v); // reuse init'ed maps
+					int batch_size = 0;
+					int all_atom2_numbers = 0; // total number of atom^2 in current batch
+					std::vector<model> batch_ligands; // ligands in current batch
+					v1.bias_batch_list.clear();
+					while (predict_peak_memory(batch_size, exhaustiveness, all_atom2_numbers, use_v100, v.multi_bias) < max_memory &&
+						processed_ligands + batch_size < all_ligands.size())
+					{
+						batch_ligands.emplace_back(all_ligands[processed_ligands + batch_size].second);
+						int next_atom_numbers = batch_ligands.back()
+													.get_atoms()
+													.size()
+												+ receptor_atom_numbers;
+						int next_atom2_numbers = next_atom_numbers * next_atom_numbers; // Memory ~ atom numbers^2
+						all_atom2_numbers += next_atom2_numbers;
+						batch_size++;
+					}
+					DEBUG_PRINTF("batch size=%d, all_atom2_numbers=%d\n", batch_size, all_atom2_numbers);
+
+					std::cout << "Batch " << batch_id << " size: " << batch_size << std::endl;
+					std::vector<std::string> batch_ligand_names;
+					for (int i = processed_ligands; i < processed_ligands + batch_size; i++)
+					{
+						batch_ligand_names.push_back(all_ligands[i].first);
+					}
+					processed_ligands += batch_size;
+					gpu_out_name = {};
+					VINA_RANGE(i, 0, batch_ligand_names.size())
+					{
+						gpu_out_name.push_back(default_output(get_filename(batch_ligand_names[i]), out_dir));
+						if (v1.multi_bias){
+							std::ifstream bias_file_content(get_biasname(batch_ligand_names[i]));
+							if (!bias_file_content.is_open()){
+								throw file_error(bias_file, true);
+							}
+
+							// initialize bias object
+							v1.set_batch_bias(bias_file_content);
+							bias_file_content.close();
+						}
+					}
+					v1.set_ligand_from_object_gpu(batch_ligands);
+					v1.global_search_gpu(exhaustiveness, num_modes, min_rmsd, max_evals, max_step, batch_ligand_names.size(), (unsigned long long)seed, refine_step, local_only);
+					v1.write_poses_gpu(gpu_out_name, num_modes, energy_range);
+					auto end = std::chrono::system_clock::now();
+					std::cout << "Batch " << batch_id << " running time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
+				}
+			}
 		}
 	}
 

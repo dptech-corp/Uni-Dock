@@ -1281,3 +1281,24 @@ model parse_receptor_pdb(const std::string& rigid_name, const std::string& flex_
 
     return tmp.m;
 }
+int count_occurrences(const std::string& text, const std::string& search) {
+    int count = 0;
+    size_t pos = 0;
+
+    while ((pos = text.find(search, pos)) != std::string::npos) {
+        ++count;
+        pos += search.length();  // Move to the next character after the found substring
+    }
+
+    return count;
+}
+std::vector<std::string> split(const std::string& text, const std::string& delimiter) {
+    std::vector<std::string> parts;
+    std::size_t start = 0, end;
+    while ((end = text.find(delimiter, start)) != std::string::npos) {
+        parts.push_back(text.substr(start, end - start));
+        start = end + delimiter.length();
+    }
+    parts.push_back(text.substr(start));
+    return parts;
+}
