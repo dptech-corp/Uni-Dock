@@ -644,7 +644,12 @@ bug reporting, license agreements, and more information.      \n";
 			int batch_index=0;
 			int occurrences=0;
 			std::vector<std::string> all_ligand_names;
+			if (endsWith(ligand_names[0], ".pdbqt")){
+					std::cout<<".pdbqt"<<std::endl;
+				}
+			else{
 			for (int file_count=0;file_count<ligand_names.size();file_count++){
+				
 			try {
 					std::ifstream infile(ligand_names[file_count]);
 					std::string file_content((std::istreambuf_iterator<char>(infile)), std::istreambuf_iterator<char>());
@@ -668,11 +673,12 @@ bug reporting, license agreements, and more information.      \n";
 						all_ligand_names.push_back(filename);
 					}
 					} 
-					catch (const std::exception& e) {
-					std::cerr << "Error: " << e.what() << '\n';
-					}
+				catch (const std::exception& e) {
+				std::cerr << "Error: " << e.what() << '\n';
+				}
 			}
 			ligand_names = all_ligand_names;
+			}
 			while(batch_index<ligand_names.size()){
 				all_ligands.clear();
 				int next_batch_index = std::min(int(batch_index+ligand_batch_limit),int(ligand_names.size()));
@@ -684,11 +690,13 @@ bug reporting, license agreements, and more information.      \n";
 							ligand, v.m_scoring_function.get_atom_typing(), keep_H);
 					#pragma omp critical
 					all_ligands.emplace_back(std::make_pair(ligand,l));
+					if (endsWith(ligand_names[ligand_count], ".sdf")){
 					if (std::remove(ligand_names[ligand_count].c_str()) == 0) {
             			std::cout << "Successfully deleted " << ligand_names[ligand_count] << std::endl;
 					}
 					else {
-            std::perror(("Error deleting " + ligand_names[ligand_count]).c_str());}
+            		std::perror(("Error deleting " + ligand_names[ligand_count]).c_str());}
+					}
         }
 				batch_index=next_batch_index;
 				/*

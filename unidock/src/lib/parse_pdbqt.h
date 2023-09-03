@@ -39,4 +39,5 @@ model parse_ligand_pdbqt_from_string(const std::string &string_name, atom_type::
 model parse_ligand_pdbqt_from_string_no_failure(const std::string &string_name, atom_type::t atype); // can return empty model as failure
 int count_occurrences(const std::string& text, const std::string& search);// get ligand conuts in sdf file
 std::vector<std::string> split(const std::string& text, const std::string& delimiter);
+bool endsWith(const std::string& str, const std::string& suffix); 
 #endif

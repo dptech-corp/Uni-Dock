@@ -1302,3 +1302,9 @@ std::vector<std::string> split(const std::string& text, const std::string& delim
     parts.push_back(text.substr(start));
     return parts;
 }
+bool endsWith(const std::string& str, const std::string& suffix) {
+    if (str.length() >= suffix.length()) {
+        return (str.rfind(suffix) == (str.size() - suffix.size()));
+    }
+    return false;
+}
