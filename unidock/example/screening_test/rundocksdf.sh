@@ -1,0 +1,1 @@
+./unidock --receptor ./indata/def.pdbqt --ligand_index ./def_sdf.txt --center_x -36.01 --center_y 25.63 --center_z 67.49 --size_x 22 --size_y 22 --size_z 22 --dir ./test/def --exhaustiveness 128 --max_step 20 --num_modes 9  --scoring vina --refine_step 3 --seed 5

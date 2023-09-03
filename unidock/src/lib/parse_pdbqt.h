@@ -37,4 +37,6 @@ model parse_ligand_sdf_from_file_no_failure(const std::string& name, atom_type::
 
 model parse_ligand_pdbqt_from_string(const std::string &string_name, atom_type::t atype); // can exit with code EXIT_FAILURE
 model parse_ligand_pdbqt_from_string_no_failure(const std::string &string_name, atom_type::t atype); // can return empty model as failure
+int count_occurrences(const std::string& text, const std::string& search);// get ligand conuts in sdf file
+std::vector<std::string> split(const std::string& text, const std::string& delimiter);
 #endif
