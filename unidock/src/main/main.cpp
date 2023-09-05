@@ -627,7 +627,7 @@ bug reporting, license agreements, and more information.      \n";
 			if (deviceCount > 0){
 				cudaSetDevice(0);
 				cudaMemGetInfo(&avail, &total);
-				printf("Avaliable Memory = %dMiB   Total Memory = %dMiB\n", int(avail/1024/1024), int(total / 1024 / 1024));
+				printf("Available Memory = %dMiB   Total Memory = %dMiB\n", int(avail/1024/1024), int(total / 1024 / 1024));
 				max_memory = avail / 1024 / 1024 * 0.95; // leave 5% to prevent error
 			}
 			if (max_memory < 17000){
