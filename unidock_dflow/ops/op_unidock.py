@@ -158,34 +158,35 @@ def run_unidock_op(receptor:Artifact(Path), ligand_content_json:Artifact(Path),
         if res.stderr:
             print(res.stderr)
 
-    result_content_list = []
+    result_content_map = dict()
     for result_ligand in glob.glob(output_dir.as_posix() + "/*.sdf"):
         with open(result_ligand, "r") as f:
             content = f.read()
-        conf_id = 1
         curr_conf_content = ""
         for line in content.split("\n"):
             curr_conf_content += line + "\n"
             if line.startswith("$$$$"):
-                name, fmt = os.path.splitext(os.path.basename(result_ligand))
-                result_content_list.append({"name": f"{name}_{conf_id}{fmt}", "content": curr_conf_content})
-                conf_id += 1
+                basename = os.path.basename(result_ligand)
+                if not result_content_map.get(basename):
+                    result_content_map[basename] = []
+                result_content_map[basename].append(curr_conf_content)
                 curr_conf_content = ""
 
     result_json_path = "result.json"
     with open(result_json_path, "w") as f:
-        json.dump(result_content_list, f)
+        json.dump(result_content_map, f)
 
     return OPIO({"result_json": Path(result_json_path)})
 
 
 @OP.function
-def run_unidock_score_only_op(receptor:Artifact(Path), ligand_content_json:Artifact(Path), 
-        docking_params:Parameter(dict)) -> {"score_table":Artifact(Path)}:
+def run_unidock_score_only_op(receptor:Artifact(Path), result_content_json:Artifact(Path), 
+        docking_params:Parameter(dict)) -> {"score_table":Artifact(Path), "result_json": Artifact(Path)}:
     import os
     import shutil
     import json
     import glob
+    import uuid
     import subprocess
     import pandas as pd
 
@@ -202,30 +203,36 @@ def run_unidock_score_only_op(receptor:Artifact(Path), ligand_content_json:Artif
             score = float(score_line.partition("LOWER_BOUND=")[0][len("ENERGY="):])
         return score
 
-    df = pd.DataFrame(columns=["basename", "score"])
+    result_dir = Path(f"tmp_{uuid.uuid4().hex}")
+    result_dir.mkdir(parents=True, exist_ok=True)
+    result_table_path = result_dir.joinpath("score_table.csv")
+    copy_result_json_path = result_dir.joinpath("result.json")
+    shutil.copyfile(result_content_json, copy_result_json_path)
 
-    with open(ligand_content_json.as_posix(), "r") as f:
-        ligand_content_list = json.load(f)
+    df = pd.DataFrame(columns=["basename", "score", "conf_id"])
+
+    with open(result_content_json.as_posix(), "r") as f:
+        result_content_map = json.load(f)
 
     if not docking_params.get("multi_bias") and not docking_params.get("bias"):
-        for ligand_content_item in ligand_content_list:
-            name = ligand_content_item["name"]
-            content = ligand_content_item["content"]
-            score = read_score_from_sdf_content(content)
-            df.loc[df.shape[0]] = [name, score]
-        df = df.sort_values(by=["score"])
-        df.to_csv("score_table.csv", index=False)
-        return OPIO({"score_table": Path("score_table.csv")})
+        for basename, content_list in result_content_map.items():
+            for i, content in enumerate(content_list):
+                score = read_score_from_sdf_content(content)
+                df.loc[df.shape[0]] = [basename, score, i+1]
+        df = df.sort_values(by="score")
+        df.to_csv(result_table_path, index=False)
+        return OPIO({"score_table": result_table_path, "result_json": copy_result_json_path})
 
+    file_list_content = ""
     ligands_dir = Path("./tmp/inputs_dir")
     ligands_dir.mkdir(parents=True, exist_ok=True)
-    ligand_files = []
-    for ligand_content_item in ligand_content_list:
-        name = ligand_content_item["name"]
-        content = ligand_content_item["content"]
-        with open(ligands_dir / name, "w") as f:
-            f.write(content)
-        ligand_files.append(ligands_dir / name)
+    for basename, content_list in result_content_map.items():
+        name, fmt = os.path.splitext(basename)
+        for i, content in enumerate(content_list):
+            ligand_path = os.path.join(ligands_dir, f"{name}_{i+1}{fmt}")
+            with open(ligand_path, "w") as f:
+                f.write(content)
+            file_list_content += ligand_path + "\n"
 
     scoring_func = docking_params["scoring"]
     center_x, center_y, center_z = docking_params["center_x"], docking_params["center_y"], docking_params["center_z"]
@@ -235,8 +242,7 @@ def run_unidock_score_only_op(receptor:Artifact(Path), ligand_content_json:Artif
 
     docking_file_list = "docking_file_list"
     with open(docking_file_list, "w") as f:
-        for ligand_file in ligand_files:
-            f.write(ligand_file.as_posix() + "\n")
+        f.write(file_list_content)
 
     cmd = f"unidock --scoring {scoring_func} --exhaustiveness 1 --score_only \
         --center_x {center_x} --center_y {center_y} --center_z {center_z} \
@@ -264,11 +270,11 @@ def run_unidock_score_only_op(receptor:Artifact(Path), ligand_content_json:Artif
         for line in f.readlines():
             if line.startswith("REMARK"):
                 line_list = line.strip("\n").split(" ")
-                basename = line_list[1]
-                score = line_list[2]
-                df.loc[df.shape[0]] = [basename, score]
+                name, fmt = os.path.splitext(line_list[1])
+                name, _, conf_id = name.rpartition("_")
+                df.loc[df.shape[0]] = [name+fmt, line_list[2], int(conf_id)]
 
-    df = df.sort_values(by=["score"])
-    df.to_csv("score_table.csv", index=False)
+    df = df.sort_values(by="score")
+    df.to_csv(result_table_path, index=False)
 
-    return OPIO({"score_table": Path("score_table.csv")})
+    return OPIO({"score_table": result_table_path, "result_json": copy_result_json_path})

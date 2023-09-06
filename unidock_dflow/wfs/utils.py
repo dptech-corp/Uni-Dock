@@ -1,9 +1,9 @@
 from typing import Union, Optional
 import dflow
 from dflow.plugins import bohrium
-bohrium.BohriumExecutor
 from dflow.executor import ContainerExecutor
 from dflow.plugins.dispatcher import DispatcherExecutor
+from lbg_plugins import LebesgueContext, LebesgueExecutor
 
 
 def setup(config:dict):
@@ -54,4 +54,17 @@ def get_dispatcher_executor(dispatcher_config:dict) -> Optional[DispatcherExecut
         singularity_executable=singularity_executable,
         container_args=container_args,
     )
+    return remote_executor
+
+
+def get_remote_executor(executor_config:dict, scass_type:str, use_lbg_executor:bool) -> Union[LebesgueExecutor, DispatcherExecutor]:
+    if use_lbg_executor:
+        executor_config["scass_type"] = scass_type
+        remote_executor = LebesgueExecutor(executor="lebesgue_v2", extra=executor_config)
+    else:
+        try:
+            executor_config["machine_dict"]["remote_profile"]["input_data"]["scass_type"] = scass_type
+        except:
+            pass
+        remote_executor = get_dispatcher_executor(executor_config)
     return remote_executor
