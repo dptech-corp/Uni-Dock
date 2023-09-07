@@ -619,12 +619,26 @@ def run_unimol_unidock(config:dict, out_yaml_path:str=""):
             wf.add(top_refine_unidock_pipeline_step)
     
         elif name == "pbgbsa":
+            top_num = None
+            top_percent = None
+            score_table = None
+            if params.get("top_num"):
+                score_table = top_refine_unidock_pipeline_step.outputs.artifacts["score_table"]
+                top_num = params.pop("top_num")
+            if params.get("top_percent"):
+                score_table = top_refine_unidock_pipeline_step.outputs.artifacts["score_table"]
+                top_percent = params.pop("top_percent")
             remote_executor = get_remote_executor(remote_config, scass_type, True if os.environ.get("HERMITE_MODE") else False)
             pbgbsa_image = image_dict.get("pbgbsa_image", "")
             pbgbsa_get_ligands_step = Step(
                 name="pbgbsa-get-docking-result-ligands-step",
                 artifacts={
                     "results_json_list": top_refine_unidock_pipeline_step.outputs.artifacts["results_json_list"],
+                    "score_table": score_table
+                },
+                parameters={
+                    "top_num": top_num,
+                    "top_percent": top_percent
                 },
                 template=PythonOPTemplate(
                     get_pbgbsa_inputs_from_docking_op,
