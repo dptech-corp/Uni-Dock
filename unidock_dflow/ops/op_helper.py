@@ -22,23 +22,30 @@ def collect_parallel_docking_results_op(
     import pandas as pd
 
     result_json_list = []
-    total_score_table = pd.DataFrame(columns=["basename", "score", "conf_id"])
+    total_score_table = None
     for i in range(len(score_table_list)):
         result_json_path = f"result_{i}.json"
         result_map = dict()
         score_table_path = score_table_list[i]
         result_content_json = result_content_json_list[i]
         score_table = pd.read_csv(score_table_path, index_col=None)
-        total_score_table = pd.concat([total_score_table, score_table], axis=0, ignore_index=True)
+        if total_score_table is None:
+            total_score_table = pd.read_csv(score_table_path, index_col=None)
+        else:
+            total_score_table = pd.concat([total_score_table, score_table], axis=0, ignore_index=True)
         with open(result_content_json, "r") as f:
             result_content_map = json.load(f)
         for _, row in score_table.iterrows():
             basename = row["basename"]
             score = float(row["score"])
             conf_id = int(row["conf_id"])
+            constrained_score = row.get("constrained_score")
             content = result_content_map[basename][conf_id-1]
             name, fmt = os.path.splitext(basename)
-            result_map[f"{name}_{conf_id}{fmt}"] = {"score": score, "content": content}
+            item = {"score": score, "content": content}
+            if constrained_score:
+                item["constrained_score"] = float(constrained_score)
+            result_map[f"{name}_{conf_id}{fmt}"] = item
         with open(result_json_path, "w") as f:
             json.dump(result_map, f)
         result_json_list.append(Path(result_json_path))

@@ -80,8 +80,8 @@ def gen_ad4_map_op(receptor:Artifact(Path), ligand_content_json:Artifact(Path),
 
 
 @OP.function
-def run_unidock_op(receptor:Artifact(Path), ligand_content_json:Artifact(Path), 
-        docking_params:Parameter(dict), bias_content_json:Artifact(Path, optional=True), 
+def run_unidock_op(receptor:Artifact(Path), ligand_content_json:Artifact(Path), docking_params:Parameter(dict), 
+        bias_file:Artifact(Path, optional=True), bias_content_json:Artifact(Path, optional=True), 
         batch_size:Parameter(int, default=1200)
 ) -> {"result_json": Artifact(Path)}:
     import os
@@ -116,15 +116,18 @@ def run_unidock_op(receptor:Artifact(Path), ligand_content_json:Artifact(Path),
             f.write(content)
         ligand_files.append(ligands_dir / name)
 
+    if bias_file:
+        docking_params["bias"] = bias_file.as_posix()
+
     if bias_content_json:
-        if "multi_bias" in docking_params:
-            with open(bias_content_json.as_posix(), "r") as f:
-                bias_content_list = json.load(f)
-            for bias_content_item in bias_content_list:
-                name = bias_content_item["name"]
-                content = bias_content_item["content"]
-                with open(ligands_dir / f"{name}.bpf", "w") as f:
-                    f.write(content)
+        docking_params["multi_bias"] = True
+        with open(bias_content_json.as_posix(), "r") as f:
+            bias_content_list = json.load(f)
+        for bias_content_item in bias_content_list:
+            name = bias_content_item["name"]
+            content = bias_content_item["content"]
+            with open(ligands_dir / f"{name}.bpf", "w") as f:
+                f.write(content)
 
     real_batch_size = int(len(ligand_files) // (len(ligand_files) // batch_size + 1) + 1)
     batch_ligand_files = [ligand_files[i:i+real_batch_size] for i in range(0, len(ligand_files), real_batch_size)]
@@ -180,6 +183,42 @@ def run_unidock_op(receptor:Artifact(Path), ligand_content_json:Artifact(Path),
 
 
 @OP.function
+def read_score_op(result_content_json:Artifact(Path)) -> {"score_table":Artifact(Path), "result_json": Artifact(Path)}:
+    import shutil
+    import json
+    import uuid
+    import pandas as pd
+
+    df = pd.DataFrame(columns=["basename", "score", "conf_id"])
+
+    with open(result_content_json.as_posix(), "r") as f:
+        result_content_map = json.load(f)
+
+    for basename, content_list in result_content_map.items():
+        for i, content in enumerate(content_list):
+            score = None
+            content_split = content.split("\n")
+            score_line_ind = None
+            for j, line in enumerate(content_split):
+                if line.startswith("> <Uni-Dock RESULT>"):
+                    score_line_ind = j + 1
+                    break
+            if score_line_ind:
+                score_line = content_split[score_line_ind]
+                score = float(score_line.partition("LOWER_BOUND=")[0][len("ENERGY="):])
+            df.loc[df.shape[0]] = [basename, score, i+1]
+
+    result_dir = Path(f"tmp_{uuid.uuid4().hex}")
+    result_dir.mkdir(parents=True, exist_ok=True)
+    result_table_path = result_dir.joinpath("score_table.csv")
+    copy_result_json_path = result_dir.joinpath(f"result.json")
+    df = df.sort_values(by="score")
+    df.to_csv(result_table_path, index=False)
+    shutil.copyfile(result_content_json, copy_result_json_path)
+    return OPIO({"score_table": result_table_path, "result_json": copy_result_json_path})
+
+
+@OP.function
 def run_unidock_score_only_op(receptor:Artifact(Path), result_content_json:Artifact(Path), 
         docking_params:Parameter(dict)) -> {"score_table":Artifact(Path), "result_json": Artifact(Path)}:
     import os
@@ -209,20 +248,12 @@ def run_unidock_score_only_op(receptor:Artifact(Path), result_content_json:Artif
     copy_result_json_path = result_dir.joinpath("result.json")
     shutil.copyfile(result_content_json, copy_result_json_path)
 
-    df = pd.DataFrame(columns=["basename", "score", "conf_id"])
+    df = pd.DataFrame(columns=["basename", "score", "constrained_score", "conf_id"])
 
     with open(result_content_json.as_posix(), "r") as f:
         result_content_map = json.load(f)
 
-    if not docking_params.get("multi_bias") and not docking_params.get("bias"):
-        for basename, content_list in result_content_map.items():
-            for i, content in enumerate(content_list):
-                score = read_score_from_sdf_content(content)
-                df.loc[df.shape[0]] = [basename, score, i+1]
-        df = df.sort_values(by="score")
-        df.to_csv(result_table_path, index=False)
-        return OPIO({"score_table": result_table_path, "result_json": copy_result_json_path})
-
+    constrain_score_map = dict()
     file_list_content = ""
     ligands_dir = Path("./tmp/inputs_dir")
     ligands_dir.mkdir(parents=True, exist_ok=True)
@@ -232,6 +263,8 @@ def run_unidock_score_only_op(receptor:Artifact(Path), result_content_json:Artif
             ligand_path = os.path.join(ligands_dir, f"{name}_{i+1}{fmt}")
             with open(ligand_path, "w") as f:
                 f.write(content)
+            constrained_score = read_score_from_sdf_content(content)
+            constrain_score_map[name] = constrained_score
             file_list_content += ligand_path + "\n"
 
     scoring_func = docking_params["scoring"]
@@ -272,7 +305,8 @@ def run_unidock_score_only_op(receptor:Artifact(Path), result_content_json:Artif
                 line_list = line.strip("\n").split(" ")
                 name, fmt = os.path.splitext(line_list[1])
                 name, _, conf_id = name.rpartition("_")
-                df.loc[df.shape[0]] = [name+fmt, line_list[2], int(conf_id)]
+                constrain_score = constrain_score_map.get(name)
+                df.loc[df.shape[0]] = [name+fmt, float(line_list[2]), constrain_score, int(conf_id)]
 
     df = df.sort_values(by="score")
     df.to_csv(result_table_path, index=False)

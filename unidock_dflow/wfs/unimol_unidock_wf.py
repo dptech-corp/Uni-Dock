@@ -4,6 +4,7 @@ import sys
 import glob
 import json
 import copy
+from enum import IntEnum
 import argparse
 
 from dflow import (
@@ -31,18 +32,24 @@ from utils import (
 
 ops_folder_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "ops")
 sys.path.append(ops_folder_path)
-from op_bias import gen_pose_refine_bpf_op
+from op_bias import gen_pose_refine_bpf_op, gen_hbond_bpf_op, merge_bpf_op, gen_substructure_bpf_op, insert_substructure_ind_op, gen_shape_bpf_op, gen_mcs_bpf_op
 from op_preprocess import preprocess_receptor_op, preprocess_ligands_op
 from op_pose_refine import run_unimol_pose_refine_op
-from op_unidock import gen_ad4_map_op, run_unidock_op, run_unidock_score_only_op
+from op_unidock import gen_ad4_map_op, run_unidock_op, run_unidock_score_only_op, read_score_op
 from op_helper import collect_parallel_docking_results_op, pick_refine_ligands_op, update_results_op
 from op_pbgbsa import get_pbgbsa_inputs_from_docking_op, run_pbgbsa_op
 
 
-pose_refine_min_num = os.environ.get("POSE_REFINE_MIN_NUM", 10000)
-ligand_num_per_batch = os.environ.get("LIGAND_NUM_PER_BATCH", 18000)
+pose_refine_min_num = int(os.environ.get("POSE_REFINE_MIN_NUM", "10000"))
+ligand_num_per_batch = int(os.environ.get("LIGAND_NUM_PER_BATCH", "18000"))
 local_executor = None
 
+class ConstrainedDockingType(IntEnum):
+    HBond = 1
+    Substructure = 2
+    MCS = 3
+    Shape = 4
+    MetalBond = 5
 
 def get_pose_bias_superop(docking_config:dict, image_dict:dict, remote_executor:Executor) -> Steps:
     unimol_image = image_dict.get("unimol_image", "")
@@ -94,7 +101,7 @@ def get_pose_bias_superop(docking_config:dict, image_dict:dict, remote_executor:
     return pose_refine_pipeline
 
 
-def get_unidock_superop(docking_config:dict, image_dict:dict, remote_executor:Executor) -> Steps:
+def get_unidock_superop(docking_config:dict, image_dict:dict, remote_executor:Executor, has_bias:bool=False) -> Steps:
     mgltools_image = image_dict.get("mgltools_image", "")
     unidock_tools_image = image_dict.get("unidock_tools_image", "")
 
@@ -102,10 +109,12 @@ def get_unidock_superop(docking_config:dict, image_dict:dict, remote_executor:Ex
     unidock_superop.inputs.artifacts = {
         "receptor": InputArtifact(),
         "ligand_content_json": InputArtifact(),
+        "bias_file": InputArtifact(optional=True),
         "bias_content_json": InputArtifact(optional=True)
     }
     receptor = unidock_superop.inputs.artifacts["receptor"]
     ligand_content_json = unidock_superop.inputs.artifacts["ligand_content_json"]
+    bias_file = unidock_superop.inputs.artifacts["bias_file"]
     bias_content_json = unidock_superop.inputs.artifacts["bias_content_json"]
 
     if docking_config["scoring"] == "ad4":
@@ -133,6 +142,7 @@ def get_unidock_superop(docking_config:dict, image_dict:dict, remote_executor:Ex
         artifacts={
             "receptor": receptor, 
             "ligand_content_json": ligand_content_json,
+            "bias_file": bias_file,
             "bias_content_json": bias_content_json, 
         },
         parameters={
@@ -148,22 +158,36 @@ def get_unidock_superop(docking_config:dict, image_dict:dict, remote_executor:Ex
     unidock_superop.add(unidock_step)
     result_content_json = unidock_step.outputs.artifacts["result_json"]
 
-    unidock_score_step = Step(
-        name="unidock-score",
-        artifacts={
-            "receptor": receptor, 
-            "result_content_json": result_content_json,
-        },
-        parameters={
-            "docking_params": docking_config,
-        },
-        template=PythonOPTemplate(
-            run_unidock_score_only_op,
-            image=unidock_tools_image,
-            image_pull_policy="IfNotPresent",
-        ),
-        executor=local_executor
-    )
+    if has_bias:
+        unidock_score_step = Step(
+            name="unidock-score",
+            artifacts={
+                "receptor": receptor, 
+                "result_content_json": result_content_json,
+            },
+            parameters={
+                "docking_params": docking_config,
+            },
+            template=PythonOPTemplate(
+                run_unidock_score_only_op,
+                image=unidock_tools_image,
+                image_pull_policy="IfNotPresent",
+            ),
+            executor=local_executor
+        )
+    else:
+        unidock_score_step = Step(
+            name="unidock-score",
+            artifacts={
+                "result_content_json": result_content_json,
+            },
+            template=PythonOPTemplate(
+                read_score_op,
+                image=unidock_tools_image,
+                image_pull_policy="IfNotPresent",
+            ),
+            executor=local_executor
+        )
     unidock_superop.add(unidock_score_step)
     score_table = unidock_score_step.outputs.artifacts["score_table"]
     result_content_json = unidock_score_step.outputs.artifacts["result_json"]
@@ -182,13 +206,30 @@ def get_unidock_pipeline_superop(docking_config:dict, image_dict:dict, remote_ex
         "input_receptor": InputArtifact(),
         "prepared_receptor": InputArtifact(),
         "ligands_dir": InputArtifact(),
+        "ref_sdf_file": InputArtifact(optional=True),
     }
 
     prepared_receptor = unidock_pipeline.inputs.artifacts["prepared_receptor"]
     ligands_dir = unidock_pipeline.inputs.artifacts["ligands_dir"]
+    ref_sdf_file = unidock_pipeline.inputs.artifacts["ref_sdf_file"]
 
+    bias_file = None
     bias_content_json = None
     next_step_list = []
+
+    has_bias = False
+    constrain_type = 0
+    constrain_params = dict()
+    if docking_config.get("constaint"):
+        constrain_params = docking_config.pop("constaint")
+        constrain_type = constrain_params.pop("constrained_type")
+        if constrain_type not in [ConstrainedDockingType.HBond.value]:
+            try:
+                docking_config.pop("pose_refine")
+            except:
+                pass
+        has_bias = True
+
     if docking_config.get("pose_refine"):
         pose_refine_method = docking_config.pop("pose_refine")
         if pose_refine_method == "unimol":
@@ -202,7 +243,7 @@ def get_unidock_pipeline_superop(docking_config:dict, image_dict:dict, remote_ex
             )
             next_step_list.append(pose_bias_step)
             bias_content_json = pose_bias_step.outputs.artifacts["bias_content_json"]
-            docking_config["multi_bias"] = True
+            has_bias = True
 
     ligprep_step = Step(
         name="ligand-prep",
@@ -217,18 +258,128 @@ def get_unidock_pipeline_superop(docking_config:dict, image_dict:dict, remote_ex
         executor=local_executor,
     )
     next_step_list.append(ligprep_step)
-    unidock_pipeline.add(next_step_list)
 
+    if constrain_type == ConstrainedDockingType.HBond:
+        hbond_bias_step = Step(
+            name="hbond-bias-step",
+            artifacts={
+                "receptor_path": unidock_pipeline.inputs.artifacts["input_receptor"],
+            },
+            parameters={
+                "hbond_sites": constrain_params.get("h_bond_sites", ""),
+            },
+            template=PythonOPTemplate(
+                gen_hbond_bpf_op,
+                image=unidock_tools_image,
+                image_pull_policy="IfNotPresent",
+            ),
+            executor=local_executor,
+        )
+        next_step_list.append(hbond_bias_step)
+        bias_file = hbond_bias_step.outputs.artifacts["bias_file"]
+    elif constrain_type == ConstrainedDockingType.Substructure:
+        substructure_bias_step = Step(
+            name="substructure-bias-step",
+            artifacts={
+                "ref_sdf_file": ref_sdf_file,
+            },
+            parameters={
+                "ind_list": constrain_params.get("indices_list", []),
+            },
+            template=PythonOPTemplate(
+                gen_substructure_bpf_op,
+                image=unidock_tools_image,
+                image_pull_policy="IfNotPresent",
+            ),
+            executor=local_executor,
+        )
+        next_step_list.append(substructure_bias_step)
+        bias_file = substructure_bias_step.outputs.artifacts["bias_file"]
+    elif constrain_type == ConstrainedDockingType.Shape:
+        shape_bias_step = Step(
+            name="shape-bias-step",
+            artifacts={
+                "ref_sdf_file": ref_sdf_file,
+            },
+            parameters={
+                "shape_scale": constrain_params.get("shape_scale", 1),
+            },
+            template=PythonOPTemplate(
+                gen_shape_bpf_op,
+                image=unidock_tools_image,
+                image_pull_policy="IfNotPresent",
+            ),
+            executor=local_executor,
+        )
+        next_step_list.append(shape_bias_step)
+        bias_file = shape_bias_step.outputs.artifacts["bias_file"]
+
+    unidock_pipeline.add(next_step_list)
     ligand_content_json = ligprep_step.outputs.artifacts["content_json"]
+
+    if constrain_type == ConstrainedDockingType.HBond and bias_content_json:
+        merge_bias_step = Step(
+            name="merge-bias-step",
+            artifacts={
+                "bias_content_json": bias_content_json,
+                "bpf_file": bias_file,
+            },
+            template=PythonOPTemplate(
+                merge_bpf_op,
+                image=unidock_tools_image,
+                image_pull_policy="IfNotPresent",
+            ),
+            executor=local_executor,
+        )
+        unidock_pipeline.add(merge_bias_step)
+        bias_content_json = merge_bias_step.outputs.artifacts["bias_content_json"]
+        bias_file = None
+    elif constrain_type == ConstrainedDockingType.Substructure:
+        insert_substructure_ind_step = Step(
+            name="insert-substructure-ind-step",
+            artifacts={
+                "ref_sdf_file": ref_sdf_file,
+                "ligand_content_json": ligand_content_json,
+            },
+            parameters={
+                "ind_list": constrain_params.get("indices_list", []),
+            },
+            template=PythonOPTemplate(
+                insert_substructure_ind_op,
+                image=unidock_tools_image,
+                image_pull_policy="IfNotPresent",
+            ),
+            executor=local_executor,
+        )
+        unidock_pipeline.add(insert_substructure_ind_step)
+        ligand_content_json = insert_substructure_ind_step.outputs.artifacts["ligand_content_json"]
+    elif constrain_type == ConstrainedDockingType.MCS:
+        gen_mcs_bpf_step = Step(
+            name="gen-mcs-bpf-step",
+            artifacts={
+                "ref_sdf_file": ref_sdf_file,
+                "ligand_content_json": ligand_content_json,
+            },
+            template=PythonOPTemplate(
+                gen_mcs_bpf_op,
+                image=unidock_tools_image,
+                image_pull_policy="IfNotPresent",
+            ),
+            executor=local_executor,
+        )
+        unidock_pipeline.add(gen_mcs_bpf_step)
+        bias_content_json = gen_mcs_bpf_step.outputs.artifacts["bias_content_json"]
+        ligand_content_json = gen_mcs_bpf_step.outputs.artifacts["ligand_content_json"]
 
     docking_step = Step(
         name="docking",
         artifacts={
             "receptor": prepared_receptor,
             "ligand_content_json": ligand_content_json,
+            "bias_file": bias_file,
             "bias_content_json": bias_content_json,
         },
-        template=get_unidock_superop(docking_config, image_dict, remote_executor)
+        template=get_unidock_superop(docking_config, image_dict, remote_executor, has_bias)
     )
     unidock_pipeline.add(docking_step)
 
@@ -246,6 +397,7 @@ def get_parallel_unidock_pipeline_superop(docking_config:dict, image_dict:dict, 
         "input_receptor": InputArtifact(),
         "prepared_receptor": InputArtifact(),
         "ligands_dir_list": InputArtifact(archive=None),
+        "ref_sdf_file": InputArtifact(optional=True),
     }
     unidock_temp = get_unidock_pipeline_superop(docking_config, image_dict, remote_executor)
     parallel_unidock_pipeline_step = Step(
@@ -255,6 +407,7 @@ def get_parallel_unidock_pipeline_superop(docking_config:dict, image_dict:dict, 
             "input_receptor": parallel_unidock_pipeline.inputs.artifacts["input_receptor"],
             "prepared_receptor": parallel_unidock_pipeline.inputs.artifacts["prepared_receptor"],
             "ligands_dir": parallel_unidock_pipeline.inputs.artifacts["ligands_dir_list"],
+            "ref_sdf_file": parallel_unidock_pipeline.inputs.artifacts["ref_sdf_file"],
         },
         template=unidock_temp,
     )
@@ -288,12 +441,13 @@ def get_top_refine_docking_pipeline_superop(docking_config:dict, image_dict:dict
         "input_receptor": InputArtifact(),
         "prepared_receptor": InputArtifact(),
         "ligands_dir_list": InputArtifact(archive=None),
+        "ref_sdf_file": InputArtifact(optional=True),
     }
     input_receptor = top_refine_pipeline.inputs.artifacts["input_receptor"]
     prepared_receptor = top_refine_pipeline.inputs.artifacts["prepared_receptor"]
     ligands_dir_list = top_refine_pipeline.inputs.artifacts["ligands_dir_list"]
 
-    if not docking_config.get("pose_refine") or ligand_num < pose_refine_min_num:
+    if (docking_config.get("constaint") and docking_config["constaint"].get("constrained_type") not in [ConstrainedDockingType.HBond.value]) or not docking_config.get("pose_refine") or ligand_num < pose_refine_min_num:
         parallel_unidock_temp = get_parallel_unidock_pipeline_superop(docking_config, image_dict, 
             remote_executor)
         parallel_unidock_step = Step(
@@ -302,6 +456,7 @@ def get_top_refine_docking_pipeline_superop(docking_config:dict, image_dict:dict
                 "input_receptor": input_receptor,
                 "prepared_receptor": prepared_receptor,
                 "ligands_dir_list": ligands_dir_list,
+                "ref_sdf_file": top_refine_pipeline.inputs.artifacts["ref_sdf_file"],
             },
             template=parallel_unidock_temp,
         )
@@ -330,6 +485,7 @@ def get_top_refine_docking_pipeline_superop(docking_config:dict, image_dict:dict
                 "input_receptor": input_receptor,
                 "prepared_receptor": prepared_receptor,
                 "ligands_dir_list": ligands_dir_list,
+                "ref_sdf_file": top_refine_pipeline.inputs.artifacts["ref_sdf_file"],
             },
             template=pure_docking_parallel_unidock_temp,
         )
@@ -355,13 +511,14 @@ def get_top_refine_docking_pipeline_superop(docking_config:dict, image_dict:dict
         top_refine_pipeline.add(pick_top_ligands_step)
 
         unimol_docking_parallel_unidock_temp = get_parallel_unidock_pipeline_superop(docking_config, image_dict, 
-            local_executor, remote_executor)
+            remote_executor)
         unimol_parallel_unidock_step = Step(
             name="parallel-unidock-s2",
             artifacts={
                 "input_receptor": input_receptor,
                 "prepared_receptor": prepared_receptor,
                 "ligands_dir_list": pick_top_ligands_step.outputs.artifacts["ligands_dir_list"],
+                "ref_sdf_file": top_refine_pipeline.inputs.artifacts["ref_sdf_file"],
             },
             template=unimol_docking_parallel_unidock_temp,
         )
@@ -418,6 +575,9 @@ def run_unimol_unidock(config:dict, out_yaml_path:str=""):
         ligand_num += len(glob.glob(os.path.join(sub_dir.as_posix(), "*.mol")))
         ligand_num += len(glob.glob(os.path.join(sub_dir.as_posix(), "*.smi")))
     ligands_dir_artifact_list = upload_artifact(sub_dirs_list, archive=None)
+    ref_ligand_artifact = None
+    if config.get("ref_ligand"):
+        ref_ligand_artifact = upload_artifact(config["ref_ligand"])
 
     wf = Workflow(name="vs-workflow", context=wf_ctx, parallelism=100)
     for step_params in step_params_list:
@@ -452,6 +612,7 @@ def run_unimol_unidock(config:dict, out_yaml_path:str=""):
                     "input_receptor": receptor_artifact,
                     "prepared_receptor": prepared_receptor,
                     "ligands_dir_list": ligands_dir_artifact_list,
+                    "ref_sdf_file": ref_ligand_artifact,
                 },
                 template=get_top_refine_docking_pipeline_superop(params, image_dict, remote_executor, ligand_num),
             )
