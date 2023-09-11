@@ -68,9 +68,10 @@ class LigandPrepareRunner:
             out_path = os.path.join(workdir, filename + ".sdf")
             tmp_file = os.path.join(workdir, filename + "_tmp.sdf")
             if standardize:
+                if __class__.check_no_3d(ligand_file):
+                    __class__.gen_3d(ligand_file, tmp_file)
+                    ligand_file = tmp_file
                 __class__.add_hydrogen(ligand_file, tmp_file)
-                if __class__.check_no_3d(tmp_file):
-                    __class__.gen_3d(tmp_file, tmp_file)
                 ligand_file = tmp_file
             topo=TopologyBuilder(ligand_file)
             topo.build_molecular_graph()
