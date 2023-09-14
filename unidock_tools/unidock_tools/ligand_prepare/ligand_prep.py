@@ -12,11 +12,15 @@ from unidock_tools.ligand_prepare.topology_builder import TopologyBuilder
 
 
 class LigandPrepareRunner:
-    def __init__(self, ligand_files:List[str], workdir:str='./prepared_ligands', standardize:bool=False) -> None:
+    def __init__(self, ligand_files:List[str], 
+                 workdir:str='./prepared_ligands', 
+                 standardize:bool=False, 
+                 write_sdf:bool=True) -> None:
         self.ligand_files = ligand_files
         self.workdir = workdir
         os.makedirs(self.workdir, exist_ok=True)
         self.standardize = standardize
+        self.write_sdf = write_sdf
 
     @staticmethod
     def set_properties(mol:Chem.rdchem.Mol, props_dict:dict):
@@ -62,10 +66,12 @@ class LigandPrepareRunner:
             print(f"ligand {os.path.splitext(os.path.basename(ligand_file))[0]} gen 3d failed")
 
     @staticmethod
-    def prepare_one_ligand(ligand_file:str, workdir:str, standardize:bool=False) -> Union[str, None]:
+    def prepare_one_ligand(ligand_file:str, workdir:str, 
+                           standardize:bool=False,
+                           write_sdf:bool=True) -> Union[str, None]:
         filename = os.path.splitext(os.path.basename(ligand_file))[0]
         try:
-            out_path = os.path.join(workdir, filename + ".sdf")
+
             tmp_file = os.path.join(workdir, filename + "_tmp.sdf")
             if standardize:
                 if __class__.check_no_3d(ligand_file):
@@ -75,7 +81,12 @@ class LigandPrepareRunner:
                 ligand_file = tmp_file
             topo=TopologyBuilder(ligand_file)
             topo.build_molecular_graph()
-            topo.write_torsion_tree_sdf_file(out_path)
+            if write_sdf:
+                out_path = os.path.join(workdir, filename + ".sdf")
+                topo.write_torsion_tree_sdf_file(out_path)
+            else:
+                out_path = os.path.join(workdir, filename + ".pdbqt")
+                topo.write_pdbqt_file(out_path)
             print(f"ligand {filename} preperation successful")
             Path(tmp_file).unlink(missing_ok=True)
             return out_path
@@ -89,7 +100,9 @@ class LigandPrepareRunner:
             cpu_count = 1
         with multiprocessing.Pool(processes=max(1, min(len(self.ligand_files), int(cpu_count//1.5))), maxtasksperchild=10) as pool:
             result_files = pool.map(partial(__class__.prepare_one_ligand, 
-                workdir=self.workdir, standardize=self.standardize), self.ligand_files, chunksize=100)
+                workdir=self.workdir, 
+                standardize=self.standardize,
+                write_sdf=self.write_sdf), self.ligand_files, chunksize=100)
         result_files = [f for f in result_files if f]
 
         ligands_num = len(self.ligand_files)
