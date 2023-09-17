@@ -455,6 +455,27 @@ void Vina::set_ad4_weights(double weight_ad4_vdw , double weight_ad4_hb,
 	}
 }
 
+void Vina::set_dkoes_weights(double weight_dkoes_vdw,double weight_dkoes_hydrogen,
+							  double weight_dkoes_ad4_dsolv, double weight_dkoes_num_tors_sqr,
+							  double weight_dkoes_constant_term){
+	flv weights;
+	if (m_sf_choice == SF_DKOES){
+		weights.push_back(weight_dkoes_vdw);
+		weights.push_back(weight_dkoes_hydrogen);
+		weights.push_back(weight_dkoes_ad4_dsolv);
+		weights.push_back(weight_dkoes_num_tors_sqr);
+		weights.push_back(weight_dkoes_constant_term);
+		
+		// Store in Vina object
+		m_weights = weights;
+
+		// Since we set (different) weights, we automatically initialize the forcefield
+		set_forcefield();
+	}
+
+}
+
+
 void Vina::set_forcefield() {
 	ScoringFunction scoring_function(m_sf_choice, m_weights);
 	// Store in Vina object

@@ -182,5 +182,5 @@ fl ad4_tors_add::eval(const conf_independent_inputs& in, fl x, flv::const_iterat
 //smina constant_term
 fl dkoes_constant_term::eval(const conf_independent_inputs& in, fl x, flv::const_iterator& i){
     fl weight = read_iterator(i);
-    return x+w;
+    return x+weight;
 }

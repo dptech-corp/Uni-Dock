@@ -99,6 +99,9 @@ public:
 		} else if (sf_name.compare("ad4") == 0) {
 			m_sf_choice = SF_AD42;
 			set_ad4_weights();
+		} else if (sf_name.compare("smina") == 0) {
+			m_sf_choice = SF_DKOES;
+			set_dkoes_weights();
 		} else {
 			std::cerr << "ERROR: Scoring function " << sf_name << " not implemented (choices: vina, vinardo or ad4)\n";
 			exit (EXIT_FAILURE);
@@ -131,6 +134,9 @@ public:
 	void set_ad4_weights(double weight_ad4_vdw=0.1662, double weight_ad4_hb=0.1209,
 						      double weight_ad4_elec=0.1406, double weight_ad4_dsolv=0.1322,
 						      double weight_glue=50, double weight_ad4_rot=0.2983);
+	void set_dkoes_weights(double weight_dkoes_vdw=0.009900,double weight_dkoes_hydrogen=-0.153055,
+							  double weight_dkoes_ad4_dsolv=0.048934, double weight_dkoes_num_tors_sqr=0.285035,
+							  double weight_dkoes_constant_term=-2.469020);
 	std::vector<double> grid_dimensions_from_ligand(double buffer_size=4);
 	void compute_vina_maps(double center_x, double center_y, double center_z,
 								  double size_x, double size_y, double size_z,

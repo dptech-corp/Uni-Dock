@@ -194,6 +194,13 @@ bug reporting, license agreements, and more information.      \n";
 		double weight_vinardo_hydrophobic = -0.035;
 		double weight_vinardo_hydrogen = -0.600;
 
+		//smina weights
+		double weight_dkoes_vdw   = 0.009900;
+		double weight_dkoes_hydrogen = -0.153055;
+		double weight_dkoes_ad4_dsolv = 0.048934;
+		double weight_dkoes_num_tors_sqr = 0.317268;
+		double weight_dkoes_constant_term = -2.469020;
+
 		// macrocycle closure
 		double weight_glue        = 50.000000; // linear attraction
 
@@ -277,6 +284,12 @@ bug reporting, license agreements, and more information.      \n";
 			("weight_ad4_elec", value<double>(&weight_ad4_elec)->default_value(weight_ad4_elec), "ad4_elec weight")
 			("weight_ad4_dsolv", value<double>(&weight_ad4_dsolv)->default_value(weight_ad4_dsolv), "ad4_dsolv weight")
 			("weight_ad4_rot", value<double>(&weight_ad4_rot)->default_value(weight_ad4_rot), "ad4_rot weight")
+
+			("weight_dkoes_vdw", value<double>(&weight_dkoes_vdw)->default_value(weight_dkoes_vdw), "dkoes_vdw weight")
+			("weight_dkoes_hydrogen", value<double>(&weight_dkoes_hydrogen)->default_value(weight_dkoes_hydrogen), "dkoes Hydrogen bond weight")
+			("weight_dkoes_ad4_dsolv", value<double>(&weight_dkoes_ad4_dsolv)->default_value(weight_dkoes_ad4_dsolv), "dkoes ad4_dsolv weight")
+			("weight_dkoes_num_tors_sqr", value<double>(&weight_dkoes_num_tors_sqr)->default_value(weight_dkoes_num_tors_sqr), "dkoes num_tors_sqr weight")
+			("weight_dkoes_constant_term", value<double>(&weight_dkoes_constant_term)->default_value(weight_dkoes_constant_term), "dkoes constant_term weight")
 
 			("weight_glue", value<double>(&weight_glue)->default_value(weight_glue),                      "macrocycle glue weight")
 			("bias", value<std::string>(&bias_file), "bias configuration file name, content similar to BPF in AutoDock-bias")
@@ -522,6 +535,8 @@ bug reporting, license agreements, and more information.      \n";
 		} else if (sf_name.compare("vinardo") == 0) {
 			v.set_vinardo_weights(weight_vinardo_gauss1, weight_vinardo_repulsion,
 								  weight_vinardo_hydrophobic, weight_vinardo_hydrogen, weight_glue, weight_rot);
+		} else if (sf_name.compare("smina")==0){
+			v.set_dkoes_weights(weight_dkoes_vdw, weight_dkoes_hydrogen, weight_dkoes_ad4_dsolv, weight_dkoes_num_tors_sqr,weight_dkoes_constant_term);
 		} else {
 			v.set_ad4_weights(weight_ad4_vdw, weight_ad4_hb, weight_ad4_elec,
 							  weight_ad4_dsolv, weight_glue, weight_ad4_rot);
