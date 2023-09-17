@@ -318,6 +318,40 @@ __device__ __forceinline__  fl linearattraction_eval(sz t1, sz t2, fl r, fl cuto
         return 0.0;
 };
 
+//smina
+
+__device__ __forceinline__  fl dkoes_non_dir_h_bond_eval(sz t1, sz t2, fl r, fl good, fl bad, fl cutoff) {
+    if (r >= cutoff)
+        return 0.0;
+    if ((t1 >= XS_TYPE_SIZE) || (t2 >= XS_TYPE_SIZE))
+        return 0.0;
+    if(xs_h_bond_possible_gpu(t1, t2))
+        return slope_step_gpu(bad, good, r - optimal_distance_gpu(t1, t2));
+    return 0.0;
+};
+
+__device__ __forceinline__ fl dkoes_vdw_eval(sz a_ad, sz b_ad, fl r, fl smoothing, fl cap, fl cutoff){
+    if (r >= cutoff)
+        return 0.0;
+    sz t1 = a_ad;
+    sz t2 = b_ad;
+    fl d0 = optimal_distance_gpu(t1,t2);
+    fl depth=1;
+     if (depth < 0) return 0.0; // interaction is hb, not vdw.
+        r = smoothen_gpu(r, d0, smoothing);
+        fl c_4 = pow(d0,4) * depth * 8/ (fl(4) - fl(8));
+        fl c_8  = pow(d0,8)  * depth * 4/(fl(8) - fl(4));
+        fl r_4   = pow(r,4);
+        fl r_8  = pow(r,8);
+
+        if(r_4 > epsilon_fl && r_8 > epsilon_fl)
+            return min(cap, c_4 / r_8 - c_8 / r_8);
+        else
+            return cap;
+        VINA_CHECK_GPU(false);
+        return 0.0;
+};
+
 
 /* potential related end */
 
@@ -343,6 +377,8 @@ typedef struct {
     fl ad4_vdw_smoothing, ad4_vdw_cap, ad4_vdw_cutoff;
     fl ad4_hb_smoothing, ad4_hb_cap, ad4_hb_cutoff;
     fl linearattraction_cutoff; // shared by all scoring functions
+    fl dkoes_vdw_smoothing, dkoes_vdw_cap, dkoes_vdw_cutoff;
+    fl dkoes_non_dir_h_bond_good, dkoes_non_dir_h_bond_bad, dkoes_non_dir_h_bond_cutoff;
 
 } scoring_function_cuda_t;
 

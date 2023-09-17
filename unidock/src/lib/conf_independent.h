@@ -123,4 +123,11 @@ public:
     fl eval(const conf_independent_inputs& in, fl x, flv::const_iterator& i);
 };
 
+//smina
+class dkoes_constant_term : public ConfIndependent {
+public:
+    dkoes_constant_term() { }
+    sz size() const { return 1; }
+    fl eval(const conf_independent_inputs& in, fl x, flv::const_iterator& i);
+};
 #endif

@@ -34,7 +34,7 @@
 //Forward declaration
 struct model;
 
-enum scoring_function_choice {SF_VINA, SF_AD42, SF_VINARDO};
+enum scoring_function_choice {SF_VINA, SF_AD42, SF_VINARDO, SF_DKOES};
 
 class ScoringFunction {
 public:
@@ -83,6 +83,19 @@ public:
                 m_cutoff = 20.48;
                 m_max_cutoff = 20.48;
                 m_sf_choice = SF_AD42;
+                break;
+            }
+            case SF_DKOES:// need fast and old ?
+            {
+                m_potentials.push_back(new dkoes_vdw(0, 100000, 8.0));//TODO: second parameter is 100 or 100000?
+                m_potentials.push_back(new dkoes_non_dir_h_bond(-0.7,0, 8.0));
+                m_potentials.push_back(new ad4_solvation(3.6, 0.01097, true, 8.0));
+                m_conf_independents.push_back(new num_tors_sqr());
+                m_conf_independents.push_back(new dkoes_constant_term());
+                m_atom_typing = atom_type::XS;
+                m_cutoff = 8.0;
+                m_max_cutoff = 8.0;
+                m_sf_choice = SF_DKOES;
                 break;
             }
             default:

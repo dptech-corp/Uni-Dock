@@ -82,6 +82,19 @@ void precalculate_gpu(triangular_matrix_cuda_t *m_data_gpu_list, scoring_functio
                     }
                     break;
                 }
+                case SF_DKOES:
+                {
+                    for (int k = 0;k < n; ++k){
+                        fl sum = 0;
+                        // calculate smooth_e
+                        sum += sf_gpu->m_weights[0] * dkoes_vdw_eval(atom_xs_gpu[i], atom_xs_gpu[j], common_rs_gpu[k], sf_gpu->dkoes_vdw_smoothing, sf_gpu->dkoes_vdw_cap, sf_gpu->dkoes_vdw_cutoff);
+                        sum += sf_gpu->m_weights[1] * dkoes_non_dir_h_bond_eval(atom_xs_gpu[i], atom_xs_gpu[j], common_rs_gpu[k], sf_gpu->vinardo_non_dir_h_bond_good, sf_gpu->dkoes_non_dir_h_bond_bad, sf_gpu->dkoes_non_dir_h_bond_cutoff);
+                        sum += sf_gpu->m_weights[2] * ad4_solvation_eval_gpu(atom_xs_gpu[i], atom_xs_gpu[i], atom_charge_gpu[i], atom_ad_gpu[j],
+                                 atom_xs_gpu[j], atom_charge_gpu[j], sf_gpu->ad4_solvation_desolvation_sigma, sf_gpu->ad4_solvation_solvation_q, sf_gpu->ad4_solvation_charge_dependent, sf_gpu->ad4_solvation_cutoff, common_rs_gpu[k]);
+                        // DEBUG_PRINTF("i=%d, j=%d, k=%d, sum=%f\n", i, j, k, sum);
+                    }
+                    break;
+                }
                 default:
                     break;
             }
@@ -223,6 +236,10 @@ void precalculate_parallel(triangular_matrix_cuda_t *m_data_list_cpu, std::vecto
             scoring_cuda.ad4_solvation_cutoff = 20.48;
             scoring_cuda.linearattraction_cutoff = 20.0;
             break;
+        }
+        case SF_DKOES:
+        {
+            scoring_cuda. 
         }
     }
     scoring_function_cuda_t *scoring_cuda_gpu;

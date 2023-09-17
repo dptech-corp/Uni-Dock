@@ -516,4 +516,66 @@ public:
     fl cutoff;
 };
 
+// dkoes
+class dkoes_vdw : public Potential{
+public:
+    dkoes_vdw(fl smoothing_=1, fl cap_=100, fl cutoff_=8) : smoothing(smoothing_), cap(cap_), cutoff(cutoff_) { }
+    //~ad4_vdw() { }
+    fl eval(const atom& a, const atom& b, fl r) {
+        if (r >= cutoff)
+            return 0.0;
+        sz t1 = a.ad;
+        sz t2 = b.ad;
+        fl d0 = optimal_distance(t1,t2);
+        fl depth=1;
+        if (depth < 0) return 0.0; // interaction is hb, not vdw.
+        r = smoothen(r, d0, smoothing);
+        fl c_4 = int_pow<4>(d0) * depth * 8/ (fl(4) - fl(8));
+        fl c_8  = int_pow<8>(d0)  * depth * 4/(fl(8) - fl(4));
+        fl r_4   = int_pow<4>(r);
+        fl r_8  = int_pow<8>(r);
+
+        if(r_4 > epsilon_fl && r_8 > epsilon_fl)
+            return (std::min)(cap, c_4 / r_4 - c_8 / r_8);
+        else
+            return cap;
+        // VINA_CHECK(false);
+        return 0.0; // placating the compiler
+    };
+    fl eval(sz t1, sz t2, fl r) { return 0; }
+    fl get_cutoff() { return cutoff; }
+
+    fl smoothing;
+    fl cap;
+    fl cutoff;
+};
+
+class dkoes_non_dir_h_bond : public Potential {
+public:
+    dkoes_non_dir_h_bond(fl good_=-0.7, fl bad_=0, fl cutoff_=8) : good(good_), bad(bad_), cutoff(cutoff_) { }
+    //~vina_non_dir_h_bond() { }
+    fl eval(const atom& a, const atom& b, fl r) {
+        if (r >= cutoff)
+            return 0.0;
+        if ((a.xs >= XS_TYPE_SIZE) || (b.xs >= XS_TYPE_SIZE))
+            return 0.0;
+        if (xs_h_bond_possible(a.xs, b.xs))
+            return slope_step(bad, good, r - optimal_distance_vinardo(a.xs, b.xs));
+        return 0.0;
+    };
+    fl eval(sz t1, sz t2, fl r) {
+        if (r >= cutoff)
+            return 0.0;
+        if(xs_h_bond_possible(t1, t2))
+            return slope_step(bad, good, r - optimal_distance_vinardo(t1, t2));
+        return 0.0;
+    };
+    fl get_cutoff() { return cutoff; }
+
+    fl good;
+    fl bad;
+    fl cutoff;
+};
+
+
 #endif
