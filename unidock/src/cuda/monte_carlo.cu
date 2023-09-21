@@ -84,7 +84,12 @@ float norm3(const float* a) {
 void random_inside_sphere_gpu(float *random_inside_sphere, curandStatePhilox4_32_10_t* state){
 	float4 random_inside_sphere_fl;
 	while(true) { // on average, this will have to be run about twice
-		random_inside_sphere_fl = curand_uniform4(state); // ~ U[0,1]
+		// random_inside_sphere_fl = curand_uniform4(state); // ~ U[0,1]
+		// printf("x:%f,y:%f,z:%f,w:%f",random_inside_sphere_fl.x,random_inside_sphere_fl.y,random_inside_sphere_fl.z,random_inside_sphere_fl.w);
+		random_inside_sphere_fl.x = 0.75;
+		random_inside_sphere_fl.y = 0.75;
+		random_inside_sphere_fl.z = 0.75;
+		random_inside_sphere_fl.w = 0.75;
 		random_inside_sphere[0] = (random_inside_sphere_fl.x - 0.5)*2.0;
 		random_inside_sphere[1] = (random_inside_sphere_fl.y - 0.5)*2.0;
 		random_inside_sphere[2] = (random_inside_sphere_fl.z - 0.5)*2.0;
@@ -216,7 +221,7 @@ void mutate_conf_cuda(const	int	num_steps, output_type_cuda_t *c,
 	int flex_torsion_size = 0; // FIX? 20210727
 	int count_mutable_entities = 2 + c->lig_torsion_size + flex_torsion_size;
 	int which = curand(state) % count_mutable_entities;
-
+	which = 1;
 	float random_inside_sphere[4];
 	random_inside_sphere_gpu(random_inside_sphere, state);
 	if (which == 0){
@@ -1224,7 +1229,7 @@ void kernel(	m_cuda_t*			m_cuda_global,
 			bfgs(&candidate, &g, &m_cuda_gpu, p_cuda_gpu, ig_cuda_gpu, hunt_cap_gpu, epsilon_fl, bfgs_max_steps);
 			// n ~ U[0,1]
 			float n = curand_uniform(&states[idx]);
-
+			n = 0.5;
 			// if (idx == 0)
 			// 	DEBUG_PRINTF("metropolis_accept tmp.e=%f, candidate.e=%f, n=%f\n", tmp.e, candidate.e, n);
 
