@@ -220,7 +220,13 @@ DOI 10.1002/jcc.21334
 ## FAQ
 
 1. The GPU encounters out-of-memory error.
-Uni-Dock estimates the number of ligands put into GPU memory in one pass based on the available GPU memory size. If it fails, please use `--max_gpu_memory` to limit the usage of GPU memory size by Uni-Dock.
+     
+     Uni-Dock estimates the number of ligands put into GPU memory in one pass based on the available GPU memory size. If it fails, please use `--max_gpu_memory` to limit the usage of GPU memory size by Uni-Dock.
+
 2. I want to put all my ligands in `--gpu_batch`, but it exceeds the maximum command line length that linux can accept.
     - You can save your command in a shell script like `run.sh`, and run the command by `bash run.sh`.
     - You can save your ligands path in a file (separated by spaces) by `ls *.pdbqt > index.txt`, and use `--ligand_index index.txt` in place of `--gpu_batch`.
+
+3. Uni-Dock computes slowly for few (<10) ligands.
+
+     The optimal application of Uni-Dock occurs in scenarios where one binding pocket interacts with numerous (in an order of 1000) ligands. As the number of ligands within a single computational batch increases, the average processing speed improves. In instances where only a few ligands are present for one binding pocket, the overhead proportion becomes considerably large, leading to slower computational performance.
