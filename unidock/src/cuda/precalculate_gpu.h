@@ -224,7 +224,7 @@ __device__ __forceinline__ fl volume_gpu(sz a_ad, sz a_xs){
         return ad_type_property_gpu(a_ad).volume;
     else if (a_xs < XS_TYPE_SIZE)
         return 4.0 * pi / 3.0 * pow(xs_radius_gpu(a_xs), 3);
-    VINA_CHECK_GPU(false);
+    // VINA_CHECK_GPU(false);
     return 0.0; // placating the compiler
 };
 
@@ -234,7 +234,7 @@ __device__ __forceinline__ fl solvation_parameter_gpu(sz a_ad, sz a_xs){
         return ad_type_property_gpu(a_ad).solvation;
     else if (a_xs == XS_TYPE_Met_D)
         return metal_solvation_parameter_gpu;
-    VINA_CHECK_GPU(false);
+    // VINA_CHECK_GPU(false);
     return 0.0; // placating the compiler
 };
 
@@ -335,6 +335,8 @@ __device__ __forceinline__ fl dkoes_vdw_eval(sz a_ad, sz b_ad, fl r, fl smoothin
         return 0.0;
     sz t1 = a_ad;
     sz t2 = b_ad;
+    if ((t1 >= XS_TYPE_SIZE) || (t2 >= XS_TYPE_SIZE))
+        return 0.0;
     fl d0 = optimal_distance_gpu(t1,t2);
     fl depth=1;
      if (depth < 0) return 0.0; // interaction is hb, not vdw.
@@ -348,7 +350,7 @@ __device__ __forceinline__ fl dkoes_vdw_eval(sz a_ad, sz b_ad, fl r, fl smoothin
             return min(cap, c_4 / r_8 - c_8 / r_8);
         else
             return cap;
-        VINA_CHECK_GPU(false);
+        // VINA_CHECK_GPU(false);
         return 0.0;
 };
 

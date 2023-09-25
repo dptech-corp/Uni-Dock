@@ -560,14 +560,14 @@ public:
         if ((a.xs >= XS_TYPE_SIZE) || (b.xs >= XS_TYPE_SIZE))
             return 0.0;
         if (xs_h_bond_possible(a.xs, b.xs))
-            return slope_step(bad, good, r - optimal_distance_vinardo(a.xs, b.xs));
+            return slope_step(bad, good, r - optimal_distance(a.xs, b.xs));
         return 0.0;
     };
     fl eval(sz t1, sz t2, fl r) {
         if (r >= cutoff)
             return 0.0;
         if(xs_h_bond_possible(t1, t2))
-            return slope_step(bad, good, r - optimal_distance_vinardo(t1, t2));
+            return slope_step(bad, good, r - optimal_distance(t1, t2));
         return 0.0;
     };
     fl get_cutoff() { return cutoff; }

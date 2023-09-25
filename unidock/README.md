@@ -111,7 +111,7 @@ Input:
   --ligand_index arg         file containing paths to ligands (PDBQT or SDF)
   --batch arg                batch ligand (PDBQT)
   --gpu_batch arg            gpu batch ligand (PDBQT or SDF)
-  --scoring arg (=vina)      scoring function (ad4, vina or vinardo)
+  --scoring arg (=vina)      scoring function (ad4, vina, vinardo or smina )
 
 Search space (required):
   --maps arg                 affinity maps for the autodock4.2 (ad4) or vina

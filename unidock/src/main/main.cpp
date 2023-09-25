@@ -413,7 +413,13 @@ bug reporting, license agreements, and more information.      \n";
 				std::cerr << desc_simple << "\n\nERROR: Affinity maps are missing.\n";
 				exit(EXIT_FAILURE);
 			}
-		} else {
+		} else if (sf_name.compare("smina") == 0){//TODO :need map or not?
+			if (!vm.count("receptor") ) {
+				std::cerr << desc_simple << "ERROR: The receptor  must be specified.\n";
+				exit(EXIT_FAILURE);
+			}
+		} 
+		else {
 			std::cerr << desc_simple << "Scoring function " << sf_name << " unknown.\n";
 			exit(EXIT_FAILURE);
 		}
@@ -555,7 +561,7 @@ bug reporting, license agreements, and more information.      \n";
 			}
 			v.set_ligand_from_object(ligands);
 
-			if (sf_name.compare("vina") == 0 || sf_name.compare("vinardo") == 0) {
+			if (sf_name.compare("vina") == 0 || sf_name.compare("vinardo") == 0 || sf_name.compare("smina") == 0) {
 				if (vm.count("maps")) {
 					v.load_maps(maps);
 				} else {
@@ -597,7 +603,7 @@ bug reporting, license agreements, and more information.      \n";
 				return 0;
 			}
 			v.enable_gpu();
-			if (sf_name.compare("vina") == 0 || sf_name.compare("vinardo") == 0) {
+			if (sf_name.compare("vina") == 0 || sf_name.compare("vinardo") == 0 || sf_name.compare("smina") == 0) {
 				if (vm.count("maps")) {
 					v.load_maps(maps);
 				} else {

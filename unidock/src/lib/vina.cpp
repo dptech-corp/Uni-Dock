@@ -125,7 +125,7 @@ void Vina::set_ligand_from_string(const std::string& ligand_string) {
 	if (m_map_initialized) {
 		szv atom_types = m_model.get_movable_atom_types(atom_typing);
 
-		if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO) {
+		if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO || m_sf_choice == SF_DKOES) {
 			if(!m_grid.are_atom_types_grid_initialized(atom_types))
 				exit(EXIT_FAILURE);
 		} else {
@@ -170,7 +170,7 @@ void Vina::set_ligand_from_string(const std::vector<std::string>& ligand_string)
 	if (m_map_initialized) {
 		szv atom_types = m_model.get_movable_atom_types(atom_typing);
 
-		if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO) {
+		if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO || m_sf_choice == SF_DKOES) {
 			if(!m_grid.are_atom_types_grid_initialized(atom_types))
 				exit(EXIT_FAILURE);
 		} else {
@@ -224,7 +224,7 @@ void Vina::set_ligand_from_string_gpu(const std::vector<std::string>& ligand_str
 		if (m_map_initialized) {
 			szv atom_types = m_model_gpu[i].get_movable_atom_types(atom_typing);
 
-			if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO) {
+			if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO || m_sf_choice == SF_DKOES) {
 				if(!m_grid.are_atom_types_grid_initialized(atom_types))
 					exit(EXIT_FAILURE);
 			} else {
@@ -283,7 +283,7 @@ void Vina::set_ligand_from_object_gpu(const std::vector<model>& ligands) {
 		if (m_map_initialized) {
 			szv atom_types = m_model_gpu[i].get_movable_atom_types(atom_typing);
 
-			if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO) {
+			if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO || m_sf_choice == SF_DKOES) {
 				if(!m_grid.are_atom_types_grid_initialized(atom_types))
 					exit(EXIT_FAILURE);
 			} else {
@@ -331,7 +331,7 @@ void Vina::set_ligand_from_object(const std::vector<model>& ligands) {
 	if (m_map_initialized) {
 		szv atom_types = m_model.get_movable_atom_types(atom_typing);
 
-		if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO) {
+		if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO || m_sf_choice == SF_DKOES) {
 			if(!m_grid.are_atom_types_grid_initialized(atom_types))
 				exit(EXIT_FAILURE);
 		} else {
@@ -594,7 +594,7 @@ void Vina::load_maps(std::string maps) {
 	const fl slope = 1e6; // FIXME: too large? used to be 100
 	grid_dims gd;
 
-	if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO) {
+	if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO || m_sf_choice == SF_DKOES) {
 		doing("Reading Vina maps", m_verbosity, 0);
 		cache grid(slope);
 		grid.read(maps);
@@ -618,7 +618,7 @@ void Vina::load_maps(std::string maps) {
 		atom_type::t atom_typing = m_scoring_function.get_atom_typing();
 		szv atom_types = m_model.get_movable_atom_types(atom_typing);
 
-		if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO) {
+		if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO || m_sf_choice == SF_DKOES) {
 			if(!m_grid.are_atom_types_grid_initialized(atom_types))
 				exit(EXIT_FAILURE);
 		} else {
@@ -646,7 +646,7 @@ void Vina::write_maps(const std::string& map_prefix, const std::string& gpf_file
 	else
 		atom_types = m_scoring_function.get_atom_types();
 
-	if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO) {
+	if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO || m_sf_choice == SF_DKOES) {
 		doing("Writing Vina maps", m_verbosity, 0);
 		m_grid.write(map_prefix, atom_types, gpf_filename, fld_filename, receptor_filename);
 		done(m_verbosity, 0);
@@ -1101,7 +1101,7 @@ void Vina::show_score(const std::vector<double> energies) {
 	std::cout << "    Flex   - Receptor              : " << std::fixed << std::setprecision(3) << energies[3] << " (kcal/mol)\n";
 	std::cout << "    Flex   - Flex side chains      : " << std::fixed << std::setprecision(3) << energies[4] << " (kcal/mol)\n";
 	std::cout << "(3) Torsional Free Energy          : " << std::fixed << std::setprecision(3) << energies[6] << " (kcal/mol)\n";
-	if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO) {
+	if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO || m_sf_choice == SF_DKOES) {
 		std::cout << "(4) Unbound System's Energy        : " << std::fixed << std::setprecision(3) << energies[7] << " (kcal/mol)\n";
 	} else {
 		std::cout << "(4) Unbound System's Energy [=(2)] : " << std::fixed << std::setprecision(3) << energies[7] << " (kcal/mol)\n";
@@ -1120,7 +1120,7 @@ void Vina::write_score(const std::vector<double> energies, const std::string inp
 	f << "    Flex   - Receptor              : " << std::fixed << std::setprecision(3) << energies[3] << " (kcal/mol)\n";
 	f << "    Flex   - Flex side chains      : " << std::fixed << std::setprecision(3) << energies[4] << " (kcal/mol)\n";
 	f << "(3) Torsional Free Energy          : " << std::fixed << std::setprecision(3) << energies[6] << " (kcal/mol)\n";
-	if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO) {
+	if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO || m_sf_choice == SF_DKOES) {
 		f << "(4) Unbound System's Energy        : " << std::fixed << std::setprecision(3) << energies[7] << " (kcal/mol)\n";
 	} else {
 		f << "(4) Unbound System's Energy [=(2)] : " << std::fixed << std::setprecision(3) << energies[7] << " (kcal/mol)\n";
@@ -1139,7 +1139,7 @@ void Vina::write_score_to_file(const std::vector<double> energies, const std::st
 	f << "    Flex   - Receptor              : " << std::fixed << std::setprecision(3) << energies[3] << " (kcal/mol)\n";
 	f << "    Flex   - Flex side chains      : " << std::fixed << std::setprecision(3) << energies[4] << " (kcal/mol)\n";
 	f << "(3) Torsional Free Energy          : " << std::fixed << std::setprecision(3) << energies[6] << " (kcal/mol)\n";
-	if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO) {
+	if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO || m_sf_choice == SF_DKOES) {
 		f << "(4) Unbound System's Energy        : " << std::fixed << std::setprecision(3) << energies[7] << " (kcal/mol)\n";
 	} else {
 		f << "(4) Unbound System's Energy [=(2)] : " << std::fixed << std::setprecision(3) << energies[7] << " (kcal/mol)\n";
@@ -1162,7 +1162,7 @@ std::vector<double> Vina::score(double intramolecular_energy) {
 	const vec authentic_v(1000, 1000, 1000);
 	std::vector<double> energies;
 
-	if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO) {
+	if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO || m_sf_choice == SF_DKOES) {
 		// Inter
 		if (m_no_refine || !m_receptor_initialized)
 			all_grids = m_grid.eval(m_model, authentic_v[1]); // [1] ligand & flex -- grid
@@ -1207,7 +1207,7 @@ std::vector<double> Vina::score(double intramolecular_energy) {
 	energies.push_back(lig_intra);
 	energies.push_back(conf_independent);
 
-	if (m_sf_choice == SF_VINA  || m_sf_choice == SF_VINARDO) {
+	if (m_sf_choice == SF_VINA  || m_sf_choice == SF_VINARDO || m_sf_choice == SF_DKOES) {
 		energies.push_back(intramolecular_energy);
 	} else {
 		energies.push_back(-intra);
@@ -1232,7 +1232,7 @@ std::vector<double> Vina::score_gpu(int i, double intramolecular_energy) {
 	const vec authentic_v(1000, 1000, 1000);
 	std::vector<double> energies;
 
-	if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO) {
+	if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO || m_sf_choice == SF_DKOES) {
 		// Inter
 		if (m_no_refine || !m_receptor_initialized)
 			all_grids = m_grid.eval(m_model_gpu[i], authentic_v[1]); // [1] ligand & flex -- grid
@@ -1277,7 +1277,7 @@ std::vector<double> Vina::score_gpu(int i, double intramolecular_energy) {
 	energies.push_back(lig_intra);
 	energies.push_back(conf_independent);
 
-	if (m_sf_choice == SF_VINA  || m_sf_choice == SF_VINARDO) {
+	if (m_sf_choice == SF_VINA  || m_sf_choice == SF_VINARDO || m_sf_choice == SF_DKOES) {
 		energies.push_back(intramolecular_energy);
 	} else {
 		energies.push_back(-intra);
@@ -1305,7 +1305,7 @@ std::vector<double> Vina::score() {
 	double intramolecular_energy = 0;
 	const vec authentic_v(1000, 1000, 1000);
 
-	if(m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO) {
+	if(m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO || m_sf_choice == SF_DKOES) {
 		intramolecular_energy = m_model.eval_intramolecular(m_precalculated_byatom, m_grid, authentic_v);
 	}
 
@@ -1331,7 +1331,7 @@ std::vector<double> Vina::score_gpu(int i) {
 	double intramolecular_energy = 0;
 	const vec authentic_v(1000, 1000, 1000);
 
-	if(m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO) {
+	if(m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO || m_sf_choice == SF_DKOES) {
 		intramolecular_energy = m_model_gpu[i].eval_intramolecular(m_precalculated_byatom_gpu[i], m_grid, authentic_v);
 	}
 
@@ -1366,7 +1366,7 @@ std::vector<double> Vina::optimize(output_type& out, int max_steps) {
 	doing("Performing local search", m_verbosity, 0);
 	// Try 5 five times to optimize locally the conformation
 	VINA_FOR(p, 5) {
-		if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO) {
+		if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO || m_sf_choice == SF_DKOES) {
 			quasi_newton_par(m_model, m_precalculated_byatom, m_grid,    out, g, authentic_v, evalcount);
 			// Break if we succeed to bring (back) the ligand within the grid
 			if (m_grid.is_in_grid(m_model))
@@ -1493,7 +1493,7 @@ void Vina::global_search(const int exhaustiveness, const int n_poses, const doub
 	sstm << "Performing docking (random seed: " << m_seed << ")";
 
 	doing(sstm.str(), m_verbosity, 0);
-	if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO) {
+	if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO || m_sf_choice == SF_DKOES) {
 		parallelmc(m_model, poses, m_precalculated_byatom,    m_grid, m_grid.corner1(), m_grid.corner2(), generator);
 	} else {
 		parallelmc(m_model, poses, m_precalculated_byatom, m_ad4grid, m_ad4grid.corner1(), m_ad4grid.corner2(), generator);
@@ -1509,7 +1509,7 @@ void Vina::global_search(const int exhaustiveness, const int n_poses, const doub
 	if (!poses.empty()) {
 		// For the Vina scoring function, we take the intramolecular energy from the best pose
 		// the order must not change because of non-decreasing g (see paper), but we'll re-sort in case g is non strictly increasing
-		if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO) {
+		if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO || m_sf_choice == SF_DKOES) {
 			// Refine poses if no_refine is false and got receptor
 			if (!m_no_refine & m_receptor_initialized) {
 				change g(m_model.get_size());
@@ -1658,7 +1658,7 @@ void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const 
 	sstm << "Performing docking (random seed: " << m_seed << ")";
 	doing(sstm.str(), m_verbosity, 0);
 	auto start = std::chrono::system_clock::now();
-	if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO) {
+	if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO || m_sf_choice == SF_DKOES) {
 		mc(m_model_gpu, poses_gpu, m_precalculated_byatom_gpu, m_data_list_gpu,    m_grid, m_grid.corner1(), m_grid.corner2(), 
 			generator, m_verbosity, seed, bias_batch_list);
 	} else {
@@ -1684,7 +1684,7 @@ void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const 
 			DEBUG_PRINTF("vina: poses not empty, poses.size()=%lu\n", poses.size());
 			// For the Vina scoring function, we take the intramolecular energy from the best pose
 			// the order must not change because of non-decreasing g (see paper), but we'll re-sort in case g is non strictly increasing
-			if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO) {
+			if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO || m_sf_choice == SF_DKOES) {
 				// Refine poses if no_refine is false and got receptor
 				if (!m_no_refine & m_receptor_initialized) {
 					change g(m_model_gpu[l].get_size());

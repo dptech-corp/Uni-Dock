@@ -28,7 +28,7 @@ void precalculate_gpu(triangular_matrix_cuda_t *m_data_gpu_list, scoring_functio
     // for (int i = 0;i < atom_num;++i){
     //     DEBUG_PRINTF("atom[%d] on gpu: xs=%lu\n", i, atom_xs_gpu[i]);
     // }
-
+    
     for (int i = 0;i < atom_num; ++i){
         for (int j = i;j < atom_num; ++j){
             int offset = i + j*(j+1)/2; // copied from "triangular_matrix_index.h"
@@ -70,7 +70,7 @@ void precalculate_gpu(triangular_matrix_cuda_t *m_data_gpu_list, scoring_functio
                 {
                     for (int k = 0;k < n; ++k){
                         fl sum = 0;
-                        // calculate smooth_e
+                        // calculate smooth_e                   
                         sum += sf_gpu->m_weights[0] * ad4_vdw_eval(atom_ad_gpu[i], atom_ad_gpu[j], common_rs_gpu[k], sf_gpu->ad4_vdw_smoothing, sf_gpu->ad4_vdw_cap, sf_gpu->ad4_vdw_cutoff);
                         sum += sf_gpu->m_weights[1] * ad4_hb_eval(atom_ad_gpu[i], atom_ad_gpu[j], common_rs_gpu[k], sf_gpu->ad4_hb_smoothing, sf_gpu->ad4_hb_cap, sf_gpu->ad4_hb_cutoff);
                         sum += sf_gpu->m_weights[2] * ad4_electrostatic_eval(atom_charge_gpu[i], atom_charge_gpu[j], common_rs_gpu[k], sf_gpu->ad4_electrostatic_cap, sf_gpu->ad4_electrostatic_cutoff);

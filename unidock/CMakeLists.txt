@@ -9,6 +9,9 @@ project(
 set(CMAKE_CXX_STANDARD 14)
 if(NOT CMAKE_BUILD_TYPE)
 	set(CMAKE_BUILD_TYPE Release)
+elseif(CMAKE_BUILD_TYPE MATCHES "Debug")
+	set(CMAKE_BUILD_TYPE Debug)
+	set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -G -g")
 endif()
 Option(Boost_USE_STATIC_LIBS "Whether to use static libs for boost" OFF)
 
