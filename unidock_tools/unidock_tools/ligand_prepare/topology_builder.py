@@ -55,8 +55,11 @@ class TopologyBuilder(object):
             if bond_info in rotatable_bond_info_list or bond_info_reversed in rotatable_bond_info_list:
                 rotatable_bond_idx_list.append(bond.GetIdx())
 
-        splitted_mol = FragmentOnBonds(mol, rotatable_bond_idx_list, addDummies=False)
-        splitted_mol_list = list(GetMolFrags(splitted_mol, asMols=True, sanitizeFrags=False))
+        if len(rotatable_bond_idx_list) != 0:
+            splitted_mol = FragmentOnBonds(mol, rotatable_bond_idx_list, addDummies=False)
+            splitted_mol_list = list(GetMolFrags(splitted_mol, asMols=True, sanitizeFrags=False))
+        else:
+            splitted_mol_list = [mol]
 
         num_fragments = len(splitted_mol_list)
 
