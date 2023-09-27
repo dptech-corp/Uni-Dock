@@ -1891,12 +1891,13 @@ __host__ void monte_carlo::operator()(std::vector<model> &m_gpu, std::vector<out
 
 	/* Launch kernel */
 	DEBUG_PRINTF("launch kernel, global_steps=%d, thread=%d, num_of_ligands=%d\n", global_steps, thread, num_of_ligands);
+	printf("launch kernel, global_steps=%d, thread=%d, num_of_ligands=%d\n", global_steps, thread, num_of_ligands);
 	kernel<<<thread / 32 + 1, 32>>>(m_cuda_gpu, ig_cuda_gpu, p_cuda_gpu, rand_molec_struc_gpu,
 									best_e_gpu, quasi_newton_par_max_steps, mutation_amplitude_float,
 									states, seed,
 									epsilon_fl_float, hunt_cap_gpu, authentic_v_gpu, results_gpu, global_steps,
 									num_of_ligands, threads_per_ligand, multi_bias);
-
+	checkCUDA(cudaGetLastError());
 	// Device to Host memcpy of precalculated_byatom, copy back data to p_gpu
 	p_m_data_cuda_t *p_data;
 	checkCUDA(cudaMallocHost(&p_data, sizeof(p_m_data_cuda_t) * MAX_P_DATA_M_DATA_SIZE));
