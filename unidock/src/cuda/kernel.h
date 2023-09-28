@@ -22,7 +22,7 @@ void check(T result, char const *const func, const char *const file, int const l
     MAX_M_DATA_MI *MAX_M_DATA_MJ *MAX_M_DATA_MK *MAX_NUM_OF_EVERY_M_DATA_ELEMENT
 
 // kernel2 macros
-#define MAX_NUM_OF_LIG_TORSION 12
+#define MAX_NUM_OF_LIG_TORSION 48
 #define MAX_NUM_OF_FLEX_TORSION 1
 #define MAX_NUM_OF_RIGID 128
 // #define MAX_NUM_OF_ATOMS 300
