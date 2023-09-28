@@ -14,8 +14,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 
-   Author: Dr. Oleg Trott <ot14@columbia.edu>, 
-           The Olson Lab, 
+   Author: Dr. Oleg Trott <ot14@columbia.edu>,
+           The Olson Lab,
            The Scripps Research Institute
 
 */
@@ -26,15 +26,14 @@
 #include "common.h"
 
 inline sz triangular_matrix_index(sz n, sz i, sz j) {
-	assert(j < n);
-	assert(i <= j); 
+    assert(j < n);
+    assert(i <= j);
 
-	return i + j*(j+1)/2; 
+    return i + j * (j + 1) / 2;
 }
 
 inline sz triangular_matrix_index_permissive(sz n, sz i, sz j) {
-	return (i <= j) ? triangular_matrix_index(n, i, j)
-		            : triangular_matrix_index(n, j, i);
+    return (i <= j) ? triangular_matrix_index(n, i, j) : triangular_matrix_index(n, j, i);
 }
 
 #endif

@@ -14,8 +14,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 
-   Author: Dr. Oleg Trott <ot14@columbia.edu>, 
-           The Olson Lab, 
+   Author: Dr. Oleg Trott <ot14@columbia.edu>,
+           The Olson Lab,
            The Scripps Research Institute
 
 */
@@ -23,35 +23,32 @@
 #ifndef VINA_PARALLEL_PROGRESS_H
 #define VINA_PARALLEL_PROGRESS_H
 
-#include <boost/timer/progress_display.hpp>
-
 #include <boost/thread/mutex.hpp>
-
+#include <boost/timer/progress_display.hpp>
 #include <functional>
 
 #include "incrementable.h"
 
 struct parallel_progress : public incrementable {
-	parallel_progress(std::function<void(double)>* c = NULL) : p(NULL), callback(c) {}
-	void init(unsigned long n) {
+    parallel_progress(std::function<void(double)>* c = NULL) : p(NULL), callback(c) {}
+    void init(unsigned long n) {
         count = n;
         p = new boost::timer::progress_display(count);
     }
-	void operator++() {
-		if(p) {
-			boost::mutex::scoped_lock self_lk(self);
-			const unsigned long value = ++(*p);
-            if(callback)
-                (*callback)(static_cast<double>(value) / count);
-		}
-	}
-	virtual ~parallel_progress() { delete p; }
+    void operator++() {
+        if (p) {
+            boost::mutex::scoped_lock self_lk(self);
+            const unsigned long value = ++(*p);
+            if (callback) (*callback)(static_cast<double>(value) / count);
+        }
+    }
+    virtual ~parallel_progress() { delete p; }
+
 private:
-	boost::mutex self;
-	boost::timer::progress_display* p;
+    boost::mutex self;
+    boost::timer::progress_display* p;
     std::function<void(double)>* callback;
     unsigned long count;
 };
 
 #endif
-

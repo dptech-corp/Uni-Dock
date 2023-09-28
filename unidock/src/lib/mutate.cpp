@@ -14,8 +14,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 
-   Author: Dr. Oleg Trott <ot14@columbia.edu>, 
-           The Olson Lab, 
+   Author: Dr. Oleg Trott <ot14@columbia.edu>,
+           The Olson Lab,
            The Scripps Research Institute
 
 */
@@ -23,46 +23,59 @@
 #include "mutate.h"
 
 sz count_mutable_entities(const conf& c) {
-	sz counter = 0;
-	VINA_FOR_IN(i, c.ligands)
-		counter += 2 + c.ligands[i].torsions.size();
-	VINA_FOR_IN(i, c.flex)
-		counter += c.flex[i].torsions.size();
-	return counter;
+    sz counter = 0;
+    VINA_FOR_IN(i, c.ligands)
+    counter += 2 + c.ligands[i].torsions.size();
+    VINA_FOR_IN(i, c.flex)
+    counter += c.flex[i].torsions.size();
+    return counter;
 }
 
 // does not set model
-void mutate_conf(conf& c, const model& m, fl amplitude, rng& generator) { // ONE OF: 2A for position, similar amp for orientation, randomize torsion
-	sz mutable_entities_num = count_mutable_entities(c);
-	if(mutable_entities_num == 0) return;
-	int which_int = random_int(0, int(mutable_entities_num - 1), generator);
-	VINA_CHECK(which_int >= 0);
-	sz which = sz(which_int);
-	VINA_CHECK(which < mutable_entities_num);
+void mutate_conf(
+    conf& c, const model& m, fl amplitude,
+    rng& generator) {  // ONE OF: 2A for position, similar amp for orientation, randomize torsion
+    sz mutable_entities_num = count_mutable_entities(c);
+    if (mutable_entities_num == 0) return;
+    int which_int = random_int(0, int(mutable_entities_num - 1), generator);
+    VINA_CHECK(which_int >= 0);
+    sz which = sz(which_int);
+    VINA_CHECK(which < mutable_entities_num);
 
-	VINA_FOR_IN(i, c.ligands) {
-		if(which == 0) { c.ligands[i].rigid.position += amplitude * random_inside_sphere(generator); return; }
-		--which;
-		if(which == 0) { 
-			fl gr = m.gyration_radius(i); 
-			if(gr > epsilon_fl) { // FIXME? just doing nothing for 0-radius molecules. do some other mutation?
-				vec rotation; 
-				rotation = amplitude / gr * random_inside_sphere(generator); 
-				if (eq(rotation.norm(),0)){
-					// debug
-					// std::cout << "gr=" << gr << "rotation.norm()=" << rotation.norm() << std::endl;
-					return;
-				}
-				quaternion_increment(c.ligands[i].rigid.orientation, rotation);
-			}
-			return; 
-		}
-		--which;
-		if(which < c.ligands[i].torsions.size()) { c.ligands[i].torsions[which] = random_fl(-pi, pi, generator); return; }
-		which -= c.ligands[i].torsions.size();
-	}
-	VINA_FOR_IN(i, c.flex) {
-		if(which < c.flex[i].torsions.size()) { c.flex[i].torsions[which] = random_fl(-pi, pi, generator); return; }
-		which -= c.flex[i].torsions.size();
-	}
+    VINA_FOR_IN(i, c.ligands) {
+        if (which == 0) {
+            c.ligands[i].rigid.position += amplitude * random_inside_sphere(generator);
+            return;
+        }
+        --which;
+        if (which == 0) {
+            fl gr = m.gyration_radius(i);
+            if (gr > epsilon_fl) {  // FIXME? just doing nothing for 0-radius molecules. do some
+                                    // other mutation?
+                vec rotation;
+                rotation = amplitude / gr * random_inside_sphere(generator);
+                if (eq(rotation.norm(), 0)) {
+                    // debug
+                    // std::cout << "gr=" << gr << "rotation.norm()=" << rotation.norm() <<
+                    // std::endl;
+                    return;
+                }
+                quaternion_increment(c.ligands[i].rigid.orientation, rotation);
+            }
+            return;
+        }
+        --which;
+        if (which < c.ligands[i].torsions.size()) {
+            c.ligands[i].torsions[which] = random_fl(-pi, pi, generator);
+            return;
+        }
+        which -= c.ligands[i].torsions.size();
+    }
+    VINA_FOR_IN(i, c.flex) {
+        if (which < c.flex[i].torsions.size()) {
+            c.flex[i].torsions[which] = random_fl(-pi, pi, generator);
+            return;
+        }
+        which -= c.flex[i].torsions.size();
+    }
 }
