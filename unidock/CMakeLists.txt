@@ -51,3 +51,14 @@ add_library(cuda OBJECT src/cuda/monte_carlo.cu src/cuda/precalculate.cu)
 target_link_libraries(${VINA_BIN_NAME} cuda lib)
 target_include_directories(${VINA_BIN_NAME} PUBLIC ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}) # For detecting CUDA memory size
 install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/${VINA_BIN_NAME} TYPE BIN)
+
+file(GLOB_RECURSE sources CONFIGURE_DEPENDS src/*.cpp src/*.h src/*.cu)
+set(CLANG_FORMAT clang-format)
+
+
+add_custom_target(
+  clang-format
+  COMMAND ${CLANG_FORMAT} -i ${sources}
+  COMMENT "Running clang-format"
+  VERBATIM
+)

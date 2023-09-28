@@ -14,4 +14,3 @@
   BreakBeforeBinaryOperators: All
   BreakBeforeTernaryOperators: 'true'
   SortIncludes: false
-...

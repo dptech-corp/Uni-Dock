@@ -14,8 +14,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 
-   Author: Dr. Oleg Trott <ot14@columbia.edu>, 
-           The Olson Lab, 
+   Author: Dr. Oleg Trott <ot14@columbia.edu>,
+           The Olson Lab,
            The Scripps Research Institute
 
 */
@@ -28,18 +28,18 @@
 #include "array3d.h"
 
 struct szv_grid {
-  szv_grid() {}
-	szv_grid(const model& m, const grid_dims& gd, fl cutoff_sqr);
-	const szv& possibilities(const vec& coords) const;
-	fl average_num_possibilities() const;
+    szv_grid() {}
+    szv_grid(const model& m, const grid_dims& gd, fl cutoff_sqr);
+    const szv& possibilities(const vec& coords) const;
+    fl average_num_possibilities() const;
+
 private:
-	array3d<szv> m_data;
-	vec m_init;
-	vec m_range;
-	vec index_to_coord(sz i, sz j, sz k) const;
+    array3d<szv> m_data;
+    vec m_init;
+    vec m_range;
+    vec index_to_coord(sz i, sz j, sz k) const;
 };
 
 grid_dims szv_grid_dims(const grid_dims& gd);
-
 
 #endif
