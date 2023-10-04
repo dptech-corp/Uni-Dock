@@ -30,33 +30,32 @@ Uni-Dock supports NVIDIA GPUs on Linux platform.
 
 1. Install dependencies
 
-- Boost >= 1.72
+     - CUDA toolkit: Please refer to the [installation tutorial](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html) provided by nvidia.
+     - CMake >= 3.16
+     - A C++ compiler (should be compatible with NVCC; `g++` works for most cases)
+     - Boost >= 1.72
+          
+          ```bash
+          sudo apt install libboost-system-dev libboost-thread-dev libboost-serialization-dev libboost-filesystem-dev libboost-program-options-dev libboost-timer-dev
+          ```
+          
+          Alternatively, install from [boost source codes](https://www.boost.org/users/download/) or from [anaconda](https://anaconda.org/anaconda/libboost) with `conda install -c anaconda libboost`
 
-```bash
-sudo apt install libboost-system-dev libboost-thread-dev libboost-serialization-dev libboost-filesystem-dev libboost-program-options-dev libboost-timer-dev
-```
+2. Clone repo or retrieve source code from [release page](https://github.com/dptech-corp/Uni-Dock/releases):
 
-Alternatively, install from [boost source codes](https://www.boost.org/users/download/) or from [anaconda](https://anaconda.org/anaconda/libboost) with `conda install -c anaconda libboost`
+   ```bash
+   git clone https://github.com/dptech-corp/Uni-Dock.git
+   ```
 
-- CUDA toolkit: Please refer to the [installation tutorial](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html) provided by nvidia.
-
-2. Clone GitHub repo or retrieve source code from release page
-
-3. Build Uni-Dock using CMake:
-
-```bash
-cmake -B build
-cmake --build build -j4
-```
-
-Or build with Makefile:
-```bash
-cd ./build/linux/release
-make clean
-make -j 4
-```
-
-Add the build directory to your `PATH` environment variable.
+4. Build Uni-Dock using CMake:
+     
+     ```bash
+     cd Uni-Dock/unidock
+     cmake -B build
+     cmake --build build -j4
+     cmake --install build # This will add `unidock` to the default installation path for executables.
+                           # Otherwise, prepend the building directory to your `PATH` environment variable.
+     ```
 
 ### Using binary
 
