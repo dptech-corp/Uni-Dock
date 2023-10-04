@@ -58,6 +58,12 @@ make -j 4
 
 Add the build directory to your `PATH` environment variable.
 
+
+code foramt
+```shell
+cd ./build/
+make clang-format
+```
 ### Using binary
 
 Please download the latest binary of Uni-Dock at the assets tab of [the Release page](https://github.com/dptech-corp/Uni-Dock/releases).

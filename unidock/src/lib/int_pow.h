@@ -14,8 +14,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 
-   Author: Dr. Oleg Trott <ot14@columbia.edu>, 
-           The Olson Lab, 
+   Author: Dr. Oleg Trott <ot14@columbia.edu>,
+           The Olson Lab,
            The Scripps Research Institute
 
 */
@@ -23,16 +23,13 @@
 #ifndef VINA_INT_POW_H
 #define VINA_INT_POW_H
 
-#include "common.h" // for fl
+#include "common.h"  // for fl
 
-template<unsigned n>
-inline fl int_pow(fl x) {
-	return int_pow<n-1>(x)*x; // tests seem to suggest that even for largish n's this optimizes well
+template <unsigned n> inline fl int_pow(fl x) {
+    return int_pow<n - 1>(x)
+           * x;  // tests seem to suggest that even for largish n's this optimizes well
 }
 
-template<>
-inline fl int_pow<0>(fl x) {
-	return 1;
-}
+template <> inline fl int_pow<0>(fl x) { return 1; }
 
 #endif

@@ -14,8 +14,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 
-   Author: Dr. Oleg Trott <ot14@columbia.edu>, 
-           The Olson Lab, 
+   Author: Dr. Oleg Trott <ot14@columbia.edu>,
+           The Olson Lab,
            The Scripps Research Institute
 
 */
@@ -25,37 +25,37 @@
 
 #include "common.h"
 
-#if 1 // prefer this to "hard curl"? 
-template<typename T> // T = fl or vec
+#if 1                  // prefer this to "hard curl"?
+template <typename T>  // T = fl or vec
 void curl(fl& e, T& deriv, fl v) {
-	if(e > 0 && not_max(v)) { // FIXME authentic_v can be gotten rid of everywhere now
-		fl tmp = (v < epsilon_fl) ? 0 : (v / (v + e));
-		e *= tmp;
-		deriv *= sqr(tmp);
-	}
+    if (e > 0 && not_max(v)) {  // FIXME authentic_v can be gotten rid of everywhere now
+        fl tmp = (v < epsilon_fl) ? 0 : (v / (v + e));
+        e *= tmp;
+        deriv *= sqr(tmp);
+    }
 }
 
 inline void curl(fl& e, fl v) {
-	if(e > 0 && not_max(v)) {
-		fl tmp = (v < epsilon_fl) ? 0 : (v / (v + e));
-		e *= tmp;
-	}
+    if (e > 0 && not_max(v)) {
+        fl tmp = (v < epsilon_fl) ? 0 : (v / (v + e));
+        e *= tmp;
+    }
 }
 
 #else
 
-template<typename T> // T = fl or vec
+template <typename T>  // T = fl or vec
 void curl(fl& e, T& deriv, fl v) {
-	if(e > v) {
-		e = v;
-		deriv = 0;
-	}
+    if (e > v) {
+        e = v;
+        deriv = 0;
+    }
 }
 
 inline void curl(fl& e, fl v) {
-	if(e > v) {
-		e = v;
-	}
+    if (e > v) {
+        e = v;
+    }
 }
 #endif
 
