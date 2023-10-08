@@ -45,13 +45,16 @@ class UniDock():
 
         :param receptor: Path to the receptor file (PDBQT format).
         """
-        if os.path.splitext(receptor)[1] == ".pdb":
+        file_format = os.path.splitext(receptor)[1]
+        if file_format == ".pdb":
             from unidock_tools.protein_prepare.protein_prepare import DockingProteinPrepare
 
             preparer = DockingProteinPrepare(input_protein_path=receptor, output_protein_path=os.path.splitext(receptor)[0] + '.pdbqt')
             self.receptor = preparer.run()
-        else:
+        elif file_format == ".pdbqt":
             self.receptor = receptor
+        else:
+            raise ValueError(f"unsupported receptor file format {file_format}")
 
     def set_ligand_index(self, ligand_index:str):
         """
@@ -292,8 +295,8 @@ def main():
     parser.add_argument("--keep_nonpolar_H", action="store_true")
     parser.add_argument("--cpu", type=int, default=0, help="the number of CPUs to use (the default is to try to detect the number of CPUs or, failing that, use 1)")
     parser.add_argument("--seed", type=int, default=0, help="explicit random seed")
-    #parser.add_argument("--exhaustiveness", type=int, default=8, help="exhaustiveness of the global search (roughly proportional to time): 1+")
-    #parser.add_argument("--max_evals", type=int, default=0, help="number of evaluations in each MC run (if zero, which is the default, the number of MC steps is based on heuristics)")
+    parser.add_argument("--exhaustiveness", type=int, default=8, help="exhaustiveness of the global search (roughly proportional to time): 1+")
+    parser.add_argument("--max_evals", type=int, default=0, help="number of evaluations in each MC run (if zero, which is the default, the number of MC steps is based on heuristics)")
     parser.add_argument("--num_modes", type=int, default=9, help="maximum number of binding modes to generate")
     parser.add_argument("--min_rmsd", type=float, default=1, help="minimum RMSD between output poses")
     parser.add_argument("--energy_range", type=float, default=3, help="maximum energy difference between the best binding mode and the worst one displayed (kcal/mol)")
@@ -306,7 +309,7 @@ def main():
 
     args = parser.parse_args()
 
-    if args.receptor is None or (args.ligand is None and args.batch is None and args.gpu_batch is None and args.index is None):
+    if args.receptor is None or (args.ligand is None and args.batch is None and args.gpu_batch is None and args.ligand_index is None):
         print(parser.print_help())
     else:
         unidock = UniDock(args.receptor, args.scoring, args.dir)
