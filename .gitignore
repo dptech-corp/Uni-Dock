@@ -15,3 +15,7 @@ unidock_tools/dist
 unidock_tools/dist/*
 unidock_tools/unidock_tools.egg-info
 unidock_tools/unidock_tools.egg-info/*
+
+build-*
+nvidia_inha_benchmark
+compile_commands.json
