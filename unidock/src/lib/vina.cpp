@@ -1560,7 +1560,7 @@ void Vina::global_search(const int exhaustiveness, const int n_poses, const doub
         // case g is non strictly increasing
         if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO) {
             // Refine poses if no_refine is false and got receptor
-            if (!m_no_refine & m_receptor_initialized) {
+            if (!m_no_refine && m_receptor_initialized) {
                 change g(m_model.get_size());
                 quasi_newton quasi_newton_par;
                 const vec authentic_v(1000, 1000, 1000);
