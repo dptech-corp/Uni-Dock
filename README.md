@@ -10,7 +10,7 @@ The [paper](https://pubs.acs.org/doi/10.1021/acs.jctc.2c01145) has been accepted
 
 Check this [subfolder](./unidock/) for instructions on installing Uni-Dock.
 
-**Uni-Dock** joins the DeepModeling community, a community devote of AI for science, as an incubating level project. To learn more about the DeepModeling community, see the [introduction of community](https://github.com/deepmodeling/community).
+**Uni-Dock** joins the DeepModeling community, a community devoted of AI for science, as an incubating level project. To learn more about the DeepModeling community, see the [introduction of community](https://github.com/deepmodeling/community).
 ## UniDockTools
 
 **UniDockTools** is a python package developed to handle the inputs and outputs of Uni-Dock.
