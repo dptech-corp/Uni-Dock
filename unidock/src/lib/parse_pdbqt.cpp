@@ -617,14 +617,14 @@ void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, c
     // sdf header has three lines
     for (int i = 0; i < 3; ++i) {
         std::getline(in, str);
-        // std::cout << "read sdf line:" << str << std::endl;
+        std::cout << "read sdf line:" << str << std::endl;
         add_context(c, str);
     }
 
     // parse counts line
 
     std::getline(in, str);
-    // std::cout << "read sdf line:" << str << std::endl;
+    std::cout << "read sdf line:" << str << std::endl;
     add_context(c, str);
     int atom_num = checked_convert_substring<fl>(str, 1, 3, "Atom num");
     int bond_num = checked_convert_substring<fl>(str, 4, 6, "Bond num");
@@ -633,7 +633,7 @@ void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, c
     for (int i = 0; i < atom_num; ++i) {
         std::getline(in, str);
         add_context(c, str);
-        // std::cout << "read sdf line:" << str << std::endl;
+        std::cout << "read sdf line:" << str << std::endl;
         parsed_atom a = parse_sdf_atom_string(str, i + 1);
         p.add(a, c, true);
     }
@@ -641,13 +641,13 @@ void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, c
     for (int i = 0; i < bond_num; ++i) {
         std::getline(in, str);
         add_context(c, str);
-        // std::cout << "read sdf bond line:" << str << std::endl;
+        std::cout << "read sdf bond line:" << str << std::endl;
     }
 
     // read property
     while (std::getline(in, str)) {
         add_context(c, str);
-        // std::cout << "read sdf property line:" << str << ' ' << str.find("M  END") << std::endl;
+        std::cout << "read sdf property line:" << str << ' ' << str.find("M  END") << std::endl;
 
         if (str.find("M  END") < str.length()) {
             break;
@@ -657,11 +657,12 @@ void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, c
     // use property given by ligprep to construct tree
     std::vector<std::vector<int> > frags;
     std::vector<std::vector<int> > torsions;
-
+    std::vector<std::vector<int>> torsions_r;
+    std::vector<std::vector<std::vector<float>>> torsion_ranges_grouped;
     while (std::getline(in, str)) {
         if (str.find("$$$$") < str.length()) continue;
         add_context(c, str);
-        // std::cout << "read sdf line:" << str << std::endl;
+        std::cout << "read sdf line:" << str << std::endl;
 
         if (str[0] == '>') {
             std::string data_type = str.substr(6, str.length() - 7);
@@ -669,25 +670,25 @@ void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, c
                 // update p.atoms[num].a.charge and type
                 while (std::getline(in, str)) {
                     add_context(c, str);
-                    // std::cout << "read info sdf line:" << str << std::endl;
+                    std::cout << "read info sdf line:" << str << std::endl;
                     if (str.empty()) {
                         break;
                     }
                     std::string ad_name = omit_whitespace(str, 14, 14);
                     int atomid = checked_convert_substring<int>(
                         str, 1, std::min(unsigned(str.find(' ')), 3U), "AtomId");
-                    // std::cout << "atomid=" << atomid << ",  ad_name=" << ad_name << std::endl;
+                    std::cout << "atomid=" << atomid << ",  ad_name=" << ad_name << std::endl;
                     fl charge = checked_convert_substring<fl>(str, 4, 13, "Partial Charge");
                     sz ad = string_to_ad_type(ad_name);
                     p.atoms[atomid - 1].a.charge = charge;
                     p.atoms[atomid - 1].a.ad = ad;
                 }
-            } else if (str.find("torsion") < str.length()) {
+            } else if (str.find("torsionInfo") < str.length()) {
                 // update p.atoms[num].a.charge
-                // std::cout << "start torsion" << std::endl;
+                std::cout << "start torsion" << std::endl;
                 while (std::getline(in, str)) {
                     add_context(c, str);
-                    // std::cout << "read torsion sdf line:" << str << std::endl;
+                    std::cout << "read torsion sdf line:" << str << std::endl;
                     if (str.empty()) {
                         break;
                     }
@@ -709,7 +710,7 @@ void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, c
             } else if (str.find("frag") < str.length()) {
                 while (std::getline(in, str)) {
                     add_context(c, str);
-                    // std::cout << "read frag sdf line:" << str << std::endl;
+                    std::cout << "read frag sdf line:" << str << std::endl;
                     if (str.empty()) {
                         break;
                     }
@@ -727,10 +728,65 @@ void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, c
                     frag.push_back(num);
                     frags.push_back(frag);
                 }
-            } else {
+            }else if (str.find("torsionSamplingRangeInfo") < str.length()) {
+                std::cout << "start torsionSamplingRangeInfo" << std::endl;
                 while (std::getline(in, str)) {
                     add_context(c, str);
-                    // std::cout << "read und sdf line:" << str << std::endl;
+                    std::cout << "read torsion range sdf line:" << str << std::endl;
+                    if (str.empty()) {
+                        break;
+                    }
+                    std::istringstream iss(str);
+
+                    std::vector<int> torsion_r(4);
+                    // if (isdigit(str[0]) || str[0] == '-') {
+                    // if (str.find('.') == std::string::npos) {  // No decimal point, so it's an integer line
+                    //     std::vector<int> torsion_r(4);
+                    //     iss >> torsion_r[0] >> torsion_r[1] >> torsion_r[2] >> torsion_r[3];
+                    //     torsions_r.push_back(torsion_r);
+                    // } else 
+                    // {  // It's a float line
+                    //     std::vector<float> range(3);
+                    //     iss >> range[0] >> range[1] >> range[2];
+                    //     torsion_ranges.push_back(range);
+                    //     }
+                    // }
+                    if (isdigit(str[0]) || str[0] == '-') {
+            if (str.find('.') == std::string::npos) {  // No decimal point, so it's an integer line
+                std::vector<int> torsion_r(4);
+                iss >> torsion_r[0] >> torsion_r[1] >> torsion_r[2] >> torsion_r[3];
+                torsions_r.push_back(torsion_r);
+
+                // Read the subsequent float lines associated with this torsion
+                std::vector<std::vector<float>> current_torsion_ranges;
+                while (std::getline(in, str) && str.find('.') != std::string::npos) {
+                    std::istringstream float_iss(str);
+                    std::vector<float> range(3);
+                    float_iss >> range[0] >> range[1] >> range[2];
+                    current_torsion_ranges.push_back(range);
+                }
+                torsion_ranges_grouped.push_back(current_torsion_ranges);
+            }
+        }
+                }
+                for (size_t i = 0; i < torsions_r.size(); ++i) {
+                    for (int index : torsions_r[i]) {
+                        std::cout << index << " ";
+                    }
+                    std::cout << "\n";
+                    for (const auto &range : torsion_ranges_grouped[i]) {
+                        
+                        for (float value : range) {
+                            std::cout << value << " ";
+                        }
+                        std::cout << "\n";
+                    }
+                }
+            }
+            else {
+                while (std::getline(in, str)) {
+                    add_context(c, str);
+                    std::cout << "read und sdf line:" << str << std::endl;
                     if (str.empty()) {
                         break;
                     }
@@ -802,8 +858,8 @@ void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, c
             center_atom_id = i;
         }
     }
-    // std::cout << center[0] << ' ' << center[1] << ' ' << center[2] << "atom:" << center_atom_id
-    // << std::endl;
+    std::cout << center[0] << ' ' << center[1] << ' ' << center[2] << "atom:" << center_atom_id
+    << std::endl;
     for (int i = 0; i < frags.size(); ++i) {
         for (int j = 0; j < frags[i].size(); ++j) {
             if (frags[i][j] - 1 == center_atom_id) {
@@ -965,8 +1021,8 @@ void parse_sdf_branch(std::vector<std::vector<int> >& frags,
                       std::vector<std::vector<int> >& torsions, int frag_id, parsing_struct& new_p,
                       parsing_struct& p, context& c, unsigned& number, unsigned from, unsigned to,
                       std::set<int>& been_frags, bool keep_H) {
-    // std::cout << "entering parse_sdf_branch frag= "<< frag_id << ' ' << from << ' '  << to <<
-    // std::endl;
+    std::cout << "entering parse_sdf_branch frag= "<< frag_id << ' ' << from << ' '  << to <<
+    std::endl;
 
     // push new fragment atoms into new_p
     // new_p.atoms.reserve(frags[frag_id].size());
