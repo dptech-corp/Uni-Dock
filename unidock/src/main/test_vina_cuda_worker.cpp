@@ -349,7 +349,7 @@ int main(int argc, char* argv[])
     std::cout << "Completed Batched Operations in " << milliseconds << " mS\n";
 
     // For comparison - use original non-streamed code
-    dock_many_non_batched (work_dir, input_path, out_phrase, batch_size, local_only, max_eval_steps);
+    //dock_many_non_batched (work_dir, input_path, out_phrase, batch_size, local_only, max_eval_steps);
 
     return 0;
 }

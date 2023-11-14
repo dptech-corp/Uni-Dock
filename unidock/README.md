@@ -257,11 +257,13 @@ local_only     = 1, for localonly using computed map for given atoms, or 0, for 
 max_eval_steps = Number of steps in each MC evaluation
 ```
 
-For example, to benchmark 1:1 docking runs with 5 pairs available in the test folder, run as below.
+For example, to benchmark 1:1 docking runs with 5 pairs available in the test folder with box_size of 25, run as below.
 
 `build/unidock_fast <unidock_folder_full_path>/unidock/test protein_ligand_batch 5 5 0 50`
 
 This will output the batched docking results in `out_5_0_50_random`, and non batched results in `out_non_batched_5_0_50_random`, and print the time taken in the terminal.
+
+Expected performance improvement over original 1:1 docking option in Unidock is approximately 2x
 
 #### Code structure of CUDA Stream accelerated docking additions to unidock_fast:
 
