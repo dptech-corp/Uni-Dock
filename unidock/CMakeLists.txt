@@ -20,6 +20,7 @@ if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
 		60 # P100
 		70 # V100
 		75 # T4
+		86 # Ampere
 		80 # A100
 		# 89 # RTX 40
 		90 # H100
@@ -27,6 +28,7 @@ if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
 endif()
 
 set(VINA_BIN_NAME unidock)
+set(VINA_FAST_BIN_NAME unidock_fast)
 add_compile_definitions(ENABLE_CUDA)
 add_compile_definitions(VERSION="v${PROJECT_VERSION}")
 
@@ -35,6 +37,7 @@ find_package(Boost 1.72 REQUIRED
 	COMPONENTS system thread serialization filesystem program_options timer)
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(src/lib src/cuda)
+
 add_executable(${VINA_BIN_NAME} src/main/main.cpp)
 add_executable(split src/split/split.cpp)
 
@@ -62,3 +65,13 @@ add_custom_target(
   COMMENT "Running clang-format"
   VERBATIM
 )
+
+
+### Fast version
+add_executable(${VINA_FAST_BIN_NAME} src/main/test_vina_cuda_worker.cpp)
+target_link_libraries(${VINA_FAST_BIN_NAME} Boost::system Boost::thread Boost::serialization Boost::filesystem Boost::program_options Boost::timer)
+target_link_libraries(${VINA_FAST_BIN_NAME} OpenMP::OpenMP_CXX)
+
+target_link_libraries(${VINA_FAST_BIN_NAME} cuda lib)
+target_include_directories(${VINA_FAST_BIN_NAME} PUBLIC ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}) # For detecting CUDA memory size
+install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/${VINA_FAST_BIN_NAME} TYPE BIN)

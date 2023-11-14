@@ -35,6 +35,28 @@
 #include "cache.h"
 #include "ad4cache.h"
 
+// Structure holds GPU state of CUDA streams across gpu_prime, running and obtaining results
+
+ struct gpu_state
+ {
+    cudaStream_t curr_stream;
+    m_cuda_t* m_cuda_gpu = 0;
+    ig_cuda_t* ig_cuda_gpu = 0;
+    p_cuda_t* p_cuda_gpu = 0;
+    float* rand_molec_struc_gpu = nullptr;
+    float* best_e_gpu = nullptr;
+    curandStatePhilox4_32_10_t* states = nullptr;
+    float* hunt_cap_gpu = nullptr;
+    float* authentic_v_gpu = nullptr;
+    output_type_cuda_t* results_gpu = nullptr;
+    m_cuda_t* m_cuda = 0;
+    output_type_cuda_t* rand_molec_struc_tmp  = nullptr;
+    ig_cuda_t* ig_cuda_ptr  = nullptr;
+    p_cuda_t_cpu* p_cuda = nullptr;
+    p_m_data_cuda_t* p_data = nullptr;
+    output_type_cuda_t* results = nullptr;
+ };
+
 /* Below based on mutate_conf.cpp */
 
 __device__ __forceinline__ void quaternion_increment(float* q, const float* rotation,
@@ -209,12 +231,12 @@ __device__ __forceinline__ void mutate_conf_cuda(const int num_steps, output_typ
     float random_inside_sphere[4];
     random_inside_sphere_gpu(random_inside_sphere, state);
     if (which == 0) {
-        DEBUG_PRINTF("random sphere r=%f\n", norm3(random_inside_sphere));
+        DEBUG_PRINTF_DEVICE("random sphere r=%f\n", norm3(random_inside_sphere));
     }
 
     float random_pi = (random_inside_sphere[3] - 0.5) * 2.0 * pi;  // ~ U[-pi, pi]
     if (which == 0) {
-        DEBUG_PRINTF("random pi=%f\n", random_pi);
+        DEBUG_PRINTF_DEVICE("random pi=%f\n", random_pi);
     }
 
     if (which == 0) {
@@ -1134,6 +1156,572 @@ std::vector<output_type> monte_carlo::cuda_to_vina(output_type_cuda_t results_pt
     }
     return results_vina;
 }
+
+__host__ gpu_state* monte_carlo::gpu_prime(std::vector<model>& m_gpu,
+    std::vector<precalculate_byatom>& p_gpu, triangular_matrix_cuda_t* m_data_list_gpu,
+    const igrid& ig, const vec& corner1, const vec& corner2, rng& generator, int verbosity,
+    unsigned long long seed, std::vector<std::vector<bias_element>>& bias_batch_list) const
+{
+    gpu_state* ptr_gpu_state = new gpu_state();
+
+    vec authentic_v(1000, 1000, 1000);  // FIXME? this is here to avoid max_fl/max_fl
+
+    checkCUDA(cudaStreamCreate ( &ptr_gpu_state->curr_stream));
+    DEBUG_PRINTF("Stream created [0x%p]\n", ptr_gpu_state->curr_stream);
+
+    /* Allocate CPU memory and define new data structure */
+    DEBUG_PRINTF("Allocating CPU memory\n");  // debug
+    checkCUDA(cudaMallocHost(&ptr_gpu_state->m_cuda, sizeof(m_cuda_t)));
+
+    checkCUDA(cudaMallocHost(&ptr_gpu_state->rand_molec_struc_tmp, sizeof(output_type_cuda_t)));
+
+    checkCUDA(cudaMallocHost(&ptr_gpu_state->ig_cuda_ptr, sizeof(ig_cuda_t)));
+
+    checkCUDA(cudaMallocHost(&ptr_gpu_state->p_cuda, sizeof(p_cuda_t_cpu)));
+
+    // The p_data and results allocations moved from gpu_obtain()
+    // Device to Host memcpy of precalculated_byatom, copy back data to p_gpu
+    checkCUDA(cudaMallocHost(&ptr_gpu_state->p_data, sizeof(p_m_data_cuda_t) * MAX_P_DATA_M_DATA_SIZE));
+    checkCUDA(cudaMallocHost(&ptr_gpu_state->results, thread * sizeof(output_type_cuda_t)));
+
+
+    /* End CPU allocation */
+
+    /* Allocate GPU memory */
+    DEBUG_PRINTF("Allocating GPU memory\n");
+    size_t m_cuda_size = sizeof(m_cuda_t);
+    DEBUG_PRINTF("m_cuda_size=%lu\n", m_cuda_size);
+    size_t ig_cuda_size = sizeof(ig_cuda_t);
+    DEBUG_PRINTF("ig_cuda_size=%lu\n", ig_cuda_size);
+    DEBUG_PRINTF("p_cuda_size_cpu=%lu\n", sizeof(p_cuda_t_cpu));
+
+    size_t p_cuda_size_gpu = sizeof(p_cuda_t);
+    DEBUG_PRINTF("p_cuda_size_gpu=%lu\n", p_cuda_size_gpu);
+
+    // rand_molec_struc_gpu
+    checkCUDA(cudaMalloc(&ptr_gpu_state->rand_molec_struc_gpu, thread * SIZE_OF_MOLEC_STRUC));
+    // best_e_gpu
+
+    checkCUDA(cudaMalloc(&ptr_gpu_state->best_e_gpu, sizeof(float)));
+    checkCUDA(cudaMemcpyAsync(ptr_gpu_state->best_e_gpu, &max_fl, sizeof(float), cudaMemcpyHostToDevice, ptr_gpu_state->curr_stream));
+
+    // use cuRand to generate random values on GPU
+    DEBUG_PRINTF("random states size=%lu\n", sizeof(curandStatePhilox4_32_10_t) * thread);
+    checkCUDA(cudaMalloc(&ptr_gpu_state->states, sizeof(curandStatePhilox4_32_10_t) * thread));
+
+    // hunt_cap_gpu
+    float hunt_cap_float[3] = {static_cast<float>(hunt_cap[0]), static_cast<float>(hunt_cap[1]),
+                               static_cast<float>(hunt_cap[2])};
+
+    checkCUDA(cudaMalloc(&ptr_gpu_state->hunt_cap_gpu, 3 * sizeof(float)));
+    // Preparing m related data
+    DEBUG_PRINTF("m_cuda_size=%lu", m_cuda_size);
+    checkCUDA(cudaMalloc(&ptr_gpu_state->m_cuda_gpu, num_of_ligands * m_cuda_size));
+    // Preparing p related data
+
+    checkCUDA(cudaMalloc(&ptr_gpu_state->p_cuda_gpu, num_of_ligands * p_cuda_size_gpu));
+    DEBUG_PRINTF("p_cuda_gpu=%p\n", ptr_gpu_state->p_cuda_gpu);
+
+    float authentic_v_float[3]
+        = {static_cast<float>(authentic_v[0]), static_cast<float>(authentic_v[1]),
+           static_cast<float>(authentic_v[2])};
+
+    checkCUDA(cudaMalloc(&ptr_gpu_state->authentic_v_gpu, sizeof(authentic_v_float)));
+    // Preparing result data
+    checkCUDA(cudaMalloc(&ptr_gpu_state->results_gpu, thread * sizeof(output_type_cuda_t)));
+
+    /* End Allocating GPU Memory */
+
+    assert(num_of_ligands <= MAX_LIGAND_NUM);
+    assert(thread <= MAX_THREAD);
+
+    struct tmp_struct {
+        int start_index = 0;
+        int parent_index = 0;
+        void store_node(tree<segment>& child_ptr, rigid_cuda_t& rigid) {
+            start_index++;  // start with index 1, index 0 is root node
+            rigid.parent[start_index] = parent_index;
+            rigid.atom_range[start_index][0] = child_ptr.node.begin;
+            rigid.atom_range[start_index][1] = child_ptr.node.end;
+            for (int i = 0; i < 9; i++)
+                rigid.orientation_m[start_index][i] = child_ptr.node.get_orientation_m().data[i];
+            rigid.orientation_q[start_index][0] = child_ptr.node.orientation().R_component_1();
+            rigid.orientation_q[start_index][1] = child_ptr.node.orientation().R_component_2();
+            rigid.orientation_q[start_index][2] = child_ptr.node.orientation().R_component_3();
+            rigid.orientation_q[start_index][3] = child_ptr.node.orientation().R_component_4();
+            for (int i = 0; i < 3; i++) {
+                rigid.origin[start_index][i] = child_ptr.node.get_origin()[i];
+                rigid.axis[start_index][i] = child_ptr.node.get_axis()[i];
+                rigid.relative_axis[start_index][i] = child_ptr.node.relative_axis[i];
+                rigid.relative_origin[start_index][i] = child_ptr.node.relative_origin[i];
+            }
+            if (child_ptr.children.size() == 0)
+                return;
+            else {
+                assert(start_index < MAX_NUM_OF_RIGID);
+                int parent_index_tmp = start_index;
+                for (int i = 0; i < child_ptr.children.size(); i++) {
+                    this->parent_index = parent_index_tmp;  // Update parent index
+                    this->store_node(child_ptr.children[i], rigid);
+                }
+            }
+        }
+    };
+
+    for (int l = 0; l < num_of_ligands; ++l) {
+        model& m = m_gpu[l];
+        const precalculate_byatom& p = p_gpu[l];
+
+        /* Prepare m related data */
+        conf_size s = m.get_size();
+        change g(s);
+        output_type tmp(s, 0);
+        tmp.c = m.get_initial_conf();
+
+        assert(m.atoms.size() < MAX_NUM_OF_ATOMS);
+
+        // Preparing ligand data
+        DEBUG_PRINTF("prepare ligand data\n");
+        assert(m.num_other_pairs() == 0);  // m.other_pairs is not supported!
+        assert(m.ligands.size() <= 1);     // Only one ligand supported!
+
+        if (m.ligands.size() == 0) {  // ligand parsing error
+            ptr_gpu_state->m_cuda->m_num_movable_atoms = -1;
+            DEBUG_PRINTF("copy m_cuda to gpu, size=%lu\n", sizeof(m_cuda_t));
+            checkCUDA(cudaMemcpyAsync(ptr_gpu_state->m_cuda_gpu + l, ptr_gpu_state->m_cuda, sizeof(m_cuda_t), cudaMemcpyHostToDevice, ptr_gpu_state->curr_stream));
+        } else {
+            for (int i = 0; i < m.atoms.size(); i++) {
+                ptr_gpu_state->m_cuda->atoms[i].types[0]
+                    = m.atoms[i].el;  // To store 4 atoms types (el, ad, xs, sy)
+                ptr_gpu_state->m_cuda->atoms[i].types[1] = m.atoms[i].ad;
+                ptr_gpu_state->m_cuda->atoms[i].types[2] = m.atoms[i].xs;
+                ptr_gpu_state->m_cuda->atoms[i].types[3] = m.atoms[i].sy;
+                for (int j = 0; j < 3; j++) {
+                    ptr_gpu_state->m_cuda->atoms[i].coords[j] = m.atoms[i].coords[j];  // To store atom coords
+                }
+            }
+
+            // To store atoms coords
+            for (int i = 0; i < m.coords.size(); i++) {
+                for (int j = 0; j < 3; j++) {
+                    ptr_gpu_state->m_cuda->m_coords.coords[i][j] = m.coords[i].data[j];
+                }
+            }
+
+            // To store minus forces
+            for (int i = 0; i < m.coords.size(); i++) {
+                for (int j = 0; j < 3; j++) {
+                    ptr_gpu_state->m_cuda->minus_forces.coords[i][j] = m.minus_forces[i].data[j];
+                }
+            }
+
+            ptr_gpu_state->m_cuda->ligand.pairs.num_pairs = m.ligands[0].pairs.size();
+            for (int i = 0; i < ptr_gpu_state->m_cuda->ligand.pairs.num_pairs; i++) {
+                ptr_gpu_state->m_cuda->ligand.pairs.type_pair_index[i] = m.ligands[0].pairs[i].type_pair_index;
+                ptr_gpu_state->m_cuda->ligand.pairs.a[i] = m.ligands[0].pairs[i].a;
+                ptr_gpu_state->m_cuda->ligand.pairs.b[i] = m.ligands[0].pairs[i].b;
+            }
+            ptr_gpu_state->m_cuda->ligand.begin = m.ligands[0].begin;  // 0
+            ptr_gpu_state->m_cuda->ligand.end = m.ligands[0].end;      // 29
+            ligand& m_ligand = m.ligands[0];            // Only support one ligand
+            DEBUG_PRINTF("m_ligand.end=%lu, MAX_NUM_OF_ATOMS=%d\n", m_ligand.end, MAX_NUM_OF_ATOMS);
+            assert(m_ligand.end < MAX_NUM_OF_ATOMS);
+
+            // Store root node
+            ptr_gpu_state->m_cuda->ligand.rigid.atom_range[0][0] = m_ligand.node.begin;
+            ptr_gpu_state->m_cuda->ligand.rigid.atom_range[0][1] = m_ligand.node.end;
+            for (int i = 0; i < 3; i++)
+                ptr_gpu_state->m_cuda->ligand.rigid.origin[0][i] = m_ligand.node.get_origin()[i];
+            for (int i = 0; i < 9; i++)
+                ptr_gpu_state->m_cuda->ligand.rigid.orientation_m[0][i]
+                    = m_ligand.node.get_orientation_m().data[i];
+            ptr_gpu_state->m_cuda->ligand.rigid.orientation_q[0][0] = m_ligand.node.orientation().R_component_1();
+            ptr_gpu_state->m_cuda->ligand.rigid.orientation_q[0][1] = m_ligand.node.orientation().R_component_2();
+            ptr_gpu_state->m_cuda->ligand.rigid.orientation_q[0][2] = m_ligand.node.orientation().R_component_3();
+            ptr_gpu_state->m_cuda->ligand.rigid.orientation_q[0][3] = m_ligand.node.orientation().R_component_4();
+            for (int i = 0; i < 3; i++) {
+                ptr_gpu_state->m_cuda->ligand.rigid.axis[0][i] = 0;
+                ptr_gpu_state->m_cuda->ligand.rigid.relative_axis[0][i] = 0;
+                ptr_gpu_state->m_cuda->ligand.rigid.relative_origin[0][i] = 0;
+            }
+
+            // Store children nodes (in depth-first order)
+            DEBUG_PRINTF("store children nodes\n");
+
+            tmp_struct ts;
+            for (int i = 0; i < m_ligand.children.size(); i++) {
+                ts.parent_index = 0;  // Start a new branch, whose parent is 0
+                ts.store_node(m_ligand.children[i], ptr_gpu_state->m_cuda->ligand.rigid);
+            }
+            ptr_gpu_state->m_cuda->ligand.rigid.num_children = ts.start_index;
+
+            // set children_map
+            DEBUG_PRINTF("set children map\n");
+            for (int i = 0; i < MAX_NUM_OF_RIGID; i++)
+                for (int j = 0; j < MAX_NUM_OF_RIGID; j++)
+                    ptr_gpu_state->m_cuda->ligand.rigid.children_map[i][j] = false;
+            for (int i = 1; i < ptr_gpu_state->m_cuda->ligand.rigid.num_children + 1; i++) {
+                int parent_index = ptr_gpu_state->m_cuda->ligand.rigid.parent[i];
+                ptr_gpu_state->m_cuda->ligand.rigid.children_map[parent_index][i] = true;
+            }
+            ptr_gpu_state->m_cuda->m_num_movable_atoms = m.num_movable_atoms();
+
+            DEBUG_PRINTF("copy m_cuda to gpu, size=%lu\n", sizeof(m_cuda_t));
+            checkCUDA(cudaMemcpyAsync(ptr_gpu_state->m_cuda_gpu + l, ptr_gpu_state->m_cuda, sizeof(m_cuda_t), 
+                        cudaMemcpyHostToDevice, ptr_gpu_state->curr_stream));
+
+            /* Prepare rand_molec_struc data */
+            int lig_torsion_size = tmp.c.ligands[0].torsions.size();
+            DEBUG_PRINTF("lig_torsion_size=%d\n", lig_torsion_size);
+            int flex_torsion_size;
+            if (tmp.c.flex.size() != 0)
+                flex_torsion_size = tmp.c.flex[0].torsions.size();
+            else
+                flex_torsion_size = 0;
+            // std::vector<vec> uniform_data;
+            // uniform_data.resize(thread);
+
+            for (int i = 0; i < threads_per_ligand; ++i) {
+                if (!local_only) {
+                    tmp.c.randomize(
+                        corner1, corner2,
+                        generator);  // generate a random structure, can move to GPU if necessary
+                }
+                for (int j = 0; j < 3; j++)
+                    ptr_gpu_state->rand_molec_struc_tmp->position[j] = tmp.c.ligands[0].rigid.position[j];
+                assert(lig_torsion_size <= MAX_NUM_OF_LIG_TORSION);
+                for (int j = 0; j < lig_torsion_size; j++)
+                    ptr_gpu_state->rand_molec_struc_tmp->lig_torsion[j]
+                        = tmp.c.ligands[0].torsions[j];  // Only support one ligand
+                assert(flex_torsion_size <= MAX_NUM_OF_FLEX_TORSION);
+                for (int j = 0; j < flex_torsion_size; j++)
+                    ptr_gpu_state->rand_molec_struc_tmp->flex_torsion[j]
+                        = tmp.c.flex[0].torsions[j];  // Only support one flex
+
+                ptr_gpu_state->rand_molec_struc_tmp->orientation[0]
+                    = (float)tmp.c.ligands[0].rigid.orientation.R_component_1();
+                ptr_gpu_state->rand_molec_struc_tmp->orientation[1]
+                    = (float)tmp.c.ligands[0].rigid.orientation.R_component_2();
+                ptr_gpu_state->rand_molec_struc_tmp->orientation[2]
+                    = (float)tmp.c.ligands[0].rigid.orientation.R_component_3();
+                ptr_gpu_state->rand_molec_struc_tmp->orientation[3]
+                    = (float)tmp.c.ligands[0].rigid.orientation.R_component_4();
+
+                ptr_gpu_state->rand_molec_struc_tmp->lig_torsion_size = lig_torsion_size;
+
+                float* rand_molec_struc_gpu_tmp
+                    = ptr_gpu_state->rand_molec_struc_gpu
+                      + (l * threads_per_ligand + i) * SIZE_OF_MOLEC_STRUC / sizeof(float);
+                checkCUDA(cudaMemcpyAsync(rand_molec_struc_gpu_tmp, ptr_gpu_state->rand_molec_struc_tmp,
+                                     SIZE_OF_MOLEC_STRUC, cudaMemcpyHostToDevice, ptr_gpu_state->curr_stream));
+            }
+
+            /* Preparing p related data */
+            DEBUG_PRINTF("Preaparing p related data\n");  // debug
+
+            // copy pointer instead of data
+            ptr_gpu_state->p_cuda->m_cutoff_sqr = p.m_cutoff_sqr;
+            ptr_gpu_state->p_cuda->factor = p.m_factor;
+            ptr_gpu_state->p_cuda->n = p.m_n;
+            ptr_gpu_state->p_cuda->m_data_size = p.m_data.m_data.size();
+            checkCUDA(cudaMemcpyAsync(ptr_gpu_state->p_cuda_gpu + l, ptr_gpu_state->p_cuda, sizeof(p_cuda_t), cudaMemcpyHostToDevice, ptr_gpu_state->curr_stream));
+            checkCUDA(cudaMemcpyAsync(&(ptr_gpu_state->p_cuda_gpu[l].m_data), &(m_data_list_gpu[l].p_data),
+                                 sizeof(p_m_data_cuda_t*),
+                                 cudaMemcpyHostToDevice, ptr_gpu_state->curr_stream));  // check if fl == float
+        }
+    }
+
+    /* Prepare data only concerns rigid receptor */
+
+    // Preparing igrid related data
+    DEBUG_PRINTF("Preparing ig related data\n");  // debug
+
+    bool multi_bias = (bias_batch_list.size() == num_of_ligands);
+    if (multi_bias) {
+        // multi bias mode
+        std::cout << "with multi bias ";
+
+        checkCUDA(cudaMalloc(&ptr_gpu_state->ig_cuda_gpu, ig_cuda_size * num_of_ligands));
+        for (int l = 0; l < num_of_ligands; ++l) {
+            if (ig.get_atu() == atom_type::XS) {
+                cache ig_tmp(ig.get_gd(), ig.get_slope());
+                ig_tmp.m_grids = ig.get_grids();
+                // // debug
+                // if (l == 1){
+                // 	std::cout << "writing original grid map\n";
+                // 	ig_tmp.write(std::string("./ori"), szv(1,0));
+                // }
+                ig_tmp.compute_bias(m_gpu[l], bias_batch_list[l]);
+                // // debug
+                // std::cout << "writing bias\n";
+                // ig_tmp.write(std::string("./")+std::to_string(l), szv(1,0));
+                ptr_gpu_state->ig_cuda_ptr->atu = ig.get_atu();  // atu
+                DEBUG_PRINTF("ig_cuda_ptr->atu=%d\n", ptr_gpu_state->ig_cuda_ptr->atu);
+                ptr_gpu_state->ig_cuda_ptr->slope = ig.get_slope();  // slope
+                std::vector<grid> tmp_grids = ig.get_grids();
+                int grid_size = tmp_grids.size();
+                DEBUG_PRINTF("ig.size()=%d, GRIDS_SIZE=%d, should be 33\n", grid_size, GRIDS_SIZE);
+
+                for (int i = 0; i < grid_size; i++) {
+                    // DEBUG_PRINTF("i=%d\n",i); //debug
+                    for (int j = 0; j < 3; j++) {
+                        ptr_gpu_state->ig_cuda_ptr->grids[i].m_init[j] = tmp_grids[i].m_init[j];
+                        ptr_gpu_state->ig_cuda_ptr->grids[i].m_factor[j] = tmp_grids[i].m_factor[j];
+                        ptr_gpu_state->ig_cuda_ptr->grids[i].m_dim_fl_minus_1[j]
+                            = tmp_grids[i].m_dim_fl_minus_1[j];
+                        ptr_gpu_state->ig_cuda_ptr->grids[i].m_factor_inv[j] = tmp_grids[i].m_factor_inv[j];
+                    }
+                    if (tmp_grids[i].m_data.dim0() != 0) {
+                        ptr_gpu_state->ig_cuda_ptr->grids[i].m_i = tmp_grids[i].m_data.dim0();
+                        assert(MAX_NUM_OF_GRID_MI >= ptr_gpu_state->ig_cuda_ptr->grids[i].m_i);
+                        ptr_gpu_state->ig_cuda_ptr->grids[i].m_j = tmp_grids[i].m_data.dim1();
+                        assert(MAX_NUM_OF_GRID_MJ >= ptr_gpu_state->ig_cuda_ptr->grids[i].m_j);
+                        ptr_gpu_state->ig_cuda_ptr->grids[i].m_k = tmp_grids[i].m_data.dim2();
+                        assert(MAX_NUM_OF_GRID_MK >= ptr_gpu_state->ig_cuda_ptr->grids[i].m_k);
+
+                        assert(tmp_grids[i].m_data.m_data.size()
+                               == ptr_gpu_state->ig_cuda_ptr->grids[i].m_i * ptr_gpu_state->ig_cuda_ptr->grids[i].m_j
+                                      * ptr_gpu_state->ig_cuda_ptr->grids[i].m_k);
+                        assert(tmp_grids[i].m_data.m_data.size() <= MAX_NUM_OF_GRID_POINT);
+                        memcpy(ptr_gpu_state->ig_cuda_ptr->grids[i].m_data, tmp_grids[i].m_data.m_data.data(),
+                               tmp_grids[i].m_data.m_data.size() * sizeof(fl));
+                    } else {
+                        ptr_gpu_state->ig_cuda_ptr->grids[i].m_i = 0;
+                        ptr_gpu_state->ig_cuda_ptr->grids[i].m_j = 0;
+                        ptr_gpu_state->ig_cuda_ptr->grids[i].m_k = 0;
+                    }
+                }
+            } else {
+                ad4cache ig_tmp(ig.get_slope());
+                ig_tmp.m_grids = ig.get_grids();
+                // // debug
+                // if (l == 1){
+                // 	std::cout << "writing original grid map\n";
+                // 	ig_tmp.write(std::string("./ori"), szv(1,0));
+                // }
+                ig_tmp.set_bias(bias_batch_list[l]);
+                // // debug
+                // std::cout << "writing bias\n";
+                // ig_tmp.write(std::string("./")+std::to_string(l), szv(1,0));
+                ptr_gpu_state->ig_cuda_ptr->atu = ig.get_atu();  // atu
+                DEBUG_PRINTF("ig_cuda_ptr->atu=%d\n", ptr_gpu_state->ig_cuda_ptr->atu);
+                ptr_gpu_state->ig_cuda_ptr->slope = ig.get_slope();  // slope
+                std::vector<grid> tmp_grids = ig.get_grids();
+                int grid_size = tmp_grids.size();
+                DEBUG_PRINTF("ig.size()=%d, GRIDS_SIZE=%d, should be 33\n", grid_size, GRIDS_SIZE);
+
+                for (int i = 0; i < grid_size; i++) {
+                    // DEBUG_PRINTF("i=%d\n",i); //debug
+                    for (int j = 0; j < 3; j++) {
+                        ptr_gpu_state->ig_cuda_ptr->grids[i].m_init[j] = tmp_grids[i].m_init[j];
+                        ptr_gpu_state->ig_cuda_ptr->grids[i].m_factor[j] = tmp_grids[i].m_factor[j];
+                        ptr_gpu_state->ig_cuda_ptr->grids[i].m_dim_fl_minus_1[j]
+                            = tmp_grids[i].m_dim_fl_minus_1[j];
+                        ptr_gpu_state->ig_cuda_ptr->grids[i].m_factor_inv[j] = tmp_grids[i].m_factor_inv[j];
+                    }
+                    if (tmp_grids[i].m_data.dim0() != 0) {
+                        ptr_gpu_state->ig_cuda_ptr->grids[i].m_i = tmp_grids[i].m_data.dim0();
+                        assert(MAX_NUM_OF_GRID_MI >= ptr_gpu_state->ig_cuda_ptr->grids[i].m_i);
+                        ptr_gpu_state->ig_cuda_ptr->grids[i].m_j = tmp_grids[i].m_data.dim1();
+                        assert(MAX_NUM_OF_GRID_MJ >= ptr_gpu_state->ig_cuda_ptr->grids[i].m_j);
+                        ptr_gpu_state->ig_cuda_ptr->grids[i].m_k = tmp_grids[i].m_data.dim2();
+                        assert(MAX_NUM_OF_GRID_MK >= ptr_gpu_state->ig_cuda_ptr->grids[i].m_k);
+
+                        assert(tmp_grids[i].m_data.m_data.size()
+                               == ptr_gpu_state->ig_cuda_ptr->grids[i].m_i * ptr_gpu_state->ig_cuda_ptr->grids[i].m_j
+                                      * ptr_gpu_state->ig_cuda_ptr->grids[i].m_k);
+                        memcpy(ptr_gpu_state->ig_cuda_ptr->grids[i].m_data, tmp_grids[i].m_data.m_data.data(),
+                               tmp_grids[i].m_data.m_data.size() * sizeof(fl));
+                    } else {
+                        ptr_gpu_state->ig_cuda_ptr->grids[i].m_i = 0;
+                        ptr_gpu_state->ig_cuda_ptr->grids[i].m_j = 0;
+                        ptr_gpu_state->ig_cuda_ptr->grids[i].m_k = 0;
+                    }
+                }
+            }
+
+            checkCUDA(
+                cudaMemcpyAsync(ptr_gpu_state->ig_cuda_gpu + l, ptr_gpu_state->ig_cuda_ptr, ig_cuda_size, cudaMemcpyHostToDevice, ptr_gpu_state->curr_stream));
+        }
+        std::cout << "set\n";
+    } else {
+        ptr_gpu_state->ig_cuda_ptr->atu = ig.get_atu();  // atu
+        DEBUG_PRINTF("ig_cuda_ptr->atu=%d\n", ptr_gpu_state->ig_cuda_ptr->atu);
+        ptr_gpu_state->ig_cuda_ptr->slope = ig.get_slope();  // slope
+        std::vector<grid> tmp_grids = ig.get_grids();
+        int grid_size = tmp_grids.size();
+        DEBUG_PRINTF("ig.size()=%d, GRIDS_SIZE=%d, should be 33\n", grid_size, GRIDS_SIZE);
+
+        for (int i = 0; i < grid_size; i++) {
+            // DEBUG_PRINTF("i=%d\n",i); //debug
+            for (int j = 0; j < 3; j++) {
+                ptr_gpu_state->ig_cuda_ptr->grids[i].m_init[j] = tmp_grids[i].m_init[j];
+                ptr_gpu_state->ig_cuda_ptr->grids[i].m_factor[j] = tmp_grids[i].m_factor[j];
+                ptr_gpu_state->ig_cuda_ptr->grids[i].m_dim_fl_minus_1[j] = tmp_grids[i].m_dim_fl_minus_1[j];
+                ptr_gpu_state->ig_cuda_ptr->grids[i].m_factor_inv[j] = tmp_grids[i].m_factor_inv[j];
+            }
+            if (tmp_grids[i].m_data.dim0() != 0) {
+                ptr_gpu_state->ig_cuda_ptr->grids[i].m_i = tmp_grids[i].m_data.dim0();
+                assert(MAX_NUM_OF_GRID_MI >= ptr_gpu_state->ig_cuda_ptr->grids[i].m_i);
+                ptr_gpu_state->ig_cuda_ptr->grids[i].m_j = tmp_grids[i].m_data.dim1();
+                assert(MAX_NUM_OF_GRID_MJ >= ptr_gpu_state->ig_cuda_ptr->grids[i].m_j);
+                ptr_gpu_state->ig_cuda_ptr->grids[i].m_k = tmp_grids[i].m_data.dim2();
+                assert(MAX_NUM_OF_GRID_MK >= ptr_gpu_state->ig_cuda_ptr->grids[i].m_k);
+
+                assert(tmp_grids[i].m_data.m_data.size()
+                       == ptr_gpu_state->ig_cuda_ptr->grids[i].m_i * ptr_gpu_state->ig_cuda_ptr->grids[i].m_j
+                              * ptr_gpu_state->ig_cuda_ptr->grids[i].m_k);
+                memcpy(ptr_gpu_state->ig_cuda_ptr->grids[i].m_data, tmp_grids[i].m_data.m_data.data(),
+                       tmp_grids[i].m_data.m_data.size() * sizeof(fl));
+            } else {
+                ptr_gpu_state->ig_cuda_ptr->grids[i].m_i = 0;
+                ptr_gpu_state->ig_cuda_ptr->grids[i].m_j = 0;
+                ptr_gpu_state->ig_cuda_ptr->grids[i].m_k = 0;
+            }
+        }
+        DEBUG_PRINTF("memcpy ig_cuda, ig_cuda_size=%lu\n", ig_cuda_size);
+        checkCUDA(cudaMalloc(&ptr_gpu_state->ig_cuda_gpu, ig_cuda_size));
+        checkCUDA(cudaMemcpyAsync(ptr_gpu_state->ig_cuda_gpu, ptr_gpu_state->ig_cuda_ptr, ig_cuda_size, cudaMemcpyHostToDevice, ptr_gpu_state->curr_stream));
+    }
+
+    checkCUDA(cudaMemcpyAsync(ptr_gpu_state->hunt_cap_gpu, hunt_cap_float, 3 * sizeof(float), cudaMemcpyHostToDevice, ptr_gpu_state->curr_stream));
+    float hunt_test[3];
+    checkCUDA(cudaMemcpyAsync(hunt_test, ptr_gpu_state->hunt_cap_gpu, 3 * sizeof(float), cudaMemcpyDeviceToHost, ptr_gpu_state->curr_stream));
+    DEBUG_PRINTF("hunt_test[1]=%f, hunt_cap_float[1]=%f\n", hunt_test[1], hunt_cap_float[1]);
+    checkCUDA(cudaMemcpyAsync(ptr_gpu_state->authentic_v_gpu, authentic_v_float, sizeof(authentic_v_float),
+                         cudaMemcpyHostToDevice, ptr_gpu_state->curr_stream));
+
+    DEBUG_PRINTF("Primed CUDA monte_carlo search\n");  // debug     
+
+    return ptr_gpu_state;    
+
+}
+
+__host__ void monte_carlo::gpu_run_kernel(
+                        gpu_state* ptr_gpu_state, unsigned long long seed)
+{
+    float mutation_amplitude_float = static_cast<float>(mutation_amplitude);
+    float epsilon_fl_float = static_cast<float>(epsilon_fl);
+    bool multi_bias = false;
+
+    const int quasi_newton_par_max_steps = local_steps;  // no need to decrease step
+
+    if (!ptr_gpu_state)
+    {
+        DEBUG_PRINTF("Invalid ptr_gpu_state\n");
+        return;
+    }
+
+
+    /* Launch kernel */
+    DEBUG_PRINTF("launch kernel [stream=0x%p], global_steps=%d, thread=%d, num_of_ligands=%d\n", 
+                ptr_gpu_state->curr_stream, global_steps,
+                 thread, num_of_ligands);
+    kernel<<<thread / MAX_THREADS_PER_BLOCK + 1, MAX_THREADS_PER_BLOCK, 0, ptr_gpu_state->curr_stream >>>(ptr_gpu_state->m_cuda_gpu, 
+                                    ptr_gpu_state->ig_cuda_gpu, ptr_gpu_state->p_cuda_gpu, 
+                                    ptr_gpu_state->rand_molec_struc_gpu,
+                                    ptr_gpu_state->best_e_gpu, quasi_newton_par_max_steps,
+                                    mutation_amplitude_float, ptr_gpu_state->states, seed, epsilon_fl_float,
+                                    ptr_gpu_state->hunt_cap_gpu, ptr_gpu_state->authentic_v_gpu, 
+                                    ptr_gpu_state->results_gpu, global_steps,
+                                    num_of_ligands, threads_per_ligand, multi_bias);    
+}
+
+__host__ void monte_carlo::gpu_obtain(gpu_state* ptr_gpu_state, std::vector<output_container>& out_gpu,
+                            std::vector<precalculate_byatom>& p_gpu,
+                                triangular_matrix_cuda_t* m_data_list_gpu)
+{
+    // Device to Host memcpy of precalculated_byatom, copy back data to p_gpu
+
+    if (!ptr_gpu_state)
+    {
+        DEBUG_PRINTF("Invalid state pointer\n");
+        return;
+    }
+    cudaStreamSynchronize(ptr_gpu_state->curr_stream);
+    // All below are considered synchronous operations
+
+    for (int l = 0; l < num_of_ligands; ++l) {
+        // copy data to m_data on CPU, then to p_gpu[l]
+        int pnum = p_gpu[l].m_data.m_data.size();
+        checkCUDA(cudaMemcpy(ptr_gpu_state->p_data, m_data_list_gpu[l].p_data, sizeof(p_m_data_cuda_t) * pnum,
+                             cudaMemcpyDeviceToHost));
+        checkCUDA(cudaFree(m_data_list_gpu[l].p_data));  // free m_cuda pointers in p_cuda
+        for (int i = 0; i < pnum; ++i) {
+            memcpy(&p_gpu[l].m_data.m_data[i].fast[0], 
+                    ptr_gpu_state->p_data[i].fast, sizeof(ptr_gpu_state->p_data[i].fast));
+            memcpy(&p_gpu[l].m_data.m_data[i].smooth[0], ptr_gpu_state->p_data[i].smooth,
+                   sizeof(ptr_gpu_state->p_data[i].smooth));
+        }
+    }
+    // DEBUG_PRINTF("energies about the first ligand on GPU:\n");
+    // for (int i = 0;i < 20; ++i){
+    //     DEBUG_PRINTF("precalculated_byatom.m_data.m_data[%d]: (smooth.first, smooth.second, fast)
+    //     ", i); for (int j = 0;j < FAST_SIZE; ++j){
+    //         DEBUG_PRINTF("(%f, %f, %f) ", p_gpu[0].m_data.m_data[i].smooth[j].first,
+    //         p_gpu[0].m_data.m_data[i].smooth[j].second, p_gpu[0].m_data.m_data[i].fast[j]);
+    //     }
+    //     DEBUG_PRINTF("\n");
+    // }
+
+    /* Convert result data. Can be improved by mapping memory
+     */
+    DEBUG_PRINTF("cuda to vina\n");
+
+    checkCUDA(cudaMemcpy(ptr_gpu_state->results, ptr_gpu_state->results_gpu, thread * sizeof(output_type_cuda_t),
+                         cudaMemcpyDeviceToHost));
+
+    std::vector<output_type> result_vina = cuda_to_vina(ptr_gpu_state->results, thread);
+
+    DEBUG_PRINTF("result size=%lu\n", result_vina.size());
+
+    for (int i = 0; i < thread; ++i) {
+        add_to_output_container(out_gpu[i / threads_per_ligand], result_vina[i], min_rmsd,
+                                num_saved_mins);
+    }
+    for (int i = 0; i < num_of_ligands; ++i) {
+        DEBUG_PRINTF("output poses size = %lu\n", out_gpu[i].size());
+        if (out_gpu[i].size() == 0) continue;
+        DEBUG_PRINTF("output poses energy from gpu =");
+        for (int j = 0; j < out_gpu[i].size(); ++j) DEBUG_PRINTF("%f ", out_gpu[i][j].e);
+        DEBUG_PRINTF("\n");
+    }
+
+
+    /* Free memory */
+    checkCUDA(cudaFree(ptr_gpu_state->m_cuda_gpu));
+    checkCUDA(cudaFree(ptr_gpu_state->ig_cuda_gpu));
+    checkCUDA(cudaFree(ptr_gpu_state->p_cuda_gpu));
+    checkCUDA(cudaFree(ptr_gpu_state->rand_molec_struc_gpu));
+    checkCUDA(cudaFree(ptr_gpu_state->best_e_gpu));
+    checkCUDA(cudaFree(ptr_gpu_state->hunt_cap_gpu));
+    checkCUDA(cudaFree(ptr_gpu_state->authentic_v_gpu));
+    checkCUDA(cudaFree(ptr_gpu_state->results_gpu));
+    checkCUDA(cudaFree(ptr_gpu_state->states));
+    checkCUDA(cudaFreeHost(ptr_gpu_state->m_cuda));
+    checkCUDA(cudaFreeHost(ptr_gpu_state->rand_molec_struc_tmp));
+    checkCUDA(cudaFreeHost(ptr_gpu_state->ig_cuda_ptr));
+    checkCUDA(cudaFreeHost(ptr_gpu_state->p_cuda));
+    checkCUDA(cudaFreeHost(ptr_gpu_state->p_data));
+    checkCUDA(cudaFreeHost(ptr_gpu_state->results));
+
+    checkCUDA(cudaStreamDestroy(ptr_gpu_state->curr_stream));
+
+    gpu_clear_state();
+
+    DEBUG_PRINTF("exit monte_carlo obtain\n");    
+}
+
+void monte_carlo::gpu_clear_state()
+{
+    DEBUG_PRINTF("clearing ptr_gpu_state 0x%p\n", ptr_gpu_state);    
+    if (ptr_gpu_state)
+    {
+        delete ptr_gpu_state;
+        ptr_gpu_state = nullptr;
+    }
+}   
+
 
 __host__ void monte_carlo::operator()(
     std::vector<model>& m_gpu, std::vector<output_container>& out_gpu,

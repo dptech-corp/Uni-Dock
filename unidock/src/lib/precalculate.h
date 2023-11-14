@@ -27,10 +27,12 @@
 #include "matrix.h"
 #include "kernel.h"
 
-#ifdef DEBUG
-#    define DEBUG_PRINTF printf
-#else
+#ifdef NDEBUG
 #    define DEBUG_PRINTF(...)
+#    define DEBUG_PRINTF_DEVICE(...)
+#else
+#    define DEBUG_PRINTF printf
+#    define DEBUG_PRINTF_DEVICE printf
 #endif
 
 // Forward declaration

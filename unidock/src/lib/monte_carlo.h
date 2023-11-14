@@ -29,7 +29,10 @@
 #include "grid.h"
 #include "precalculate.h"
 
+struct gpu_state;
+
 struct monte_carlo {
+    gpu_state* ptr_gpu_state;
     unsigned max_evals;
     unsigned global_steps;
     fl temperature;
@@ -44,7 +47,8 @@ struct monte_carlo {
     unsigned thread = 2048;  // for CUDA parallel option, num_of_ligands * threads_per_ligand
     // T = 600K, R = 2cal/(K*mol) -> temperature = RT = 1.2;  global_steps = 50*lig_atoms = 2500
     monte_carlo()
-        : max_evals(0),
+        : ptr_gpu_state(nullptr),
+          max_evals(0),
           global_steps(2500),
           threads_per_ligand(2048),
           temperature(1.2),
@@ -64,6 +68,17 @@ struct monte_carlo {
                     int verbosity, unsigned long long seed,
                     std::vector<std::vector<bias_element> >& bias_batch_list) const;
     std::vector<output_type> cuda_to_vina(output_type_cuda_t* results_p, int thread) const;
+
+    gpu_state* gpu_prime(std::vector<model>& m_gpu,
+        std::vector<precalculate_byatom>& p_gpu, triangular_matrix_cuda_t* m_data_list_gpu,
+        const igrid& ig, const vec& corner1, const vec& corner2, rng& generator, int verbosity,
+        unsigned long long seed, std::vector<std::vector<bias_element>>& bias_batch_list) const;
+
+    void gpu_run_kernel(gpu_state* ptr_gpu_state, unsigned long long seed);
+    void gpu_obtain(gpu_state* ptr_gpu_state, std::vector<output_container>& out,
+                    std::vector<precalculate_byatom>& p, triangular_matrix_cuda_t* m_data_list_gpu);
+
+    void gpu_clear_state();
 };
 
 #endif
