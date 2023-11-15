@@ -237,6 +237,7 @@ app <work_dir> <input_dir_relative> <batch_size> <max_limit> <local_only> <max_e
 // max_limit      = Limits number of complexs to be analysed\n\
 // local_only     = 1, for localonly using computed map for given atoms, or 0, for randomized search\n\
 // max_eval_steps = Number of steps in each MC evaluation\n\
+// GPU            = 1, for GPU operations, 0 for CPU-local_only operation\n\
 \
 \n";
 
@@ -250,7 +251,8 @@ void parse_args(char* argv[],
                 int & batch_size, 
                 int & max_limit, 
                 bool & local_only, 
-                int & max_eval_steps)
+                int & max_eval_steps,
+                bool & isGPU)
 {
     
     work_dir = argv[1];
@@ -261,6 +263,8 @@ void parse_args(char* argv[],
     int local_ = std::stoi(argv[5]);
     local_only = !!local_;
     max_eval_steps = std::stoi(argv[6]);
+    int isGPU_ = std::stoi(argv[7]);
+    isGPU = !!isGPU_;
 
     std::string out_phrase = std::to_string(batch_size) + "_" + std::to_string (local_) + 
             "_" + std::to_string (max_eval_steps) + "_" + util_random_string(5);
@@ -281,13 +285,14 @@ void parse_args(char* argv[],
 //      <complex_name>_ligand_config.txt (containing the center_x, center_y, center_z)
 // batch_size     = Size of each batch
 // max_limit      = Limits number of complexs to be analysed
-// local_only     = 1, for localonly using computed map for given atoms, or 0, for randomized search
+// local_only     = 1, for localonly on GPU, or 0, for randomized search on GPU
 // max_eval_steps = Number of steps in each MC evaluation
+// GPU            = 1, for GPU operations, 0 for CPU-local_only operation
 
 int main(int argc, char* argv[])
 {
-
-    if (argc < 7)
+    int min_args = 8;
+    if (argc < min_args)
     {
         fast_usage();
         exit(-1);
@@ -304,10 +309,11 @@ int main(int argc, char* argv[])
     int max_eval_steps = 60;
     int verbosity = 1;
     int box_size = 25;
+    bool isGPU = true;
 
-    parse_args(argv, work_dir, input_path, out_phrase, batch_size, max_limit, local_only, max_eval_steps);
+    parse_args(argv, work_dir, input_path, out_phrase, batch_size, max_limit, local_only, max_eval_steps, isGPU);
 
-    simulation_container sc(work_dir, input_path, out_phrase, batch_size, box_size, local_only, max_eval_steps, max_limit, verbosity);
+    simulation_container sc(work_dir, input_path, out_phrase, batch_size, box_size, local_only, max_eval_steps, max_limit, verbosity, isGPU);
 
     if (int res = sc.prime())
     {
@@ -317,15 +323,22 @@ int main(int argc, char* argv[])
 
     auto start = std::chrono::steady_clock::now();
 
-    sc.launch();
+    if (isGPU)
+    {
+        sc.launch();
+    }
+    else
+    {
+        sc.launch_cpu();
+    }
 
     auto end = std::chrono::steady_clock::now();
     auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-    std::cout << "Completed Batched Operations in " << milliseconds << " mS\n";
+    std::cout << "Completed Batched Operations in " << milliseconds << " mS, for GPU = " << isGPU << "\n";
 
     // For comparison - use original code (nonstreaming = true)
-    bool mc_use_non_streaming = true;
-    dock_many_non_batched (work_dir, input_path, out_phrase, batch_size, local_only, max_eval_steps, mc_use_non_streaming, box_size);
+    //bool mc_use_non_streaming = true;
+    //dock_many_non_batched (work_dir, input_path, out_phrase, batch_size, local_only, max_eval_steps, mc_use_non_streaming, box_size);
 
     return 0;
 }

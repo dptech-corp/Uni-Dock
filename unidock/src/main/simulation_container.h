@@ -50,6 +50,7 @@ struct simulation_container
     int m_max_limits;
     int m_max_global_steps;
     int m_verbosity;
+    bool m_isGPU;
 
     std::vector<std::string> m_complex_names;
     std::vector<boost::filesystem::directory_entry> m_ligand_paths;
@@ -58,7 +59,7 @@ struct simulation_container
     complex_property_holder * m_ptr_complex_property_holder;
 
     simulation_container(std::string work_dir, std::string input_path, std::string out_phrase, 
-                int batch_size, int box_size, bool local_only, int max_eval_steps, int max_limits, int verbosity):
+                int batch_size, int box_size, bool local_only, int max_eval_steps, int max_limits, int verbosity, bool isGPU):
         m_work_dir(work_dir),
         m_input_path(input_path),
         m_out_phrase(out_phrase),
@@ -67,7 +68,8 @@ struct simulation_container
         m_local_only(local_only),
         m_max_global_steps(max_eval_steps),
         m_max_limits(max_limits),
-        m_verbosity(verbosity)
+        m_verbosity(verbosity),
+        m_isGPU(isGPU)
     {}
 
     std::string trim_eol(std::string line)
@@ -223,5 +225,104 @@ struct simulation_container
             worker_threads[i].join();
         }
     }    
+
+    bool dock_one_cpu_local(complex_property prop)
+    {
+        int exhaustiveness = 512;
+        int num_modes = 1;
+        int min_rmsd = 0;
+        int max_evals = 0;
+        int seed = 5;
+        int refine_step = 5;
+        double energy_range = 3.0;
+        bool keep_H = true;
+        std::string sf_name = "vina";
+        int cpu = 0;
+        int verbosity = 1;
+        bool no_refine = false;
+        int size_x = m_box_size;
+        int size_y = m_box_size;
+        int size_z = m_box_size;
+        double grid_spacing = 0.375;
+        bool force_even_voxels = false;
+        // vina weights
+        double weight_gauss1 = -0.035579;
+        double weight_gauss2 = -0.005156;
+        double weight_repulsion = 0.840245;
+        double weight_hydrophobic = -0.035069;
+        double weight_hydrogen = -0.587439;
+        double weight_rot = 0.05846;    
+        // macrocycle closure
+        double weight_glue = 50.000000;  // linear attraction
+
+        double center_x = prop.center_x;
+        double center_y = prop.center_y;
+        double center_z = prop.center_z;
+        std::string complex_name = prop.complex_name;
+
+        std::string ligand_name(m_work_dir + "/" + m_input_path + "/" + complex_name + "_ligand.pdbqt");
+        if (! boost::filesystem::exists( ligand_name ) )
+        {
+            std::cout << "Input ligand file does not exist\n";        
+            return false;
+        }
+
+        std::string out_dir(m_work_dir + "/" + m_out_phrase);
+
+        std::vector<std::string> gpu_out_name;
+        gpu_out_name.emplace_back(default_output(get_filename(ligand_name), out_dir));
+        if (!boost::filesystem::exists(out_dir))
+        {
+            std::cout << "Creating output dir" << out_dir << "\n";
+            boost::filesystem::create_directory(out_dir);
+        }
+
+        // Create the vina object
+        Vina v(sf_name, cpu, seed, verbosity, no_refine);
+
+        v.bias_batch_list.clear();
+        v.multi_bias = false;
+        v.set_vina_weights(weight_gauss1, weight_gauss2, weight_repulsion, weight_hydrophobic,
+                            weight_hydrogen, weight_glue, weight_rot);
+
+        std::string flex;
+        std::string rigid(m_work_dir + "/" + m_input_path + "/" + complex_name + "_protein.pdbqt");
+        if (! boost::filesystem::exists( rigid ) )
+        {
+            std::cout << "Input (rigid) protein file does not exist\n";        
+            return false;
+        }    
+        v.set_receptor(rigid, flex);
+
+        std::vector<model> batch_ligands;  // ligands in current batch    
+        auto parsed_ligand = parse_ligand_from_file_no_failure(
+            ligand_name, v.m_scoring_function.get_atom_typing(), keep_H);
+        batch_ligands.emplace_back(parsed_ligand);
+
+        v.set_ligand_from_object(batch_ligands);
+
+        double buffer_size = 4;
+        std::vector<double> dim = v.grid_dimensions_from_ligand(buffer_size);
+        v.compute_vina_maps(dim[0], dim[1], dim[2], dim[3], dim[4], dim[5],
+                            grid_spacing, force_even_voxels);
+        std::vector<double> energies;
+        energies = v.optimize();
+        v.write_pose(default_output(get_filename(ligand_name)));
+        v.show_score(energies);
+
+        return true;                       
+    }
+
+    void launch_cpu()
+    {
+        std::cout << "WARN: Launching CPU docking\n";
+
+        for (int i = 0;i < m_complex_names.size();i ++)
+        {
+            dock_one_cpu_local(m_ptr_complex_property_holder->m_properties[i]);
+        }
+    }
+
+
 }; // simulation_container
 
