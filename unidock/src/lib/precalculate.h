@@ -32,7 +32,7 @@
 #    define DEBUG_PRINTF_DEVICE(...)
 #else
 #    define DEBUG_PRINTF printf
-#    define DEBUG_PRINTF_DEVICE printf
+#    define DEBUG_PRINTF_DEVICE(...)
 #endif
 
 // Forward declaration
