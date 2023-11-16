@@ -20,6 +20,8 @@
 
 */
 
+#include <algorithm>
+#include <cstddef>
 #include <random>
 
 #include "model.h"
@@ -222,7 +224,9 @@ void model::append(const model& m) {
 
     t.append(grid_atoms, m.grid_atoms);
     t.coords_append(atoms, m.atoms);
-
+    // if (m.torsions_ranges.size()>0){
+    //     this->torsions_ranges = m.torsions_ranges;
+    // }
     // Add interaction pairs between previously added atoms and (very likely) ligand atoms
     /* Interactions:
     - flex     - ligand   : YES (inter_pairs)

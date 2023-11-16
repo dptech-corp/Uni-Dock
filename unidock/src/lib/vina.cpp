@@ -261,17 +261,50 @@ void Vina::set_ligand_from_object_gpu(const std::vector<model>& ligands) {
         ligands.size(),
         m_receptor);  // Initialize current model with receptor and reinitialize poses
     m_precalculated_byatom_gpu.resize(ligands.size());
+// for (int j = 0; j < ligands.size(); j++) {
+//      std::cout<< "ligand:"<<j<<std::endl;
+//      std::cout<< " ligands[j].torsions_ranges:"<< ligands[j].torsions_ranges.size()<<std::endl;
+//                         int i=0;
+//         for (const auto& torsion : ligands[j].torsions_ranges) {
+//             std::cout<< "torsion:"<<i<<std::endl;
+//             i++;
+//             for (const auto& range : torsion.torsions_range) {
+//                 std::cout << "Range: " << range[0] << ", " << range[1] << std::endl;
+//             }
+//             std::cout << "----------" << std::endl;
+//         }
+//                     }
 
 // Read ligand info and initialize precalculated_byatom
-#pragma omp parallel for
-    for (int i = 0; i < ligands.size(); ++i) {
+// #pragma omp parallel for
+    for (int i = 0; i < ligands.size(); i++) {
+
+         std::cout<<"ligands"<<i<<"total:"<<ligands.size()<<std::endl;
         m_model_gpu[i].append(ligands[i]);
+        
         if (multi_bias) {
             m_model_gpu[i].bias_list = bias_batch_list[i];
         }
         m_precalculated_byatom_gpu[i].init_without_calculation(m_scoring_function, m_model_gpu[i]);
+        
+        // std::cout<<m_model_gpu[i].num_atoms()<<std::endl;
+        m_model_gpu[i].torsions_ranges = ligands[i].torsions_ranges;
+       
     }
-
+    // std::cout<<m_model_gpu.size()<<std::endl;
+   for (int j = 0; j < m_model_gpu.size(); j++) {
+     std::cout<< "ligand:"<<j<<std::endl;
+     std::cout<< " m_model_gpu["<<j<<"].torsions_ranges:"<< m_model_gpu[j].torsions_ranges.size()<<std::endl;
+                        int i=0;
+        for (const auto& torsion : m_model_gpu[j].torsions_ranges) {
+            std::cout<< "torsion:"<<i<<std::endl;
+            i++;
+            for (const auto& range : torsion.torsions_range) {
+                std::cout << "Range: " << range[0] << ", " << range[1] << std::endl;
+            }
+            std::cout << "-----" << std::endl;
+        }
+        }
     // calculate common rs data
     flv common_rs = m_precalculated_byatom_gpu[0].calculate_rs();
 

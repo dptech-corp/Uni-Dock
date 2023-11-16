@@ -746,6 +746,17 @@ bug reporting, license agreements, and more information.      \n";
                           [](named_model a, named_model b)
                           { return a.second.get_atoms().size() < b.second.get_atoms().size(); });
                 */
+                // for(int i=0;i<all_ligands.size();i++){
+                // int j=0;
+                // for (const auto& torsion : all_ligands[i].second.torsions_ranges) {
+                //         std::cout<< "torsion:"<<j<<std::endl;
+                //         j++;
+                //         for (const auto& range : torsion.torsions_range) {
+                //             std::cout << "Range: " << range[0] << ", " << range[1] << std::endl;
+                //         }
+                //         std::cout << "-----" << std::endl;
+                //     }
+                //     }
                 DEBUG_PRINTF("%d\n", next_batch_index);
                 int processed_ligands = 0;
                 int batch_id = 0;
@@ -753,6 +764,9 @@ bug reporting, license agreements, and more information.      \n";
                     ++batch_id;
                     auto start = std::chrono::system_clock::now();
                     Vina v1(v);  // reuse init'ed maps
+                    
+                    
+
                     int batch_size = 0;
                     int all_atom2_numbers = 0;         // total number of atom^2 in current batch
                     std::vector<model> batch_ligands;  // ligands in current batch
@@ -795,6 +809,9 @@ bug reporting, license agreements, and more information.      \n";
                         }
                     }
                     v1.set_ligand_from_object_gpu(batch_ligands);
+                    
+                    
+
                     v1.global_search_gpu(exhaustiveness, num_modes, min_rmsd, max_evals, max_step,
                                          batch_ligand_names.size(), (unsigned long long)seed,
                                          refine_step, local_only);

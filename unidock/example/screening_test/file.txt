@@ -1,0 +1,7387 @@
+Uni-Dock v0.1.0
+
+If you used Uni-Dock in your work, please cite:               
+ 
+Yu, Y., Cai, C., Wang, J., Bo, Z., Zhu, Z., & Zheng, H. (2023). 
+Uni-Dock: GPU-Accelerated Docking Enables Ultralarge Virtual Screening. 
+Journal of Chemical Theory and Computation.                    
+https://doi.org/10.1021/acs.jctc.2c01145                       
+
+Tang, S., Chen, R., Lin, M., Lin, Q., Zhu, Y., Ding, J., ... & Wu, J. (2022). 
+Accelerating autodock vina with gpus. Molecules, 27(9), 3041. 
+DOI 10.3390/molecules27093041                                 
+
+J. Eberhardt, D. Santos-Martins, A. F. Tillack, and S. Forli  
+AutoDock Vina 1.2.0: New Docking Methods, Expanded Force      
+Field, and Python Bindings, J. Chem. Inf. Model. (2021)       
+DOI 10.1021/acs.jcim.1c00203                                  
+
+O. Trott, A. J. Olson,                                        
+AutoDock Vina: improving the speed and accuracy of docking    
+with a new scoring function, efficient optimization and        
+multithreading, J. Comp. Chem. (2010)                         
+DOI 10.1002/jcc.21334                                         
+
+Please refer to https://github.com/dptech-corp/Uni-Dock/ for  
+bug reporting, license agreements, and more information.      
+
+Scoring function : vina
+Rigid receptor: ./indata/def.pdbqt
+Grid center: X -36.01 Y 25.63 Z 67.49
+Grid size  : X 22 Y 22 Z 22
+Grid space : 0.375
+Exhaustiveness: 512
+CPU: 0
+Verbosity: 1
+
+Computing Vina grid ... done.
+Total ligands: 2
+Available Memory = 7114MiB   Total Memory = 8187MiB
+read sdf line:MOL_0_isomer_0_conf_1
+read sdf line:     RDKit          3D
+read sdf line:
+read sdf line: 65 69  0  0  0  0  0  0  0  0999 V2000
+read sdf line:    2.6421    2.6969   20.1879 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    2.8996    3.1586   21.4260 N   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    3.0628    2.2537   22.3994 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    3.3164    2.7515   23.6428 N   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    3.4553    1.9267   24.8193 C   0  0  2  0  0  0  0  0  0  0  0  0
+read sdf line:    2.1052    1.4467   25.3394 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    2.0181    0.1945   25.9729 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    0.8057   -0.2612   26.4954 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:   -0.3373    0.5279   26.3929 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:   -0.2678    1.7739   25.7736 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    0.9452    2.2335   25.2561 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    4.1654    2.7483   25.9007 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    2.9858    0.9336   22.2011 N   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    2.7044    0.5097   20.9515 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    2.5808   -0.9454   20.7791 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    3.3972   -1.7147   20.0286 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    4.5642   -1.3621   19.2193 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    5.5814   -0.5422   19.7362 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    6.6906   -0.2071   18.9556 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    6.7906   -0.6976   17.6605 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    7.8537   -0.3775   16.9125 F   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    5.8041   -1.5198   17.1320 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    4.6936   -1.8543   17.9112 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    2.8464   -3.0940   20.1949 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    3.2195   -4.0935   19.6001 O   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    1.7891   -3.0226   21.1017 N   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    0.8176   -4.0752   21.3489 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    1.4997   -5.3307   21.9175 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    0.5177   -6.4723   22.0924 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:   -0.1704   -6.7272   20.7943 N   0  0  0  0  0  4  0  0  0  0  0  0
+read sdf line:   -0.9346   -5.5528   20.2844 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    0.0165   -4.3907   20.0763 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    1.5808   -1.6779   21.4232 N   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    0.9476   -1.2930   22.6762 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    2.5250    1.3655   19.8889 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    2.5253    3.4490   19.4112 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    3.3334    3.7574   23.7192 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    4.0871    1.0558   24.5915 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    2.9045   -0.4288   26.0724 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    0.7580   -1.2238   26.9972 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:   -1.2794    0.1824   26.8104 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:   -1.1554    2.3981   25.7036 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    0.9789    3.2146   24.7871 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    3.9079    2.3979   26.9058 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    5.2539    2.6734   25.7813 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    3.8976    3.8102   25.8301 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    5.5299   -0.1607   20.7550 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    7.4769    0.4282   19.3520 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    5.9077   -1.8981   16.1197 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    3.9334   -2.5052   17.4838 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    0.1119   -3.7267   22.1102 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    2.3103   -5.6680   21.2617 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    1.9656   -5.0941   22.8819 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    1.0257   -7.3998   22.3727 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:   -0.2544   -6.2461   22.8352 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:   -0.8055   -7.5317   20.8960 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    0.5261   -7.0178   20.0893 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:   -1.4040   -5.8602   19.3452 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:   -1.7143   -5.3243   21.0184 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:   -0.5485   -3.5042   19.7633 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    0.6916   -4.6320   19.2461 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    1.5392   -1.6560   23.5231 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    0.8445   -0.2069   22.7535 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:   -0.0628   -1.7081   22.7428 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    2.3069    1.0227   18.8858 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf bond line: 36  1  1  0
+read sdf bond line:  1  2  2  0
+read sdf bond line:  2  3  1  0
+read sdf bond line:  3  4  1  0
+read sdf bond line:  4 37  1  0
+read sdf bond line:  4  5  1  0
+read sdf bond line:  5 38  1  6
+read sdf bond line:  5  6  1  0
+read sdf bond line:  6  7  2  0
+read sdf bond line:  7 39  1  0
+read sdf bond line:  7  8  1  0
+read sdf bond line:  8 40  1  0
+read sdf bond line:  8  9  2  0
+read sdf bond line:  9 41  1  0
+read sdf bond line:  9 10  1  0
+read sdf bond line: 10 42  1  0
+read sdf bond line:  6 11  1  0
+read sdf bond line: 10 11  2  0
+read sdf bond line: 11 43  1  0
+read sdf bond line:  5 12  1  0
+read sdf bond line: 12 44  1  0
+read sdf bond line: 12 45  1  0
+read sdf bond line: 12 46  1  0
+read sdf bond line:  3 13  2  0
+read sdf bond line: 13 14  1  0
+read sdf bond line: 14 15  1  0
+read sdf bond line: 15 16  2  0
+read sdf bond line: 16 17  1  0
+read sdf bond line: 17 18  2  0
+read sdf bond line: 18 47  1  0
+read sdf bond line: 18 19  1  0
+read sdf bond line: 19 48  1  0
+read sdf bond line: 19 20  2  0
+read sdf bond line: 20 21  1  0
+read sdf bond line: 20 22  1  0
+read sdf bond line: 22 49  1  0
+read sdf bond line: 17 23  1  0
+read sdf bond line: 22 23  2  0
+read sdf bond line: 23 50  1  0
+read sdf bond line: 16 24  1  0
+read sdf bond line: 24 25  2  0
+read sdf bond line: 24 26  1  0
+read sdf bond line: 26 27  1  0
+read sdf bond line: 27 51  1  0
+read sdf bond line: 27 28  1  0
+read sdf bond line: 28 52  1  0
+read sdf bond line: 28 53  1  0
+read sdf bond line: 28 29  1  0
+read sdf bond line: 29 54  1  0
+read sdf bond line: 29 55  1  0
+read sdf bond line: 29 30  1  0
+read sdf bond line: 30 56  1  0
+read sdf bond line: 30 57  1  0
+read sdf bond line: 30 31  1  0
+read sdf bond line: 31 58  1  0
+read sdf bond line: 31 59  1  0
+read sdf bond line: 27 32  1  0
+read sdf bond line: 31 32  1  0
+read sdf bond line: 32 60  1  0
+read sdf bond line: 32 61  1  0
+read sdf bond line: 15 33  1  0
+read sdf bond line: 26 33  1  0
+read sdf bond line: 33 34  1  0
+read sdf bond line: 34 62  1  0
+read sdf bond line: 34 63  1  0
+read sdf bond line: 34 64  1  0
+read sdf bond line:  1 35  1  0
+read sdf bond line: 14 35  2  0
+read sdf bond line: 35 65  1  0
+read sdf property line:M  CHG  1  30   1 18446744073709551615
+read sdf property line:M  END 0
+read sdf line:>  <conformer_energy>  (1) 
+read und sdf line:-11.64
+read und sdf line:
+read sdf line:>  <ligand_smiles>  (1) 
+read und sdf line:C[C@H](Nc1nccc(-c2c(-c3ccc(F)cc3)c(=O)n(C3CC[NH2+]CC3)n2C)n1)c1ccccc1
+read und sdf line:
+read sdf line:>  <ligand_conf_name>  (1) 
+read und sdf line:MOL_0_isomer_0_conf_0
+read und sdf line:
+read sdf line:>  <ligand_molecule_name>  (1) 
+read und sdf line:MOL_0_isomer_0
+read und sdf line:
+read sdf line:>  <aligned_conformer_energy>  (1) 
+read und sdf line:-8.615785762919135
+read und sdf line:
+read sdf line:>  <fragInfo>  (1) 
+read frag sdf line:1 2 3 4 5 12 13 14 15 16 24 25 26 33 34 35 36 37 38 44 45 46 62 63 64 65
+read frag sdf line:6 7 8 9 10 11 39 40 41 42 43
+read frag sdf line:17 18 19 20 21 22 23 47 48 49 50
+read frag sdf line:27 28 29 30 31 32 51 52 53 54 55 56 57 58 59 60 61
+read frag sdf line:
+read sdf line:
+read sdf line:>  <torsionInfo>  (1) 
+start torsion
+read torsion sdf line:16 17 0 2
+read torsion sdf line:5 6 0 1
+read torsion sdf line:26 27 0 3
+read torsion sdf line:
+read sdf line:
+read sdf line:>  <atomInfo>  (1) 
+read info sdf line:1  0.033055  A 
+atomid=1,  ad_name=A
+read info sdf line:2  -0.221617 NA
+atomid=2,  ad_name=NA
+read info sdf line:3  0.223223  A 
+atomid=3,  ad_name=A
+read info sdf line:4  -0.347686 N 
+atomid=4,  ad_name=N
+read info sdf line:5  0.051426  C 
+atomid=5,  ad_name=C
+read info sdf line:6  -0.025949 A 
+atomid=6,  ad_name=A
+read info sdf line:7  -0.056982 A 
+atomid=7,  ad_name=A
+read info sdf line:8  -0.061917 A 
+atomid=8,  ad_name=A
+read info sdf line:9  -0.062246 A 
+atomid=9,  ad_name=A
+read info sdf line:10 -0.061917 A 
+atomid=10,  ad_name=A
+read info sdf line:11 -0.056982 A 
+atomid=11,  ad_name=A
+read info sdf line:12 -0.040479 C 
+atomid=12,  ad_name=C
+read info sdf line:13 -0.211368 NA
+atomid=13,  ad_name=NA
+read info sdf line:14 0.094579  A 
+atomid=14,  ad_name=A
+read info sdf line:15 0.096465  A 
+atomid=15,  ad_name=A
+read info sdf line:16 0.075978  A 
+atomid=16,  ad_name=A
+read info sdf line:17 -0.010333 A 
+atomid=17,  ad_name=A
+read info sdf line:18 -0.051191 A 
+atomid=18,  ad_name=A
+read info sdf line:19 -0.025702 A 
+atomid=19,  ad_name=A
+read info sdf line:20 0.122751  A 
+atomid=20,  ad_name=A
+read info sdf line:21 -0.207012 F 
+atomid=21,  ad_name=F
+read info sdf line:22 -0.025702 A 
+atomid=22,  ad_name=A
+read info sdf line:23 -0.051191 A 
+atomid=23,  ad_name=A
+read info sdf line:24 0.275018  A 
+atomid=24,  ad_name=A
+read info sdf line:25 -0.267065 OA
+atomid=25,  ad_name=OA
+read info sdf line:26 -0.246263 N 
+atomid=26,  ad_name=N
+read info sdf line:27 0.064604  C 
+atomid=27,  ad_name=C
+read info sdf line:28 0.019288  C 
+atomid=28,  ad_name=C
+read info sdf line:29 0.077563  C 
+atomid=29,  ad_name=C
+read info sdf line:30 -0.346118 N 
+atomid=30,  ad_name=N
+read info sdf line:31 0.077563  C 
+atomid=31,  ad_name=C
+read info sdf line:32 0.019288  C 
+atomid=32,  ad_name=C
+read info sdf line:33 -0.282502 N 
+atomid=33,  ad_name=N
+read info sdf line:34 0.028638  C 
+atomid=34,  ad_name=C
+read info sdf line:35 -0.015528 A 
+atomid=35,  ad_name=A
+read info sdf line:36 0.084213  H 
+atomid=36,  ad_name=H
+read info sdf line:37 0.163818  HD
+atomid=37,  ad_name=HD
+read info sdf line:38 0.057713  H 
+atomid=38,  ad_name=H
+read info sdf line:39 0.062639  H 
+atomid=39,  ad_name=H
+read info sdf line:40 0.062280  H 
+atomid=40,  ad_name=H
+read info sdf line:41 0.062269  H 
+atomid=41,  ad_name=H
+read info sdf line:42 0.062280  H 
+atomid=42,  ad_name=H
+read info sdf line:43 0.062639  H 
+atomid=43,  ad_name=H
+read info sdf line:44 0.025485  H 
+atomid=44,  ad_name=H
+read info sdf line:45 0.025485  H 
+atomid=45,  ad_name=H
+read info sdf line:46 0.025485  H 
+atomid=46,  ad_name=H
+read info sdf line:47 0.063034  H 
+atomid=47,  ad_name=H
+read info sdf line:48 0.065380  H 
+atomid=48,  ad_name=H
+read info sdf line:49 0.065380  H 
+atomid=49,  ad_name=H
+read info sdf line:50 0.063034  H 
+atomid=50,  ad_name=H
+read info sdf line:51 0.055731  H 
+atomid=51,  ad_name=H
+read info sdf line:52 0.034673  H 
+atomid=52,  ad_name=H
+read info sdf line:53 0.034673  H 
+atomid=53,  ad_name=H
+read info sdf line:54 0.092352  H 
+atomid=54,  ad_name=H
+read info sdf line:55 0.092352  H 
+atomid=55,  ad_name=H
+read info sdf line:56 0.345809  HD
+atomid=56,  ad_name=HD
+read info sdf line:57 0.345809  HD
+atomid=57,  ad_name=HD
+read info sdf line:58 0.092352  H 
+atomid=58,  ad_name=H
+read info sdf line:59 0.092352  H 
+atomid=59,  ad_name=H
+read info sdf line:60 0.034673  H 
+atomid=60,  ad_name=H
+read info sdf line:61 0.034673  H 
+atomid=61,  ad_name=H
+read info sdf line:62 0.047818  H 
+atomid=62,  ad_name=H
+read info sdf line:63 0.047818  H 
+atomid=63,  ad_name=H
+read info sdf line:64 0.047818  H 
+atomid=64,  ad_name=H
+read info sdf line:65 0.066275  H 
+atomid=65,  ad_name=H
+read info sdf line:
+read sdf line:
+read sdf line:>  <torsionSamplingRangeInfo>  (1) 
+start torsionSamplingRangeInfo
+read torsion range sdf line:TORSION 7 6 5 4
+read torsion range sdf line:SMARTS [a:1][c:2]!@[CX4H1:3][N,O:4]
+read torsion range sdf line:RANGE 0.0 100.0
+read torsion range sdf line:RANGE 100.0 180.0
+read torsion range sdf line:RANGE 180.0 -100.0
+read torsion range sdf line:RANGE -100.0 0.0
+read torsion range sdf line:HISTOGRAM 989.0 1407.0 1857.0 2225.0 2282.0 1942.0 1461.0 1050.0 866.0 829.0 1108.0 1585.0 2172.0 2380.0 2218.0 1832.0 1339.0 930.0 891.0 1253.0 1756.0 2241.0 2380.0 2166.0 1589.0 1067.0 843.0 868.0 1046.0 1465.0 1924.0 2253.0 2216.0 1966.0 1515.0 1027.0
+read torsion range sdf line:TORSION 18 17 16 15
+read torsion range sdf line:SMARTS [a:1][c:2]!@[CX3:3]=[CX3H0:4]
+read torsion range sdf line:RANGE 30.0 90.0
+read torsion range sdf line:RANGE -150.0 -90.0
+read torsion range sdf line:RANGE 150.0 -150.0
+read torsion range sdf line:RANGE -30.0 30.0
+read torsion range sdf line:RANGE -90.0 -30.0
+read torsion range sdf line:RANGE 90.0 150.0
+read torsion range sdf line:HISTOGRAM 1630.0 801.0 952.0 1360.0 2018.0 1736.0 1128.0 798.0 656.0 667.0 805.0 1302.0 1985.0 2068.0 1298.0 811.0 721.0 1672.0 1584.0 730.0 846.0 1242.0 2029.0 1907.0 1194.0 834.0 674.0 658.0 776.0 1206.0 1863.0 2027.0 1393.0 946.0 768.0 1731.0
+read torsion range sdf line:TORSION 24 26 27 51
+read torsion range sdf line:SMARTS [$(C=O):1][NX3H0:2]!@[CX4H1:3][H:4]
+read torsion range sdf line:RANGE -30.0 30.0
+read torsion range sdf line:RANGE 160.0 -160.0
+read torsion range sdf line:HISTOGRAM 579.0 183.0 69.0 13.0 4.0 5.0 1.0 0.0 7.0 6.0 8.0 6.0 17.0 43.0 107.0 198.0 336.0 623.0 615.0 364.0 214.0 105.0 44.0 14.0 6.0 1.0 7.0 6.0 5.0 3.0 3.0 4.0 20.0 77.0 202.0 590.0
+read torsion range sdf line:
+read sdf line:
+2.27237 -1.20144 21.9467atom:32
+entering parse_sdf_branch frag= 1 5 6
+entering parse_sdf_branch frag= 2 16 17
+entering parse_sdf_branch frag= 3 26 27
+torsion:0
+Range: 0, 1.74533
+Range: 1.74533, 3.14159
+Range: 3.14159, 4.53786
+Range: 4.53786, 0
+-----
+torsion:1
+Range: 0.523599, 1.5708
+Range: 3.66519, 4.71239
+Range: 2.61799, 3.66519
+Range: 5.75959, 0.523599
+Range: 4.71239, 5.75959
+Range: 1.5708, 2.61799
+-----
+torsion:2
+Range: 5.75959, 0.523599
+Range: 2.79253, 3.49066
+-----
+read sdf line:MOL_0_isomer_0_conf_0
+read sdf line:     RDKit          3D
+read sdf line:
+read sdf line: 65 69  0  0  0  0  0  0  0  0999 V2000
+read sdf line:    2.6421    2.6969   20.1879 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    2.8996    3.1586   21.4260 N   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    3.0628    2.2537   22.3994 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    3.3164    2.7515   23.6428 N   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    3.4553    1.9267   24.8193 C   0  0  2  0  0  0  0  0  0  0  0  0
+read sdf line:    2.1052    1.4467   25.3394 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    2.0181    0.1945   25.9729 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    0.8057   -0.2612   26.4954 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:   -0.3373    0.5279   26.3929 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:   -0.2678    1.7739   25.7736 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    0.9452    2.2335   25.2561 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    4.1654    2.7483   25.9007 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    2.9858    0.9336   22.2011 N   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    2.7044    0.5097   20.9515 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    2.5808   -0.9454   20.7791 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    3.3972   -1.7147   20.0286 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    4.5642   -1.3621   19.2193 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    5.5814   -0.5422   19.7362 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    6.6906   -0.2071   18.9556 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    6.7906   -0.6976   17.6605 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    7.8537   -0.3775   16.9125 F   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    5.8041   -1.5198   17.1320 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    4.6936   -1.8543   17.9112 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    2.8464   -3.0940   20.1949 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    3.2195   -4.0935   19.6001 O   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    1.7891   -3.0226   21.1017 N   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    0.8176   -4.0752   21.3489 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    1.4997   -5.3307   21.9175 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    0.5177   -6.4723   22.0924 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:   -0.1704   -6.7272   20.7943 N   0  0  0  0  0  4  0  0  0  0  0  0
+read sdf line:   -0.9346   -5.5528   20.2844 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    0.0165   -4.3907   20.0763 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    1.5808   -1.6779   21.4232 N   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    0.9476   -1.2930   22.6762 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    2.5250    1.3655   19.8889 C   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    2.5253    3.4490   19.4112 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    3.3334    3.7574   23.7192 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    4.0871    1.0558   24.5915 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    2.9045   -0.4288   26.0724 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    0.7580   -1.2238   26.9972 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:   -1.2794    0.1824   26.8104 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:   -1.1554    2.3981   25.7036 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    0.9789    3.2146   24.7871 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    3.9079    2.3979   26.9058 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    5.2539    2.6734   25.7813 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    3.8976    3.8102   25.8301 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    5.5299   -0.1607   20.7550 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    7.4769    0.4282   19.3520 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    5.9077   -1.8981   16.1197 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    3.9334   -2.5052   17.4838 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    0.1119   -3.7267   22.1102 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    2.3103   -5.6680   21.2617 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    1.9656   -5.0941   22.8819 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    1.0257   -7.3998   22.3727 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:   -0.2544   -6.2461   22.8352 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:   -0.8055   -7.5317   20.8960 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    0.5261   -7.0178   20.0893 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:   -1.4040   -5.8602   19.3452 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:   -1.7143   -5.3243   21.0184 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:   -0.5485   -3.5042   19.7633 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    0.6916   -4.6320   19.2461 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    1.5392   -1.6560   23.5231 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    0.8445   -0.2069   22.7535 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:   -0.0628   -1.7081   22.7428 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf line:    2.3069    1.0227   18.8858 H   0  0  0  0  0  0  0  0  0  0  0  0
+read sdf bond line: 36  1  1  0
+read sdf bond line:  1  2  2  0
+read sdf bond line:  2  3  1  0
+read sdf bond line:  3  4  1  0
+read sdf bond line:  4 37  1  0
+read sdf bond line:  4  5  1  0
+read sdf bond line:  5 38  1  6
+read sdf bond line:  5  6  1  0
+read sdf bond line:  6  7  2  0
+read sdf bond line:  7 39  1  0
+read sdf bond line:  7  8  1  0
+read sdf bond line:  8 40  1  0
+read sdf bond line:  8  9  2  0
+read sdf bond line:  9 41  1  0
+read sdf bond line:  9 10  1  0
+read sdf bond line: 10 42  1  0
+read sdf bond line:  6 11  1  0
+read sdf bond line: 10 11  2  0
+read sdf bond line: 11 43  1  0
+read sdf bond line:  5 12  1  0
+read sdf bond line: 12 44  1  0
+read sdf bond line: 12 45  1  0
+read sdf bond line: 12 46  1  0
+read sdf bond line:  3 13  2  0
+read sdf bond line: 13 14  1  0
+read sdf bond line: 14 15  1  0
+read sdf bond line: 15 16  2  0
+read sdf bond line: 16 17  1  0
+read sdf bond line: 17 18  2  0
+read sdf bond line: 18 47  1  0
+read sdf bond line: 18 19  1  0
+read sdf bond line: 19 48  1  0
+read sdf bond line: 19 20  2  0
+read sdf bond line: 20 21  1  0
+read sdf bond line: 20 22  1  0
+read sdf bond line: 22 49  1  0
+read sdf bond line: 17 23  1  0
+read sdf bond line: 22 23  2  0
+read sdf bond line: 23 50  1  0
+read sdf bond line: 16 24  1  0
+read sdf bond line: 24 25  2  0
+read sdf bond line: 24 26  1  0
+read sdf bond line: 26 27  1  0
+read sdf bond line: 27 51  1  0
+read sdf bond line: 27 28  1  0
+read sdf bond line: 28 52  1  0
+read sdf bond line: 28 53  1  0
+read sdf bond line: 28 29  1  0
+read sdf bond line: 29 54  1  0
+read sdf bond line: 29 55  1  0
+read sdf bond line: 29 30  1  0
+read sdf bond line: 30 56  1  0
+read sdf bond line: 30 57  1  0
+read sdf bond line: 30 31  1  0
+read sdf bond line: 31 58  1  0
+read sdf bond line: 31 59  1  0
+read sdf bond line: 27 32  1  0
+read sdf bond line: 31 32  1  0
+read sdf bond line: 32 60  1  0
+read sdf bond line: 32 61  1  0
+read sdf bond line: 15 33  1  0
+read sdf bond line: 26 33  1  0
+read sdf bond line: 33 34  1  0
+read sdf bond line: 34 62  1  0
+read sdf bond line: 34 63  1  0
+read sdf bond line: 34 64  1  0
+read sdf bond line:  1 35  1  0
+read sdf bond line: 14 35  2  0
+read sdf bond line: 35 65  1  0
+read sdf property line:M  CHG  1  30   1 18446744073709551615
+read sdf property line:M  END 0
+read sdf line:>  <conformer_energy>  (1) 
+read und sdf line:-11.64
+read und sdf line:
+read sdf line:>  <ligand_smiles>  (1) 
+read und sdf line:C[C@H](Nc1nccc(-c2c(-c3ccc(F)cc3)c(=O)n(C3CC[NH2+]CC3)n2C)n1)c1ccccc1
+read und sdf line:
+read sdf line:>  <ligand_conf_name>  (1) 
+read und sdf line:MOL_0_isomer_0_conf_0
+read und sdf line:
+read sdf line:>  <ligand_molecule_name>  (1) 
+read und sdf line:MOL_0_isomer_0
+read und sdf line:
+read sdf line:>  <aligned_conformer_energy>  (1) 
+read und sdf line:-8.615785762919135
+read und sdf line:
+read sdf line:>  <fragInfo>  (1) 
+read frag sdf line:1 2 3 4 5 12 13 14 15 16 24 25 26 33 34 35 36 37 38 44 45 46 62 63 64 65
+read frag sdf line:6 7 8 9 10 11 39 40 41 42 43
+read frag sdf line:17 18 19 20 21 22 23 47 48 49 50
+read frag sdf line:27 28 29 30 31 32 51 52 53 54 55 56 57 58 59 60 61
+read frag sdf line:
+read sdf line:
+read sdf line:>  <torsionInfo>  (1) 
+start torsion
+read torsion sdf line:16 17 0 2
+read torsion sdf line:5 6 0 1
+read torsion sdf line:26 27 0 3
+read torsion sdf line:
+read sdf line:
+read sdf line:>  <atomInfo>  (1) 
+read info sdf line:1  0.033055  A 
+atomid=1,  ad_name=A
+read info sdf line:2  -0.221617 NA
+atomid=2,  ad_name=NA
+read info sdf line:3  0.223223  A 
+atomid=3,  ad_name=A
+read info sdf line:4  -0.347686 N 
+atomid=4,  ad_name=N
+read info sdf line:5  0.051426  C 
+atomid=5,  ad_name=C
+read info sdf line:6  -0.025949 A 
+atomid=6,  ad_name=A
+read info sdf line:7  -0.056982 A 
+atomid=7,  ad_name=A
+read info sdf line:8  -0.061917 A 
+atomid=8,  ad_name=A
+read info sdf line:9  -0.062246 A 
+atomid=9,  ad_name=A
+read info sdf line:10 -0.061917 A 
+atomid=10,  ad_name=A
+read info sdf line:11 -0.056982 A 
+atomid=11,  ad_name=A
+read info sdf line:12 -0.040479 C 
+atomid=12,  ad_name=C
+read info sdf line:13 -0.211368 NA
+atomid=13,  ad_name=NA
+read info sdf line:14 0.094579  A 
+atomid=14,  ad_name=A
+read info sdf line:15 0.096465  A 
+atomid=15,  ad_name=A
+read info sdf line:16 0.075978  A 
+atomid=16,  ad_name=A
+read info sdf line:17 -0.010333 A 
+atomid=17,  ad_name=A
+read info sdf line:18 -0.051191 A 
+atomid=18,  ad_name=A
+read info sdf line:19 -0.025702 A 
+atomid=19,  ad_name=A
+read info sdf line:20 0.122751  A 
+atomid=20,  ad_name=A
+read info sdf line:21 -0.207012 F 
+atomid=21,  ad_name=F
+read info sdf line:22 -0.025702 A 
+atomid=22,  ad_name=A
+read info sdf line:23 -0.051191 A 
+atomid=23,  ad_name=A
+read info sdf line:24 0.275018  A 
+atomid=24,  ad_name=A
+read info sdf line:25 -0.267065 OA
+atomid=25,  ad_name=OA
+read info sdf line:26 -0.246263 N 
+atomid=26,  ad_name=N
+read info sdf line:27 0.064604  C 
+atomid=27,  ad_name=C
+read info sdf line:28 0.019288  C 
+atomid=28,  ad_name=C
+read info sdf line:29 0.077563  C 
+atomid=29,  ad_name=C
+read info sdf line:30 -0.346118 N 
+atomid=30,  ad_name=N
+read info sdf line:31 0.077563  C 
+atomid=31,  ad_name=C
+read info sdf line:32 0.019288  C 
+atomid=32,  ad_name=C
+read info sdf line:33 -0.282502 N 
+atomid=33,  ad_name=N
+read info sdf line:34 0.028638  C 
+atomid=34,  ad_name=C
+read info sdf line:35 -0.015528 A 
+atomid=35,  ad_name=A
+read info sdf line:36 0.084213  H 
+atomid=36,  ad_name=H
+read info sdf line:37 0.163818  HD
+atomid=37,  ad_name=HD
+read info sdf line:38 0.057713  H 
+atomid=38,  ad_name=H
+read info sdf line:39 0.062639  H 
+atomid=39,  ad_name=H
+read info sdf line:40 0.062280  H 
+atomid=40,  ad_name=H
+read info sdf line:41 0.062269  H 
+atomid=41,  ad_name=H
+read info sdf line:42 0.062280  H 
+atomid=42,  ad_name=H
+read info sdf line:43 0.062639  H 
+atomid=43,  ad_name=H
+read info sdf line:44 0.025485  H 
+atomid=44,  ad_name=H
+read info sdf line:45 0.025485  H 
+atomid=45,  ad_name=H
+read info sdf line:46 0.025485  H 
+atomid=46,  ad_name=H
+read info sdf line:47 0.063034  H 
+atomid=47,  ad_name=H
+read info sdf line:48 0.065380  H 
+atomid=48,  ad_name=H
+read info sdf line:49 0.065380  H 
+atomid=49,  ad_name=H
+read info sdf line:50 0.063034  H 
+atomid=50,  ad_name=H
+read info sdf line:51 0.055731  H 
+atomid=51,  ad_name=H
+read info sdf line:52 0.034673  H 
+atomid=52,  ad_name=H
+read info sdf line:53 0.034673  H 
+atomid=53,  ad_name=H
+read info sdf line:54 0.092352  H 
+atomid=54,  ad_name=H
+read info sdf line:55 0.092352  H 
+atomid=55,  ad_name=H
+read info sdf line:56 0.345809  HD
+atomid=56,  ad_name=HD
+read info sdf line:57 0.345809  HD
+atomid=57,  ad_name=HD
+read info sdf line:58 0.092352  H 
+atomid=58,  ad_name=H
+read info sdf line:59 0.092352  H 
+atomid=59,  ad_name=H
+read info sdf line:60 0.034673  H 
+atomid=60,  ad_name=H
+read info sdf line:61 0.034673  H 
+atomid=61,  ad_name=H
+read info sdf line:62 0.047818  H 
+atomid=62,  ad_name=H
+read info sdf line:63 0.047818  H 
+atomid=63,  ad_name=H
+read info sdf line:64 0.047818  H 
+atomid=64,  ad_name=H
+read info sdf line:65 0.066275  H 
+atomid=65,  ad_name=H
+read info sdf line:
+read sdf line:
+read sdf line:>  <torsionSamplingRangeInfo>  (1) 
+start torsionSamplingRangeInfo
+read torsion range sdf line:TORSION 7 6 5 4
+read torsion range sdf line:SMARTS [a:1][c:2]!@[CX4H1:3][N,O:4]
+read torsion range sdf line:RANGE 0.0 100.0
+read torsion range sdf line:RANGE 100.0 180.0
+read torsion range sdf line:RANGE 180.0 -100.0
+read torsion range sdf line:RANGE -100.0 0.0
+read torsion range sdf line:HISTOGRAM 989.0 1407.0 1857.0 2225.0 2282.0 1942.0 1461.0 1050.0 866.0 829.0 1108.0 1585.0 2172.0 2380.0 2218.0 1832.0 1339.0 930.0 891.0 1253.0 1756.0 2241.0 2380.0 2166.0 1589.0 1067.0 843.0 868.0 1046.0 1465.0 1924.0 2253.0 2216.0 1966.0 1515.0 1027.0
+read torsion range sdf line:TORSION 18 17 16 15
+read torsion range sdf line:SMARTS [a:1][c:2]!@[CX3:3]=[CX3H0:4]
+read torsion range sdf line:RANGE 30.0 90.0
+read torsion range sdf line:RANGE -150.0 -90.0
+read torsion range sdf line:RANGE 150.0 -150.0
+read torsion range sdf line:RANGE -30.0 30.0
+read torsion range sdf line:RANGE -90.0 -30.0
+read torsion range sdf line:RANGE 90.0 150.0
+read torsion range sdf line:HISTOGRAM 1630.0 801.0 952.0 1360.0 2018.0 1736.0 1128.0 798.0 656.0 667.0 805.0 1302.0 1985.0 2068.0 1298.0 811.0 721.0 1672.0 1584.0 730.0 846.0 1242.0 2029.0 1907.0 1194.0 834.0 674.0 658.0 776.0 1206.0 1863.0 2027.0 1393.0 946.0 768.0 1731.0
+read torsion range sdf line:TORSION 24 26 27 51
+read torsion range sdf line:SMARTS [$(C=O):1][NX3H0:2]!@[CX4H1:3][H:4]
+read torsion range sdf line:RANGE -30.0 30.0
+read torsion range sdf line:RANGE 160.0 -160.0
+read torsion range sdf line:HISTOGRAM 579.0 183.0 69.0 13.0 4.0 5.0 1.0 0.0 7.0 6.0 8.0 6.0 17.0 43.0 107.0 198.0 336.0 623.0 615.0 364.0 214.0 105.0 44.0 14.0 6.0 1.0 7.0 6.0 5.0 3.0 3.0 4.0 20.0 77.0 202.0 590.0
+read torsion range sdf line:
+read sdf line:
+2.27237 -1.20144 21.9467atom:32
+entering parse_sdf_branch frag= 1 5 6
+entering parse_sdf_branch frag= 2 16 17
+entering parse_sdf_branch frag= 3 26 27
+torsion:0
+Range: 0, 1.74533
+Range: 1.74533, 3.14159
+Range: 3.14159, 4.53786
+Range: 4.53786, 0
+-----
+torsion:1
+Range: 0.523599, 1.5708
+Range: 3.66519, 4.71239
+Range: 2.61799, 3.66519
+Range: 5.75959, 0.523599
+Range: 4.71239, 5.75959
+Range: 1.5708, 2.61799
+-----
+torsion:2
+Range: 5.75959, 0.523599
+Range: 2.79253, 3.49066
+-----
+Batch 1 size: 2
+ligands0total:2
+ligands1total:2
+ligand:0
+ m_model_gpu[0].torsions_ranges:3
+torsion:0
+Range: 0, 1.74533
+Range: 1.74533, 3.14159
+Range: 3.14159, 4.53786
+Range: 4.53786, 0
+-----
+torsion:1
+Range: 0.523599, 1.5708
+Range: 3.66519, 4.71239
+Range: 2.61799, 3.66519
+Range: 5.75959, 0.523599
+Range: 4.71239, 5.75959
+Range: 1.5708, 2.61799
+-----
+torsion:2
+Range: 5.75959, 0.523599
+Range: 2.79253, 3.49066
+-----
+ligand:1
+ m_model_gpu[1].torsions_ranges:3
+torsion:0
+Range: 0, 1.74533
+Range: 1.74533, 3.14159
+Range: 3.14159, 4.53786
+Range: 4.53786, 0
+-----
+torsion:1
+Range: 0.523599, 1.5708
+Range: 3.66519, 4.71239
+Range: 2.61799, 3.66519
+Range: 5.75959, 0.523599
+Range: 4.71239, 5.75959
+Range: 1.5708, 2.61799
+-----
+torsion:2
+Range: 5.75959, 0.523599
+Range: 2.79253, 3.49066
+-----
+Performing docking (random seed: 5) ... torsion range
+torsion:0
+Range[0,0]:0.000000,1.745329 
+Range[0,1]:1.745329,3.141593 
+Range[0,2]:3.141593,4.537856 
+Range[0,3]:4.537856,0.000000 
+-----
+torsion:1
+Range[1,0]:0.523599,1.570796 
+Range[1,1]:3.665191,4.712389 
+Range[1,2]:2.617994,3.665191 
+Range[1,3]:5.759586,0.523599 
+Range[1,4]:4.712389,5.759586 
+Range[1,5]:1.570796,2.617994 
+-----
+torsion:2
+Range[2,0]:5.759586,0.523599 
+Range[2,1]:2.792527,3.490659 
+-----
+torsion:0
+Range:0.000000,1.745329 
+Range:1.745329,3.141593 
+Range:3.141593,4.537856 
+Range:4.537856,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+-----***-----
+torsion:1
+Range:0.523599,1.570796 
+Range:3.665191,4.712389 
+Range:2.617994,3.665191 
+Range:5.759586,0.523599 
+Range:4.712389,5.759586 
+Range:1.570796,2.617994 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+-----***-----
+torsion:2
+Range:5.759586,0.523599 
+Range:2.792527,3.490659 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+-----***-----
+torsion:3
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+-----***-----
+torsion:4
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+-----***-----
+torsion:5
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+-----***-----
+torsion:6
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+-----***-----
+torsion:7
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+-----***-----
+torsion:8
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+-----***-----
+torsion:9
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+-----***-----
+torsion range
+torsion:0
+Range[0,0]:0.000000,1.745329 
+Range[0,1]:1.745329,3.141593 
+Range[0,2]:3.141593,4.537856 
+Range[0,3]:4.537856,0.000000 
+-----
+torsion:1
+Range[1,0]:0.523599,1.570796 
+Range[1,1]:3.665191,4.712389 
+Range[1,2]:2.617994,3.665191 
+Range[1,3]:5.759586,0.523599 
+Range[1,4]:4.712389,5.759586 
+Range[1,5]:1.570796,2.617994 
+-----
+torsion:2
+Range[2,0]:5.759586,0.523599 
+Range[2,1]:2.792527,3.490659 
+-----
+torsion:0
+Range:0.000000,1.745329 
+Range:1.745329,3.141593 
+Range:3.141593,4.537856 
+Range:4.537856,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+-----***-----
+torsion:1
+Range:0.523599,1.570796 
+Range:3.665191,4.712389 
+Range:2.617994,3.665191 
+Range:5.759586,0.523599 
+Range:4.712389,5.759586 
+Range:1.570796,2.617994 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+-----***-----
+torsion:2
+Range:5.759586,0.523599 
+Range:2.792527,3.490659 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+-----***-----
+torsion:3
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+-----***-----
+torsion:4
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+-----***-----
+torsion:5
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+-----***-----
+torsion:6
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+-----***-----
+torsion:7
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+-----***-----
+torsion:8
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+-----***-----
+torsion:9
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+-----***-----
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+torsion:8
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+torsion:9
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+Range:0.000000,0.000000 
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+-----***-----
+Kernel running time: 6
+
+mode |   affinity | dist from best mode
+     | (kcal/mol) | rmsd l.b.| rmsd u.b.
+-----+------------+----------+----------
+   1       -7.384          0          0
+   2       -7.314     0.8128      1.432
+   3       -7.246      1.197      1.711
+   4       -6.876      3.416      5.627
+   5       -6.845      3.732      5.763
+   6        -6.83      3.583      8.064
+   7       -6.823      3.623      7.851
+   8       -6.758      2.257      3.174
+
+mode |   affinity | dist from best mode
+     | (kcal/mol) | rmsd l.b.| rmsd u.b.
+-----+------------+----------+----------
+   1       -7.421          0          0
+   2       -7.359     0.8345        1.2
+   3       -7.269      1.252      1.555
+   4       -7.259      1.243      1.918
+   5       -6.913      3.365      5.576
+   6       -6.881      3.697      5.695
+   7       -6.845      3.532      8.027
+Batch 1 running time: 8961ms

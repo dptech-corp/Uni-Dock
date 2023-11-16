@@ -589,6 +589,84 @@ __device__ __forceinline__ void angle_to_quaternion2(float* out, const float* ax
     out[2] = s * axis[1];
     out[3] = s * axis[2];
 }
+__device__ __forceinline__ void set_torsion_range(output_type_cuda_t* x,m_cuda_t* m_cuda_gpu){
+
+            // int i=0;
+
+            // for (const auto& torsion : m.torsions_ranges) {
+            //     printf("torsion:%d\n",i);
+            //     i++;
+            //     int j=0;
+            //     for (const auto& range : torsion.torsions_range) {
+            //         m_cuda_gpu->torsions_range[i][j][0] = range[0]/180;
+            //         m_cuda_gpu->torsions_range[i][j][1] = range[1]/180;
+            //         printf("Range:%f,%f \n",range[0],range[1]);
+            //     }
+            //     // std::cout << "-----" << std::endl;
+            // }
+    float lowbound;
+    float highbound;
+    float cur_torsion;
+    int state1 = 0;
+    for (int current = 1; current < m_cuda_gpu->ligand.rigid.num_children + 1;
+         current++) {
+            cur_torsion = fmod(x->lig_torsion[current - 1]+2*M_PI,2*M_PI);
+            // printf("cur:%f ",cur_torsion);
+            float disl;
+            float dish;
+            float dis_min=10;
+            int state = 0;
+            
+            for (int j=0;j<10;j++){
+                lowbound = m_cuda_gpu->torsions_range[current-1][j][0] ;
+                highbound = m_cuda_gpu->torsions_range[current-1][j][1];
+                // printf("low:%f,high:%f\n",lowbound,highbound);
+                
+                // if low < high is clear ;if low > high ,it need more conditional judgment
+                // if (((lowbound<highbound)&&(cur_torsion>lowbound && cur_torsion<highbound))||
+                // ((lowbound>highbound)&&(((cur_torsion>lowbound) &&(cur_torsion<M_PI)) || ((cur_torsion>-M_PI)&&(cur_torsion<highbound))))){
+                if (lowbound==0 &&highbound==0){
+                    // printf("range over\n");
+                    // state1=1;
+                    state = 2;
+                    break;
+                }
+                if (cur_torsion>lowbound && cur_torsion<highbound){
+                    printf("low:%f,cur:%f,high:%f\n",lowbound,cur_torsion,highbound);
+                    state1 =0;
+                    printf("torsion in range\n");
+                    return;
+                }
+                else {
+                    printf("not in range");
+                    state = 1;
+                    state1 =1;
+                     disl = fabs(cur_torsion-lowbound);
+                     dish = fabs(cur_torsion-highbound);
+                    if (disl<dis_min || dish<dis_min){
+                        if (disl<dish){
+                            cur_torsion = lowbound;
+                            dis_min = disl;
+                        }
+                        else{
+                            cur_torsion = highbound;
+                            dis_min = dish;
+                        }
+                    }
+                    
+
+                }
+                
+            }
+            if (state!=2 || state1!=0){
+            printf("cur_torsion_num:%d,cur_torsion:%f,dis_min:%f,state:%d\n",current,cur_torsion,dis_min,state1);
+            }
+            x->lig_torsion[current - 1] = cur_torsion-M_PI;
+            
+
+         }
+    
+}
 
 __device__ __forceinline__ void set(const output_type_cuda_t* x, rigid_cuda_t* lig_rigid_gpu,
                                     m_coords_cuda_t* m_coords_gpu, const atom_cuda_t* atoms,
@@ -612,6 +690,7 @@ __device__ __forceinline__ void set(const output_type_cuda_t* x, rigid_cuda_t* l
          current++) { /* current starts from 1 (namely starts from first child node) */
         int parent = lig_rigid_gpu->parent[current];
         float torsion = x->lig_torsion[current - 1]; /* torsions are all related to child nodes */
+        // printf("torsion: %f \n",torsion);
         local_to_lab(lig_rigid_gpu->origin[current], lig_rigid_gpu->origin[parent],
                      lig_rigid_gpu->relative_origin[current], lig_rigid_gpu->orientation_m[parent]);
         local_to_lab_direction(lig_rigid_gpu->axis[current], lig_rigid_gpu->relative_axis[current],
@@ -1041,6 +1120,15 @@ __global__ __launch_bounds__(MAX_THREADS_PER_BLOCK, MIN_BLOCKS_PER_MP) void kern
     float best_e = INFINITY;
 
     if (idx < num_of_ligands * threads_per_ligand) {
+        // for (int i=0;i<MAX_NUM_OF_TORSION;i++) {
+        //         printf("torsion:%d\n",i);
+               
+        //         for (int j=0;j<MAX_NUM_OF_TORSION_RANGE;j++) {
+                 
+        //             printf("Range:%f,%f \n",m_cuda_global->torsions_range[i][j][0],m_cuda_global->torsions_range[i][j][1]);
+        //         }
+        //         printf( "-----***-----\n");
+        //     }
         // if (idx % 100 == 0)DEBUG_PRINTF("\nThread %d START", idx);
         output_type_cuda_t tmp;  // private memory, shared only in work item
         change_cuda_t g;
@@ -1079,6 +1167,7 @@ __global__ __launch_bounds__(MAX_THREADS_PER_BLOCK, MIN_BLOCKS_PER_MP) void kern
 
             if (step == 0 || metropolis_accept(tmp.e, candidate.e, 1.2, n)) {
                 output_type_cuda_init_with_output(&tmp, &candidate);
+                set_torsion_range(&tmp , m_cuda_global);
                 set(&tmp, &m_cuda_gpu.ligand.rigid, &m_cuda_gpu.m_coords, m_cuda_gpu.atoms,
                     m_cuda_gpu.m_num_movable_atoms, epsilon_fl);
                 if (tmp.e < best_e) {
@@ -1086,6 +1175,7 @@ __global__ __launch_bounds__(MAX_THREADS_PER_BLOCK, MIN_BLOCKS_PER_MP) void kern
                          epsilon_fl, bfgs_max_steps);
                     // set
                     if (tmp.e < best_e) {
+                        set_torsion_range(&tmp , m_cuda_global);
                         set(&tmp, &m_cuda_gpu.ligand.rigid, &m_cuda_gpu.m_coords, m_cuda_gpu.atoms,
                             m_cuda_gpu.m_num_movable_atoms, epsilon_fl);
                         output_type_cuda_init_with_output(&best_out, &tmp);
@@ -1095,6 +1185,7 @@ __global__ __launch_bounds__(MAX_THREADS_PER_BLOCK, MIN_BLOCKS_PER_MP) void kern
                 }
             }
         }
+        set_torsion_range(&tmp , m_cuda_global);
         // write the best conformation back to CPU // FIX?? should add more
         write_back(results + idx, &best_out);
         // if (idx % 100 == 0) DEBUG_PRINTF("\nThread %d FINISH", idx);
@@ -1277,6 +1368,48 @@ __host__ void monte_carlo::operator()(
             DEBUG_PRINTF("copy m_cuda to gpu, size=%lu\n", sizeof(m_cuda_t));
             checkCUDA(cudaMemcpy(m_cuda_gpu + l, m_cuda, sizeof(m_cuda_t), cudaMemcpyHostToDevice));
         } else {
+            // for (int i=0;i<m.torsions_ranges.size();i++){
+            //     for (int j=0;i<m.torsions_ranges[i].torsions_range.size();j++){
+            //     m_cuda->torsions_range[i][j][0] = m.torsions_ranges[i].torsions_range[j][0];
+            //     m_cuda->torsions_range[i][j][1] = m.torsions_ranges[i].torsions_range[j][1];
+            //     }
+            // }
+            printf("torsion range\n");
+            int i=0;
+
+            for (const auto& torsion : m.torsions_ranges) {
+                printf("torsion:%d\n",i);
+                
+                int j=0;
+                for (const auto& range : torsion.torsions_range) {
+                    
+                    m_cuda->torsions_range[i][j][0] = range[0];
+                    m_cuda->torsions_range[i][j][1] = range[1];
+                    printf("Range[%d,%d]:%f,%f \n",i,j,m_cuda->torsions_range[i][j][0],m_cuda->torsions_range[i][j][1]);
+                    j++;
+                }
+                i++;
+                std::cout << "-----" << std::endl;
+            }
+        
+            
+            for (int i0=0;i0<MAX_NUM_OF_TORSION;i0++) {
+                printf("torsion:%d\n",i0);
+               
+                for (int j=0;j<MAX_NUM_OF_TORSION_RANGE;j++) {
+                 
+                    printf("Range:%f,%f \n",m_cuda->torsions_range[i0][j][0],m_cuda->torsions_range[i0][j][1]);
+                }
+                std::cout << "-----***-----" << std::endl;
+            }
+        
+            // for (int i=0;i<m.torsions_ranges.size();i++){
+            //     for (int j=0;j<m.torsions_ranges[i].torsions_range.size();j++){
+            // printf("m_cuda->torsions_range[%d][%d][0]:%f \n",i,j,m_cuda->torsions_range[i][j][0] );
+            // printf("m_cuda->torsions_range[%d][%d][1]:%f \n",i,j,m_cuda->torsions_range[i][j][1] );
+            // }
+            // printf("---*---");
+            // }
             for (int i = 0; i < m.atoms.size(); i++) {
                 m_cuda->atoms[i].types[0]
                     = m.atoms[i].el;  // To store 4 atoms types (el, ad, xs, sy)
@@ -1355,6 +1488,10 @@ __host__ void monte_carlo::operator()(
 
             DEBUG_PRINTF("copy m_cuda to gpu, size=%lu\n", sizeof(m_cuda_t));
             checkCUDA(cudaMemcpy(m_cuda_gpu + l, m_cuda, sizeof(m_cuda_t), cudaMemcpyHostToDevice));
+
+             
+
+
 
             /* Prepare rand_molec_struc data */
             int lig_torsion_size = tmp.c.ligands[0].torsions.size();

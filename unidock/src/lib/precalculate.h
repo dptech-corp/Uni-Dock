@@ -265,6 +265,7 @@ public:
         DEBUG_PRINTF("init_without_calculation exiting successfully\n");
     }
 
+
     fl eval_fast(sz i, sz j, fl r2) const {
         assert(r2 <= m_max_cutoff_sqr);
         return m_data(i, j).eval_fast(r2);
