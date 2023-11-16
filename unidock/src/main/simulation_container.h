@@ -307,7 +307,7 @@ struct simulation_container
                             grid_spacing, force_even_voxels);
         std::vector<double> energies;
         energies = v.optimize();
-        v.write_pose(default_output(get_filename(ligand_name)));
+        v.write_pose(default_output(get_filename(ligand_name), out_dir));
         v.show_score(energies);
 
         return true;                       
