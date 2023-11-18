@@ -19,12 +19,6 @@
 
 #define M_PI_F 3.1415927f
 
-// symmetric matrix_d (only half of it are stored)
-typedef struct {
-    float data[MAX_HESSIAN_MATRIX_D_SIZE];
-    int dim;
-} matrix_d;
-
 /* Below based on mutate_conf.cpp */
 
 __device__ __forceinline__ void quaternion_increment(float *q, const float *rotation,

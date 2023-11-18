@@ -98,34 +98,34 @@ __device__ __forceinline__ void write_back(output_type_cuda_t *results,
 template <unsigned int TileSize = 32>
 __global__ __launch_bounds__(MAX_THREADS_PER_BLOCK, MIN_BLOCKS_PER_MP) void kernel(
     m_cuda_t *m_cuda_global, ig_cuda_t *ig_cuda_gpu, p_cuda_t *p_cuda_gpu,
-    float *rand_molec_struc_gpu, float *best_e_gpu, int bfgs_max_steps, float mutation_amplitude,
+    float *rand_molec_struc_gpu, int bfgs_max_steps, float mutation_amplitude,
     curandStatePhilox4_32_10_t *states, unsigned long long seed, float epsilon_fl,
     float *hunt_cap_gpu, float *authentic_v_gpu, output_type_cuda_t *results,
     output_type_cuda_t *output_aux, change_cuda_t *change_aux, pot_cuda_t *pot_aux,
     matrix_d *h_cuda_gpu, m_cuda_t *m_cuda_gpu, int search_depth, int num_of_ligands,
     int threads_per_ligand, bool multi_bias) {
     int bid = blockIdx.x, tid = threadIdx.x;
-    int pose_id = (bid * warpSize + tid) / TileSize;
-    auto tb = cg::this_thread_block();
-    cg::thread_block_tile<TileSize> tile = cg::tiled_partition<TileSize>(tb);
+    int pose_id = (bid * blockDim.x + tid) / TileSize;
     if (m_cuda_global[pose_id / threads_per_ligand].m_num_movable_atoms == -1) {
         return;
     }
 
+    auto tb = cg::this_thread_block();
+    cg::thread_block_tile<TileSize> tile = cg::tiled_partition<TileSize>(tb);
+
     float best_e = INFINITY;
-    // __shared__ output_type_cuda_t tmp, best_out, candidate, x_new, x_orig;
     output_type_cuda_t &tmp = output_aux[pose_id * 5];
     output_type_cuda_t &best_out = output_aux[pose_id * 5 + 1];
     output_type_cuda_t &candidate = output_aux[pose_id * 5 + 2];
     output_type_cuda_t &x_new = output_aux[pose_id * 5 + 3];
     output_type_cuda_t &x_orig = output_aux[pose_id * 5 + 4];
 
-    // __shared__ change_cuda_t g, tmp1, tmp2, tmp3, tmp4;
-    change_cuda_t &g = change_aux[pose_id * 5];
-    change_cuda_t &tmp1 = change_aux[pose_id * 5 + 1];
-    change_cuda_t &tmp2 = change_aux[pose_id * 5 + 2];
-    change_cuda_t &tmp3 = change_aux[pose_id * 5 + 3];
-    change_cuda_t &tmp4 = change_aux[pose_id * 5 + 4];
+    change_cuda_t &g = change_aux[pose_id * 6];
+    change_cuda_t &tmp1 = change_aux[pose_id * 6 + 1];
+    change_cuda_t &tmp2 = change_aux[pose_id * 6 + 2];
+    change_cuda_t &tmp3 = change_aux[pose_id * 6 + 3];
+    change_cuda_t &tmp4 = change_aux[pose_id * 6 + 4];
+    change_cuda_t &tmp5 = change_aux[pose_id * 6 + 5];
 
     if (pose_id < num_of_ligands * threads_per_ligand) {
         output_type_cuda_init_warp(
@@ -159,7 +159,7 @@ __global__ __launch_bounds__(MAX_THREADS_PER_BLOCK, MIN_BLOCKS_PER_MP) void kern
                                  mutation_amplitude);
             tile.sync();
 
-            bfgs_warp(tile, &candidate, &x_new, &x_orig, &g, &tmp1, &tmp2, &tmp3, &tmp4,
+            bfgs_warp(tile, &candidate, &x_new, &x_orig, &g, &tmp1, &tmp2, &tmp3, &tmp4, &tmp5,
                       &h_cuda_gpu[pose_id], &m_cuda_gpu[pose_id], p_cuda_gpu, ig_cuda_gpu, pot_aux,
                       hunt_cap_gpu, epsilon_fl, bfgs_max_steps);
 
@@ -182,7 +182,7 @@ __global__ __launch_bounds__(MAX_THREADS_PER_BLOCK, MIN_BLOCKS_PER_MP) void kern
                 tile.sync();
 
                 if (tmp.e < best_e) {
-                    bfgs_warp(tile, &tmp, &x_new, &x_orig, &g, &tmp1, &tmp2, &tmp3, &tmp4,
+                    bfgs_warp(tile, &tmp, &x_new, &x_orig, &g, &tmp1, &tmp2, &tmp3, &tmp4, &tmp5,
                               &h_cuda_gpu[pose_id], &m_cuda_gpu[pose_id], p_cuda_gpu, ig_cuda_gpu,
                               pot_aux, authentic_v_gpu, epsilon_fl, bfgs_max_steps);
 
@@ -274,6 +274,7 @@ __host__ void monte_carlo::operator()(
 
     p_cuda_t_cpu *p_cuda;
     checkCUDA(cudaMallocHost(&p_cuda, sizeof(p_cuda_t_cpu)));
+    size_t avail, total;
 
     /* End CPU allocation */
 
@@ -291,11 +292,7 @@ __host__ void monte_carlo::operator()(
     // rand_molec_struc_gpu
     float *rand_molec_struc_gpu;
     checkCUDA(cudaMalloc(&rand_molec_struc_gpu, thread * SIZE_OF_MOLEC_STRUC));
-    // best_e_gpu
-    float *best_e_gpu;
     float epsilon_fl_float = static_cast<float>(epsilon_fl);
-    checkCUDA(cudaMalloc(&best_e_gpu, sizeof(float)));
-    checkCUDA(cudaMemcpy(best_e_gpu, &max_fl, sizeof(float), cudaMemcpyHostToDevice));
 
     // use cuRand to generate random values on GPU
     curandStatePhilox4_32_10_t *states;
@@ -324,17 +321,29 @@ __host__ void monte_carlo::operator()(
     float authentic_v_float[3]
         = {static_cast<float>(authentic_v[0]), static_cast<float>(authentic_v[1]),
            static_cast<float>(authentic_v[2])};
+    cudaMemGetInfo(&avail, &total);
+    printf("Available Memory = %dMiB   Total Memory = %dMiB\n", int(avail / 1024 / 1024),
+           int(total / 1024 / 1024));
 
     checkCUDA(cudaMalloc(&authentic_v_gpu, sizeof(authentic_v_float)));
     // Preparing result data
     output_type_cuda_t *results_gpu;
     checkCUDA(cudaMalloc(&results_gpu, thread * sizeof(output_type_cuda_t)));
+    cudaMemGetInfo(&avail, &total);
+    printf("Available Memory = %dMiB   Total Memory = %dMiB\n", int(avail / 1024 / 1024),
+           int(total / 1024 / 1024));
 
     m_cuda_t *m_cuda_global;
     checkCUDA(cudaMalloc(&m_cuda_global, thread * sizeof(m_cuda_t)));
+    cudaMemGetInfo(&avail, &total);
+    printf("Available Memory = %dMiB   Total Memory = %dMiB\n", int(avail / 1024 / 1024),
+           int(total / 1024 / 1024));
 
     matrix_d *h_cuda_global;
     checkCUDA(cudaMalloc(&h_cuda_global, thread * sizeof(matrix_d)));
+    cudaMemGetInfo(&avail, &total);
+    printf("Available Memory = %dMiB   Total Memory = %dMiB\n", int(avail / 1024 / 1024),
+           int(total / 1024 / 1024));
 
     /* End Allocating GPU Memory */
 
@@ -721,15 +730,15 @@ __host__ void monte_carlo::operator()(
     output_type_cuda_t *results_aux;
     checkCUDA(cudaMalloc(&results_aux, 5 * thread * sizeof(output_type_cuda_t)));
     change_cuda_t *change_aux;
-    checkCUDA(cudaMalloc(&change_aux, 5 * thread * sizeof(change_cuda_t)));
+    checkCUDA(cudaMalloc(&change_aux, 6 * thread * sizeof(change_cuda_t)));
     pot_cuda_t *pot_aux;
     checkCUDA(cudaMalloc(&pot_aux, thread * sizeof(pot_cuda_t)));
 
-    kernel<32><<<thread, 32>>>(
-        m_cuda_gpu, ig_cuda_gpu, p_cuda_gpu, rand_molec_struc_gpu, best_e_gpu,
-        quasi_newton_par_max_steps, mutation_amplitude_float, states, seed, epsilon_fl_float,
-        hunt_cap_gpu, authentic_v_gpu, results_gpu, results_aux, change_aux, pot_aux, h_cuda_global,
-        m_cuda_global, global_steps, num_of_ligands, threads_per_ligand, multi_bias);
+    kernel<32><<<thread, 32>>>(m_cuda_gpu, ig_cuda_gpu, p_cuda_gpu, rand_molec_struc_gpu,
+                               quasi_newton_par_max_steps, mutation_amplitude_float, states, seed,
+                               epsilon_fl_float, hunt_cap_gpu, authentic_v_gpu, results_gpu,
+                               results_aux, change_aux, pot_aux, h_cuda_global, m_cuda_global,
+                               global_steps, num_of_ligands, threads_per_ligand, multi_bias);
 
     // Device to Host memcpy of precalculated_byatom, copy back data to p_gpu
     p_m_data_cuda_t *p_data;
@@ -799,13 +808,15 @@ __host__ void monte_carlo::operator()(
     checkCUDA(cudaFree(ig_cuda_gpu));
     checkCUDA(cudaFree(p_cuda_gpu));
     checkCUDA(cudaFree(rand_molec_struc_gpu));
-    checkCUDA(cudaFree(best_e_gpu));
     checkCUDA(cudaFree(hunt_cap_gpu));
     checkCUDA(cudaFree(authentic_v_gpu));
     checkCUDA(cudaFree(results_gpu));
     checkCUDA(cudaFree(change_aux));
     checkCUDA(cudaFree(results_aux));
+    checkCUDA(cudaFree(pot_aux));
     checkCUDA(cudaFree(states));
+    checkCUDA(cudaFree(h_cuda_global));
+    checkCUDA(cudaFree(m_cuda_global));
     checkCUDA(cudaFreeHost(m_cuda));
     checkCUDA(cudaFreeHost(rand_molec_struc_tmp));
     checkCUDA(cudaFreeHost(ig_cuda_ptr));

@@ -467,16 +467,15 @@ template <unsigned int TileSize> __device__ __forceinline__ void line_search_war
 template <unsigned int TileSize>
 __device__ __forceinline__ bool bfgs_update_warp(cg::thread_block_tile<TileSize> &tile, matrix_d *h,
                                                  const change_cuda_t *p, const change_cuda_t *y,
-                                                 const float alpha, const float epsilon_fl) {
+                                                 change_cuda_t *minus_hy, const float alpha,
+                                                 const float epsilon_fl) {
     float yp, yhy;
     yp = scalar_product_warp(tile, y, p, h->dim);
     if (alpha * yp < epsilon_fl) return false;
 
-    __shared__ change_cuda_t minus_hy[32 / TileSize];
-    auto minus_hy_ptr = &minus_hy[tile.meta_group_rank()];
-    change_cuda_init_with_change_warp(tile, minus_hy_ptr, y);
-    minus_mat_vec_product_warp(tile, h, y, minus_hy_ptr);
-    yhy = -scalar_product_warp(tile, y, minus_hy_ptr, h->dim);
+    change_cuda_init_with_change_warp(tile, minus_hy, y);
+    minus_mat_vec_product_warp(tile, h, y, minus_hy);
+    yhy = -scalar_product_warp(tile, y, minus_hy, h->dim);
     float r = 1 / (alpha * yp);
     int n = 6 + p->lig_torsion_size;
 
@@ -507,9 +506,10 @@ template <unsigned int TileSize>
 __device__ void bfgs_warp(cg::thread_block_tile<TileSize> &tile, output_type_cuda_t *x,
                           output_type_cuda_t *x_new, output_type_cuda_t *x_orig, change_cuda_t *g,
                           change_cuda_t *g_new, change_cuda_t *g_orig, change_cuda_t *p,
-                          change_cuda_t *y, matrix_d *h, m_cuda_t *m_cuda_gpu, p_cuda_t *p_cuda_gpu,
-                          ig_cuda_t *ig_cuda_gpu, pot_cuda_t *pot_aux, const float *hunt_cap,
-                          const float epsilon_fl, const int max_steps) {
+                          change_cuda_t *y, change_cuda_t *minus_hy, matrix_d *h,
+                          m_cuda_t *m_cuda_gpu, p_cuda_t *p_cuda_gpu, ig_cuda_t *ig_cuda_gpu,
+                          pot_cuda_t *pot_aux, const float *hunt_cap, const float epsilon_fl,
+                          const int max_steps) {
     // Profiling: perform timing within kernel
     int n = 3 + 3 + x->lig_torsion_size; /* the dimensions of matirx */
 
@@ -559,7 +559,7 @@ __device__ void bfgs_warp(cg::thread_block_tile<TileSize> &tile, output_type_cud
         }
         tile.sync();
 
-        bfgs_update_warp(tile, h, p, y, alpha, epsilon_fl);
+        bfgs_update_warp(tile, h, p, y, minus_hy, alpha, epsilon_fl);
     }
 
     if (!(f0 <= f_orig)) {
