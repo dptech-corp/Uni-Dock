@@ -274,7 +274,6 @@ __host__ void monte_carlo::operator()(
 
     p_cuda_t_cpu *p_cuda;
     checkCUDA(cudaMallocHost(&p_cuda, sizeof(p_cuda_t_cpu)));
-    size_t avail, total;
 
     /* End CPU allocation */
 
@@ -321,29 +320,17 @@ __host__ void monte_carlo::operator()(
     float authentic_v_float[3]
         = {static_cast<float>(authentic_v[0]), static_cast<float>(authentic_v[1]),
            static_cast<float>(authentic_v[2])};
-    cudaMemGetInfo(&avail, &total);
-    printf("Available Memory = %dMiB   Total Memory = %dMiB\n", int(avail / 1024 / 1024),
-           int(total / 1024 / 1024));
 
     checkCUDA(cudaMalloc(&authentic_v_gpu, sizeof(authentic_v_float)));
     // Preparing result data
     output_type_cuda_t *results_gpu;
     checkCUDA(cudaMalloc(&results_gpu, thread * sizeof(output_type_cuda_t)));
-    cudaMemGetInfo(&avail, &total);
-    printf("Available Memory = %dMiB   Total Memory = %dMiB\n", int(avail / 1024 / 1024),
-           int(total / 1024 / 1024));
 
     m_cuda_t *m_cuda_global;
     checkCUDA(cudaMalloc(&m_cuda_global, thread * sizeof(m_cuda_t)));
-    cudaMemGetInfo(&avail, &total);
-    printf("Available Memory = %dMiB   Total Memory = %dMiB\n", int(avail / 1024 / 1024),
-           int(total / 1024 / 1024));
 
     matrix_d *h_cuda_global;
     checkCUDA(cudaMalloc(&h_cuda_global, thread * sizeof(matrix_d)));
-    cudaMemGetInfo(&avail, &total);
-    printf("Available Memory = %dMiB   Total Memory = %dMiB\n", int(avail / 1024 / 1024),
-           int(total / 1024 / 1024));
 
     /* End Allocating GPU Memory */
 
