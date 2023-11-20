@@ -160,6 +160,7 @@ struct simulation_container
     {
         int batches = m_complex_names.size()/m_batch_size;
         std::cout << "To do [" << batches << "] batches, box = " << m_box_size << " max_eval_steps global = " << m_max_global_steps << "\n";
+        std::cout << "Batched output to " << m_out_phrase << "\n";
 
         std::vector<complex_property> cp;
         for (int i = 0;i < batches;i ++)
@@ -301,10 +302,15 @@ struct simulation_container
 
         v.set_ligand_from_object(batch_ligands);
 
+#if 0 //autobox
         double buffer_size = 4;
         std::vector<double> dim = v.grid_dimensions_from_ligand(buffer_size);
         v.compute_vina_maps(dim[0], dim[1], dim[2], dim[3], dim[4], dim[5],
                             grid_spacing, force_even_voxels);
+#else
+        v.compute_vina_maps(center_x, center_y, center_z, size_x, size_y, size_z,
+                            grid_spacing, force_even_voxels);
+#endif
         std::vector<double> energies;
         energies = v.optimize();
         v.write_pose(default_output(get_filename(ligand_name), out_dir));

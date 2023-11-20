@@ -178,15 +178,15 @@ public:
                 
         set_receptor(rigid, flex);                                
 
+        enable_gpu();
+        compute_vina_maps(center_x, center_y, center_z, size_x, size_y, size_z,
+                                                grid_spacing, force_even_voxels);
+
         auto parsed_ligand = parse_ligand_from_file_no_failure(
             ligand_name, m_scoring_function.get_atom_typing(), keep_H);
         batch_ligands.emplace_back(parsed_ligand);
 
         set_ligand_from_object_gpu(batch_ligands);
-
-        enable_gpu();
-        compute_vina_maps(center_x, center_y, center_z, size_x, size_y, size_z,
-                                                grid_spacing, force_even_voxels);
 
         global_search_gpu_prime(
                                 exhaustiveness, num_modes, min_rmsd, max_evals, max_step,
