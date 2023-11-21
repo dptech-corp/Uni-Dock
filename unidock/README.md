@@ -261,7 +261,7 @@ box_size       = Size of bounding box
 
 For example, to benchmark 1:1 docking runs with 5 pairs available in the test folder with box_size of 25, run as below.
 
-`build/unidock_fast <unidock_folder_full_path>/unidock/test protein_ligand_batch 5 5 0 50 1`
+`build/unidock_fast <unidock_folder_full_path>/unidock/test protein_ligand_batch 5 5 0 50 1 25`
 
 This will output the batched docking results in `out_5_0_50_random`, and non batched results in `out_non_batched_5_0_50_random`, and print the time taken in the terminal.
 
