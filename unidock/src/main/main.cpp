@@ -25,6 +25,8 @@
 #include <vector>  // ligand paths
 #include <exception>
 #include <boost/program_options.hpp>
+#include "conf.h"
+#include "kernel.h"
 #include "vina.h"
 #include "utils.h"
 #include "scoring_function.h"
@@ -32,6 +34,7 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
+#include <unistd.h>
 
 struct usage_error : public std::runtime_error {
     usage_error(const std::string& message) : std::runtime_error(message) {}
@@ -87,6 +90,41 @@ int predict_peak_memory(int batch_size, int exhaustiveness, int all_atom2_number
         }
     }
     return 0;
+}
+int predict_peak_memory(int batch_size, int exhaustiveness, int all_atom2_numbers,
+                        bool multi_bias) {
+    int64_t gpu_memory = 0;
+    // precalculate
+    gpu_memory += (int64_t)(1) * all_atom2_numbers * sizeof(precalculate_element_cuda_t);
+
+    // m_cuda_gpu
+    gpu_memory += (int64_t)(1) * batch_size * sizeof(m_cuda_t);
+    // ig_cuda_gpu
+    if (multi_bias)
+        gpu_memory += (int64_t)(1) * batch_size * sizeof(ig_cuda_t);
+    else
+        gpu_memory += sizeof(ig_cuda_t);
+    // p_cuda_gpu
+    gpu_memory += (int64_t)(1) * batch_size * sizeof(p_cuda_t);
+    // rand_molec_struc_gpu
+    gpu_memory += (int64_t)(1) * batch_size * exhaustiveness * SIZE_OF_MOLEC_STRUC;
+    // results_gpu
+    gpu_memory += (int64_t)(1) * batch_size * exhaustiveness * sizeof(output_type_cuda_t);
+    // m_cuda_global
+    gpu_memory += (int64_t)(1) * batch_size * exhaustiveness * sizeof(m_cuda_t);
+    // h_cuda_global
+    gpu_memory += (int64_t)(1) * batch_size * exhaustiveness * sizeof(matrix_d);
+    // change_aux
+    gpu_memory += (int64_t)(6) * batch_size * exhaustiveness * sizeof(change_cuda_t);
+    // results_aux
+    gpu_memory += (int64_t)(5) * batch_size * exhaustiveness * sizeof(output_type_cuda_t);
+    // pot_aux
+    gpu_memory += (int64_t)(1) * batch_size * exhaustiveness * sizeof(pot_cuda_t);
+    // states
+    gpu_memory
+        += (int64_t)(1) * batch_size * exhaustiveness * 64;  // sizeof(curandStatePhilox4_32_10_t)
+
+    return gpu_memory / (1024 * 1024);
 }
 
 int main(int argc, char* argv[]) {
@@ -757,8 +795,10 @@ bug reporting, license agreements, and more information.      \n";
                     int all_atom2_numbers = 0;         // total number of atom^2 in current batch
                     std::vector<model> batch_ligands;  // ligands in current batch
                     v1.bias_batch_list.clear();
+                    // while (predict_peak_memory(batch_size, exhaustiveness, all_atom2_numbers,
+                    //                            use_v100, v.multi_bias)
                     while (predict_peak_memory(batch_size, exhaustiveness, all_atom2_numbers,
-                                               use_v100, v.multi_bias)
+                        multi_bias)
                                < max_memory
                            && processed_ligands + batch_size < all_ligands.size()) {
                         batch_ligands.emplace_back(
