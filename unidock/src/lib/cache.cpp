@@ -195,10 +195,15 @@ bool cache::is_in_grid(const model& m, fl margin) const {
         if (m.atoms[i].is_hydrogen()) continue;
 
         const vec& a_coords = m.coords[i];
-
+    
+            printf("a_coords[0]:%f,a_coords[1]:%f,a_coords[2]:%f\n",a_coords[0],a_coords[1],a_coords[2]);
+        
         VINA_FOR_IN(j, m_gd) {
             if (m_gd[j].n_voxels > 0) {
                 if (a_coords[j] < m_gd[j].begin - margin || a_coords[j] > m_gd[j].end + margin) {
+                    printf("begin a_coords[%d]:%f,m_gd[%d].begin:%f\n",j,a_coords[j],j,m_gd[j].begin- margin );
+                    printf("end a_coords[%d]:%f,m_gd[%d].begin:%f\n",j,a_coords[j],j,m_gd[j].end+margin );
+                    printf("\n");
                     return false;
                 }
             }

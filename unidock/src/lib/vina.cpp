@@ -512,6 +512,7 @@ void Vina::compute_vina_maps(double center_x, double center_y, double center_z, 
     grid_dims gd;
     vec span(size_x, size_y, size_z);
     vec center(center_x, center_y, center_z);
+    std::cout<<"x:"<<center_x<<"y:"<<center_y<<"z:"<<center_z<<std::endl;
     const fl slope = 1e6;  // FIXME: too large? used to be 100
     szv atom_types;
     atom_type::t atom_typing = m_scoring_function.get_atom_typing();
@@ -537,6 +538,9 @@ void Vina::compute_vina_maps(double center_x, double center_y, double center_z, 
         fl real_span = granularity * gd[i].n_voxels;
         gd[i].begin = center[i] - real_span / 2;
         gd[i].end = gd[i].begin + real_span;
+        printf("granularity:%f,gd[%d].n_vosels:%d\n",granularity,i,gd[i].n_voxels);
+        printf("center[%ld]:%f,real_span%f",i,center[i],real_span);
+        printf("begin gd[%ld]:%f end gd[%ld]:%f\n",i,gd[i].begin,i,gd[i].end);
     }
 
     // Initialize the scoring function
@@ -1338,7 +1342,7 @@ std::vector<double> Vina::score() {
         std::cerr << "ERROR: Cannot score the pose. Affinity maps were not initialized.\n";
         exit(EXIT_FAILURE);
     } else if (!m_grid.is_in_grid(m_model)) {
-        std::cerr << "ERROR: The ligand is outside the grid box. Increase the size of the grid box "
+        std::cerr << "ERROR1341: The ligand is outside the grid box. Increase the size of the grid box "
                      "or center it accordingly around the ligand.\n";
         exit(EXIT_FAILURE);
     }
@@ -1366,7 +1370,7 @@ std::vector<double> Vina::score_gpu(int i) {
         std::cerr << "ERROR: Cannot score the pose. Affinity maps were not initialized.\n";
         exit(EXIT_FAILURE);
     } else if (!m_grid.is_in_grid(m_model_gpu[i])) {
-        std::cerr << "ERROR: The ligand is outside the grid box. Increase the size of the grid box "
+        std::cerr << "ERROR1369: The ligand is outside the grid box. Increase the size of the grid box "
                      "or center it accordingly around the ligand.\n";
         exit(EXIT_FAILURE);
     }
@@ -1439,7 +1443,7 @@ std::vector<double> Vina::optimize(int max_steps) {
         std::cerr << "ERROR: Cannot do the optimization. Affinity maps were not initialized.\n";
         exit(EXIT_FAILURE);
     } else if (!m_grid.is_in_grid(m_model)) {
-        std::cerr << "ERROR: The ligand is outside the grid box. Increase the size of the grid box "
+        std::cerr << "ERROR1442: The ligand is outside the grid box. Increase the size of the grid box "
                      "or center it accordingly around the ligand.\n";
         exit(EXIT_FAILURE);
     }

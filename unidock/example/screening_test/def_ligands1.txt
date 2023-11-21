@@ -1,0 +1,1 @@
+./indata/ligand_prepared_root.sdf
