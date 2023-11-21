@@ -256,6 +256,7 @@ max_limit      = Limits number of complexs to be analysed
 local_only     = 1, for localonly using computed map for given atoms, or 0, for randomized search
 max_eval_steps = Number of steps in each MC evaluation
 GPU            = 1, for GPU operations, 0 for CPU-local_only operation
+box_size       = Size of bounding box
 ```
 
 For example, to benchmark 1:1 docking runs with 5 pairs available in the test folder with box_size of 25, run as below.
