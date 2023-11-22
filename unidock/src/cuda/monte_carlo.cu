@@ -1585,9 +1585,6 @@ __host__ gpu_state* monte_carlo::gpu_prime(std::vector<model>& m_gpu,
     }
 
     checkCUDA(cudaMemcpyAsync(ptr_gpu_state->hunt_cap_gpu, hunt_cap_float, 3 * sizeof(float), cudaMemcpyHostToDevice, ptr_gpu_state->curr_stream));
-    float hunt_test[3];
-    checkCUDA(cudaMemcpyAsync(hunt_test, ptr_gpu_state->hunt_cap_gpu, 3 * sizeof(float), cudaMemcpyDeviceToHost, ptr_gpu_state->curr_stream));
-    DEBUG_PRINTF("hunt_test[1]=%f, hunt_cap_float[1]=%f\n", hunt_test[1], hunt_cap_float[1]);
     checkCUDA(cudaMemcpyAsync(ptr_gpu_state->authentic_v_gpu, authentic_v_float, sizeof(authentic_v_float),
                          cudaMemcpyHostToDevice, ptr_gpu_state->curr_stream));
 

@@ -96,10 +96,8 @@ bool dock_one(
     double center_x = prop.center_x;
     double center_y = prop.center_y;
     double center_z = prop.center_z;
-    std::string complex_name = prop.complex_name;
 
-    std::string ligand_name(workdir + "/" + input_dir + "/" + complex_name + "_ligand.pdbqt");
-    if (! boost::filesystem::exists( ligand_name ) )
+    if (! boost::filesystem::exists( prop.ligand_name ) )
     {
         std::cout << "Input ligand file does not exist\n";        
         return false;
@@ -108,7 +106,7 @@ bool dock_one(
     std::string out_dir(workdir + "/" + out_phrase);
 
     std::vector<std::string> gpu_out_name;
-    gpu_out_name.emplace_back(default_output(get_filename(ligand_name), out_dir));
+    gpu_out_name.emplace_back(default_output(get_filename(prop.ligand_name), out_dir));
     if (!boost::filesystem::exists(out_dir))
     {
         std::cout << "Creating output dir" << out_dir << "\n";
@@ -125,7 +123,7 @@ bool dock_one(
 
     // rigid_name variable can be ignored for AD4
     std::string flex;
-    std::string rigid(workdir + "/" + input_dir + "/" + complex_name + "_protein.pdbqt");
+    std::string rigid(prop.protein_name);
     if (! boost::filesystem::exists( rigid ) )
     {
         std::cout << "Input (rigid) protein file does not exist\n";        
@@ -139,7 +137,7 @@ bool dock_one(
 
     std::vector<model> batch_ligands;  // ligands in current batch    
     auto parsed_ligand = parse_ligand_from_file_no_failure(
-        ligand_name, v.m_scoring_function.get_atom_typing(), keep_H);
+        prop.ligand_name, v.m_scoring_function.get_atom_typing(), keep_H);
     batch_ligands.emplace_back(parsed_ligand);
 
     v.set_ligand_from_object_gpu(batch_ligands);
@@ -157,7 +155,8 @@ bool dock_one(
             center_x,
             center_y, 
             center_z, 
-            complex_name,
+            prop.protein_name,
+            prop.ligand_name,
             local_only,
             box_size,
             max_eval_steps,
@@ -196,11 +195,32 @@ int dock_many_non_batched(
 
     std::cout << "Non-batched output to " << non_batched_out_dir << "\n";
 
-    complex_property cp1(-22.1801, 13.4045 ,27.4542, "5S8I_2LY");
-    complex_property cp2(54.9792, -21.0535 , -10.7179, "6VS3_R6V");
-    complex_property cp3(92.7454 , 8.79115 , 30.7175, "6VTA_AKN");
-    complex_property cp4(-0.487667 , 24.0228, -11.1546, "7TUO_KL9");
-    complex_property cp5(-15.0006 , -23.6868, 149.842, "7VJT_7IJ");
+
+    auto form_full_path = [=](auto name){
+        return std::string(work_dir + "/" + input_dir + "/" + name);
+    };
+
+    std::string ligand_name = form_full_path("5S8I_2LY_ligand.pdbqt");
+    std::string protein_name = form_full_path("5S8I_2LY_protein.pdbqt");
+
+    complex_property cp1(-22.1801, 13.4045 ,27.4542, box_size, box_size, box_size, protein_name, ligand_name);
+
+    ligand_name = form_full_path("6VS3_R6V_ligand.pdbqt");
+    protein_name = form_full_path("6VS3_R6V_protein.pdbqt");
+    complex_property cp2(54.9792, -21.0535 , -10.7179, box_size, box_size, box_size, protein_name, ligand_name);
+    
+    ligand_name = form_full_path("6VTA_AKN_ligand.pdbqt");
+    protein_name = form_full_path("6VTA_AKN_protein.pdbqt");
+
+    complex_property cp3(92.7454 , 8.79115 , 30.7175, box_size, box_size, box_size,protein_name, ligand_name);
+
+    ligand_name = form_full_path("7TUO_KL9_ligand.pdbqt");
+    protein_name = form_full_path("7TUO_KL9_protein.pdbqt");
+    complex_property cp4(-0.487667 , 24.0228, -11.1546, box_size, box_size, box_size,protein_name, ligand_name);
+
+    ligand_name = form_full_path("7VJT_7IJ_ligand.pdbqt");
+    protein_name = form_full_path("7VJT_7IJ_protein.pdbqt");
+    complex_property cp5(-15.0006 , -23.6868, 149.842, box_size, box_size, box_size, protein_name, ligand_name);
 
     auto start_one_by_one = std::chrono::steady_clock::now();
     //-5.8
@@ -345,8 +365,8 @@ int main(int argc, char* argv[])
     std::cout << "Completed Batched Operations in " << milliseconds << " mS, for GPU = " << isGPU << "\n";
 
     // For comparison - use original code (nonstreaming = true)
-    bool mc_use_non_streaming = true;
-    dock_many_non_batched (work_dir, input_path, out_phrase, batch_size, local_only, max_eval_steps, mc_use_non_streaming, box_size);
+    //bool mc_use_non_streaming = true;
+    //dock_many_non_batched (work_dir, input_path, out_phrase, batch_size, local_only, max_eval_steps, mc_use_non_streaming, box_size);
 
     return 0;
 }

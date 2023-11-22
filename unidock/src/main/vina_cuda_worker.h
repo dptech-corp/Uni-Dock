@@ -69,7 +69,6 @@ class vina_cuda_worker : public Vina
     double weight_glue = 50.000000;  // linear attraction
     monte_carlo mc;
     std::vector<std::string> gpu_out_name;
-    std::string ligand_name;
     std::string workdir;
     std::string input_dir;
     std::string out_dir;
@@ -77,10 +76,10 @@ class vina_cuda_worker : public Vina
     double center_x;
     double center_y; 
     double center_z; 
-    std::string complex_name;
+    std::string protein_name;
+    std::string ligand_name;
     void init(std::string out_phrase)
     {
-        ligand_name = workdir + "/" + input_dir + "/" + complex_name + "_ligand.pdbqt";
         out_dir = workdir + "/" + out_phrase;
         if (!boost::filesystem::exists(out_dir))
         {
@@ -92,7 +91,8 @@ public:
             double center_x, 
             double center_y, 
             double center_z, 
-            std::string complex_name,
+            std::string protein_name,
+            std::string ligand_name,
             bool local_only,
             int box_size,
             int max_step,
@@ -110,7 +110,8 @@ public:
             size_y(box_size),
             size_z(box_size),
             max_step(max_step),
-            complex_name(complex_name),
+            protein_name(protein_name),
+            ligand_name(ligand_name),
             local_only(local_only),
             out_dir(out_phrase),
             Vina{"vina", 0, seed, verbosity, false, NULL}
@@ -121,7 +122,8 @@ public:
             double center_x, 
             double center_y, 
             double center_z, 
-            std::string complex_name,
+            std::string protein_name,
+            std::string ligand_name,
             bool local_only,
             int box_size,
             int max_step,
@@ -140,7 +142,8 @@ public:
             size_y(box_size),
             size_z(box_size),
             max_step(max_step),
-            complex_name(complex_name),
+            protein_name(protein_name),
+            ligand_name(ligand_name),
             local_only(local_only),
             out_dir(out_phrase),
             Vina(v)
@@ -163,7 +166,7 @@ public:
         set_vina_weights(weight_gauss1, weight_gauss2, weight_repulsion, weight_hydrophobic,
                                 weight_hydrogen, weight_glue, weight_rot);        
         std::string flex;
-        std::string rigid(workdir + "/" + input_dir + "/" + complex_name + "_protein.pdbqt");
+        std::string rigid(protein_name);
 
         if (! boost::filesystem::exists( ligand_name ) )
         {
@@ -172,7 +175,7 @@ public:
         }        
         if (! boost::filesystem::exists( rigid ) )
         {
-            std::cout << "Input (rigid) protein file does not exist\n";        
+            std::cout << "Input (rigid) protein file does not exist" << rigid << "\n";        
             return;
         }    
                 
