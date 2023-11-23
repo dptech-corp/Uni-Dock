@@ -1,1 +1,2 @@
-./indata/ligand_prepared_root.sdf
+./ligand_prepared_split_0_root_conf_0.sdf
+./ligand_prepared_split_0_root_conf_1.sdf

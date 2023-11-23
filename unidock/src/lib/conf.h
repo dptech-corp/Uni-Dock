@@ -174,6 +174,10 @@ struct ligand_conf {
         rigid.randomize(corner1, corner2, generator);
         torsions_randomize(torsions, generator);
     }
+    void randomize_rigid(const vec& corner1, const vec& corner2, rng& generator) {
+        rigid.randomize(corner1, corner2, generator);
+        // torsions_randomize(torsions, generator);
+    }
     void print() const {
         rigid.print();
         printnl(torsions);
@@ -335,6 +339,12 @@ struct conf {
     void randomize(const vec& corner1, const vec& corner2, rng& generator) {
         VINA_FOR_IN(i, ligands)
         ligands[i].randomize(corner1, corner2, generator);
+        VINA_FOR_IN(i, flex)
+        flex[i].randomize(generator);
+    }
+    void randomize_rigid(const vec& corner1, const vec& corner2, rng& generator) {
+        VINA_FOR_IN(i, ligands)
+        ligands[i].randomize_rigid(corner1, corner2, generator);
         VINA_FOR_IN(i, flex)
         flex[i].randomize(generator);
     }

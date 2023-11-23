@@ -20,6 +20,7 @@
 
 */
 
+#include <boost/program_options/value_semantic.hpp>
 #include <iostream>
 #include <string>
 #include <vector>  // ligand paths
@@ -91,41 +92,7 @@ int predict_peak_memory(int batch_size, int exhaustiveness, int all_atom2_number
     }
     return 0;
 }
-int predict_peak_memory(int batch_size, int exhaustiveness, int all_atom2_numbers,
-                        bool multi_bias) {
-    int64_t gpu_memory = 0;
-    // precalculate
-    gpu_memory += (int64_t)(1) * all_atom2_numbers * sizeof(precalculate_element_cuda_t);
 
-    // m_cuda_gpu
-    gpu_memory += (int64_t)(1) * batch_size * sizeof(m_cuda_t);
-    // ig_cuda_gpu
-    if (multi_bias)
-        gpu_memory += (int64_t)(1) * batch_size * sizeof(ig_cuda_t);
-    else
-        gpu_memory += sizeof(ig_cuda_t);
-    // p_cuda_gpu
-    gpu_memory += (int64_t)(1) * batch_size * sizeof(p_cuda_t);
-    // rand_molec_struc_gpu
-    gpu_memory += (int64_t)(1) * batch_size * exhaustiveness * SIZE_OF_MOLEC_STRUC;
-    // results_gpu
-    gpu_memory += (int64_t)(1) * batch_size * exhaustiveness * sizeof(output_type_cuda_t);
-    // m_cuda_global
-    gpu_memory += (int64_t)(1) * batch_size * exhaustiveness * sizeof(m_cuda_t);
-    // h_cuda_global
-    gpu_memory += (int64_t)(1) * batch_size * exhaustiveness * sizeof(matrix_d);
-    // change_aux
-    gpu_memory += (int64_t)(6) * batch_size * exhaustiveness * sizeof(change_cuda_t);
-    // results_aux
-    gpu_memory += (int64_t)(5) * batch_size * exhaustiveness * sizeof(output_type_cuda_t);
-    // pot_aux
-    gpu_memory += (int64_t)(1) * batch_size * exhaustiveness * sizeof(pot_cuda_t);
-    // states
-    gpu_memory
-        += (int64_t)(1) * batch_size * exhaustiveness * 64;  // sizeof(curandStatePhilox4_32_10_t)
-
-    return gpu_memory / (1024 * 1024);
-}
 
 int main(int argc, char* argv[]) {
     using namespace boost::program_options;
@@ -249,6 +216,8 @@ bug reporting, license agreements, and more information.      \n";
         bool help_advanced = false;
         bool version = false;  // FIXME
         bool autobox = false;
+        bool randomize_score = false;
+        int randomize_score_num = 100;
         variables_map vm;
 
         // bias
@@ -314,9 +283,11 @@ bug reporting, license agreements, and more information.      \n";
             "--local_only jobs, and (3) --score_only jobs")(
             "force_even_voxels", bool_switch(&force_even_voxels),
             "calculated grid maps will have an even number of voxels (intervals) in each dimension "
-            "(odd number of grid points)")("randomize_only", bool_switch(&randomize_only),
+            "(odd number of grid points)")
+            ("randomize_score",bool_switch(&randomize_score))
+            ("randomize_score_num",value<int> (&randomize_score_num))
+            ("randomize_only", bool_switch(&randomize_only),
                                            "randomize input, attempting to avoid clashes")
-
             ("weight_gauss1", value<double>(&weight_gauss1)->default_value(weight_gauss1),
              "gauss_1 weight")(
                 "weight_gauss2", value<double>(&weight_gauss2)->default_value(weight_gauss2),
@@ -694,7 +665,19 @@ bug reporting, license agreements, and more information.      \n";
                 energies = v.optimize();
                 v.write_pose(out_name);
                 v.show_score(energies);
-            } else {
+            } else if(randomize_score){
+                v.randomize();
+                out_name = default_output(ligand_names[0]);
+                v.randomize_score(randomize_score_num,0,out_dir,out_name,ligand_names[0]); 
+                // std::vector<double> energies;
+                // energies = v.score();
+                // v.show_score(energies);
+                // v.write_pose(out_dir+"/"+out_name);
+                // v.write_score_to_file(energies, out_dir, out_name, ligand_names[0]);
+                // v.write_score(energies, ligand_names[0]);
+                
+            } 
+            else {
                 // search one ligand on cpu
                 v.global_search(exhaustiveness, num_modes, min_rmsd, max_evals);
                 v.write_poses(out_name, num_modes, energy_range);
@@ -735,6 +718,35 @@ bug reporting, license agreements, and more information.      \n";
                     v1.write_score_to_file(energies, out_dir, score_file, ligand_names[i]);
                 }
                 return 0;
+            }
+            if(randomize_score){
+                VINA_FOR_IN(i, ligand_names) {
+                v.compute_vina_maps(center_x, center_y, center_z, size_x, size_y, size_z,
+                                                grid_spacing, force_even_voxels);
+                  
+                out_name = default_output(ligand_names[i]); 
+                std::vector<model> ligands;
+                    ligands.emplace_back(parse_ligand_from_file_no_failure(
+                        ligand_names[i], v.m_scoring_function.get_atom_typing(), keep_H));
+                    v.set_ligand_from_object(ligands);
+                    v.randomize(10);
+                    // v.write_pose(out_name);
+                    Vina v1(v);
+                    v.write_poses(out_name, 10, energy_range);
+                    // for (int j=0;j<10;j++){
+                    // v1.randomize(10);
+                    // std::cout<<out_name<<std::endl;
+                    v1.write_pose(out_dir+"/"+out_name);
+                    v1.set_ligand_from_object(ligands);
+                    std::vector<double> energies;
+                    energies = v1.score();
+                    v1.show_score(energies);
+                    v1.write_score_to_file(energies, out_dir, out_name, ligand_names[i]);
+                    // }
+                    
+                }
+                return 0;
+
             }
 
             int receptor_atom_numbers = v.m_receptor.get_atoms().size();

@@ -21,6 +21,7 @@
 */
 
 #include "vina.h"
+#include <string>
 #include "scoring_function.h"
 #include "precalculate.h"
 #include "omp.h"
@@ -1030,7 +1031,7 @@ void Vina::write_pose(const std::string& output_name, const std::string& remark)
         format_remark << "REMARK " << remark << " \n";
     }
 
-    ofile f(make_path(output_name));
+    ofile f(make_path(output_name),std::ios::app);
     m_model.write_structure(f, format_remark.str());
 }
 
@@ -1074,6 +1075,58 @@ void Vina::randomize(const int max_steps) {
 
     if (m_verbosity > 1) {
         std::cout << "Clash penalty: " << best_clash_penalty << "\n";
+    }
+}
+void Vina::randomize_score( sz max_steps,sz para,std::string out_dir,std::string out_name,std::string ligand_name) {
+    // Randomize ligand/flex residues conformation
+    // Check the box was defined
+    if (!m_ligand_initialized) {
+        std::cerr << "ERROR: Cannot do ligand randomization. Ligand(s) was(ere) not initialized.\n";
+        exit(EXIT_FAILURE);
+    } else if (!m_map_initialized) {
+        std::cerr << "ERROR: Cannot do ligand randomization. Affinity maps were not initialized.\n";
+        exit(EXIT_FAILURE);
+    }
+
+    conf c;
+    int seed = generate_seed();
+    double penalty = 0;
+    double best_clash_penalty = 0;
+    std::stringstream sstm;
+    rng generator(static_cast<rng::result_type>(seed));
+
+    // It's okay to take the initial conf since we will randomize it
+    conf init_conf = m_model.get_initial_conf();
+    conf best_conf = init_conf;
+
+    sstm << "Randomize conformation (random seed: " << seed << ")";
+    doing(sstm.str(), m_verbosity, 0);
+    VINA_FOR(i, max_steps) {
+        c = init_conf;
+        c.randomize_rigid(m_grid.corner1(), m_grid.corner2(), generator);
+        penalty = m_model.clash_penalty();
+
+        // if (i == 0 || penalty < best_clash_penalty) {
+        //     best_conf = c;
+        //     best_clash_penalty = penalty;
+        // }
+    // }
+    done(m_verbosity, 0);
+
+    m_model.set(c);
+
+    if (m_verbosity > 1) {
+        std::cout << "Clash penalty: " << best_clash_penalty << "\n";
+    }
+    if (!m_grid.is_in_grid(m_model)){
+        printf("The ligand is outside the grid box");
+        continue;
+    }
+    std::vector<double> energies;
+    energies = score();
+    show_score(energies);
+    write_pose(out_dir+"/"+out_name);
+    write_score_to_file(energies, out_dir, out_name, ligand_name);
     }
 }
 

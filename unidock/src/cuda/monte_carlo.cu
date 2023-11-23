@@ -1586,7 +1586,7 @@ __host__ void monte_carlo::operator()(
     checkCUDA(cudaEventRecord(start, NULL));
 
     /* Launch kernel */
-    DEBUG_PRINTF("launch kernel, global_steps=%d, thread=%d, num_of_ligands=%d\n", global_steps,
+    printf("launch kernel, global_steps=%d, thread=%d, num_of_ligands=%d\n", global_steps,
                  thread, num_of_ligands);
     kernel<<<thread / 32 + 1, 32>>>(m_cuda_gpu, ig_cuda_gpu, p_cuda_gpu, rand_molec_struc_gpu,
                                     best_e_gpu, quasi_newton_par_max_steps,
