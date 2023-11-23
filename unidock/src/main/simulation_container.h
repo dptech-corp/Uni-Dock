@@ -162,8 +162,8 @@ struct simulation_container
                 std::string complex = entry.path().stem().string().substr(0, pos_complex);
                 
                 m_complex_names.emplace_back(complex);
-                m_ligand_paths.emplace_back(entry.path());
-                m_protein_paths.emplace_back(entry.path().parent_path() / boost::filesystem::path(complex + "_protein.pdbqt"));
+                m_protein_paths.emplace_back(entry.path());
+                m_ligand_paths.emplace_back(entry.path().parent_path() / boost::filesystem::path(complex + "_ligand.pdbqt"));
                 m_ligand_config_paths.emplace_back(entry.path().parent_path() / boost::filesystem::path(complex + "_ligand_config.txt"));
 
                 curr_entry_size ++;
