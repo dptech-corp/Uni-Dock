@@ -262,8 +262,15 @@ struct simulation_container
                             props[i].center_z, props[i].protein_name,props[i].ligand_name,
                             local_only, m_box_size, m_max_global_steps, m_verbosity,
                             workdir, input_dir, out_phrase);
-                    vcw.launch();
-                    vcw.wait_for_completion();                        
+                    try
+                    {
+                        vcw.launch();
+                        vcw.wait_for_completion();
+                    }
+                    catch(...)
+                    {
+                        std::cerr << "Exception processing " << props[i].ligand_name;
+                    }
                 }
             )
             );
