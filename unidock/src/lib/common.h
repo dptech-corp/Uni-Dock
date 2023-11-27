@@ -101,8 +101,14 @@ struct vec {
     vec operator+(const vec& v) const {
         return vec(data[0] + v[0], data[1] + v[1], data[2] + v[2]);
     }
+    vec operator+(fl s) const {
+        return vec(data[0] + s , data[1] + s, data[2] + s);
+    }
     vec operator-(const vec& v) const {
         return vec(data[0] - v[0], data[1] - v[1], data[2] - v[2]);
+    }
+    vec operator-(fl s) const {
+        return vec(data[0] - s , data[1] - s, data[2] - s);
     }
     const vec& operator*=(fl s) {
         data[0] *= s;

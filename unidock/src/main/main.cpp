@@ -218,6 +218,7 @@ bug reporting, license agreements, and more information.      \n";
         bool autobox = false;
         bool randomize_score = false;
         int randomize_score_num = 100;
+        float randomize_range = 2.0;
         variables_map vm;
 
         // bias
@@ -286,6 +287,7 @@ bug reporting, license agreements, and more information.      \n";
             "(odd number of grid points)")
             ("randomize_score",bool_switch(&randomize_score))
             ("randomize_score_num",value<int> (&randomize_score_num))
+            ("randomize_range",value<float> (&randomize_range))
             ("randomize_only", bool_switch(&randomize_only),
                                            "randomize input, attempting to avoid clashes")
             ("weight_gauss1", value<double>(&weight_gauss1)->default_value(weight_gauss1),
@@ -721,30 +723,18 @@ bug reporting, license agreements, and more information.      \n";
             }
             if(randomize_score){
                 VINA_FOR_IN(i, ligand_names) {
-                v.compute_vina_maps(center_x, center_y, center_z, size_x, size_y, size_z,
-                                                grid_spacing, force_even_voxels);
-                  
-                out_name = default_output(ligand_names[i]); 
-                std::vector<model> ligands;
-                    ligands.emplace_back(parse_ligand_from_file_no_failure(
+                    std::vector<model> ligands;
+                ligands.emplace_back(parse_ligand_from_file_no_failure(
                         ligand_names[i], v.m_scoring_function.get_atom_typing(), keep_H));
-                    v.set_ligand_from_object(ligands);
-                    v.randomize(10);
-                    // v.write_pose(out_name);
-                    Vina v1(v);
-                    v.write_poses(out_name, 10, energy_range);
-                    // for (int j=0;j<10;j++){
-                    // v1.randomize(10);
-                    // std::cout<<out_name<<std::endl;
-                    v1.write_pose(out_dir+"/"+out_name);
-                    v1.set_ligand_from_object(ligands);
-                    std::vector<double> energies;
-                    energies = v1.score();
-                    v1.show_score(energies);
-                    v1.write_score_to_file(energies, out_dir, out_name, ligand_names[i]);
-                    // }
-                    
+                Vina v1(v); 
+                v1.set_ligand_from_object(ligands);   
+                v1.randomize();
+                out_name = default_output(ligand_names[i]);
+                // v1.randomize_score(randomize_score_num,0,out_dir,out_name,ligand_names[i]);
+                vec center(center_x,center_y,center_z);
+                v1.randomize_score_with_range(randomize_score_num,center,randomize_range,out_dir,out_name,ligand_names[i]); 
                 }
+                
                 return 0;
 
             }
