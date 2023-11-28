@@ -193,7 +193,10 @@ python run_dock.py
 ```
 
 If you want to use search mode presets, specify the parameter `search_mode` in `config.json` and delete `nt` and `ns` in `config.json`.
-
+### Random mode
+``` shell
+unidock --receptor ./indata/protein.pdbqt --ligand_index def_ligands1.txt  --center_x 2.638 --center_y -0.964 --center_z 21.290 --size_x 22 --size_y 22 --size_z 22 --dir ./result/score --exhaustiveness 128 --max_step 20 --num_modes 9  --scoring vinardo --refine_step 3 --seed 5  --randomize_score --randomize_score_num 1000 --randomize_range 10
+```
 ## Bug Report
 
 Please report bugs to [Issues](https://github.com/dptech-corp/Uni-Dock/issues) page.
