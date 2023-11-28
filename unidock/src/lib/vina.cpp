@@ -1105,8 +1105,8 @@ void Vina::randomize_score( sz max_steps,sz para,std::string out_dir,std::string
     VINA_FOR(i, max_steps) {
         c = init_conf;
         c.randomize_rigid(m_grid.corner1(), m_grid.corner2(), generator);
-        printf("corner1[0]:%f,corner1[1]:%f,corner1[2]:%f\n",m_grid.corner1()[0],m_grid.corner1()[1],m_grid.corner1()[2]);
-        printf("corner2[0]:%f,corner2[1]:%f,corner2[2]:%f\n",m_grid.corner2()[0],m_grid.corner2()[1],m_grid.corner2()[2]);
+        // printf("corner1[0]:%f,corner1[1]:%f,corner1[2]:%f\n",m_grid.corner1()[0],m_grid.corner1()[1],m_grid.corner1()[2]);
+        // printf("corner2[0]:%f,corner2[1]:%f,corner2[2]:%f\n",m_grid.corner2()[0],m_grid.corner2()[1],m_grid.corner2()[2]);
         penalty = m_model.clash_penalty();
 
         // if (i == 0 || penalty < best_clash_penalty) {
@@ -1161,8 +1161,8 @@ void Vina::randomize_score_with_range( sz max_steps,vec center,fl range,std::str
         c = init_conf;
 
         c.randomize_rigid(center-range, center+range, generator);
-        printf("corner1[0]:%f,corner1[1]:%f,corner1[2]:%f\n",m_grid.corner1()[0],m_grid.corner1()[1],m_grid.corner1()[2]);
-        printf("corner2[0]:%f,corner2[1]:%f,corner2[2]:%f\n",m_grid.corner2()[0],m_grid.corner2()[1],m_grid.corner2()[2]);
+        // printf("corner1[0]:%f,corner1[1]:%f,corner1[2]:%f\n",m_grid.corner1()[0],m_grid.corner1()[1],m_grid.corner1()[2]);
+        // printf("corner2[0]:%f,corner2[1]:%f,corner2[2]:%f\n",m_grid.corner2()[0],m_grid.corner2()[1],m_grid.corner2()[2]);
         penalty = m_model.clash_penalty();
 
         // if (i == 0 || penalty < best_clash_penalty) {

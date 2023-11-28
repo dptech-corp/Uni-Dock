@@ -728,7 +728,7 @@ bug reporting, license agreements, and more information.      \n";
                         ligand_names[i], v.m_scoring_function.get_atom_typing(), keep_H));
                 Vina v1(v); 
                 v1.set_ligand_from_object(ligands);   
-                v1.randomize();
+                // v1.randomize();
                 out_name = default_output(ligand_names[i]);
                 // v1.randomize_score(randomize_score_num,0,out_dir,out_name,ligand_names[i]);
                 vec center(center_x,center_y,center_z);
