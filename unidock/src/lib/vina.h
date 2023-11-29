@@ -172,11 +172,16 @@ public:
     void write_score_to_file(const std::vector<double> energies, const std::string out_dir,
                              const std::string score_file, const std::string input_name);
     void write_score_to_file_with_mark(const std::vector<double> energies, const std::string out_dir,
-                             const std::string score_file, const std::string input_name);                         
+                             const std::string score_file, const std::string input_name); 
+    void write_score_to_file(const std::vector<double> energies,
+                             const std::string score_file, const std::string input_name);
+    void write_score_to_file_with_mark(const std::vector<double> energies,
+                             const std::string score_file, const std::string input_name);                          
     void set_bias(std::ifstream& bias_file_content);
     void set_batch_bias(std::ifstream& bias_batch_file_content);
     void randomize_score( sz max_steps,sz para,std::string out_dir,std::string out_name,std::string ligand_name);
     void randomize_score_with_range( sz max_steps,vec center,fl range,std::string out_dir,std::string out_name,std::string ligand_name);
+    void randomize_score_with_range( sz max_steps,vec center,fl range,std::string out_name,std::string ligand_name);
     // model and poses
     model m_receptor;
     model m_model;

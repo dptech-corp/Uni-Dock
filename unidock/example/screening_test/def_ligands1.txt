@@ -1,2 +1,1 @@
-./ligand_prepared_split_0_root_conf_0.sdf
-./ligand_prepared_split_0_root_conf_1.sdf
+/home/ysy/Documents/Uni-Dock/unidock/example/screening_test/ligand_prepared_split_0_root_conf_0.sdf

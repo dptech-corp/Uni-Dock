@@ -62,7 +62,18 @@ options_occurrence get_occurrence(boost::program_options::variables_map& vm,
         tmp.all = false;
     return tmp;
 }
+bool isAbsolutePath(const std::string& path) {
+    return !path.empty() && path[0] == '/';
+}
 
+
+std::string extractFileName(const std::string& path) {
+    size_t lastSlash = path.find_last_of('/');
+    if (lastSlash != std::string::npos) {
+        return path.substr(lastSlash + 1);
+    }
+    return path; 
+}
 void check_occurrence(boost::program_options::variables_map& vm,
                       boost::program_options::options_description& d) {
     VINA_FOR_IN(i, d.options()) {
@@ -732,7 +743,16 @@ bug reporting, license agreements, and more information.      \n";
                 out_name = default_output(ligand_names[i]);
                 // v1.randomize_score(randomize_score_num,0,out_dir,out_name,ligand_names[i]);
                 vec center(center_x,center_y,center_z);
+                if (isAbsolutePath(out_name)) {
+                out_name  = extractFileName(out_name);
+                    std::cout << "File name: " << out_name << std::endl;
+                } else {
+                    std::cout << "The provided path is not an absolute path." << std::endl;
+                }
                 v1.randomize_score_with_range(randomize_score_num,center,randomize_range,out_dir,out_name,ligand_names[i]); 
+                // std::cout<<out_name<<std::endl;
+                // v1.randomize_score_with_range(randomize_score_num,center,randomize_range,out_name,ligand_names[i]); 
+
                 }
                 
                 return 0;

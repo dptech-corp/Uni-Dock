@@ -540,9 +540,9 @@ void Vina::compute_vina_maps(double center_x, double center_y, double center_z, 
         fl real_span = granularity * gd[i].n_voxels;
         gd[i].begin = center[i] - real_span / 2;
         gd[i].end = gd[i].begin + real_span;
-        printf("granularity:%f,gd[%d].n_vosels:%d\n",granularity,i,gd[i].n_voxels);
-        printf("center[%ld]:%f,real_span%f",i,center[i],real_span);
-        printf("begin gd[%ld]:%f end gd[%ld]:%f\n",i,gd[i].begin,i,gd[i].end);
+    //     printf("granularity:%f,gd[%d].n_vosels:%d\n",granularity,i,gd[i].n_voxels);
+    //     printf("center[%ld]:%f,real_span%f",i,center[i],real_span);
+    //     printf("begin gd[%ld]:%f end gd[%ld]:%f\n",i,gd[i].begin,i,gd[i].end);
     }
 
     // Initialize the scoring function
@@ -1183,9 +1183,65 @@ void Vina::randomize_score_with_range( sz max_steps,vec center,fl range,std::str
     }
     std::vector<double> energies;
     energies = score();
-    show_score(energies);
+    // show_score(energies);
     write_pose(out_dir+"/"+out_name);
     write_score_to_file_with_mark(energies, out_dir, out_name, ligand_name);
+    }
+}
+void Vina::randomize_score_with_range( sz max_steps,vec center,fl range,std::string out_name,std::string ligand_name) {
+    // Randomize ligand/flex residues conformation
+    // Check the box was defined
+    if (!m_ligand_initialized) {
+        std::cerr << "ERROR: Cannot do ligand randomization. Ligand(s) was(ere) not initialized.\n";
+        exit(EXIT_FAILURE);
+    } else if (!m_map_initialized) {
+        std::cerr << "ERROR: Cannot do ligand randomization. Affinity maps were not initialized.\n";
+        exit(EXIT_FAILURE);
+    }
+
+    conf c;
+    int seed = generate_seed();
+    double penalty = 0;
+    double best_clash_penalty = 0;
+    std::stringstream sstm;
+    rng generator(static_cast<rng::result_type>(seed));
+
+    // It's okay to take the initial conf since we will randomize it
+    conf init_conf = m_model.get_initial_conf();
+    conf best_conf = init_conf;
+
+    sstm << "Randomize conformation (random seed: " << seed << ")";
+    doing(sstm.str(), m_verbosity, 0);
+    
+    VINA_FOR(i, max_steps) {
+        c = init_conf;
+
+        c.randomize_rigid(center-range, center+range, generator);
+        // printf("corner1[0]:%f,corner1[1]:%f,corner1[2]:%f\n",m_grid.corner1()[0],m_grid.corner1()[1],m_grid.corner1()[2]);
+        // printf("corner2[0]:%f,corner2[1]:%f,corner2[2]:%f\n",m_grid.corner2()[0],m_grid.corner2()[1],m_grid.corner2()[2]);
+        penalty = m_model.clash_penalty();
+
+        // if (i == 0 || penalty < best_clash_penalty) {
+        //     best_conf = c;
+        //     best_clash_penalty = penalty;
+        // }
+    // }
+    done(m_verbosity, 0);
+
+    m_model.set(c);
+
+    if (m_verbosity > 1) {
+        std::cout << "Clash penalty: " << best_clash_penalty << "\n";
+    }
+    if (!m_grid.is_in_grid(m_model)){
+        printf("The ligand is outside the grid box");
+        continue;
+    }
+    std::vector<double> energies;
+    energies = score();
+    // show_score(energies);
+    write_pose(out_name);
+    write_score_to_file_with_mark(energies, out_name, ligand_name);
     }
 }
 
@@ -1284,6 +1340,41 @@ void Vina::write_score_to_file(const std::vector<double> energies, const std::st
 void Vina::write_score_to_file_with_mark(const std::vector<double> energies, const std::string out_dir,
                                const std::string score_file, const std::string input_name) {
     ofile f(make_path(out_dir + '/' + score_file),
+            std::ofstream::out | std::ofstream::app);  // separator() not needed
+    f << ">  <remarkInfo>  (1)\n";
+    f << "REMARK " << get_filename(input_name) << ' ' << std::fixed << std::setprecision(3)
+      << energies[0] << " (kcal/mol)\n";
+    f << "Estimated Free Energy of Binding   : " << std::fixed << std::setprecision(3)
+      << energies[0] << " (kcal/mol) [=(1)+(2)+(3)+(4)]\n";
+    f << "(1) Final Intermolecular Energy    : " << std::fixed << std::setprecision(3)
+      << energies[1] + energies[2] << " (kcal/mol)\n";
+    f << "    Ligand - Receptor              : " << std::fixed << std::setprecision(3)
+      << energies[1] << " (kcal/mol)\n";
+    f << "    Ligand - Flex side chains      : " << std::fixed << std::setprecision(3)
+      << energies[2] << " (kcal/mol)\n";
+    f << "(2) Final Total Internal Energy    : " << std::fixed << std::setprecision(3)
+      << energies[3] + energies[4] + energies[5] << " (kcal/mol)\n";
+    f << "    Ligand                         : " << std::fixed << std::setprecision(3)
+      << energies[5] << " (kcal/mol)\n";
+    f << "    Flex   - Receptor              : " << std::fixed << std::setprecision(3)
+      << energies[3] << " (kcal/mol)\n";
+    f << "    Flex   - Flex side chains      : " << std::fixed << std::setprecision(3)
+      << energies[4] << " (kcal/mol)\n";
+    f << "(3) Torsional Free Energy          : " << std::fixed << std::setprecision(3)
+      << energies[6] << " (kcal/mol)\n";
+    if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO) {
+        f << "(4) Unbound System's Energy        : " << std::fixed << std::setprecision(3)
+          << energies[7] << " (kcal/mol)\n";
+    } else {
+        f << "(4) Unbound System's Energy [=(2)] : " << std::fixed << std::setprecision(3)
+          << energies[7] << " (kcal/mol)\n";
+    }
+    f << "$$$$";
+    f << std::endl;
+}
+void Vina::write_score_to_file_with_mark(const std::vector<double> energies,
+                               const std::string score_file, const std::string input_name) {
+    ofile f(make_path( score_file),
             std::ofstream::out | std::ofstream::app);  // separator() not needed
     f << ">  <remarkInfo>  (1)\n";
     f << "REMARK " << get_filename(input_name) << ' ' << std::fixed << std::setprecision(3)
