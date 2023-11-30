@@ -1035,6 +1035,20 @@ void Vina::write_pose(const std::string& output_name, const std::string& remark)
     ofile f(make_path(output_name),std::ios::app);
     m_model.write_structure(f, format_remark.str());
 }
+void Vina::write_sdf_pose(const std::string& output_name, const std::string& remark) {
+    std::ostringstream format_remark;
+    format_remark.setf(std::ios::fixed, std::ios::floatfield);
+    format_remark.setf(std::ios::showpoint);
+
+    // Add REMARK keyword to be PDB valid
+    if (!remark.empty()) {
+        // format_remark << "REMARK " << remark << " \n";
+        format_remark << remark << " \n";
+    }
+
+    ofile f(make_path(output_name),std::ios::app);
+    m_model.write_sdf_structure(f, format_remark.str());
+}
 
 void Vina::randomize(const int max_steps) {
     // Randomize ligand/flex residues conformation
@@ -1184,8 +1198,9 @@ void Vina::randomize_score_with_range( sz max_steps,vec center,fl range,std::str
     std::vector<double> energies;
     energies = score();
     // show_score(energies);
-    write_pose(out_dir+"/"+out_name);
-    write_score_to_file_with_mark(energies, out_dir, out_name, ligand_name);
+    std::string score = write_score(energies);
+    write_sdf_pose(out_dir+"/"+out_name,score);
+    // write_score_to_file_with_mark(energies, out_dir, out_name, ligand_name);
     }
 }
 void Vina::randomize_score_with_range( sz max_steps,vec center,fl range,std::string out_name,std::string ligand_name) {
@@ -1302,6 +1317,39 @@ void Vina::write_score(const std::vector<double> energies, const std::string inp
         f << "(4) Unbound System's Energy [=(2)] : " << std::fixed << std::setprecision(3)
           << energies[7] << " (kcal/mol)\n";
     }
+}
+std::string Vina::write_score(const std::vector<double> energies) {
+    std::ostringstream ss; // Create a string stream
+    ss <<">  <RemarkInfo>  (1)\n"; 
+    ss << "REMARK " << ' ' << std::fixed << std::setprecision(3)
+       << energies[0] << " (kcal/mol)\n";
+    ss << "Estimated Free Energy of Binding   : " << std::fixed << std::setprecision(3)
+       << energies[0] << " (kcal/mol) [=(1)+(2)+(3)+(4)]\n";
+    ss << "(1) Final Intermolecular Energy    : " << std::fixed << std::setprecision(3)
+       << energies[1] + energies[2] << " (kcal/mol)\n";
+    ss << "    Ligand - Receptor              : " << std::fixed << std::setprecision(3)
+       << energies[1] << " (kcal/mol)\n";
+    ss << "    Ligand - Flex side chains      : " << std::fixed << std::setprecision(3)
+       << energies[2] << " (kcal/mol)\n";
+    ss << "(2) Final Total Internal Energy    : " << std::fixed << std::setprecision(3)
+       << energies[3] + energies[4] + energies[5] << " (kcal/mol)\n";
+    ss << "    Ligand                         : " << std::fixed << std::setprecision(3)
+       << energies[5] << " (kcal/mol)\n";
+    ss << "    Flex   - Receptor              : " << std::fixed << std::setprecision(3)
+       << energies[3] << " (kcal/mol)\n";
+    ss << "    Flex   - Flex side chains      : " << std::fixed << std::setprecision(3)
+       << energies[4] << " (kcal/mol)\n";
+    ss << "(3) Torsional Free Energy          : " << std::fixed << std::setprecision(3)
+       << energies[6] << " (kcal/mol)\n";
+    if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO) {
+        ss << "(4) Unbound System's Energy        : " << std::fixed << std::setprecision(3)
+           << energies[7] << " (kcal/mol)\n";
+    } else {
+        ss << "(4) Unbound System's Energy [=(2)] : " << std::fixed << std::setprecision(3)
+           << energies[7] << " (kcal/mol)\n";
+    }
+
+    return ss.str(); // Return the contents of the stream as a string
 }
 
 void Vina::write_score_to_file(const std::vector<double> energies, const std::string out_dir,

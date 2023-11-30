@@ -160,6 +160,7 @@ public:
     std::vector<std::vector<double> > get_poses_energies(int how_many = 9,
                                                          double energy_range = 3.0);
     void write_pose(const std::string& output_name, const std::string& remark = std::string());
+    void write_sdf_pose(const std::string& output_name, const std::string& remark);
     void write_poses(const std::string& output_name, int how_many = 9, double energy_range = 3.0);
     void write_poses_gpu(const std::vector<std::string>& gpu_output_name, int how_many = 9,
                          double energy_range = 3.0);
@@ -169,6 +170,7 @@ public:
                     const std::string& receptor_filename = "NULL");
     void show_score(const std::vector<double> energies);
     void write_score(const std::vector<double> energies, const std::string input_name);
+    std::string write_score(const std::vector<double> energies); 
     void write_score_to_file(const std::vector<double> energies, const std::string out_dir,
                              const std::string score_file, const std::string input_name);
     void write_score_to_file_with_mark(const std::vector<double> energies, const std::string out_dir,
