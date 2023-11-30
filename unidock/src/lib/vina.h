@@ -154,6 +154,7 @@ public:
     std::string get_sdf_poses(int how_many = 9, double energy_range = 3.0);
     std::string get_poses_gpu(int ligand_id, int how_many = 9, double energy_range = 3.0);
     std::string get_sdf_poses_gpu(int ligand_id, int how_many = 9, double energy_range = 3.0);
+    std::string get_sdf_poses_with_score_gpu(int ligand_id, int how_many, double energy_range);
     void enable_gpu() { gpu = true; }
     std::vector<std::vector<double> > get_poses_coordinates(int how_many = 9,
                                                             double energy_range = 3.0);
@@ -171,6 +172,8 @@ public:
     void show_score(const std::vector<double> energies);
     void write_score(const std::vector<double> energies, const std::string input_name);
     std::string write_score(const std::vector<double> energies); 
+    std::string write_score_without_tag(const std::vector<double> energies);
+
     void write_score_to_file(const std::vector<double> energies, const std::string out_dir,
                              const std::string score_file, const std::string input_name);
     void write_score_to_file_with_mark(const std::vector<double> energies, const std::string out_dir,
@@ -184,6 +187,7 @@ public:
     void randomize_score( sz max_steps,sz para,std::string out_dir,std::string out_name,std::string ligand_name);
     void randomize_score_with_range( sz max_steps,vec center,fl range,std::string out_dir,std::string out_name,std::string ligand_name);
     void randomize_score_with_range( sz max_steps,vec center,fl range,std::string out_name,std::string ligand_name);
+    
     // model and poses
     model m_receptor;
     model m_model;
@@ -225,6 +229,7 @@ public:
 
     std::string vina_remarks(output_type& pose, fl lb, fl ub);
     std::string sdf_remarks(output_type& pose, fl lb, fl ub);
+    std::string sdf_remarks(std::vector<double> pose, fl lb, fl ub);
     output_container remove_redundant(const output_container& in, fl min_rmsd);
 
     void set_forcefield();
@@ -233,6 +238,7 @@ public:
     std::vector<double> score_gpu(int i, double intramolecular_energy);
     std::vector<double> optimize(output_type& out, const int max_steps = 0);
     int generate_seed(const int seed = 0);
+    std::vector<std::string>score_info;
 };
 
 #endif

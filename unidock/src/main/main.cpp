@@ -694,6 +694,10 @@ bug reporting, license agreements, and more information.      \n";
                 // search one ligand on cpu
                 v.global_search(exhaustiveness, num_modes, min_rmsd, max_evals);
                 v.write_poses(out_name, num_modes, energy_range);
+                std::vector<double> energies;
+                energies = v.score();
+                v.show_score(energies);
+                
             }
         } else if (vm.count("gpu_batch") || vm.count("ligand_index")) {
             if (randomize_only) {
@@ -749,6 +753,7 @@ bug reporting, license agreements, and more information.      \n";
                 } else {
                     std::cout << "The provided path is not an absolute path." << std::endl;
                 }
+                
                 v1.randomize_score_with_range(randomize_score_num,center,randomize_range,out_dir,out_name,ligand_names[i]); 
                 // std::cout<<out_name<<std::endl;
                 // v1.randomize_score_with_range(randomize_score_num,center,randomize_range,out_name,ligand_names[i]); 
@@ -854,12 +859,14 @@ bug reporting, license agreements, and more information.      \n";
                             // initialize bias object
                             v1.set_batch_bias(bias_file_content);
                             bias_file_content.close();
+                            
                         }
                     }
                     v1.set_ligand_from_object_gpu(batch_ligands);
                     v1.global_search_gpu(exhaustiveness, num_modes, min_rmsd, max_evals, max_step,
                                          batch_ligand_names.size(), (unsigned long long)seed,
                                          refine_step, local_only);
+                    // v1.write_poses_gpu(gpu_out_name, num_modes, energy_range);
                     v1.write_poses_gpu(gpu_out_name, num_modes, energy_range);
                     auto end = std::chrono::system_clock::now();
                     std::cout << "Batch " << batch_id << " running time: "

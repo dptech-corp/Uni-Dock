@@ -771,10 +771,29 @@ std::string Vina::sdf_remarks(output_type& pose, fl lb, fl ub) {
         remark << "CONF_INDEPENDENT: " << std::setw(12) << std::setprecision(3)
                << pose.conf_independent << "\n";
     remark << "UNBOUND:          " << std::setw(12) << std::setprecision(3) << pose.unbound << "\n";
+    // remark << '\n';
+
+    return remark.str();
+}
+std::string Vina::sdf_remarks(std::vector<double> energy, fl lb, fl ub) {
+    std::ostringstream remark;
+
+    remark.setf(std::ios::fixed, std::ios::floatfield);
+    remark.setf(std::ios::showpoint);
+
+    remark << "> <Uni-Dock RESULT> \nENERGY=" << std::setw(9) << std::setprecision(3) << energy[0]
+           << "  LOWER_BOUND=" << std::setw(9) << std::setprecision(3) << lb
+           << "  UPPER_BOUND=" << std::setw(9) << std::setprecision(3) << ub << '\n';
+
+    remark << "INTER + INTRA:    " << std::setw(12) << std::setprecision(3) << energy[0] << "\n";
+    remark << "INTER:            " << std::setw(12) << std::setprecision(3) << energy[1]+energy[2] << "\n";
+    remark << "INTRA:            " << std::setw(12) << std::setprecision(3) << energy[3]+energy[4]+energy[5] << "\n";
+    remark << "UNBOUND:          " << std::setw(12) << std::setprecision(3) << energy[7]<< "\n";
     remark << '\n';
 
     return remark.str();
 }
+
 
 std::string Vina::get_poses(int how_many, double energy_range) {
     int n = 0;
@@ -934,6 +953,59 @@ std::string Vina::get_sdf_poses_gpu(int ligand_id, int how_many, double energy_r
     double best_energy = 0;
     std::ostringstream out;
     std::string remarks;
+    std::string scores;
+    if (how_many < 0) {
+        std::cerr << "Error: number of poses written must be greater than zero.\n";
+        exit(EXIT_FAILURE);
+    }
+
+    if (energy_range < 0) {
+        std::cerr << "Error: energy range must be greater than zero.\n";
+        exit(EXIT_FAILURE);
+    }
+
+    if (!m_poses_gpu[ligand_id].empty()) {
+        // Get energy from the best conf
+
+        best_energy = m_poses_gpu[ligand_id][0].e;
+
+        VINA_FOR_IN(i, m_poses_gpu[ligand_id]) {
+            /* Stop if:
+                    - We wrote the number of conf asked
+                    - If there is no conf to write
+                    - The energy of the current conf is superior than best_energy + energy_range
+            */
+            if (n >= how_many || !not_max(m_poses_gpu[ligand_id][i].e)
+                || m_poses_gpu[ligand_id][i].e > best_energy + energy_range)
+                break;  // check energy_range sanity FIXME
+
+            // Push the current pose to model
+            m_model_gpu[ligand_id].set(m_poses_gpu[ligand_id][i].c);
+
+            // Write conf
+            remarks = sdf_remarks(m_poses_gpu[ligand_id][i], m_poses_gpu[ligand_id][i].lb,
+                                  m_poses_gpu[ligand_id][i].ub);
+            scores = score_info[ligand_id*m_poses_gpu[ligand_id].size()+i];
+            out << m_model_gpu[ligand_id].write_sdf_model(n + 1, remarks+scores);
+          
+            n++;
+        }
+
+        // Push back the best conf in model
+        m_model_gpu[ligand_id].set(m_poses_gpu[ligand_id][0].c);
+
+    } else {
+        std::cerr << "WARNING: Could not find any poses. No poses were written.\n";
+    }
+    // DEBUG_PRINTF("out poses: %s\n", out.str());
+
+    return out.str();
+}
+std::string Vina::get_sdf_poses_with_score_gpu(int ligand_id, int how_many, double energy_range) {
+    int n = 0;
+    double best_energy = 0;
+    std::ostringstream out;
+    std::string remarks;
 
     if (how_many < 0) {
         std::cerr << "Error: number of poses written must be greater than zero.\n";
@@ -967,7 +1039,8 @@ std::string Vina::get_sdf_poses_gpu(int ligand_id, int how_many, double energy_r
             remarks = sdf_remarks(m_poses_gpu[ligand_id][i], m_poses_gpu[ligand_id][i].lb,
                                   m_poses_gpu[ligand_id][i].ub);
             out << m_model_gpu[ligand_id].write_sdf_model(n + 1, remarks);
-
+            out << score_info[ligand_id*m_poses_gpu[ligand_id].size()+i];
+            out<<"$$$$\n";
             n++;
         }
 
@@ -1016,6 +1089,8 @@ void Vina::write_poses_gpu(const std::vector<std::string>& gpu_output_name, int 
                 out = get_poses_gpu(i, how_many, energy_range);
             }
             f << out;
+            // std::cout<<score_info.size();
+            
         } else {
             std::cerr << "WARNING: Could not find any poses. No poses were written.\n";
         }
@@ -1043,6 +1118,7 @@ void Vina::write_sdf_pose(const std::string& output_name, const std::string& rem
     // Add REMARK keyword to be PDB valid
     if (!remark.empty()) {
         // format_remark << "REMARK " << remark << " \n";
+        // std::string out_remark = remark+get_sdf_poses(1, 10);
         format_remark << remark << " \n";
     }
 
@@ -1178,13 +1254,12 @@ void Vina::randomize_score_with_range( sz max_steps,vec center,fl range,std::str
         // printf("corner1[0]:%f,corner1[1]:%f,corner1[2]:%f\n",m_grid.corner1()[0],m_grid.corner1()[1],m_grid.corner1()[2]);
         // printf("corner2[0]:%f,corner2[1]:%f,corner2[2]:%f\n",m_grid.corner2()[0],m_grid.corner2()[1],m_grid.corner2()[2]);
         penalty = m_model.clash_penalty();
-
         // if (i == 0 || penalty < best_clash_penalty) {
         //     best_conf = c;
         //     best_clash_penalty = penalty;
         // }
     // }
-    done(m_verbosity, 0);
+    // done(m_verbosity, 0);
 
     m_model.set(c);
 
@@ -1198,9 +1273,13 @@ void Vina::randomize_score_with_range( sz max_steps,vec center,fl range,std::str
     std::vector<double> energies;
     energies = score();
     // show_score(energies);
+    std::string remarks = sdf_remarks(energies, m_model.rmsd_lower_bound(m_model), m_model.rmsd_upper_bound(m_model));
     std::string score = write_score(energies);
-    write_sdf_pose(out_dir+"/"+out_name,score);
-    // write_score_to_file_with_mark(energies, out_dir, out_name, ligand_name);
+    // std::cout<<m_model.rmsd_upper_bound(m_model);
+    // m_poses
+    // std::cout<<get_sdf_poses(1,3.0 );
+    write_sdf_pose(out_dir+"/"+out_name,remarks);
+    write_score_to_file_with_mark(energies, out_dir, out_name, ligand_name);
     }
 }
 void Vina::randomize_score_with_range( sz max_steps,vec center,fl range,std::string out_name,std::string ligand_name) {
@@ -1318,9 +1397,43 @@ void Vina::write_score(const std::vector<double> energies, const std::string inp
           << energies[7] << " (kcal/mol)\n";
     }
 }
+
 std::string Vina::write_score(const std::vector<double> energies) {
     std::ostringstream ss; // Create a string stream
     ss <<">  <RemarkInfo>  (1)\n"; 
+    ss << "REMARK " << ' ' << std::fixed << std::setprecision(3)
+       << energies[0] << " (kcal/mol)\n";
+    ss << "Estimated Free Energy of Binding   : " << std::fixed << std::setprecision(3)
+       << energies[0] << " (kcal/mol) [=(1)+(2)+(3)+(4)]\n";
+    ss << "(1) Final Intermolecular Energy    : " << std::fixed << std::setprecision(3)
+       << energies[1] + energies[2] << " (kcal/mol)\n";
+    ss << "    Ligand - Receptor              : " << std::fixed << std::setprecision(3)
+       << energies[1] << " (kcal/mol)\n";
+    ss << "    Ligand - Flex side chains      : " << std::fixed << std::setprecision(3)
+       << energies[2] << " (kcal/mol)\n";
+    ss << "(2) Final Total Internal Energy    : " << std::fixed << std::setprecision(3)
+       << energies[3] + energies[4] + energies[5] << " (kcal/mol)\n";
+    ss << "    Ligand                         : " << std::fixed << std::setprecision(3)
+       << energies[5] << " (kcal/mol)\n";
+    ss << "    Flex   - Receptor              : " << std::fixed << std::setprecision(3)
+       << energies[3] << " (kcal/mol)\n";
+    ss << "    Flex   - Flex side chains      : " << std::fixed << std::setprecision(3)
+       << energies[4] << " (kcal/mol)\n";
+    ss << "(3) Torsional Free Energy          : " << std::fixed << std::setprecision(3)
+       << energies[6] << " (kcal/mol)\n";
+    if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO) {
+        ss << "(4) Unbound System's Energy        : " << std::fixed << std::setprecision(3)
+           << energies[7] << " (kcal/mol)\n";
+    } else {
+        ss << "(4) Unbound System's Energy [=(2)] : " << std::fixed << std::setprecision(3)
+           << energies[7] << " (kcal/mol)\n";
+    }
+
+    return ss.str(); // Return the contents of the stream as a string
+}
+std::string Vina::write_score_without_tag(const std::vector<double> energies) {
+    std::ostringstream ss; // Create a string stream
+
     ss << "REMARK " << ' ' << std::fixed << std::setprecision(3)
        << energies[0] << " (kcal/mol)\n";
     ss << "Estimated Free Energy of Binding   : " << std::fixed << std::setprecision(3)
@@ -1389,7 +1502,7 @@ void Vina::write_score_to_file_with_mark(const std::vector<double> energies, con
                                const std::string score_file, const std::string input_name) {
     ofile f(make_path(out_dir + '/' + score_file),
             std::ofstream::out | std::ofstream::app);  // separator() not needed
-    f << ">  <remarkInfo>  (1)\n";
+    // f << ">  <remarkInfo>  (1)\n";
     f << "REMARK " << get_filename(input_name) << ' ' << std::fixed << std::setprecision(3)
       << energies[0] << " (kcal/mol)\n";
     f << "Estimated Free Energy of Binding   : " << std::fixed << std::setprecision(3)
@@ -1891,7 +2004,7 @@ void Vina::global_search(const int exhaustiveness, const int n_poses, const doub
             poses[i].total = poses[i].inter + poses[i].intra;  // cost function for optimization
             poses[i].conf_independent = energies[6];           // "torsion"
             poses[i].unbound = energies[7];                    // specific to each scoring function
-
+            score_info.push_back(write_score(energies));
             if (m_verbosity > 1) {
                 std::cout << "FINAL ENERGY: \n";
                 show_score(energies);
@@ -2088,7 +2201,7 @@ void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const 
                 poses[i].total = poses[i].inter + poses[i].intra;  // cost function for optimization
                 poses[i].conf_independent = energies[6];           // "torsion"
                 poses[i].unbound = energies[7];  // specific to each scoring function
-
+                score_info.push_back(write_score_without_tag(energies));
                 if (m_verbosity > 1) {
                     std::cout << "FINAL ENERGY: \n";
                     show_score(energies);

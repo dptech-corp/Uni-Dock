@@ -170,7 +170,7 @@ public:
     }
     std::string write_model(sz model_number, const std::string& remark);
     std::string write_sdf_model(sz model_number, const std::string& remark);
-
+    std::string write_sdf_with_score_model(sz model_number, const std::string& remark);
     void set(const conf& c);
 
     fl gyration_radius(sz ligand_number) const;  // uses coords
