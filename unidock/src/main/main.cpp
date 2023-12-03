@@ -230,6 +230,8 @@ bug reporting, license agreements, and more information.      \n";
         bool randomize_score = false;
         int randomize_score_num = 100;
         float randomize_range = 2.0;
+        bool core_constraint = false;
+        float mobility = 0.01;
         variables_map vm;
 
         // bias
@@ -296,6 +298,8 @@ bug reporting, license agreements, and more information.      \n";
             "force_even_voxels", bool_switch(&force_even_voxels),
             "calculated grid maps will have an even number of voxels (intervals) in each dimension "
             "(odd number of grid points)")
+            ("core_constraint",bool_switch(&core_constraint))
+            ("mobility",value<float> (&mobility))
             ("randomize_score",bool_switch(&randomize_score))
             ("randomize_score_num",value<int> (&randomize_score_num))
             ("randomize_range",value<float> (&randomize_range))
@@ -865,7 +869,7 @@ bug reporting, license agreements, and more information.      \n";
                     v1.set_ligand_from_object_gpu(batch_ligands);
                     v1.global_search_gpu(exhaustiveness, num_modes, min_rmsd, max_evals, max_step,
                                          batch_ligand_names.size(), (unsigned long long)seed,
-                                         refine_step, local_only);
+                                         refine_step, local_only,core_constraint,mobility);
                     // v1.write_poses_gpu(gpu_out_name, num_modes, energy_range);
                     v1.write_poses_gpu(gpu_out_name, num_modes, energy_range);
                     auto end = std::chrono::system_clock::now();

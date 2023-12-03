@@ -63,6 +63,11 @@ struct monte_carlo {
                     const igrid& ig, const vec& corner1, const vec& corner2, rng& generator,
                     int verbosity, unsigned long long seed,
                     std::vector<std::vector<bias_element> >& bias_batch_list) const;
+    void operator()(std::vector<model>& m, std::vector<output_container>& out,
+                    std::vector<precalculate_byatom>& p, triangular_matrix_cuda_t* m_data_list_gpu,
+                    const igrid& ig, const vec& corner1, const vec& corner2, rng& generator,
+                    int verbosity, unsigned long long seed,
+                    std::vector<std::vector<bias_element> >& bias_batch_list,bool core_constraint,float mobility) const;
     std::vector<output_type> cuda_to_vina(output_type_cuda_t* results_p, int thread) const;
 };
 

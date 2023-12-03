@@ -2058,7 +2058,7 @@ void Vina::global_search(const int exhaustiveness, const int n_poses, const doub
 void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const double min_rmsd,
                              const int max_evals, const int max_step, int num_of_ligands,
                              unsigned long long seed, const int refine_step,
-                             const bool local_only) {
+                             const bool local_only,const bool core_constraint,const float mobility) {
     // Vina search (Monte-carlo and local optimization)
     // Check if ff, box and ligand were initialized
     if (!m_ligand_initialized) {
@@ -2120,10 +2120,10 @@ void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const 
     auto start = std::chrono::system_clock::now();
     if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO) {
         mc(m_model_gpu, poses_gpu, m_precalculated_byatom_gpu, m_data_list_gpu, m_grid,
-           m_grid.corner1(), m_grid.corner2(), generator, m_verbosity, seed, bias_batch_list);
+           m_grid.corner1(), m_grid.corner2(), generator, m_verbosity, seed, bias_batch_list,core_constraint,mobility);
     } else {
         mc(m_model_gpu, poses_gpu, m_precalculated_byatom_gpu, m_data_list_gpu, m_ad4grid,
-           m_ad4grid.corner1(), m_ad4grid.corner2(), generator, m_verbosity, seed, bias_batch_list);
+           m_ad4grid.corner1(), m_ad4grid.corner2(), generator, m_verbosity, seed, bias_batch_list,core_constraint,mobility);
     }
     auto end = std::chrono::system_clock::now();
     std::cout << "Kernel running time: "
