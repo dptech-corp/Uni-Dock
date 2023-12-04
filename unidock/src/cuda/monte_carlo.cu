@@ -651,6 +651,60 @@ __device__ __forceinline__ void set(const output_type_cuda_t* x, rigid_cuda_t* l
     }
     /* ************* end branches_set_conf ************* */
 }
+__device__ __forceinline__ void set_without_core(const output_type_cuda_t* x, rigid_cuda_t* lig_rigid_gpu,
+                                    m_coords_cuda_t* m_coords_gpu, const atom_cuda_t* atoms,
+                                    const int m_num_movable_atoms, const float epsilon_fl) {
+
+    for (int i = 0; i < 3; i++) lig_rigid_gpu->origin[0][i] = x->position[i];
+    for (int i = 0; i < 4; i++) lig_rigid_gpu->orientation_q[0][i] = x->orientation[i];
+    quaternion_to_r3(lig_rigid_gpu->orientation_q[0],
+                     lig_rigid_gpu->orientation_m[0]); /* set orientation_m */
+
+    int begin = lig_rigid_gpu->atom_range[0][0];
+    int end = lig_rigid_gpu->atom_range[0][1];
+    for (int i = begin; i < end; i++) {
+        local_to_lab(m_coords_gpu->coords[i], lig_rigid_gpu->origin[0], atoms[i].coords,
+                     lig_rigid_gpu->orientation_m[0]);
+    }
+    /* ************* end node.set_conf ************* */
+
+    /* ************* branches_set_conf ************* */
+    /* update nodes in depth-first order */
+    for (int current = 1; current < lig_rigid_gpu->num_children + 1;
+         current++) { /* current starts from 1 (namely starts from first child node) */
+        int parent = lig_rigid_gpu->parent[current];
+        float torsion = x->lig_torsion[current - 1]; /* torsions are all related to child nodes */
+        local_to_lab(lig_rigid_gpu->origin[current], lig_rigid_gpu->origin[parent],
+                     lig_rigid_gpu->relative_origin[current], lig_rigid_gpu->orientation_m[parent]);
+        local_to_lab_direction(lig_rigid_gpu->axis[current], lig_rigid_gpu->relative_axis[current],
+                               lig_rigid_gpu->orientation_m[parent]);
+        float tmp[4];
+        float parent_q[4]
+            = {lig_rigid_gpu->orientation_q[parent][0], lig_rigid_gpu->orientation_q[parent][1],
+               lig_rigid_gpu->orientation_q[parent][2], lig_rigid_gpu->orientation_q[parent][3]};
+        float current_axis[3] = {lig_rigid_gpu->axis[current][0], lig_rigid_gpu->axis[current][1],
+                                 lig_rigid_gpu->axis[current][2]};
+
+        angle_to_quaternion2(tmp, current_axis, torsion);
+        angle_to_quaternion_multi(tmp, parent_q);
+        quaternion_normalize_approx(tmp, epsilon_fl);
+
+        for (int i = 0; i < 4; i++)
+            lig_rigid_gpu->orientation_q[current][i] = tmp[i]; /* set orientation_q */
+        quaternion_to_r3(lig_rigid_gpu->orientation_q[current],
+                         lig_rigid_gpu->orientation_m[current]); /* set orientation_m */
+
+        /* set coords */
+        begin = lig_rigid_gpu->atom_range[current][0];
+        end = lig_rigid_gpu->atom_range[current][1];
+        for (int i = begin; i < end; i++) {
+            local_to_lab(m_coords_gpu->coords[i], lig_rigid_gpu->origin[current], atoms[i].coords,
+                         lig_rigid_gpu->orientation_m[current]);
+        }
+    }
+    /* ************* end branches_set_conf ************* */
+}
+
 
 __device__ __forceinline__ void p_eval_deriv(float* out, int type_pair_index, float r2,
                                              p_cuda_t* p_cuda_gpu, const float epsilon_fl) {
@@ -810,6 +864,23 @@ __device__ __forceinline__ float m_eval_deriv(output_type_cuda_t* c, change_cuda
 
     return e;
 }
+__device__ __forceinline__ float m_eval_deriv_without_core(output_type_cuda_t* c, change_cuda_t* g,
+                                              m_cuda_t* m_cuda_gpu, p_cuda_t* p_cuda_gpu,
+                                              ig_cuda_t* ig_cuda_gpu, const float* v,
+                                              const float epsilon_fl) {
+    // check set args
+    set_without_core(c, &m_cuda_gpu->ligand.rigid, &m_cuda_gpu->m_coords, m_cuda_gpu->atoms,
+        m_cuda_gpu->m_num_movable_atoms, epsilon_fl);
+
+    float e = 0;
+    e = ig_eval_deriv(c, g, v[1], ig_cuda_gpu, m_cuda_gpu, epsilon_fl);
+    e += eval_interacting_pairs_deriv(p_cuda_gpu, v[0], &m_cuda_gpu->ligand.pairs,
+                                      &m_cuda_gpu->m_coords, &m_cuda_gpu->minus_forces, epsilon_fl);
+    // should add derivs for glue, other and inter pairs
+    POT_deriv(&m_cuda_gpu->minus_forces, &m_cuda_gpu->ligand.rigid, &m_cuda_gpu->m_coords, g);
+
+    return e;
+}
 
 __device__ __forceinline__ float find_change_index_read(const change_cuda_t* g, int index) {
     if (index < 3) return g->position[index];
@@ -877,6 +948,29 @@ __device__ __forceinline__ float line_search(m_cuda_t* m_cuda_gpu, p_cuda_t* p_c
         output_type_cuda_init_with_output(x_new, x);
         output_type_cuda_increment(x_new, p, alpha, epsilon_fl);
         *f1 = m_eval_deriv(x_new, g_new, m_cuda_gpu, p_cuda_gpu, ig_cuda_gpu, hunt_cap, epsilon_fl);
+        if (*f1 - f0 < c0 * alpha * pg) break;
+        alpha *= multiplier;
+    }
+    return alpha;
+}
+__device__ __forceinline__ float line_search_without_core(m_cuda_t* m_cuda_gpu, p_cuda_t* p_cuda_gpu,
+                                             ig_cuda_t* ig_cuda_gpu, int n,
+                                             const output_type_cuda_t* x, const change_cuda_t* g,
+                                             const float f0, const change_cuda_t* p,
+                                             output_type_cuda_t* x_new, change_cuda_t* g_new,
+                                             float* f1, const float epsilon_fl,
+                                             const float* hunt_cap) {
+    const float c0 = 0.0001;
+    const int max_trials = 10;
+    const float multiplier = 0.5;
+    float alpha = 1;
+
+    const float pg = scalar_product(p, g, n);
+
+    for (int trial = 0; trial < max_trials; trial++) {
+        output_type_cuda_init_with_output(x_new, x);
+        output_type_cuda_increment(x_new, p, alpha, epsilon_fl);
+        *f1 = m_eval_deriv_without_core(x_new, g_new, m_cuda_gpu, p_cuda_gpu, ig_cuda_gpu, hunt_cap, epsilon_fl);
         if (*f1 - f0 < c0 * alpha * pg) break;
         alpha *= multiplier;
     }
@@ -996,7 +1090,7 @@ __device__ __forceinline__ void bfgs_only_torsion(output_type_cuda_t* x, change_
     output_type_cuda_t x_new;
     output_type_cuda_init_with_output(&x_new, x);
 
-    float f0 = m_eval_deriv(x, g, m_cuda_gpu, p_cuda_gpu, ig_cuda_gpu, hunt_cap, epsilon_fl);
+    float f0 = m_eval_deriv_without_core(x, g, m_cuda_gpu, p_cuda_gpu, ig_cuda_gpu, hunt_cap, epsilon_fl);
 
     float f_orig = f0;
     /* Init g_orig, x_orig */
@@ -1012,7 +1106,7 @@ __device__ __forceinline__ void bfgs_only_torsion(output_type_cuda_t* x, change_
         minus_mat_vec_product(&h, g, &p);
         float f1 = 0;
 
-        const float alpha = line_search(m_cuda_gpu, p_cuda_gpu, ig_cuda_gpu, n, x, g, f0, &p,
+        const float alpha = line_search_without_core(m_cuda_gpu, p_cuda_gpu, ig_cuda_gpu, n, x, g, f0, &p,
                                         &x_new, &g_new, &f1, epsilon_fl, hunt_cap);
 
         change_cuda_t y;
@@ -1228,14 +1322,14 @@ __global__ __launch_bounds__(MAX_THREADS_PER_BLOCK, MIN_BLOCKS_PER_MP) void kern
 
             if (step == 0 || metropolis_accept(tmp.e, candidate.e, 1.2, n)) {
                 output_type_cuda_init_with_output(&tmp, &candidate);
-                set(&tmp, &m_cuda_gpu.ligand.rigid, &m_cuda_gpu.m_coords, m_cuda_gpu.atoms,
+                set_without_core(&tmp, &m_cuda_gpu.ligand.rigid, &m_cuda_gpu.m_coords, m_cuda_gpu.atoms,
                     m_cuda_gpu.m_num_movable_atoms, epsilon_fl);
                 if (tmp.e < best_e) {
                     bfgs_only_torsion(&tmp, &g, &m_cuda_gpu, p_cuda_gpu, ig_cuda_gpu, authentic_v_gpu,
                          epsilon_fl, bfgs_max_steps,mobility);
                     // set
                     if (tmp.e < best_e) {
-                        set(&tmp, &m_cuda_gpu.ligand.rigid, &m_cuda_gpu.m_coords, m_cuda_gpu.atoms,
+                        set_without_core(&tmp, &m_cuda_gpu.ligand.rigid, &m_cuda_gpu.m_coords, m_cuda_gpu.atoms,
                             m_cuda_gpu.m_num_movable_atoms, epsilon_fl);
                         output_type_cuda_init_with_output(&best_out, &tmp);
                         get_heavy_atom_movable_coords(&best_out, &m_cuda_gpu);  // get coords
