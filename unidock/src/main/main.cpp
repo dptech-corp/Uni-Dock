@@ -700,7 +700,7 @@ bug reporting, license agreements, and more information.      \n";
                 v.write_poses(out_name, num_modes, energy_range);
                 std::vector<double> energies;
                 energies = v.score();
-                v.show_score(energies);
+                v.show_score(energies);git@github.com:ccsb-scripps/AutoDock-Vina.git
                 
             }
         } else if (vm.count("gpu_batch") || vm.count("ligand_index")) {

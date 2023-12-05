@@ -254,7 +254,7 @@ __device__ __forceinline__ void mutate_conf_cuda(const int num_steps, output_typ
 
 // symmetric matrix_d (only half of it are stored)
 typedef struct {
-    float data[MAX_HESSIAN_MATRIX_D_SIZE];
+    float data[MAX_HESSIAN_MATRIX_D_SIZE] ;
     int dim;
 } matrix_d;
 
@@ -324,8 +324,8 @@ __device__ __forceinline__ void change_cuda_init_with_change(change_cuda_t* g_ne
 }
 __device__ __forceinline__ void change_cuda_init_with_torsion_change(change_cuda_t* g_new,
                                                              const change_cuda_t* g_old,float mobility) {
-    for (int i = 0; i < 3; i++) g_new->position[i] = g_old->position[i]+mobility*(g_new->position[i]-g_old->position[i]);
-    for (int i = 0; i < 3; i++) g_new->orientation[i] = g_old->orientation[i]+mobility*(g_new->orientation[i] - g_old->orientation[i]);
+    // for (int i = 0; i < 3; i++) g_new->position[i] = g_old->position[i]+mobility*(g_new->position[i]-g_old->position[i]);
+    // for (int i = 0; i < 3; i++) g_new->orientation[i] = g_old->orientation[i]+mobility*(g_new->orientation[i] - g_old->orientation[i]);
     for (int i = 0; i < MAX_NUM_OF_LIG_TORSION; i++) g_new->lig_torsion[i] = g_old->lig_torsion[i];
     for (int i = 0; i < MAX_NUM_OF_FLEX_TORSION; i++)
         g_new->flex_torsion[i] = g_old->flex_torsion[i];
@@ -1308,9 +1308,9 @@ __global__ __launch_bounds__(MAX_THREADS_PER_BLOCK, MIN_BLOCKS_PER_MP) void kern
 
         for (int step = 0; step < search_depth; step++) {
             output_type_cuda_init_with_output(&candidate, &tmp);
-            mutate_conf_cuda(bfgs_max_steps, &candidate, &states[idx], m_cuda_gpu.ligand.begin,
-                             m_cuda_gpu.ligand.end, m_cuda_gpu.atoms, &m_cuda_gpu.m_coords,
-                             m_cuda_gpu.ligand.rigid.origin[0], epsilon_fl, mutation_amplitude);
+            // mutate_conf_cuda(bfgs_max_steps, &candidate, &states[idx], m_cuda_gpu.ligand.begin,
+            //                  m_cuda_gpu.ligand.end, m_cuda_gpu.atoms, &m_cuda_gpu.m_coords,
+            //                  m_cuda_gpu.ligand.rigid.origin[0], epsilon_fl, mutation_amplitude);
             bfgs_only_torsion(&candidate, &g, &m_cuda_gpu, p_cuda_gpu, ig_cuda_gpu, hunt_cap_gpu, epsilon_fl,
                  bfgs_max_steps,mobility);
             // n ~ U[0,1]
