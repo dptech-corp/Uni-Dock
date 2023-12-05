@@ -1236,7 +1236,6 @@ model parse_receptor_pdbqt(const std::string& rigid_name, const std::string& fle
         }
     }
 
-    parse_ligand_pdbqt_from_string
     if (!flex_name.empty()) {
         try {
             parse_pdbqt_flex(make_path(flex_name), nrp, c);
