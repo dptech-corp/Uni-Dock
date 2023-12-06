@@ -1,0 +1,1 @@
+from .MultiConfDock import main_cli

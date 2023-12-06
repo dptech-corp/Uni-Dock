@@ -1,0 +1,13 @@
+mcdock --receptor 1G9V_protein_water.pdbqt \
+       --ligands 1G9V_multiconf.sdf \
+       --center_x 5.12 --center_y 18.32 --center_z 37.33 \
+       --workdir result --savedir final_result \
+       --exhaustiveness_rigid_docking 128 \
+       --maxstep_rigid_docking 20 \
+       --topn_rigid_docking 100 \
+       --num_modes_rigid_docking 3 \
+       --exhaustiveness_local_refine 512 \
+       --maxstep_local_refine 40 \
+       --topn_local_refine 10 \
+       --num_modes_local_refine 1 \
+       --min_rmsd 0.3
