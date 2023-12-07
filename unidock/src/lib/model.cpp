@@ -847,7 +847,7 @@ std::string model::write_sdf_model(sz model_number, const std::string& remark) {
         write_sdf_context(flex_context, out);
 
     out << remark;
-    out << "$$$$\n";
+    out << "\n$$$$\n";
 
     return out.str();
 }

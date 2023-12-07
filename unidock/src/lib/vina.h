@@ -197,6 +197,7 @@ public:
     bool multi_bias;
     std::vector<model> m_model_gpu;  // list of m_model for gpu parallelism
     std::vector<output_container> m_poses_gpu;
+    std::vector<std::vector<std::string>> m_score_gpu;
     // OpenBabel::OBMol m_mol;
     bool m_receptor_initialized;
     bool m_ligand_initialized;

@@ -934,7 +934,7 @@ std::string Vina::get_poses_gpu(int ligand_id, int how_many, double energy_range
                                    m_poses_gpu[ligand_id][i].ub);
             out << m_model_gpu[ligand_id].write_model(n + 1, remarks);
 
-            n++;
+            n++;    
         }
 
         // Push back the best conf in model
@@ -968,7 +968,8 @@ std::string Vina::get_sdf_poses_gpu(int ligand_id, int how_many, double energy_r
         // Get energy from the best conf
 
         best_energy = m_poses_gpu[ligand_id][0].e;
-
+        // printf("ligand_id:%d,m_poses_gpu[ligand_id].size():%ld\n",ligand_id,m_poses_gpu[ligand_id].size());
+        // printf("score_info.size:%ld\n",score_info.size());
         VINA_FOR_IN(i, m_poses_gpu[ligand_id]) {
             /* Stop if:
                     - We wrote the number of conf asked
@@ -985,7 +986,9 @@ std::string Vina::get_sdf_poses_gpu(int ligand_id, int how_many, double energy_r
             // Write conf
             remarks = sdf_remarks(m_poses_gpu[ligand_id][i], m_poses_gpu[ligand_id][i].lb,
                                   m_poses_gpu[ligand_id][i].ub);
-            scores = score_info[ligand_id*m_poses_gpu[ligand_id].size()+i];
+            // std::cout<<ligand_id*m_poses_gpu[ligand_id].size()+i<<std::endl;
+            // scores = score_info[ligand_id*m_poses_gpu[ligand_id].size()+i];
+            scores = m_score_gpu[ligand_id][i];
             out << m_model_gpu[ligand_id].write_sdf_model(n + 1, remarks+scores);
           
             n++;
@@ -1040,7 +1043,7 @@ std::string Vina::get_sdf_poses_with_score_gpu(int ligand_id, int how_many, doub
                                   m_poses_gpu[ligand_id][i].ub);
             out << m_model_gpu[ligand_id].write_sdf_model(n + 1, remarks);
             out << score_info[ligand_id*m_poses_gpu[ligand_id].size()+i];
-            out<<"$$$$\n";
+            out<<"\n$$$$\n";
             n++;
         }
 
@@ -1084,6 +1087,7 @@ void Vina::write_poses_gpu(const std::vector<std::string>& gpu_output_name, int 
             // Open output file
             ofile f(make_path(gpu_output_name[i]));
             if (gpu_output_name[i].substr(gpu_output_name[i].size() - 4, 4) == ".sdf") {
+                // printf("i:%ld,how_many:%d,energy_range:%lf\n",i,how_many,energy_range);
                 out = get_sdf_poses_gpu(i, how_many, energy_range);
             } else {
                 out = get_poses_gpu(i, how_many, energy_range);
@@ -1530,7 +1534,7 @@ void Vina::write_score_to_file_with_mark(const std::vector<double> energies, con
         f << "(4) Unbound System's Energy [=(2)] : " << std::fixed << std::setprecision(3)
           << energies[7] << " (kcal/mol)\n";
     }
-    f << "$$$$";
+    f << "\n$$$$";
     f << std::endl;
 }
 void Vina::write_score_to_file_with_mark(const std::vector<double> energies,
@@ -1565,7 +1569,7 @@ void Vina::write_score_to_file_with_mark(const std::vector<double> energies,
         f << "(4) Unbound System's Energy [=(2)] : " << std::fixed << std::setprecision(3)
           << energies[7] << " (kcal/mol)\n";
     }
-    f << "$$$$";
+    f << "\n$$$$";
     f << std::endl;
 }
 std::vector<double> Vina::score(double intramolecular_energy) {
@@ -2082,14 +2086,16 @@ void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const 
     model best_model;
     boost::optional<model> ref;
     std::vector<output_container> poses_gpu;
+    // std::vector<std::vector<std::string>> score_gpu;
     output_container poses;  // temp output_container
+    std::vector<std::string> scores;
     std::stringstream sstm;
     rng generator(static_cast<rng::result_type>(m_seed));
 
     // Setup Monte-Carlo search
     monte_carlo mc;
     poses_gpu.resize(num_of_ligands, poses);
-
+    // score_gpu.resize(num_of_ligands,scores);
     // set global_steps with cutoff, maximun for the first version
     sz heuristic = 0;
     for (int i = 0; i < num_of_ligands; ++i) {
@@ -2132,11 +2138,15 @@ void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const 
 
     // Docking post-processing and rescoring
     m_poses_gpu.resize(num_of_ligands);
+    m_score_gpu.resize(num_of_ligands);
     non_cache m_non_cache_tmp = m_non_cache;
 
     for (int l = 0; l < num_of_ligands; ++l) {
         DEBUG_PRINTF("num_output_poses before remove=%lu\n", poses_gpu[l].size());
         poses = remove_redundant(poses_gpu[l], min_rmsd);
+        scores.clear();
+        scores.resize(poses.size());
+        // scores.resize(poses.size());
         DEBUG_PRINTF("num_output_poses=%lu\n", poses.size());
 
         if (!poses.empty()) {
@@ -2185,7 +2195,6 @@ void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const 
 
             for (int i = 0; i < poses.size(); ++i) {
                 if (m_verbosity > 1) std::cout << "ENERGY FROM SEARCH: " << poses[i].e << "\n";
-
                 m_model_gpu[l].set(poses[i].c);
 
                 // For AD42 intramolecular_energy is equal to 0
@@ -2201,7 +2210,7 @@ void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const 
                 poses[i].total = poses[i].inter + poses[i].intra;  // cost function for optimization
                 poses[i].conf_independent = energies[6];           // "torsion"
                 poses[i].unbound = energies[7];  // specific to each scoring function
-                score_info.push_back(write_score_without_tag(energies));
+                // score_info.push_back(write_score_without_tag(energies));
                 if (m_verbosity > 1) {
                     std::cout << "FINAL ENERGY: \n";
                     show_score(energies);
@@ -2210,10 +2219,29 @@ void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const 
 
             // Since pose.e contains the final energy, we have to sort them again
             poses.sort();
+            for (int i = 0; i < poses.size(); ++i) {
+                // m_model_gpu[l].set(poses[i].c);
+                // printf("i:%d,l:%d\n",i,l);
+                // For AD42 intramolecular_energy is equal to 0
+                // m_model = m_model_gpu[l]; // Vina::score() will use m_model and
+                // m_precalculated_byatom m_precalculated_byatom = m_precalculated_byatom_gpu[l];
+                DEBUG_PRINTF("intramolecular_energy=%f\n", intramolecular_energy);
+                std::vector<double> energies = score_gpu(l, intramolecular_energy);
+                // DEBUG_PRINTF("energies.size()=%d\n", energies.size());
+                // Store energy components in current pose
+                // poses[i].e = energies[0];  // specific to each scoring function
+                // poses[i].inter = energies[1] + energies[2];
+                // poses[i].intra = energies[3] + energies[4] + energies[5];
+                // poses[i].total = poses[i].inter + poses[i].intra;  // cost function for optimization
+                // poses[i].conf_independent = energies[6];           // "torsion"
+                // poses[i].unbound = energies[7];  // specific to each scoring function
+                scores[i] = (write_score_without_tag(energies));
+            }
 
             // Now compute RMSD from the best model
             // Necessary to do it in two pass for AD4 scoring function
             m_model_gpu[l].set(poses[0].c);
+            // 
             best_model = m_model_gpu[l];
 
             if (m_verbosity > 0) {
@@ -2252,6 +2280,7 @@ void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const 
         }
         // Store results in Vina object
         m_poses_gpu[l] = poses;
+        m_score_gpu[l] = scores;
     }
 }
 
