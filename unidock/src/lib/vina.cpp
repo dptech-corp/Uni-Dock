@@ -1326,7 +1326,7 @@ void Vina::conf_exhaustion_with_range( sz max_steps,vec center,vec box_size,std:
         std::cerr << "ERROR: Cannot do ligand randomization. Affinity maps were not initialized.\n";
         exit(EXIT_FAILURE);
     }
-
+    int total_conf = 0;
     conf c;
     int seed = generate_seed();
     double penalty = 0;
@@ -1368,7 +1368,8 @@ void Vina::conf_exhaustion_with_range( sz max_steps,vec center,vec box_size,std:
 
     }
     printf("i:%ld,j:%ld,x:%lf,y:%lf,z:%lf\n",i,j,positions[i][0],positions[i][1],positions[i][2]);
-    std::vector<double> energies;
+    total_conf+=1;
+   std::vector<double> energies;
     energies = score();
     // show_score(energies);
     std::string remarks = sdf_remarks(energies, m_model.rmsd_lower_bound(m_model), m_model.rmsd_upper_bound(m_model));
@@ -1380,6 +1381,7 @@ void Vina::conf_exhaustion_with_range( sz max_steps,vec center,vec box_size,std:
     write_score_to_file_with_mark(energies, out_dir, out_name, ligand_name);
     }
     }
+    printf("total_conformation:%d\n",total_conf);
 }
 void Vina::randomize_score_with_range( sz max_steps,vec center,fl range,std::string out_name,std::string ligand_name) {
     // Randomize ligand/flex residues conformation
