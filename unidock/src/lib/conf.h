@@ -106,6 +106,12 @@ struct rigid_conf {
         position = random_in_box(corner1, corner2, generator);
         orientation = random_orientation(generator);
     }
+    void exhaustion(const vec& corner1, rng& generator) {
+        position[0] = corner1[0];
+        position[1] = corner1[1];
+        position[2] = corner1[2];
+        orientation = random_orientation(generator);
+    }
     bool too_close(const rigid_conf& c, fl position_cutoff, fl orientation_cutoff) const {
         if (vec_distance_sqr(position, c.position) > sqr(position_cutoff)) return false;
         if (sqr(quaternion_difference(orientation, c.orientation)) > sqr(orientation_cutoff))
@@ -178,6 +184,11 @@ struct ligand_conf {
         rigid.randomize(corner1, corner2, generator);
         // torsions_randomize(torsions, generator);
     }
+    void exhaustion_rigid(const vec& corner1, rng& generator) {
+        rigid.exhaustion(corner1,  generator);
+        // torsions_randomize(torsions, generator);
+    }
+
     void print() const {
         rigid.print();
         printnl(torsions);
@@ -347,6 +358,10 @@ struct conf {
         ligands[i].randomize_rigid(corner1, corner2, generator);
         VINA_FOR_IN(i, flex)
         flex[i].randomize(generator);
+    }
+    void exhaustion_rigid(const vec& corner1, rng& generator) {
+        VINA_FOR_IN(i, ligands)
+        ligands[i].exhaustion_rigid(corner1,  generator);
     }
     void print() const {
         VINA_FOR_IN(i, ligands)

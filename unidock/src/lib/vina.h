@@ -186,8 +186,9 @@ public:
     void set_batch_bias(std::ifstream& bias_batch_file_content);
     void randomize_score( sz max_steps,sz para,std::string out_dir,std::string out_name,std::string ligand_name);
     void randomize_score_with_range( sz max_steps,vec center,fl range,std::string out_dir,std::string out_name,std::string ligand_name);
+    void conf_exhaustion_with_range( sz max_steps,vec center,vec box_size,std::string out_dir,std::string out_name,std::string ligand_name);
     void randomize_score_with_range( sz max_steps,vec center,fl range,std::string out_name,std::string ligand_name);
-    
+    std::vector<vec> generatePoints(int num_points, double center_x, double center_y, double center_z, double length, double width, double height, double radius, double buffer);
     // model and poses
     model m_receptor;
     model m_model;

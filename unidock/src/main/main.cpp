@@ -228,6 +228,9 @@ bug reporting, license agreements, and more information.      \n";
         bool version = false;  // FIXME
         bool autobox = false;
         bool randomize_score = false;
+        bool conf_exhaustion = false;
+        int conf_exhaustion_num = 100;
+        // float conf_exhaustion_range = 2.0;
         int randomize_score_num = 100;
         float randomize_range = 2.0;
         bool core_constraint = false;
@@ -300,6 +303,8 @@ bug reporting, license agreements, and more information.      \n";
             "(odd number of grid points)")
             ("core_constraint",bool_switch(&core_constraint))
             ("mobility",value<float> (&mobility))
+            ("conf_exhaustion",bool_switch(&conf_exhaustion))
+            ("conf_exhaustion_num",value<int> (&conf_exhaustion_num))
             ("randomize_score",bool_switch(&randomize_score))
             ("randomize_score_num",value<int> (&randomize_score_num))
             ("randomize_range",value<float> (&randomize_range))
@@ -759,6 +764,33 @@ bug reporting, license agreements, and more information.      \n";
                 }
                 
                 v1.randomize_score_with_range(randomize_score_num,center,randomize_range,out_dir,out_name,ligand_names[i]); 
+                // std::cout<<out_name<<std::endl;
+                // v1.randomize_score_with_range(randomize_score_num,center,randomize_range,out_name,ligand_names[i]); 
+
+                }
+                
+                return 0;
+
+            }
+            if(conf_exhaustion){
+                VINA_FOR_IN(i, ligand_names) {
+                    std::vector<model> ligands;
+                ligands.emplace_back(parse_ligand_from_file_no_failure(
+                        ligand_names[i], v.m_scoring_function.get_atom_typing(), keep_H));
+                Vina v1(v); 
+                v1.set_ligand_from_object(ligands);   
+                // v1.randomize();
+                out_name = default_output(ligand_names[i]);
+                // v1.randomize_score(randomize_score_num,0,out_dir,out_name,ligand_names[i]);
+                vec center(center_x,center_y,center_z);
+                if (isAbsolutePath(out_name)) {
+                out_name  = extractFileName(out_name);
+                    std::cout << "File name: " << out_name << std::endl;
+                } else {
+                    std::cout << "The provided path is not an absolute path." << std::endl;
+                }
+                vec box_size(size_x,size_y,size_z);
+                v1.conf_exhaustion_with_range(conf_exhaustion_num,center,box_size,out_dir,out_name,ligand_names[i]); 
                 // std::cout<<out_name<<std::endl;
                 // v1.randomize_score_with_range(randomize_score_num,center,randomize_range,out_name,ligand_names[i]); 
 

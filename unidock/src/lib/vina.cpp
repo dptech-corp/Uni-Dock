@@ -1226,6 +1226,36 @@ void Vina::randomize_score( sz max_steps,sz para,std::string out_dir,std::string
     write_score_to_file_with_mark(energies, out_dir, out_name, ligand_name);
     }
 }
+std::vector<vec> Vina::generatePoints(int num_points, double center_x, double center_y, double center_z, double length, double width, double height, double radius=2, double buffer=3) {
+    std::vector<vec> points;
+    points.reserve(num_points);
+
+    
+    double adjusted_length = length - 2 * (radius + buffer);
+    double adjusted_width = width - 2 * (radius + buffer);
+    double adjusted_height = height - 2 * (radius + buffer);
+
+    // 计算每个维度上的点间隔
+    int num_points_cube_root = std::cbrt(num_points);
+    double delta_x = adjusted_length / (num_points_cube_root - 1);
+    double delta_y = adjusted_width / (num_points_cube_root - 1);
+    double delta_z = adjusted_height / (num_points_cube_root - 1);
+
+    // 从空间的一端开始生成点
+    for (int i = 0; i < num_points_cube_root; ++i) {
+        for (int j = 0; j < num_points_cube_root; ++j) {
+            for (int k = 0; k < num_points_cube_root; ++k) {
+                vec point;
+                point[0] = center_x - adjusted_length / 2 + delta_x * i + (radius + buffer);
+                point[1] = center_y - adjusted_width / 2 + delta_y * j + (radius + buffer);
+                point[2] = center_z - adjusted_height / 2 + delta_z * k + (radius + buffer);
+                points.push_back(point);
+            }
+        }
+    }
+
+    return points;
+}
 void Vina::randomize_score_with_range( sz max_steps,vec center,fl range,std::string out_dir,std::string out_name,std::string ligand_name) {
     // Randomize ligand/flex residues conformation
     // Check the box was defined
@@ -1284,6 +1314,71 @@ void Vina::randomize_score_with_range( sz max_steps,vec center,fl range,std::str
     // std::cout<<get_sdf_poses(1,3.0 );
     write_sdf_pose(out_dir+"/"+out_name,remarks);
     write_score_to_file_with_mark(energies, out_dir, out_name, ligand_name);
+    }
+}
+void Vina::conf_exhaustion_with_range( sz max_steps,vec center,vec box_size,std::string out_dir,std::string out_name,std::string ligand_name) {
+    // Randomize ligand/flex residues conformation
+    // Check the box was defined
+    if (!m_ligand_initialized) {
+        std::cerr << "ERROR: Cannot do ligand randomization. Ligand(s) was(ere) not initialized.\n";
+        exit(EXIT_FAILURE);
+    } else if (!m_map_initialized) {
+        std::cerr << "ERROR: Cannot do ligand randomization. Affinity maps were not initialized.\n";
+        exit(EXIT_FAILURE);
+    }
+
+    conf c;
+    int seed = generate_seed();
+    double penalty = 0;
+    double best_clash_penalty = 0;
+    std::stringstream sstm;
+    rng generator(static_cast<rng::result_type>(seed));
+
+    // It's okay to take the initial conf since we will randomize it
+    conf init_conf = m_model.get_initial_conf();
+    conf best_conf = init_conf;
+
+    sstm << "exhaustion conformation (random seed: " << seed << ")";
+    doing(sstm.str(), m_verbosity, 0);
+    auto positions =generatePoints(max_steps, center[0], center[1], center[2], box_size[0], box_size[1], box_size[2]);
+    VINA_FOR(i, max_steps) {
+        for (int j =0;j<10;j++){
+        c = init_conf;
+
+        c.exhaustion_rigid(positions[i], generator);
+        // printf("corner1[0]:%f,corner1[1]:%f,corner1[2]:%f\n",m_grid.corner1()[0],m_grid.corner1()[1],m_grid.corner1()[2]);
+        // printf("corner2[0]:%f,corner2[1]:%f,corner2[2]:%f\n",m_grid.corner2()[0],m_grid.corner2()[1],m_grid.corner2()[2]);
+        penalty = m_model.clash_penalty();
+        // if (i == 0 || penalty < best_clash_penalty) {
+        //     best_conf = c;
+        //     best_clash_penalty = penalty;
+        // }
+    // }
+    // done(m_verbosity, 0);
+
+    m_model.set(c);
+
+    if (m_verbosity > 1) {
+        std::cout << "Clash penalty: " << best_clash_penalty << "\n";
+    }
+    if (!m_grid.is_in_grid(m_model)){
+        // printf("The ligand is outside the grid box\n");
+        // printf("i:%ld,x:%lf,y:%lf,z:%lf\n",i,positions[i][0],positions[i][1],positions[i][2]);
+        continue;
+
+    }
+    printf("i:%ld,j:%ld,x:%lf,y:%lf,z:%lf\n",i,j,positions[i][0],positions[i][1],positions[i][2]);
+    std::vector<double> energies;
+    energies = score();
+    // show_score(energies);
+    std::string remarks = sdf_remarks(energies, m_model.rmsd_lower_bound(m_model), m_model.rmsd_upper_bound(m_model));
+    std::string score = write_score(energies);
+    // std::cout<<m_model.rmsd_upper_bound(m_model);
+    // m_poses
+    // std::cout<<get_sdf_poses(1,3.0 );
+    write_sdf_pose(out_dir+"/"+out_name,remarks);
+    write_score_to_file_with_mark(energies, out_dir, out_name, ligand_name);
+    }
     }
 }
 void Vina::randomize_score_with_range( sz max_steps,vec center,fl range,std::string out_name,std::string ligand_name) {
