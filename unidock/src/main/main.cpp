@@ -20,22 +20,16 @@
 
 */
 
-#include <cstdint>
 #include <iostream>
 #include <string>
 #include <vector>  // ligand paths
-#include <exception>
 #include <boost/program_options.hpp>
-#include "conf.h"
-#include "kernel.h"
 #include "vina.h"
 #include "utils.h"
 #include "scoring_function.h"
 
-#include <cuda.h>
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
-#include <unistd.h>
 
 struct usage_error : public std::runtime_error {
     usage_error(const std::string& message) : std::runtime_error(message) {}
