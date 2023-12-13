@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cstdint>
 #include <stdexcept>
 template <typename T>
 void check(T result, char const *const func, const char *const file, int const line) {

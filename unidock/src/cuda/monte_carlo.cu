@@ -21,13 +21,11 @@
 */
 
 #include "common.cuh"
-#include "cuda.h"
 #include "curand_kernel.h"
 #include "kernel.h"
 #include "math.h"
 #include "warp_ops.cuh"
 #include <cmath>
-#include <cstdint>
 #include <vector>
 /* Original Include files */
 #include "ad4cache.h"
@@ -38,7 +36,6 @@
 #include "mutate.h"
 #include "precalculate.h"
 #include "quasi_newton.h"
-#include <nvtx3/nvToolsExt.h>
 #include <cooperative_groups.h>
 #include <cooperative_groups/reduce.h>
 
@@ -764,8 +761,7 @@ __host__ void monte_carlo::operator()(
     cudaEventSynchronize(stop);
     float msecTotal = 0.0f;
     cudaEventElapsedTime(&msecTotal, start, stop);
-    printf("Time spend on GPU is %f ms\n", msecTotal);
-    // DEBUG_PRINTF("Time spend on GPU is %f ms\n", msecTotal);
+    DEBUG_PRINTF("Time spend on GPU is %f ms\n", msecTotal);
 
     /* Convert result data. Can be improved by mapping memory
      */

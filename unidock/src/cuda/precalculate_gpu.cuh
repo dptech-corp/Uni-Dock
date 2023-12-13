@@ -1,6 +1,4 @@
 #include "math.h"
-#include "kernel.h"
-#include "macros.h"
 
 // Define GPU precalculate structures
 

@@ -1,21 +1,9 @@
 #pragma once
-#include "cuda.h"
 #include "curand_kernel.h"
 #include "kernel.h"
 #include "math.h"
 #include <cmath>
-#include <cstdint>
-#include <vector>
-/* Original Include files */
-#include "ad4cache.h"
-#include "cache.h"
-#include "coords.h"
-#include "model.h"
-#include "monte_carlo.h"
-#include "mutate.h"
 #include "precalculate.h"
-#include "quasi_newton.h"
-#include <nvtx3/nvToolsExt.h>
 
 #define M_PI_F 3.1415927f
 
@@ -25,40 +13,6 @@ __device__ __forceinline__ void quaternion_increment(float *q, const float *rota
                                                      float epsilon_fl);
 
 __device__ __forceinline__ void normalize_angle(float *x);
-
-__device__ __forceinline__ void output_type_cuda_init(output_type_cuda_t *out, const float *ptr) {
-    memcpy(out, ptr, sizeof(float) * (3 + 4 + MAX_NUM_OF_LIG_TORSION + MAX_NUM_OF_FLEX_TORSION));
-    out->lig_torsion_size = ptr[3 + 4 + MAX_NUM_OF_LIG_TORSION + MAX_NUM_OF_FLEX_TORSION];
-    // did not assign coords and e
-}
-
-__device__ __forceinline__ void output_type_cuda_init_with_output(
-    output_type_cuda_t *out_new, const output_type_cuda_t *out_old) {
-    memcpy(out_new, out_old,
-           sizeof(float) * (3 + 4 + MAX_NUM_OF_LIG_TORSION + MAX_NUM_OF_FLEX_TORSION));
-    out_new->lig_torsion_size = out_old->lig_torsion_size;
-    // assign e but not coords
-    out_new->e = out_old->e;
-}
-
-__device__ __forceinline__ void output_type_cuda_increment(output_type_cuda_t *x,
-                                                           const change_cuda_t *c, float factor,
-                                                           float epsilon_fl) {
-    // position increment
-    for (int k = 0; k < 3; k++) x->position[k] += factor * c->position[k];
-    // orientation increment
-    float rotation[3];
-    for (int k = 0; k < 3; k++) rotation[k] = factor * c->orientation[k];
-    quaternion_increment(x->orientation, rotation, epsilon_fl);
-
-    // torsion increment
-    for (int k = 0; k < x->lig_torsion_size; k++) {
-        float tmp = factor * c->lig_torsion[k];
-        normalize_angle(&tmp);
-        x->lig_torsion[k] += tmp;
-        normalize_angle(&(x->lig_torsion[k]));
-    }
-}
 
 __device__ __forceinline__ float norm3(const float *a) {
     return sqrtf(a[0] * a[0] + a[1] * a[1] + a[2] * a[2]);
@@ -236,27 +190,11 @@ __device__ __forceinline__ void mutate_conf_cuda(const int num_steps, output_typ
 
 /* Below based on matrix.cpp */
 
-__device__ __forceinline__ void matrix_d_init(matrix_d *m, int dim, float fill_data) {
-    m->dim = dim;
-    if ((dim * (dim + 1) / 2) > MAX_HESSIAN_MATRIX_D_SIZE)
-        DEBUG_PRINTF("\nnmatrix_d: matrix_d_init() ERROR!");
-    // ((dim * (dim + 1) / 2)*sizeof(float)); // symmetric matrix_d
-    for (int i = 0; i < (dim * (dim + 1) / 2); i++) m->data[i] = fill_data;
-    for (int i = (dim * (dim + 1) / 2); i < MAX_HESSIAN_MATRIX_D_SIZE; i++)
-        m->data[i] = 0;  // Others will be 0
-}
-
 // as rugular 3x3 matrix_d
 __device__ __forceinline__ void mat_init(matrix_d *m, float fill_data) {
     m->dim = 3;  // fixed to 3x3 matrix_d
     if (9 > MAX_HESSIAN_MATRIX_D_SIZE) DEBUG_PRINTF("\nnmatrix_d: mat_init() ERROR!");
     for (int i = 0; i < 9; i++) m->data[i] = fill_data;
-}
-
-__device__ __forceinline__ void matrix_d_set_diagonal(matrix_d *m, float fill_data) {
-    for (int i = 0; i < m->dim; i++) {
-        m->data[i + i * (i + 1) / 2] = fill_data;
-    }
 }
 
 // as regular matrix_d
@@ -719,54 +657,4 @@ __device__ __forceinline__ void find_change_index_write(change_cuda_t *g, int in
         return;
     }
     DEBUG_PRINTF("\nKernel2:find_change_index_write() ERROR!"); /* Shouldn't be here */
-}
-
-__device__ __forceinline__ void minus_mat_vec_product(const matrix_d *h, const change_cuda_t *in,
-                                                      change_cuda_t *out) {
-    int n = h->dim;
-    for (int i = 0; i < n; i++) {
-        float sum = 0;
-        for (int j = 0; j < n; j++) {
-            sum += h->data[index_permissive(h, i, j)] * find_change_index_read(in, j);
-        }
-        find_change_index_write(out, i, -sum);
-    }
-}
-
-__device__ __forceinline__ float scalar_product(const change_cuda_t *a, const change_cuda_t *b,
-                                                int n) {
-    float tmp = 0;
-    for (int i = 0; i < n; i++) {
-        tmp += find_change_index_read(a, i) * find_change_index_read(b, i);
-    }
-    return tmp;
-}
-
-__device__ __forceinline__ bool bfgs_update(matrix_d *h, const change_cuda_t *p,
-                                            const change_cuda_t *y, const float alpha,
-                                            const float epsilon_fl) {
-    const float yp = scalar_product(y, p, h->dim);
-
-    if (alpha * yp < epsilon_fl) return false;
-    change_cuda_t minus_hy;
-    change_cuda_init_with_change(&minus_hy, y);
-    minus_mat_vec_product(h, y, &minus_hy);
-    const float yhy = -scalar_product(y, &minus_hy, h->dim);
-    const float r = 1 / (alpha * yp);
-    const int n = 6 + p->lig_torsion_size;
-
-    for (int i = 0; i < n; i++) {
-        for (int j = i; j < n; j++) {
-            float tmp
-                = alpha * r
-                      * (find_change_index_read(&minus_hy, i) * find_change_index_read(p, j)
-                         + find_change_index_read(&minus_hy, j) * find_change_index_read(p, i))
-                  + +alpha * alpha * (r * r * yhy + r) * find_change_index_read(p, i)
-                        * find_change_index_read(p, j);
-
-            h->data[i + j * (j + 1) / 2] += tmp;
-        }
-    }
-
-    return true;
 }

@@ -1,5 +1,4 @@
 #pragma once
-#include "bfgs.h"
 #include "common.cuh"
 #include "kernel.h"
 #include <cooperative_groups.h>
