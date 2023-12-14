@@ -267,9 +267,7 @@ void parse_args(char* argv[],
     isGPU = !!isGPU_;
 
     std::string out_phrase = std::to_string(batch_size) + "_" + std::to_string (local_) + 
-            "_" + std::to_string (max_eval_steps) + 
-            "_" + std::to_string (isGPU) +
-            "_" + util_random_string(5);
+            "_" + std::to_string (max_eval_steps) + "_" + util_random_string(5);
     out_dir = "out_" + out_phrase;
 }
 
