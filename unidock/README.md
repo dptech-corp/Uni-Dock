@@ -255,12 +255,11 @@ batch_size     = Size of each batch
 max_limit      = Limits number of complexs to be analysed
 local_only     = 1, for localonly using computed map for given atoms, or 0, for randomized search
 max_eval_steps = Number of steps in each MC evaluation
-GPU            = 1, for GPU operations, 0 for CPU-local_only operation
 ```
 
 For example, to benchmark 1:1 docking runs with 5 pairs available in the test folder with box_size of 25, run as below.
 
-`build/unidock_fast <unidock_folder_full_path>/unidock/test protein_ligand_batch 5 5 0 50 1`
+`build/unidock_fast <unidock_folder_full_path>/unidock/test protein_ligand_batch 5 5 0 50`
 
 This will output the batched docking results in `out_5_0_50_random`, and non batched results in `out_non_batched_5_0_50_random`, and print the time taken in the terminal.
 
