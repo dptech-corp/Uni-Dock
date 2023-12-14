@@ -254,8 +254,7 @@ void parse_args(char* argv[],
                 int & max_limit, 
                 bool & local_only, 
                 int & max_eval_steps,
-                bool & is_GPU,
-                int & box_size)
+                bool & isGPU)
 {
     
     work_dir = argv[1];
@@ -267,13 +266,11 @@ void parse_args(char* argv[],
     local_only = !!local_;
     max_eval_steps = std::stoi(argv[6]);
     int isGPU_ = std::stoi(argv[7]);
-    is_GPU = !!isGPU_;
-    box_size = std::stoi(argv[8]);
+    isGPU = !!isGPU_;
 
     std::string out_phrase = std::to_string(batch_size) + "_" + std::to_string (local_) + 
             "_" + std::to_string (max_eval_steps) + 
-            "_" + std::to_string (is_GPU) +
-            "_" + std::to_string (box_size) +
+            "_" + std::to_string (isGPU) +
             "_" + util_random_string(5);
     out_dir = "out_" + out_phrase;
 }
@@ -295,11 +292,10 @@ void parse_args(char* argv[],
 // local_only     = 1, for localonly on GPU, or 0, for randomized search on GPU
 // max_eval_steps = Number of steps in each MC evaluation
 // GPU            = 1, for GPU operations, 0 for CPU-local_only operation
-// box_size       = Size of bounding box
 
 int main(int argc, char* argv[])
 {
-    int min_args = 9;
+    int min_args = 8;
     if (argc < min_args)
     {
         fast_usage();
@@ -319,7 +315,7 @@ int main(int argc, char* argv[])
     int box_size = 25;
     bool isGPU = true;
 
-    parse_args(argv, work_dir, input_path, out_phrase, batch_size, max_limit, local_only, max_eval_steps, isGPU, box_size);
+    parse_args(argv, work_dir, input_path, out_phrase, batch_size, max_limit, local_only, max_eval_steps, isGPU);
 
     simulation_container sc(work_dir, input_path, out_phrase, batch_size, box_size, local_only, max_eval_steps, max_limit, verbosity, isGPU);
 
