@@ -42,22 +42,12 @@ struct complex_property
     double center_x = 0;
     double center_y = 0;
     double center_z = 0;
-    double box_x = 0;
-    double box_y = 0;
-    double box_z = 0;    
-    std::string protein_name;
-    std::string ligand_name;
-    complex_property(double x, double y, double z, 
-                double box_x, double box_y, double box_z,
-                std::string protein_name, std::string ligand_name):
+    std::string complex_name;
+    complex_property(double x, double y, double z, std::string complex_name):
         center_x(x),
         center_y(y),
         center_z(z),
-        box_x(box_x),
-        box_y(box_y),
-        box_z(box_z),
-        protein_name(protein_name),
-        ligand_name(ligand_name){};
+        complex_name(complex_name){};
     complex_property(){};
 };
 

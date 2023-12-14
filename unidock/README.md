@@ -250,16 +250,16 @@ input_dir_relative = Path (relative to workdir) that contains the pdbqt files fo
 The below files are required for each complex
   <complex_name>_ligand.pdbqt
   <complex_name>_protein.pdbqt
-  <complex_name>_ligand_config.txt (containing the center_x, center_y, center_z, optionally box_x, box_y, box_z)
+  <complex_name>_ligand_config.txt (containing the center_x, center_y, center_z)
 batch_size     = Size of each batch
 max_limit      = Limits number of complexs to be analysed
 local_only     = 1, for localonly using computed map for given atoms, or 0, for randomized search
 max_eval_steps = Number of steps in each MC evaluation
 GPU            = 1, for GPU operations, 0 for CPU-local_only operation
-box_size       = Size of bounding box (same for x,y,z)
+box_size       = Size of bounding box
 ```
 
-For example, to benchmark 1:1 docking runs with 5 pairs available in the test folder with box_size of 25, run as below. Note, if the config file has box_x/y/z defined, it will override this argument
+For example, to benchmark 1:1 docking runs with 5 pairs available in the test folder with box_size of 25, run as below.
 
 `build/unidock_fast <unidock_folder_full_path>/unidock/test protein_ligand_batch 5 5 0 50 1 25`
 

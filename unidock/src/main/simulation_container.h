@@ -85,7 +85,7 @@ struct simulation_container
         return newString;
     }
 
-    void fill_config(complex_property & cp, std::string path, std::string protein_name, std::string ligand_name)
+    void fill_config(complex_property & cp, std::string path, std::string name)
     {
         std::ifstream ifs(path);
         std::string line;
@@ -103,62 +103,30 @@ struct simulation_container
         cp.center_y = vals[1];
         cp.center_z = vals[2];
 
-        // Default to provided, update if in config file
-        cp.box_x = cp.box_y = cp.box_z = m_box_size;
-        if (id > 3)
-        {
-            cp.box_x = vals[3];
-            cp.box_y = vals[4];
-            cp.box_z = vals[5];
-        }
-
-        cp.protein_name = protein_name;
-        cp.ligand_name = ligand_name;
+        cp.complex_name = name;
 
         ifs.close();
 
     }
 
-    void add_rank_combinations(std::string effective_path)
+    int prime()
     {
         int curr_entry_size = 0;
-        //search for complex_rank<n>.pdbqt for ranked ligands
-        for (boost::filesystem::directory_entry& entry : boost::filesystem::recursive_directory_iterator(effective_path))
+        std::string effective_path = m_work_dir + '/' + m_input_path;
+
+        if (!boost::filesystem::exists(effective_path))
         {
-            int pos_rank = entry.path().string().find("_rank");
-            int pos_config = entry.path().stem().string().find("_config");
-            int pos_pdbqt = entry.path().extension().string().find(".pdbqt");
-
-            if (pos_rank != std::string::npos &&
-                pos_pdbqt != std::string::npos &&
-                pos_config == std::string::npos)
-            {
-                int pos_complex = entry.path().stem().string().find("_rank");
-                std::string complex = entry.path().stem().string().substr(0, pos_complex);
-                m_complex_names.emplace_back(complex);
-                m_ligand_paths.emplace_back(entry.path());
-                m_protein_paths.emplace_back(entry.path().parent_path() / boost::filesystem::path(complex + "_protein.pdbqt"));
-                m_ligand_config_paths.emplace_back(entry.path().parent_path() / boost::filesystem::path(entry.path().stem().string() + "_config.txt"));
-
-                curr_entry_size ++;
-                if (curr_entry_size >= m_max_limits)
-                {
-                    std::cout << "Limiting number of ranked samples to max limits " << m_max_limits << "\n";
-                    break;
-                }
-            }
+            std::cout << "Error: Input path " << effective_path << " does not exist\n";
+            return -1;
         }
-    }
-    void add_combinations(std::string effective_path)
-    {
-        int curr_entry_size = 0;
-        for (boost::filesystem::directory_entry& entry : boost::filesystem::recursive_directory_iterator(effective_path))
+
+        for (boost::filesystem::directory_entry& entry : boost::filesystem::directory_iterator(effective_path))
         {
-            int pos = entry.path().string().find("_protein.pdbqt");
+            int pos = entry.path().string().find("_ligand.pdbqt");
 
             if (pos != std::string::npos)
             {
-                int pos_complex = entry.path().stem().string().find("_protein");
+                int pos_complex = entry.path().stem().string().find("_ligand");
                 std::string complex = entry.path().stem().string().substr(0, pos_complex);
                 
                 m_complex_names.emplace_back(complex);
@@ -174,21 +142,6 @@ struct simulation_container
                 }
             }
         }
-    }
-
-    int prime()
-    {
-        std::string effective_path = m_work_dir + '/' + m_input_path;
-
-        if (!boost::filesystem::exists(effective_path))
-        {
-            std::cout << "Error: Input path " << effective_path << " does not exist\n";
-            return -1;
-        }
-
-        add_rank_combinations(effective_path);
-        //add_combinations(effective_path);
-
         std::cout << "Found " << m_complex_names.size() << "\n";
 
         m_ptr_complex_property_holder = new complex_property_holder(m_complex_names.size());
@@ -196,7 +149,7 @@ struct simulation_container
         int id = 0;
         for (complex_property & cp: *m_ptr_complex_property_holder)
         {
-            fill_config(cp, m_ligand_config_paths[id].path().string(), m_protein_paths[id].path().string(), m_ligand_paths[id].path().string());
+            fill_config(cp, m_ligand_config_paths[id].path().string(), m_complex_names[id]);
             id ++;
         }
 
@@ -216,7 +169,7 @@ struct simulation_container
             {
                 int index = i*m_batch_size + curr;
                 cp.emplace_back(m_ptr_complex_property_holder->m_properties[index]);
-                std::cout << "Processing " << m_ptr_complex_property_holder->m_properties[index].ligand_name << "\n";
+                std::cout << "Processing " << m_ptr_complex_property_holder->m_properties[index].complex_name << "\n";
             }
             // run
             batch_dock_with_worker(cp, m_local_only, m_work_dir, m_input_path, m_out_phrase);  
@@ -259,7 +212,7 @@ struct simulation_container
                 [=]()
                 {
                     vina_cuda_worker vcw(props[i].center_x, props[i].center_y, 
-                            props[i].center_z, props[i].protein_name,props[i].ligand_name,
+                            props[i].center_z, props[i].complex_name,
                             local_only, m_box_size, m_max_global_steps, m_verbosity,
                             workdir, input_dir, out_phrase);
                     vcw.launch();
@@ -306,8 +259,9 @@ struct simulation_container
         double center_x = prop.center_x;
         double center_y = prop.center_y;
         double center_z = prop.center_z;
+        std::string complex_name = prop.complex_name;
 
-        std::string ligand_name(m_work_dir + "/" + m_input_path + "/" + prop.ligand_name + ".pdbqt");
+        std::string ligand_name(m_work_dir + "/" + m_input_path + "/" + complex_name + "_ligand.pdbqt");
         if (! boost::filesystem::exists( ligand_name ) )
         {
             std::cout << "Input ligand file does not exist\n";        
@@ -333,7 +287,7 @@ struct simulation_container
                             weight_hydrogen, weight_glue, weight_rot);
 
         std::string flex;
-        std::string rigid(m_work_dir + "/" + m_input_path + "/" + prop.protein_name + ".pdbqt");
+        std::string rigid(m_work_dir + "/" + m_input_path + "/" + complex_name + "_protein.pdbqt");
         if (! boost::filesystem::exists( rigid ) )
         {
             std::cout << "Input (rigid) protein file does not exist\n";        
