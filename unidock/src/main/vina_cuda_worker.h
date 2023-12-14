@@ -119,9 +119,6 @@ public:
 
     }
 
-
-    // Performs CUDA Stream based docking of 1 ligand and 1 protein
-
     void launch()
     {
         multi_bias = false;

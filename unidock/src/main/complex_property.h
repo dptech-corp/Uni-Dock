@@ -35,7 +35,6 @@
 #include <iterator>
 #include <cstddef>
 
-// Holds properties of each ligand complex
 
 struct complex_property
 {
@@ -50,8 +49,6 @@ struct complex_property
         complex_name(complex_name){};
     complex_property(){};
 };
-
-// Holds properties of all ligand complexs
 
 struct complex_property_holder
 {
