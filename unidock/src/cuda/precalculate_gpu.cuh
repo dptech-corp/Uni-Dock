@@ -1,11 +1,9 @@
 #include "math.h"
-#include "kernel.h"
-#include "macros.h"
 
 // Define GPU precalculate structures
 
 /* atom related start */
-#include "atom_constants_gpu.h"
+#include "atom_constants_gpu.cuh"
 
 /* atom related end */
 

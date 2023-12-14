@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "precalculate.h"
-#include "precalculate_gpu.h"
+#include "precalculate_gpu.cuh"
 
 // TODO: define kernel here
 __global__ void precalculate_gpu(triangular_matrix_cuda_t *m_data_gpu_list,

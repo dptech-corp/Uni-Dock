@@ -25,6 +25,7 @@
 
 #include "scoring_function.h"
 #include "matrix.h"
+#include "model.h"
 #include "kernel.h"
 
 #ifdef DEBUG
@@ -32,9 +33,6 @@
 #else
 #    define DEBUG_PRINTF(...)
 #endif
-
-// Forward declaration
-struct model;
 
 struct precalculate_element {
 public:

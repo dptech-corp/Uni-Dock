@@ -43,20 +43,22 @@ void check(T result, char const *const func, const char *const file, int const l
 #define MAX_NUM_OF_GRID_MK 128  // 81
 #define MAX_NUM_OF_GRID_POINT 512000
 
-//#define GRID_MI 65//55
-//#define GRID_MJ 71//55
-//#define GRID_MK 61//81
+// #define GRID_MI 65//55
+// #define GRID_MJ 71//55
+// #define GRID_MK 61//81
 #define MAX_PRECAL_NUM_ATOM 30
 #define MAX_P_DATA_M_DATA_SIZE \
-    45150  // modified for vina1.2, should be larger, n*(n+1)/2, n=num_of_atom, select n=140
-//#define MAX_NUM_OF_GRID_ATOMS 150
+    45150  // modified for vina1.2, should be larger, n*(n+1)/2, n=num_of_atom,
+           // select n=140
+// #define MAX_NUM_OF_GRID_ATOMS 150
 #define FAST_SIZE 2051  // modified for vina1.2 m_max_cutoff^2 * factor + 3, ad4=13424
 #define SMOOTH_SIZE 2051
 #define MAX_CONTAINER_SIZE_EVERY_WI 5
 
 #define MAX_THREAD 41700000  // modified for vina1.2, to calculate random map memory upper bound
 #define MAX_LIGAND_NUM \
-    10250  // modified for vina1.2, to calculate precalculate_byatom memory upper bound
+    10250  // modified for vina1.2, to calculate precalculate_byatom memory upper
+           // bound
 
 typedef struct {
     float data[GRIDS_SIZE];
@@ -107,11 +109,12 @@ typedef struct {  // depth-first order
     float relative_axis[MAX_NUM_OF_RIGID][3];    // 1st column is root node, all 0s
     float relative_origin[MAX_NUM_OF_RIGID][3];  // 1st column is root node, all 0s
 
-    int parent[MAX_NUM_OF_RIGID];  // every node has only 1 parent node
-    bool children_map[MAX_NUM_OF_RIGID]
-                     [MAX_NUM_OF_RIGID];  // chidren_map[i][j] = true if node i's child is node j
+    int parent[MAX_NUM_OF_RIGID];                             // every node has only 1 parent node
+    bool children_map[MAX_NUM_OF_RIGID][MAX_NUM_OF_RIGID];    // chidren_map[i][j] = true if node
+                                                              // i's child is node j
+    bool descendant_map[MAX_NUM_OF_RIGID][MAX_NUM_OF_RIGID];  // descendant_map[i][j] = true if
+                                                              // node i is ancestor of node j
     int num_children;
-
 } rigid_cuda_t;
 
 typedef struct {
@@ -161,6 +164,12 @@ typedef struct {
 } ig_cuda_t;
 
 typedef struct {
+    float ptmp[MAX_NUM_OF_RIGID][3];
+    float p[MAX_NUM_OF_RIGID][3];
+    float o[MAX_NUM_OF_RIGID][3];
+} pot_cuda_t;
+
+typedef struct {
     float fast[FAST_SIZE];
     float smooth[SMOOTH_SIZE][2];
     float factor;
@@ -202,3 +211,9 @@ typedef struct {
     output_type_cuda_t container[MAX_CONTAINER_SIZE_EVERY_WI];
     int current_size;
 } output_container_cuda_t;
+
+// symmetric matrix_d (only half of it are stored)
+typedef struct {
+    float data[MAX_HESSIAN_MATRIX_D_SIZE];
+    int dim;
+} matrix_d;
