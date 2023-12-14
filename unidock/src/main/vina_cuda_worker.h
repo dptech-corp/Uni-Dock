@@ -52,6 +52,7 @@ class vina_cuda_worker : public Vina
     bool keep_H = true;
     std::string sf_name = "vina";
     int cpu = 0;
+    int verbosity = 1;
     bool no_refine = false;
     int size_x = 25;
     int size_y = 25;
@@ -78,15 +79,6 @@ class vina_cuda_worker : public Vina
     double center_y; 
     double center_z; 
     std::string complex_name;
-    void init(std::string out_phrase)
-    {
-        ligand_name = workdir + "/" + input_dir + "/" + complex_name + "_ligand.pdbqt";
-        out_dir = workdir + "/" + out_phrase;
-        if (!boost::filesystem::exists(out_dir))
-        {
-            boost::filesystem::create_directory(out_dir);
-        }        
-    }
 public:            
     vina_cuda_worker(
             double center_x, 
@@ -96,7 +88,6 @@ public:
             bool local_only,
             int box_size,
             int max_step,
-            int verbosity,
             std::string workdir,
             std::string input_dir,
             std::string out_phrase):
@@ -115,38 +106,13 @@ public:
             out_dir(out_phrase),
             Vina{"vina", 0, seed, verbosity, false, NULL}
     {
-        init(out_phrase);
+        ligand_name = workdir + "/" + input_dir + "/" + complex_name + "_ligand.pdbqt";
+        out_dir = workdir + "/" + out_phrase;
+        if (!boost::filesystem::exists(out_dir))
+        {
+            boost::filesystem::create_directory(out_dir);
+        }
     }
-    vina_cuda_worker(
-            double center_x, 
-            double center_y, 
-            double center_z, 
-            std::string complex_name,
-            bool local_only,
-            int box_size,
-            int max_step,
-            int verbosity,
-            std::string workdir,
-            std::string input_dir,
-            std::string out_phrase,
-            const Vina & v):
-
-            workdir(workdir),
-            input_dir(input_dir),
-            center_x(center_x),
-            center_y(center_y),
-            center_z(center_z),
-            size_x(box_size),
-            size_y(box_size),
-            size_z(box_size),
-            max_step(max_step),
-            complex_name(complex_name),
-            local_only(local_only),
-            out_dir(out_phrase),
-            Vina(v)
-    {
-        init(out_phrase);
-    }        
 
     ~vina_cuda_worker()
     {
@@ -188,22 +154,22 @@ public:
         compute_vina_maps(center_x, center_y, center_z, size_x, size_y, size_z,
                                                 grid_spacing, force_even_voxels);
 
-        global_search_gpu_prime(
+        mc = global_search_gpu_prime(
                                 exhaustiveness, num_modes, min_rmsd, max_evals, max_step,
                                 1, (unsigned long long)seed,
                                 local_only);
-        global_search_gpu_run();
+        global_search_gpu_run(mc);                            
     }
 
     void wait_for_completion()
     {
-        global_search_gpu_obtain(1, refine_step);
+        global_search_gpu_obtain(mc, 1, refine_step);
         std::vector<std::string> gpu_out_name;
         gpu_out_name.emplace_back(default_output(get_filename(ligand_name), out_dir));
         write_poses_gpu(gpu_out_name, num_modes, energy_range);
     }
 
-    void global_search_gpu_prime(
+    monte_carlo global_search_gpu_prime(
                                 const int exhaustiveness = 8, const int n_poses = 20,
                            const double min_rmsd = 1.0, const int max_evals = 0,
                            const int max_step = 0, int num_of_ligands = 1,
@@ -234,6 +200,9 @@ public:
 
         std::stringstream sstm;
         rng generator(static_cast<rng::result_type>(m_seed));
+
+        // Setup Monte-Carlo search
+        monte_carlo mc;
 
         // set global_steps with cutoff, maximun for the first version
         sz heuristic = 0;
@@ -266,9 +235,11 @@ public:
                 m_grid,
             m_grid.corner1(), m_grid.corner2(), generator, m_verbosity, seed, bias_batch_list);
         }
+
+        return mc;
     }
 
-    void global_search_gpu_run()
+    void global_search_gpu_run(monte_carlo mc)
     {
         std::stringstream sstm;
 
@@ -279,7 +250,7 @@ public:
         done(m_verbosity, 1);
     }
 
-    void global_search_gpu_obtain(
+    void global_search_gpu_obtain(monte_carlo mc,
                         int num_of_ligands, 
                             const int refine_step = 5)
     {

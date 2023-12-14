@@ -49,7 +49,7 @@ struct simulation_container
     bool m_local_only;
     int m_max_limits;
     int m_max_global_steps;
-    int m_verbosity;
+
 
     std::vector<std::string> m_complex_names;
     std::vector<boost::filesystem::directory_entry> m_ligand_paths;
@@ -58,7 +58,7 @@ struct simulation_container
     complex_property_holder * m_ptr_complex_property_holder;
 
     simulation_container(std::string work_dir, std::string input_path, std::string out_phrase, 
-                int batch_size, int box_size, bool local_only, int max_eval_steps, int max_limits, int verbosity):
+                int batch_size, int box_size, bool local_only, int max_eval_steps, int max_limits):
         m_work_dir(work_dir),
         m_input_path(input_path),
         m_out_phrase(out_phrase),
@@ -66,8 +66,7 @@ struct simulation_container
         m_box_size(box_size),
         m_local_only(local_only),
         m_max_global_steps(max_eval_steps),
-        m_max_limits(max_limits),
-        m_verbosity(verbosity)
+        m_max_limits(max_limits)
     {}
 
     std::string trim_eol(std::string line)
@@ -210,7 +209,7 @@ struct simulation_container
                 {
                     vina_cuda_worker vcw(props[i].center_x, props[i].center_y, 
                             props[i].center_z, props[i].complex_name,
-                            local_only, m_box_size, m_max_global_steps, m_verbosity,
+                            local_only, m_box_size, m_max_global_steps,
                             workdir, input_dir, out_phrase);
                     vcw.launch();
                     vcw.wait_for_completion();                        

@@ -63,13 +63,13 @@ bool dock_one(
             std::string input_dir,
             std::string out_phrase,
             int batch_size, 
-            int max_eval_steps,
-            int box_size)            
+            int max_eval_steps)            
 {
     int exhaustiveness = 512;
     int num_modes = 1;
     int min_rmsd = 0;
     int max_evals = 0;
+    int max_step = 40;   
     int seed = 5;
     int refine_step = 5;
     double energy_range = 3.0;
@@ -78,6 +78,7 @@ bool dock_one(
     int cpu = 0;
     int verbosity = 1;
     bool no_refine = false;
+    int box_size = 25;
     int size_x = box_size;
     int size_y = box_size;
     int size_z = box_size;
@@ -92,6 +93,7 @@ bool dock_one(
     double weight_rot = 0.05846;    
     // macrocycle closure
     double weight_glue = 50.000000;  // linear attraction
+    monte_carlo mc;
 
     double center_x = prop.center_x;
     double center_y = prop.center_y;
@@ -107,6 +109,8 @@ bool dock_one(
 
     std::string out_dir(workdir + "/" + out_phrase);
 
+
+
     std::vector<std::string> gpu_out_name;
     gpu_out_name.emplace_back(default_output(get_filename(ligand_name), out_dir));
     if (!boost::filesystem::exists(out_dir))
@@ -115,65 +119,90 @@ bool dock_one(
         boost::filesystem::create_directory(out_dir);
     }
 
-    // Create the vina object
-    Vina v(sf_name, cpu, seed, verbosity, no_refine);
-
-    v.bias_batch_list.clear();
-    v.multi_bias = false;
-    v.set_vina_weights(weight_gauss1, weight_gauss2, weight_repulsion, weight_hydrophobic,
-                        weight_hydrogen, weight_glue, weight_rot);
-
-    // rigid_name variable can be ignored for AD4
-    std::string flex;
-    std::string rigid(workdir + "/" + input_dir + "/" + complex_name + "_protein.pdbqt");
-    if (! boost::filesystem::exists( rigid ) )
-    {
-        std::cout << "Input (rigid) protein file does not exist\n";        
-        return false;
-    }    
-    v.set_receptor(rigid, flex);
-
-    std::vector<model> batch_ligands;  // ligands in current batch    
-    auto parsed_ligand = parse_ligand_from_file_no_failure(
-        ligand_name, v.m_scoring_function.get_atom_typing(), keep_H);
-    batch_ligands.emplace_back(parsed_ligand);
-
-    v.set_ligand_from_object_gpu(batch_ligands);
-    v.enable_gpu(); // Has to be done before computing vina maps
-    v.compute_vina_maps(center_x, center_y, center_z, size_x, size_y, size_z,
-                                            grid_spacing, force_even_voxels);
 
     if (use_mc_non_streaming) //original code that runs a non-CUDA Stream kernel
     {
-                                                       
-        v.global_search_gpu(exhaustiveness, num_modes, min_rmsd, max_evals, max_eval_steps,
+        // Create the vina object
+        Vina v(sf_name, cpu, seed, verbosity, no_refine);
+
+        v.bias_batch_list.clear();
+        v.multi_bias = false;
+        v.set_vina_weights(weight_gauss1, weight_gauss2, weight_repulsion, weight_hydrophobic,
+                            weight_hydrogen, weight_glue, weight_rot);
+
+        // rigid_name variable can be ignored for AD4
+        std::string flex;
+        std::string rigid(workdir + "/" + input_dir + "/" + complex_name + "_protein.pdbqt");
+        if (! boost::filesystem::exists( rigid ) )
+        {
+            std::cout << "Input (rigid) protein file does not exist\n";        
+            return false;
+        }    
+        v.set_receptor(rigid, flex);
+
+        std::vector<model> batch_ligands;  // ligands in current batch    
+        auto parsed_ligand = parse_ligand_from_file_no_failure(
+            ligand_name, v.m_scoring_function.get_atom_typing(), keep_H);
+        batch_ligands.emplace_back(parsed_ligand);
+
+        v.set_ligand_from_object_gpu(batch_ligands);
+        v.enable_gpu(); // Has to be done before computing vina maps
+        v.compute_vina_maps(center_x, center_y, center_z, size_x, size_y, size_z,
+                                                grid_spacing, force_even_voxels);
+                                                        
+        v.global_search_gpu(exhaustiveness, num_modes, min_rmsd, max_evals, max_step,
                                 1, (unsigned long long)seed,
                                 refine_step, local_only);
-        v.write_poses_gpu(gpu_out_name, num_modes, energy_range);                                
+        v.write_poses_gpu(gpu_out_name, num_modes, energy_range);                                      
     }
     else // Run with CUDA streams
     {
-        vina_cuda_worker vcw(
-            center_x,
+        vina_cuda_worker v(center_x,
             center_y, 
             center_z, 
             complex_name,
             local_only,
             box_size,
-            max_eval_steps,
-            verbosity,
+            max_step,
             workdir,
             input_dir,
-            out_phrase, v);
+            out_phrase);
+
+        v.bias_batch_list.clear();
+        v.multi_bias = false;
+        v.set_vina_weights(weight_gauss1, weight_gauss2, weight_repulsion, weight_hydrophobic,
+                            weight_hydrogen, weight_glue, weight_rot);
+
+        // rigid_name variable can be ignored for AD4
+        std::string flex;
+        std::string rigid(workdir + "/" + input_dir + "/" + complex_name + "_protein.pdbqt");
+        if (! boost::filesystem::exists( rigid ) )
+        {
+            std::cout << "Input (rigid) protein file does not exist\n";        
+            return false;
+        }    
+        v.set_receptor(rigid, flex);
+
+        std::vector<model> batch_ligands;  // ligands in current batch    
+        auto parsed_ligand = parse_ligand_from_file_no_failure(
+            ligand_name, v.m_scoring_function.get_atom_typing(), keep_H);
+        batch_ligands.emplace_back(parsed_ligand);
+
+        v.set_ligand_from_object_gpu(batch_ligands);
+        v.enable_gpu(); // Has to be done before computing vina maps
+        v.compute_vina_maps(center_x, center_y, center_z, size_x, size_y, size_z,
+                                                grid_spacing, force_even_voxels);
                                                         
-        vcw.global_search_gpu_prime(
-                                exhaustiveness, num_modes, min_rmsd, max_evals, max_eval_steps,
+        mc = v.global_search_gpu_prime(
+                                exhaustiveness, num_modes, min_rmsd, max_evals, max_step,
                                 1, (unsigned long long)seed,
-                                local_only);
-        vcw.global_search_gpu_run();
-        vcw.global_search_gpu_obtain(1, refine_step);
-        vcw.write_poses_gpu(gpu_out_name, num_modes, energy_range);        
+                                local_only);   
+        v.global_search_gpu_run(mc);                            
+        v.global_search_gpu_obtain(mc, 1, refine_step);
+        v.write_poses_gpu(gpu_out_name, num_modes, energy_range);   
+
     }
+    
 
     return true;                       
 }
@@ -186,31 +215,29 @@ int dock_many_non_batched(
                 std::string out_dir,
                 int batch_size, 
                 bool local_only, 
-                int max_eval_steps,
-                bool mc_use_non_streaming,
-                int box_size)
+                int max_eval_steps)
 {
     std::string out_phrase = std::to_string(batch_size) + "_" + std::to_string (int(local_only)) +
             "_" + std::to_string (max_eval_steps) + "_" + util_random_string(5);
     std::string non_batched_out_dir = "out_non_batched_" + out_phrase;
 
-    complex_property cp1(-18.778, 1.81952 ,8.16774, "7NPL_UKZ");
-    complex_property cp2(45.7364, -10.3474 , 109.978, "7QHG_T3B");
-    complex_property cp3(18.9403 , 16.6281 , -26.8423, "8AUH_L9I");
-    complex_property cp4(68.2009 , 100.027, 88.6237, "8CI0_8EL");
-    complex_property cp5(3.88505 , 30.4676, -7.29145, "8HO0_3ZI");
+    complex_property cp1(-0.487667, 24.0228,-11.1546, "7TUO_KL9");
+    complex_property cp2(92.7454, 8.79115, 30.7175, "6VTA_AKN");
+    complex_property cp3(-22.1801, 13.4045, 27.4542, "5S8I_2LY");
+    complex_property cp4(54.9792, -21.0535, -10.7179, "6VS3_R6V");
+    complex_property cp5(-15.0006, -23.6868, 149.842, "7VJT_7IJ");
 
     auto start_one_by_one = std::chrono::steady_clock::now();
     //-9.7
-    dock_one(mc_use_non_streaming, cp1, local_only, work_dir, input_dir, non_batched_out_dir, batch_size, max_eval_steps, box_size);
+    dock_one(true, cp1, local_only, work_dir, input_dir, non_batched_out_dir, batch_size, max_eval_steps);
     // -7.1
-    dock_one(mc_use_non_streaming, cp2, local_only, work_dir, input_dir, non_batched_out_dir, batch_size, max_eval_steps, box_size);
+    dock_one(true, cp2, local_only, work_dir, input_dir, non_batched_out_dir, batch_size, max_eval_steps);
     // -5.8
-    dock_one(mc_use_non_streaming, cp3, local_only, work_dir, input_dir, non_batched_out_dir, batch_size, max_eval_steps, box_size);
+    dock_one(true, cp3, local_only, work_dir, input_dir, non_batched_out_dir, batch_size, max_eval_steps);
     // -9.3149
-    dock_one(mc_use_non_streaming, cp4, local_only, work_dir, input_dir, non_batched_out_dir, batch_size, max_eval_steps, box_size);
+    dock_one(true, cp4, local_only, work_dir, input_dir, non_batched_out_dir, batch_size, max_eval_steps);
     // -12.5
-    dock_one(mc_use_non_streaming, cp5, local_only, work_dir, input_dir, non_batched_out_dir, batch_size, max_eval_steps, box_size);
+    dock_one(true, cp5, local_only, work_dir, input_dir, non_batched_out_dir, batch_size, max_eval_steps);
 
     auto end_one_by_one = std::chrono::steady_clock::now();
     auto milliseconds_one_by_one = std::chrono::duration_cast<std::chrono::milliseconds>(end_one_by_one - start_one_by_one).count();
@@ -302,12 +329,10 @@ int main(int argc, char* argv[])
     int max_limit = 1000; //max number of ligand:protein complexes to be run (ex control max time to run)
     bool local_only = false;
     int max_eval_steps = 60;
-    int verbosity = 1;
-    int box_size = 25;
 
     parse_args(argv, work_dir, input_path, out_phrase, batch_size, max_limit, local_only, max_eval_steps);
 
-    simulation_container sc(work_dir, input_path, out_phrase, batch_size, box_size, local_only, max_eval_steps, max_limit, verbosity);
+    simulation_container sc(work_dir, input_path, out_phrase, batch_size, 25, local_only, max_eval_steps, max_limit);
 
     if (int res = sc.prime())
     {
@@ -323,9 +348,8 @@ int main(int argc, char* argv[])
     auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     std::cout << "Completed Batched Operations in " << milliseconds << " mS\n";
 
-    // For comparison - use original code (nonstreaming = true)
-    bool mc_use_non_streaming = true;
-    dock_many_non_batched (work_dir, input_path, out_phrase, batch_size, local_only, max_eval_steps, mc_use_non_streaming, box_size);
+    // For comparison - use original non-streamed code
+    //dock_many_non_batched (work_dir, input_path, out_phrase, batch_size, local_only, max_eval_steps);
 
     return 0;
 }
