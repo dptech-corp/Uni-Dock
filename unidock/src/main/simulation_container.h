@@ -186,8 +186,8 @@ struct simulation_container
             return -1;
         }
 
-        //add_rank_combinations(effective_path);
-        add_combinations(effective_path);
+        add_rank_combinations(effective_path);
+        //add_combinations(effective_path);
 
         std::cout << "Found " << m_complex_names.size() << "\n";
 
@@ -314,7 +314,7 @@ struct simulation_container
         double center_y = prop.center_y;
         double center_z = prop.center_z;
 
-        std::string ligand_name(prop.ligand_name);
+        std::string ligand_name(m_work_dir + "/" + m_input_path + "/" + prop.ligand_name + ".pdbqt");
         if (! boost::filesystem::exists( ligand_name ) )
         {
             std::cout << "Input ligand file does not exist\n";        
@@ -340,7 +340,7 @@ struct simulation_container
                             weight_hydrogen, weight_glue, weight_rot);
 
         std::string flex;
-        std::string rigid(prop.protein_name);
+        std::string rigid(m_work_dir + "/" + m_input_path + "/" + prop.protein_name + ".pdbqt");
         if (! boost::filesystem::exists( rigid ) )
         {
             std::cout << "Input (rigid) protein file does not exist\n";        
