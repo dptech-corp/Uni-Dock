@@ -1232,7 +1232,7 @@ model parse_receptor_pdbqt(const std::string& rigid_name, const std::string& fle
             parse_pdbqt_rigid(make_path(rigid_name), r);
         } catch (struct_parse_error& e) {
             std::cerr << rigid_name << " : " << e.what() << '\n';
-            exit(EXIT_FAILURE);
+            //exit(EXIT_FAILURE);
         }
     }
 

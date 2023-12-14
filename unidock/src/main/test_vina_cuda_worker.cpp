@@ -254,13 +254,12 @@ app <work_dir> <input_dir_relative> <batch_size> <max_limit> <local_only> <max_e
 //   The below files are required for each complex\n\
 //      <complex_name>_ligand.pdbqt\n\
 //      <complex_name>_protein.pdbqt\n\
-//      <complex_name>_ligand_config.txt (containing the center_x, center_y, center_z, size_x, size_y, size_z)\n\
+//      <complex_name>_ligand_config.txt (containing the center_x, center_y, center_z)\n\
 // batch_size     = Size of each batch\n\
 // max_limit      = Limits number of complexs to be analysed\n\
 // local_only     = 1, for localonly using computed map for given atoms, or 0, for randomized search\n\
 // max_eval_steps = Number of steps in each MC evaluation\n\
 // GPU            = 1, for GPU operations, 0 for CPU-local_only operation\n\
-// box_size       = size of grid to be analysed (same for x,y,z). Will be overridden if specified in config file\n\
 \
 \n";
 
