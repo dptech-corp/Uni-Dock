@@ -193,6 +193,11 @@ bool dock_one(
         v.compute_vina_maps(center_x, center_y, center_z, size_x, size_y, size_z,
                                                 grid_spacing, force_even_voxels);
                                                         
+        v.global_search_gpu(exhaustiveness, num_modes, min_rmsd, max_evals, max_step,
+                                1, (unsigned long long)seed,
+                                refine_step, local_only);   
+        v.write_poses_gpu(gpu_out_name, num_modes, energy_range);  
+
         mc = v.global_search_gpu_prime(
                                 exhaustiveness, num_modes, min_rmsd, max_evals, max_step,
                                 1, (unsigned long long)seed,
