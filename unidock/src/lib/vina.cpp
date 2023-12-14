@@ -521,7 +521,17 @@ void Vina::compute_vina_maps(double center_x, double center_y, double center_z, 
     otherwise we use all the atom types present in the forcefield
     */
     if (m_ligand_initialized)
-        atom_types = m_model.get_movable_atom_types(atom_typing);
+    {
+        if (gpu)
+        {           
+            //HACK - find why m_model is used here!!
+            atom_types = m_model_gpu[0].get_movable_atom_types(atom_typing);
+        }
+        else
+        {
+            atom_types = m_model.get_movable_atom_types(atom_typing);
+        }
+    }
     else
         atom_types = m_scoring_function.get_atom_types();
 

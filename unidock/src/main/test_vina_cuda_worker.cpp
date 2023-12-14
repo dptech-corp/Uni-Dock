@@ -133,19 +133,19 @@ bool dock_one(
     }    
     v.set_receptor(rigid, flex);
 
-    v.enable_gpu(); // Has to be done before computing vina maps
-    v.compute_vina_maps(center_x, center_y, center_z, size_x, size_y, size_z,
-                                            grid_spacing, force_even_voxels);
-
     std::vector<model> batch_ligands;  // ligands in current batch    
     auto parsed_ligand = parse_ligand_from_file_no_failure(
         ligand_name, v.m_scoring_function.get_atom_typing(), keep_H);
     batch_ligands.emplace_back(parsed_ligand);
 
     v.set_ligand_from_object_gpu(batch_ligands);
+    v.enable_gpu(); // Has to be done before computing vina maps
+    v.compute_vina_maps(center_x, center_y, center_z, size_x, size_y, size_z,
+                                            grid_spacing, force_even_voxels);
 
     if (use_mc_non_streaming) //original code that runs a non-CUDA Stream kernel
     {
+                                                       
         v.global_search_gpu(exhaustiveness, num_modes, min_rmsd, max_evals, max_eval_steps,
                                 1, (unsigned long long)seed,
                                 refine_step, local_only);
@@ -194,24 +194,22 @@ int dock_many_non_batched(
             "_" + std::to_string (max_eval_steps) + "_" + util_random_string(5);
     std::string non_batched_out_dir = "out_non_batched_" + out_phrase;
 
-    std::cout << "Non-batched output to " << non_batched_out_dir << "\n";
-
-    complex_property cp1(-22.1801, 13.4045 ,27.4542, "5S8I_2LY");
-    complex_property cp2(54.9792, -21.0535 , -10.7179, "6VS3_R6V");
-    complex_property cp3(92.7454 , 8.79115 , 30.7175, "6VTA_AKN");
-    complex_property cp4(-0.487667 , 24.0228, -11.1546, "7TUO_KL9");
-    complex_property cp5(-15.0006 , -23.6868, 149.842, "7VJT_7IJ");
+    complex_property cp1(-18.778, 1.81952 ,8.16774, "7NPL_UKZ");
+    complex_property cp2(45.7364, -10.3474 , 109.978, "7QHG_T3B");
+    complex_property cp3(18.9403 , 16.6281 , -26.8423, "8AUH_L9I");
+    complex_property cp4(68.2009 , 100.027, 88.6237, "8CI0_8EL");
+    complex_property cp5(3.88505 , 30.4676, -7.29145, "8HO0_3ZI");
 
     auto start_one_by_one = std::chrono::steady_clock::now();
-    //-5.8
+    //-9.7
     dock_one(mc_use_non_streaming, cp1, local_only, work_dir, input_dir, non_batched_out_dir, batch_size, max_eval_steps, box_size);
-    // -9.5
+    // -7.1
     dock_one(mc_use_non_streaming, cp2, local_only, work_dir, input_dir, non_batched_out_dir, batch_size, max_eval_steps, box_size);
-    // -6.0
+    // -5.8
     dock_one(mc_use_non_streaming, cp3, local_only, work_dir, input_dir, non_batched_out_dir, batch_size, max_eval_steps, box_size);
-    // -8.8
+    // -9.3149
     dock_one(mc_use_non_streaming, cp4, local_only, work_dir, input_dir, non_batched_out_dir, batch_size, max_eval_steps, box_size);
-    // -11.9
+    // -12.5
     dock_one(mc_use_non_streaming, cp5, local_only, work_dir, input_dir, non_batched_out_dir, batch_size, max_eval_steps, box_size);
 
     auto end_one_by_one = std::chrono::steady_clock::now();
@@ -341,8 +339,8 @@ int main(int argc, char* argv[])
     std::cout << "Completed Batched Operations in " << milliseconds << " mS, for GPU = " << isGPU << "\n";
 
     // For comparison - use original code (nonstreaming = true)
-    bool mc_use_non_streaming = true;
-    dock_many_non_batched (work_dir, input_path, out_phrase, batch_size, local_only, max_eval_steps, mc_use_non_streaming, box_size);
+    //bool mc_use_non_streaming = true;
+    //dock_many_non_batched (work_dir, input_path, out_phrase, batch_size, local_only, max_eval_steps, mc_use_non_streaming, box_size);
 
     return 0;
 }
