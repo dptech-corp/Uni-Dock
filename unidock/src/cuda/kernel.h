@@ -22,10 +22,10 @@ void check(T result, char const *const func, const char *const file, int const l
     MAX_M_DATA_MI *MAX_M_DATA_MJ *MAX_M_DATA_MK *MAX_NUM_OF_EVERY_M_DATA_ELEMENT
 
 // kernel2 macros
-#define MAX_NUM_OF_LIG_TORSION 48
+#define MAX_NUM_OF_LIG_TORSION 16
 #define MAX_NUM_OF_FLEX_TORSION 1
-#define MAX_NUM_OF_RIGID 128
-#define MAX_NUM_OF_ATOMS 300
+#define MAX_NUM_OF_RIGID 16
+#define MAX_NUM_OF_ATOMS 50
 #define SIZE_OF_MOLEC_STRUC \
     ((3 + 4 + MAX_NUM_OF_LIG_TORSION + MAX_NUM_OF_FLEX_TORSION + 1) * sizeof(float))
 #define SIZE_OF_CHANGE_STRUC \
@@ -33,7 +33,7 @@ void check(T result, char const *const func, const char *const file, int const l
 #define MAX_HESSIAN_MATRIX_D_SIZE                           \
     ((6 + MAX_NUM_OF_LIG_TORSION + MAX_NUM_OF_FLEX_TORSION) \
      * (6 + MAX_NUM_OF_LIG_TORSION + MAX_NUM_OF_FLEX_TORSION + 1) / 2)
-#define MAX_NUM_OF_LIG_PAIRS 4096
+#define MAX_NUM_OF_LIG_PAIRS 1024
 #define MAX_NUM_OF_BFGS_STEPS 64
 #define MAX_NUM_OF_RANDOM_MAP 1000  // not too large (stack overflow!)
 #define GRIDS_SIZE 34               // larger than vina1.1, max(XS_TYPE_SIZE, AD_TYPE_SIZE + 2)
@@ -43,14 +43,14 @@ void check(T result, char const *const func, const char *const file, int const l
 #define MAX_NUM_OF_GRID_MK 128  // 81
 #define MAX_NUM_OF_GRID_POINT 512000
 
-// #define GRID_MI 65//55
-// #define GRID_MJ 71//55
-// #define GRID_MK 61//81
+#define GRID_MI 65//55
+#define GRID_MJ 71//55
+#define GRID_MK 61//81
 #define MAX_PRECAL_NUM_ATOM 30
 #define MAX_P_DATA_M_DATA_SIZE \
     45150  // modified for vina1.2, should be larger, n*(n+1)/2, n=num_of_atom,
-           // select n=140
-// #define MAX_NUM_OF_GRID_ATOMS 150
+        //    select n=140
+#define MAX_NUM_OF_GRID_ATOMS 150
 #define FAST_SIZE 2051  // modified for vina1.2 m_max_cutoff^2 * factor + 3, ad4=13424
 #define SMOOTH_SIZE 2051
 #define MAX_CONTAINER_SIZE_EVERY_WI 5
@@ -58,8 +58,45 @@ void check(T result, char const *const func, const char *const file, int const l
 #define MAX_THREAD 41700000  // modified for vina1.2, to calculate random map memory upper bound
 #define MAX_LIGAND_NUM \
     10250  // modified for vina1.2, to calculate precalculate_byatom memory upper
-           // bound
+        //    bound
+// struct MyConfig {
+//     static constexpr size_t MaxSize = 100;
+//     static constexpr size_t AnotherValue = 200;
+//     static constexpr size_t MAX_NUM_OF_LIG_TORSION = 48;
+// static constexpr size_t MAX_NUM_OF_FLEX_TORSION = 1;
+// static constexpr size_t MAX_NUM_OF_RIGID = 128;
+// static constexpr size_t MAX_NUM_OF_ATOMS = 300;
+// static constexpr size_t SIZE_OF_MOLEC_STRUC =
+// ((3 + 4 + MAX_NUM_OF_LIG_TORSION + MAX_NUM_OF_FLEX_TORSION + 1) * sizeof(float));
+// static constexpr size_t SIZE_OF_CHANGE_STRUC =
+//     ((3 + 3 + MAX_NUM_OF_LIG_TORSION + MAX_NUM_OF_FLEX_TORSION + 1) * sizeof(float));
+// static constexpr size_t MAX_HESSIAN_MATRIX_D_SIZE  =                         
+//     ((6 + MAX_NUM_OF_LIG_TORSION + MAX_NUM_OF_FLEX_TORSION) 
+//      * (6 + MAX_NUM_OF_LIG_TORSION + MAX_NUM_OF_FLEX_TORSION + 1) / 2);
+// static constexpr size_t MAX_NUM_OF_LIG_PAIRS =4096;
+// static constexpr size_t MAX_NUM_OF_BFGS_STEPS =64;
+// static constexpr size_t MAX_NUM_OF_RANDOM_MAP= 1000  ;// not too large (stack overflow!)
+// static constexpr size_t GRIDS_SIZE =34   ;            // larger than vina1.1, max(XS_TYPE_SIZE, AD_TYPE_SIZE + 2)
 
+// static constexpr size_t MAX_NUM_OF_GRID_MI =128;  // 55
+// static constexpr size_t MAX_NUM_OF_GRID_MJ= 128;  // 55
+// static constexpr size_t MAX_NUM_OF_GRID_MK =128 ; // 81
+// static constexpr size_t MAX_NUM_OF_GRID_POINT =512000;
+
+// //#define GRID_MI 65//55
+// //#define GRID_MJ 71//55
+// //#define GRID_MK 61//81
+// static constexpr size_t MAX_PRECAL_NUM_ATOM =30;
+// static constexpr size_t MAX_P_DATA_M_DATA_SIZE =MAX_NUM_OF_ATOMS*(MAX_NUM_OF_ATOMS+1)/2;
+// // modified for vina1.2, should be larger, n*(n+1)/2, n=num_of_atom, select n=140
+// //#define MAX_NUM_OF_GRID_ATOMS 150
+// static constexpr size_t FAST_SIZE =2051  ;// modified for vina1.2 m_max_cutoff^2 * factor + 3, ad4=13424
+// static constexpr size_t SMOOTH_SIZE =2051;
+// static constexpr size_t MAX_CONTAINER_SIZE_EVERY_WI =5;
+
+// static constexpr size_t MAX_THREAD = 41700000 ; // modified for vina1.2, to calculate random map memory upper bound
+// static constexpr size_t MAX_LIGAND_NUM  = 10250;
+// };
 typedef struct {
     float data[GRIDS_SIZE];
 } affinities_cuda_t;

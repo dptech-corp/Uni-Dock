@@ -448,12 +448,12 @@ __host__ void monte_carlo::operator()(
             DEBUG_PRINTF("store children nodes\n");
 
             tmp_struct ts;
+            
             for (int i = 0; i < m_ligand.children.size(); i++) {
                 ts.parent_index = 0;  // Start a new branch, whose parent is 0
                 ts.store_node(m_ligand.children[i], m_cuda->ligand.rigid);
             }
             m_cuda->ligand.rigid.num_children = ts.start_index;
-
             // set children map
             DEBUG_PRINTF("set children map\n");
             for (int i = 0; i < MAX_NUM_OF_RIGID; i++)

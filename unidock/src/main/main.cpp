@@ -20,6 +20,7 @@
 
 */
 
+#include <cstddef>
 #include <iostream>
 #include <string>
 #include <vector>  // ligand paths
@@ -760,6 +761,42 @@ bug reporting, license agreements, and more information.      \n";
                 DEBUG_PRINTF("%d\n", next_batch_index);
                 int processed_ligands = 0;
                 int batch_id = 0;
+                size_t max_moveable_atoms =0;
+                size_t max_num_atoms = 0;
+                size_t max_num_ligands = 0;
+                size_t max_num_torsions = 0;
+                size_t max_num_rigids = 0;
+                size_t max_num_lig_pairs = 0;
+                printf("all_ligands.size():%ld\n",all_ligands.size());
+                for (int i = 0; i <  all_ligands.size(); ++i) {
+                    printf("i=:%d\n",i);
+                    max_moveable_atoms
+                        = std::max(max_moveable_atoms, all_ligands[i].second.num_movable_atoms());
+                    max_num_atoms = std::max(max_num_atoms, all_ligands[i].second.num_atoms());
+                    max_num_torsions = std::max(max_num_torsions, sum(all_ligands[i].second.ligands.count_torsions()));
+                    max_num_rigids = std::max(max_num_rigids,all_ligands[i].second.ligands[0].children.size());
+                    max_num_lig_pairs = std::max(max_num_lig_pairs,all_ligands[i].second.num_internal_pairs());
+
+                    printf("max_moveable_atoms%ld\n",max_moveable_atoms);
+                    printf("num_atoms%ld\n",all_ligands[i].second.num_atoms());
+                    printf("num_torsions:%ld\n",sum(all_ligands[i].second.ligands.count_torsions()));
+                    printf("num_rigids:%ld\n",all_ligands[i].second.ligands[0].children.size());
+                    printf("num_internal_pairs:%ld\n",all_ligands[i].second.num_internal_pairs());
+                    
+                    all_ligands[i].second.about();
+                        
+                // printf("max_num_ligands%ld\n",max_num_ligands);
+                // printf("max_num_other_pairs%ld\n",max_num_other_pairs);
+                // printf("max_num_flex%ld\n",max_num_flex);
+                // printf("max_num_ligand_degrees_of_freedom%ld\n",max_num_ligand_degrees_of_freedom);
+                // printf("max_num_internal_pairs%ld\n",max_num_internal_pairs);
+                }
+                printf("max_moveable_atoms%ld\n",max_moveable_atoms);
+                printf("max_num_atoms%ld\n",max_num_atoms);
+                printf("max_num_torsions:%ld\n",max_num_torsions);
+                printf("max_num_rigids:%ld\n",max_num_rigids);
+                printf("max_num_lig_pairs:%ld\n",max_num_lig_pairs);
+
                 while (processed_ligands < all_ligands.size()) {
                     ++batch_id;
                     auto start = std::chrono::system_clock::now();
