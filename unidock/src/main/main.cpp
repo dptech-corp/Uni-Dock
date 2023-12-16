@@ -65,6 +65,49 @@ void check_occurrence(boost::program_options::variables_map& vm,
         if (!vm.count(str)) std::cerr << "Required parameter --" << str << " is missing!\n";
     }
 }
+struct Ligand {
+    int num_atoms;
+    int num_torsions;
+    int num_rigids;
+    int num_lig_pairs;
+    int index; 
+    float score; 
+};
+
+const float WEIGHT_ATOMS = 128.0/300.0;
+const float WEIGHT_TORSIONS = 128.0/48;
+const float WEIGHT_RIGIDS = 1.0;
+const float WEIGHT_LIG_PAIRS = 1.0/32;
+
+
+float calculateScore(const Ligand &ligand) {
+    return ligand.num_atoms * WEIGHT_ATOMS + 
+           ligand.num_torsions * WEIGHT_TORSIONS +
+           ligand.num_rigids * WEIGHT_RIGIDS +
+           ligand.num_lig_pairs * WEIGHT_LIG_PAIRS;
+}
+bool compareLigands(const Ligand &a, const Ligand &b) {
+    return a.score < b.score;
+}
+void printMaxValues(const std::vector<Ligand>& group) {
+    int max_atoms = std::numeric_limits<int>::min();
+    int max_torsions = std::numeric_limits<int>::min();
+    int max_rigids = std::numeric_limits<int>::min();
+    int max_lig_pairs = std::numeric_limits<int>::min();
+
+    for (const auto& ligand : group) {
+        max_atoms = std::max(max_atoms, ligand.num_atoms);
+        max_torsions = std::max(max_torsions, ligand.num_torsions);
+        max_rigids = std::max(max_rigids, ligand.num_rigids);
+        max_lig_pairs = std::max(max_lig_pairs, ligand.num_lig_pairs);
+    }
+
+    std::cout << "Max num_atoms: " << max_atoms << std::endl;
+    std::cout << "Max num_torsions: " << max_torsions << std::endl;
+    std::cout << "Max num_rigids: " << max_rigids << std::endl;
+    std::cout << "Max num_lig_pairs: " << max_lig_pairs << std::endl;
+    std::cout << "Group size: "<< group.size()<<std::endl;
+}
 
 int predict_peak_memory(int batch_size, int exhaustiveness, int all_atom2_numbers,
                         bool multi_bias) {
@@ -101,7 +144,68 @@ int predict_peak_memory(int batch_size, int exhaustiveness, int all_atom2_number
 
     return gpu_memory / (1024 * 1024);
 }
+void template_batch_docking(std::vector<Ligand> &sized_group,std::string batch_type,int exhaustiveness, bool multi_bias,float max_memory){
+    int processed_ligands = 0;
+    int batch_id = 0 ;
+ while (processed_ligands < sized_group.size()) {
+                    std::cout << batch_type<< std::endl;
+                    printMaxValues(sized_group);
+                    ++batch_id;
+                    auto start = std::chrono::system_clock::now();
+                    Vina v1(v);  // reuse init'ed maps
+                    int batch_size = 0;
+                    int all_atom2_numbers = 0;         // total number of atom^2 in current batch
+                    std::vector<model> batch_ligands;  // ligands in current batch
+                    v1.bias_batch_list.clear();
+                    while (predict_peak_memory(batch_size, exhaustiveness, all_atom2_numbers,
+                                               multi_bias)
+                               < max_memory
+                           && processed_ligands + batch_size < sized_group.size()) {
+                        batch_ligands.emplace_back(
+                            all_ligands[sized_group[processed_ligands + batch_size].index].second);
+                        int next_atom_numbers
+                            = batch_ligands.back().get_atoms().size() + receptor_atom_numbers;
+                        int next_atom2_numbers
+                            = next_atom_numbers * next_atom_numbers;  // Memory ~ atom numbers^2
+                        all_atom2_numbers += next_atom2_numbers;
+                        batch_size++;
+                    }
+                    DEBUG_PRINTF("batch size=%d, all_atom2_numbers=%d\n", batch_size,
+                                 all_atom2_numbers);
 
+                    std::cout <<batch_type<< " Batch " << batch_id << " size: " << batch_size << std::endl;
+                    std::vector<std::string> batch_ligand_names;
+                    for (int i = processed_ligands; i < processed_ligands + batch_size; i++) {
+                        batch_ligand_names.push_back(all_ligands[sized_group[i].index].first);
+                    }
+                    processed_ligands += batch_size;
+                    gpu_out_name = {};
+                    VINA_RANGE(i, 0, batch_ligand_names.size()) {
+                        gpu_out_name.push_back(
+                            default_output(get_filename(batch_ligand_names[i]), out_dir));
+                        if (v1.multi_bias) {
+                            std::ifstream bias_file_content(get_biasname(batch_ligand_names[i]));
+                            if (!bias_file_content.is_open()) {
+                                throw file_error(bias_file, true);
+                            }
+
+                            // initialize bias object
+                            v1.set_batch_bias(bias_file_content);
+                            bias_file_content.close();
+                        }
+                    }
+                    v1.set_ligand_from_object_gpu(batch_ligands);
+                    v1.global_search_gpu(exhaustiveness, num_modes, min_rmsd, max_evals, max_step,
+                                         batch_ligand_names.size(), (unsigned long long)seed,
+                                         refine_step, local_only);
+                    v1.write_poses_gpu(gpu_out_name, num_modes, energy_range);
+                    auto end = std::chrono::system_clock::now();
+                    std::cout << "Batch " << batch_id << " running time: "
+                              << std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
+                                     .count()
+                              << "ms" << std::endl;
+                }
+    }
 int main(int argc, char* argv[]) {
     using namespace boost::program_options;
     const std::string git_version = VERSION;
@@ -761,7 +865,10 @@ bug reporting, license agreements, and more information.      \n";
                 DEBUG_PRINTF("%d\n", next_batch_index);
                 int processed_ligands = 0;
                 int batch_id = 0;
-                size_t max_moveable_atoms =0;
+                std::vector<size_t>num_atoms_vector(all_ligands.size());
+                std::vector<size_t>num_torsions_vector(all_ligands.size());
+                std::vector<size_t>num_rigids_vector(all_ligands.size());
+                std::vector<size_t>num_lig_pairs_vector(all_ligands.size());
                 size_t max_num_atoms = 0;
                 size_t max_num_ligands = 0;
                 size_t max_num_torsions = 0;
@@ -770,18 +877,19 @@ bug reporting, license agreements, and more information.      \n";
                 printf("all_ligands.size():%ld\n",all_ligands.size());
                 for (int i = 0; i <  all_ligands.size(); ++i) {
                     printf("i=:%d\n",i);
-                    max_moveable_atoms
-                        = std::max(max_moveable_atoms, all_ligands[i].second.num_movable_atoms());
-                    max_num_atoms = std::max(max_num_atoms, all_ligands[i].second.num_atoms());
-                    max_num_torsions = std::max(max_num_torsions, sum(all_ligands[i].second.ligands.count_torsions()));
-                    max_num_rigids = std::max(max_num_rigids,all_ligands[i].second.ligands[0].children.size());
-                    max_num_lig_pairs = std::max(max_num_lig_pairs,all_ligands[i].second.num_internal_pairs());
+                    num_atoms_vector.at(i) = all_ligands[i].second.num_atoms();
+                    num_torsions_vector.at(i)=sum(all_ligands[i].second.ligands.count_torsions());
+                    num_rigids_vector.at(i)=all_ligands[i].second.ligands[0].children.size();
+                    num_lig_pairs_vector.at(i)=all_ligands[i].second.num_internal_pairs();
+                    max_num_atoms = std::max(max_num_atoms, num_atoms_vector.at(i));
+                    max_num_torsions = std::max(max_num_torsions, num_torsions_vector.at(i));
+                    max_num_rigids = std::max(max_num_rigids,num_rigids_vector.at(i));
+                    max_num_lig_pairs = std::max(max_num_lig_pairs,num_lig_pairs_vector.at(i));
 
-                    printf("max_moveable_atoms%ld\n",max_moveable_atoms);
-                    printf("num_atoms%ld\n",all_ligands[i].second.num_atoms());
-                    printf("num_torsions:%ld\n",sum(all_ligands[i].second.ligands.count_torsions()));
-                    printf("num_rigids:%ld\n",all_ligands[i].second.ligands[0].children.size());
-                    printf("num_internal_pairs:%ld\n",all_ligands[i].second.num_internal_pairs());
+                    printf("num_atoms%ld\n",num_atoms_vector.at(i));
+                    printf("num_torsions:%ld\n",num_torsions_vector.at(i));
+                    printf("num_rigids:%ld\n",num_rigids_vector.at(i));
+                    printf("num_internal_pairs:%ld\n",num_lig_pairs_vector.at(i));
                     
                     all_ligands[i].second.about();
                         
@@ -791,14 +899,51 @@ bug reporting, license agreements, and more information.      \n";
                 // printf("max_num_ligand_degrees_of_freedom%ld\n",max_num_ligand_degrees_of_freedom);
                 // printf("max_num_internal_pairs%ld\n",max_num_internal_pairs);
                 }
-                printf("max_moveable_atoms%ld\n",max_moveable_atoms);
+                
                 printf("max_num_atoms%ld\n",max_num_atoms);
                 printf("max_num_torsions:%ld\n",max_num_torsions);
                 printf("max_num_rigids:%ld\n",max_num_rigids);
                 printf("max_num_lig_pairs:%ld\n",max_num_lig_pairs);
-
-                while (processed_ligands < all_ligands.size()) {
-                    ++batch_id;
+                std::vector<Ligand> ligands;
+                for (int i = 0; i < all_ligands.size(); i++) {
+                    Ligand lig;
+                    lig.num_atoms = num_atoms_vector.at(i);
+                    lig.num_torsions = num_torsions_vector.at(i);
+                    lig.num_rigids = num_rigids_vector.at(i);
+                    lig.num_lig_pairs = num_lig_pairs_vector.at(i);
+                    lig.index = i;
+                    lig.score = calculateScore(lig);
+                    ligands.push_back(lig);
+                }
+                std::sort(ligands.begin(), ligands.end(), compareLigands);
+                int groupSize = ligands.size() / 4;
+                std::vector<Ligand> smallGroup(ligands.begin(), ligands.begin() + groupSize);
+                std::vector<Ligand> mediumGroup(ligands.begin() + groupSize, ligands.begin() + 2 * groupSize);
+                std::vector<Ligand> largeGroup(ligands.begin() + 2 * groupSize, ligands.begin() + 3 * groupSize);
+                std::vector<Ligand> extraLargeGroup(ligands.begin() + 3 * groupSize, ligands.end());
+                std::cout << "Small Group:" << std::endl;
+                printMaxValues(smallGroup);
+                
+                std::cout << "Medium Group:" << std::endl;
+                printMaxValues(mediumGroup);
+                
+                std::cout << "Large Group:" << std::endl;
+                printMaxValues(largeGroup);
+                
+                std::cout << "Extra Large Group:" << std::endl;
+                printMaxValues(extraLargeGroup);
+                int processed_ligands_smile = 0;
+                int smile_batch_id = 0;
+                int processed_ligands_medium = 0;
+                int medium_batch_id = 0;
+                int processed_ligands_large = 0;
+                int large_batch_id = 0;
+                int processed_ligands_extra_large = 0;
+                int extra_larg_batch_id = 0;
+                while (processed_ligands_smile < smallGroup.size()) {
+                    std::cout << "small batch"<< std::endl;
+                    printMaxValues(smallGroup);
+                    ++smile_batch_id;
                     auto start = std::chrono::system_clock::now();
                     Vina v1(v);  // reuse init'ed maps
                     int batch_size = 0;
@@ -808,9 +953,9 @@ bug reporting, license agreements, and more information.      \n";
                     while (predict_peak_memory(batch_size, exhaustiveness, all_atom2_numbers,
                                                multi_bias)
                                < max_memory
-                           && processed_ligands + batch_size < all_ligands.size()) {
+                           && processed_ligands_smile + batch_size < smallGroup.size()) {
                         batch_ligands.emplace_back(
-                            all_ligands[processed_ligands + batch_size].second);
+                            all_ligands[smallGroup[processed_ligands_smile + batch_size].index].second);
                         int next_atom_numbers
                             = batch_ligands.back().get_atoms().size() + receptor_atom_numbers;
                         int next_atom2_numbers
@@ -821,12 +966,12 @@ bug reporting, license agreements, and more information.      \n";
                     DEBUG_PRINTF("batch size=%d, all_atom2_numbers=%d\n", batch_size,
                                  all_atom2_numbers);
 
-                    std::cout << "Batch " << batch_id << " size: " << batch_size << std::endl;
+                    std::cout << "Small Batch " << smile_batch_id << " size: " << batch_size << std::endl;
                     std::vector<std::string> batch_ligand_names;
-                    for (int i = processed_ligands; i < processed_ligands + batch_size; i++) {
-                        batch_ligand_names.push_back(all_ligands[i].first);
+                    for (int i = processed_ligands_smile; i < processed_ligands_smile + batch_size; i++) {
+                        batch_ligand_names.push_back(all_ligands[smallGroup[i].index].first);
                     }
-                    processed_ligands += batch_size;
+                    processed_ligands_smile += batch_size;
                     gpu_out_name = {};
                     VINA_RANGE(i, 0, batch_ligand_names.size()) {
                         gpu_out_name.push_back(
@@ -853,6 +998,65 @@ bug reporting, license agreements, and more information.      \n";
                                      .count()
                               << "ms" << std::endl;
                 }
+
+
+
+                // while (processed_ligands < all_ligands.size()) {
+                //     ++batch_id;
+                //     auto start = std::chrono::system_clock::now();
+                //     Vina v1(v);  // reuse init'ed maps
+                //     int batch_size = 0;
+                //     int all_atom2_numbers = 0;         // total number of atom^2 in current batch
+                //     std::vector<model> batch_ligands;  // ligands in current batch
+                //     v1.bias_batch_list.clear();
+                //     while (predict_peak_memory(batch_size, exhaustiveness, all_atom2_numbers,
+                //                                multi_bias)
+                //                < max_memory
+                //            && processed_ligands + batch_size < all_ligands.size()) {
+                //         batch_ligands.emplace_back(
+                //             all_ligands[processed_ligands + batch_size].second);
+                //         int next_atom_numbers
+                //             = batch_ligands.back().get_atoms().size() + receptor_atom_numbers;
+                //         int next_atom2_numbers
+                //             = next_atom_numbers * next_atom_numbers;  // Memory ~ atom numbers^2
+                //         all_atom2_numbers += next_atom2_numbers;
+                //         batch_size++;
+                //     }
+                //     DEBUG_PRINTF("batch size=%d, all_atom2_numbers=%d\n", batch_size,
+                //                  all_atom2_numbers);
+
+                //     std::cout << "Batch " << batch_id << " size: " << batch_size << std::endl;
+                //     std::vector<std::string> batch_ligand_names;
+                //     for (int i = processed_ligands; i < processed_ligands + batch_size; i++) {
+                //         batch_ligand_names.push_back(all_ligands[i].first);
+                //     }
+                //     processed_ligands += batch_size;
+                //     gpu_out_name = {};
+                //     VINA_RANGE(i, 0, batch_ligand_names.size()) {
+                //         gpu_out_name.push_back(
+                //             default_output(get_filename(batch_ligand_names[i]), out_dir));
+                //         if (v1.multi_bias) {
+                //             std::ifstream bias_file_content(get_biasname(batch_ligand_names[i]));
+                //             if (!bias_file_content.is_open()) {
+                //                 throw file_error(bias_file, true);
+                //             }
+
+                //             // initialize bias object
+                //             v1.set_batch_bias(bias_file_content);
+                //             bias_file_content.close();
+                //         }
+                //     }
+                //     v1.set_ligand_from_object_gpu(batch_ligands);
+                //     v1.global_search_gpu(exhaustiveness, num_modes, min_rmsd, max_evals, max_step,
+                //                          batch_ligand_names.size(), (unsigned long long)seed,
+                //                          refine_step, local_only);
+                //     v1.write_poses_gpu(gpu_out_name, num_modes, energy_range);
+                //     auto end = std::chrono::system_clock::now();
+                //     std::cout << "Batch " << batch_id << " running time: "
+                //               << std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
+                //                      .count()
+                //               << "ms" << std::endl;
+                // }
             }
         }
     }
