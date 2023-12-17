@@ -144,67 +144,178 @@ int predict_peak_memory(int batch_size, int exhaustiveness, int all_atom2_number
 
     return gpu_memory / (1024 * 1024);
 }
-void template_batch_docking(std::vector<Ligand> &sized_group,std::string batch_type,int exhaustiveness, bool multi_bias,float max_memory){
+template<typename Config>
+int predict_peak_memory(int batch_size, int exhaustiveness, int all_atom2_numbers,
+                        bool multi_bias) {
+    int64_t gpu_memory = 0;
+    // precalculate
+    gpu_memory += (int64_t)(1) * all_atom2_numbers * sizeof(precalculate_element_cuda_t_<Config>);
+
+    // m_cuda_gpu
+    gpu_memory += (int64_t)(1) * batch_size * sizeof(m_cuda_t_<Config>);
+    // ig_cuda_gpu
+    if (multi_bias)
+        gpu_memory += (int64_t)(1) * batch_size * sizeof(ig_cuda_t_<Config>);
+    else
+        gpu_memory += sizeof(ig_cuda_t_<Config>);
+    // p_cuda_gpu
+    gpu_memory += (int64_t)(1) * batch_size * sizeof(p_cuda_t_<Config>);
+    // rand_molec_struc_gpu
+    gpu_memory += (int64_t)(1) * batch_size * exhaustiveness * Config::SIZE_OF_MOLEC_STRUC_;
+    // results_gpu
+    gpu_memory += (int64_t)(1) * batch_size * exhaustiveness * sizeof(output_type_cuda_t_<Config>);
+    // m_cuda_global
+    gpu_memory += (int64_t)(1) * batch_size * exhaustiveness * sizeof(m_cuda_t_<Config>);
+    // h_cuda_global
+    gpu_memory += (int64_t)(1) * batch_size * exhaustiveness * sizeof(matrix_d_<Config>);
+    // change_aux
+    gpu_memory += (int64_t)(6) * batch_size * exhaustiveness * sizeof(change_cuda_t_<Config>);
+    // results_aux
+    gpu_memory += (int64_t)(5) * batch_size * exhaustiveness * sizeof(output_type_cuda_t_<Config>);
+    // pot_aux
+    gpu_memory += (int64_t)(1) * batch_size * exhaustiveness * sizeof(pot_cuda_t_<Config>);
+    // states
+    gpu_memory
+        += (int64_t)(1) * batch_size * exhaustiveness * 64;  // sizeof(curandStatePhilox4_32_10_t)
+
+    return gpu_memory / (1024 * 1024);
+}
+
+
+typedef std::pair<std::string, model> named_model;
+std::vector<std::string> gpu_out_name;
+void template_batch_docking(Vina &v,std::vector<named_model> &all_ligands,std::vector<Ligand> &sized_group,
+                        std::string batch_type,int exhaustiveness, bool multi_bias,float max_memory,
+                        float receptor_atom_numbers,std::string out_dir,std::string bias_file,int num_modes,
+                        double min_rmsd,int max_evals,int max_step,int seed, int refine_step,bool local_only, 
+                        double energy_range){
     int processed_ligands = 0;
     int batch_id = 0 ;
- while (processed_ligands < sized_group.size()) {
-                    std::cout << batch_type<< std::endl;
-                    printMaxValues(sized_group);
-                    ++batch_id;
-                    auto start = std::chrono::system_clock::now();
-                    Vina v1(v);  // reuse init'ed maps
-                    int batch_size = 0;
-                    int all_atom2_numbers = 0;         // total number of atom^2 in current batch
-                    std::vector<model> batch_ligands;  // ligands in current batch
-                    v1.bias_batch_list.clear();
-                    while (predict_peak_memory(batch_size, exhaustiveness, all_atom2_numbers,
-                                               multi_bias)
-                               < max_memory
-                           && processed_ligands + batch_size < sized_group.size()) {
-                        batch_ligands.emplace_back(
-                            all_ligands[sized_group[processed_ligands + batch_size].index].second);
-                        int next_atom_numbers
-                            = batch_ligands.back().get_atoms().size() + receptor_atom_numbers;
-                        int next_atom2_numbers
-                            = next_atom_numbers * next_atom_numbers;  // Memory ~ atom numbers^2
-                        all_atom2_numbers += next_atom2_numbers;
-                        batch_size++;
-                    }
-                    DEBUG_PRINTF("batch size=%d, all_atom2_numbers=%d\n", batch_size,
-                                 all_atom2_numbers);
+    while (processed_ligands < sized_group.size()) {
+        std::cout << batch_type<< std::endl;
+        printMaxValues(sized_group);
+        ++batch_id;
+        auto start = std::chrono::system_clock::now();
+        Vina v1(v);  // reuse init'ed maps
+        int batch_size = 0;
+        int all_atom2_numbers = 0;         // total number of atom^2 in current batch
+        std::vector<model> batch_ligands;  // ligands in current batch
+        v1.bias_batch_list.clear();
+        while (predict_peak_memory(batch_size, exhaustiveness, all_atom2_numbers,
+                                    multi_bias)
+                    < max_memory
+                && processed_ligands + batch_size < sized_group.size()) {
+            batch_ligands.emplace_back(
+                all_ligands[sized_group[processed_ligands + batch_size].index].second);
+            int next_atom_numbers
+                = batch_ligands.back().get_atoms().size() + receptor_atom_numbers;
+            int next_atom2_numbers
+                = next_atom_numbers * next_atom_numbers;  // Memory ~ atom numbers^2
+            all_atom2_numbers += next_atom2_numbers;
+            batch_size++;
+        }
+        DEBUG_PRINTF("batch size=%d, all_atom2_numbers=%d\n", batch_size,
+                        all_atom2_numbers);
 
-                    std::cout <<batch_type<< " Batch " << batch_id << " size: " << batch_size << std::endl;
-                    std::vector<std::string> batch_ligand_names;
-                    for (int i = processed_ligands; i < processed_ligands + batch_size; i++) {
-                        batch_ligand_names.push_back(all_ligands[sized_group[i].index].first);
-                    }
-                    processed_ligands += batch_size;
-                    gpu_out_name = {};
-                    VINA_RANGE(i, 0, batch_ligand_names.size()) {
-                        gpu_out_name.push_back(
-                            default_output(get_filename(batch_ligand_names[i]), out_dir));
-                        if (v1.multi_bias) {
-                            std::ifstream bias_file_content(get_biasname(batch_ligand_names[i]));
-                            if (!bias_file_content.is_open()) {
-                                throw file_error(bias_file, true);
-                            }
-
-                            // initialize bias object
-                            v1.set_batch_bias(bias_file_content);
-                            bias_file_content.close();
-                        }
-                    }
-                    v1.set_ligand_from_object_gpu(batch_ligands);
-                    v1.global_search_gpu(exhaustiveness, num_modes, min_rmsd, max_evals, max_step,
-                                         batch_ligand_names.size(), (unsigned long long)seed,
-                                         refine_step, local_only);
-                    v1.write_poses_gpu(gpu_out_name, num_modes, energy_range);
-                    auto end = std::chrono::system_clock::now();
-                    std::cout << "Batch " << batch_id << " running time: "
-                              << std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
-                                     .count()
-                              << "ms" << std::endl;
+        std::cout <<batch_type<< " Batch " << batch_id << " size: " << batch_size << std::endl;
+        std::vector<std::string> batch_ligand_names;
+        for (int i = processed_ligands; i < processed_ligands + batch_size; i++) {
+            batch_ligand_names.push_back(all_ligands[sized_group[i].index].first);
+        }
+        processed_ligands += batch_size;
+        gpu_out_name = {};
+        VINA_RANGE(i, 0, batch_ligand_names.size()) {
+            gpu_out_name.push_back(
+                default_output(get_filename(batch_ligand_names[i]), out_dir));
+            if (v1.multi_bias) {
+                std::ifstream bias_file_content(get_biasname(batch_ligand_names[i]));
+                if (!bias_file_content.is_open()) {
+                    throw file_error(bias_file, true);
                 }
+
+                // initialize bias object
+                v1.set_batch_bias(bias_file_content);
+                bias_file_content.close();
+            }
+        }
+        v1.set_ligand_from_object_gpu(batch_ligands);
+        v1.global_search_gpu(exhaustiveness, num_modes, min_rmsd, max_evals, max_step,
+                                batch_ligand_names.size(), (unsigned long long)seed,
+                                refine_step, local_only);
+        v1.write_poses_gpu(gpu_out_name, num_modes, energy_range);
+        auto end = std::chrono::system_clock::now();
+        std::cout << "Batch " << batch_id << " running time: "
+                    << std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
+                            .count()
+                    << "ms" << std::endl;
+    }
+    }
+template<typename Config>
+void template_batch_docking(Vina &v,std::vector<named_model> &all_ligands,std::vector<Ligand> &sized_group,
+                        std::string batch_type,int exhaustiveness, bool multi_bias,float max_memory,
+                        float receptor_atom_numbers,std::string out_dir,std::string bias_file,int num_modes,
+                        double min_rmsd,int max_evals,int max_step,int seed, int refine_step,bool local_only, 
+                        double energy_range){
+    int processed_ligands = 0;
+    int batch_id = 0 ;
+    while (processed_ligands < sized_group.size()) {
+        std::cout << batch_type<< std::endl;
+        printMaxValues(sized_group);
+        ++batch_id;
+        auto start = std::chrono::system_clock::now();
+        Vina v1(v);  // reuse init'ed maps
+        int batch_size = 0;
+        int all_atom2_numbers = 0;         // total number of atom^2 in current batch
+        std::vector<model> batch_ligands;  // ligands in current batch
+        v1.bias_batch_list.clear();
+        while (predict_peak_memory<Config>(batch_size, exhaustiveness, all_atom2_numbers,
+                                    multi_bias)
+                    < max_memory
+                && processed_ligands + batch_size < sized_group.size()) {
+            batch_ligands.emplace_back(
+                all_ligands[sized_group[processed_ligands + batch_size].index].second);
+            int next_atom_numbers
+                = batch_ligands.back().get_atoms().size() + receptor_atom_numbers;
+            int next_atom2_numbers
+                = next_atom_numbers * next_atom_numbers;  // Memory ~ atom numbers^2
+            all_atom2_numbers += next_atom2_numbers;
+            batch_size++;
+        }
+        DEBUG_PRINTF("batch size=%d, all_atom2_numbers=%d\n", batch_size,
+                        all_atom2_numbers);
+
+        std::cout <<batch_type<< " Batch " << batch_id << " size: " << batch_size << std::endl;
+        std::vector<std::string> batch_ligand_names;
+        for (int i = processed_ligands; i < processed_ligands + batch_size; i++) {
+            batch_ligand_names.push_back(all_ligands[sized_group[i].index].first);
+        }
+        processed_ligands += batch_size;
+        gpu_out_name = {};
+        VINA_RANGE(i, 0, batch_ligand_names.size()) {
+            gpu_out_name.push_back(
+                default_output(get_filename(batch_ligand_names[i]), out_dir));
+            if (v1.multi_bias) {
+                std::ifstream bias_file_content(get_biasname(batch_ligand_names[i]));
+                if (!bias_file_content.is_open()) {
+                    throw file_error(bias_file, true);
+                }
+
+                // initialize bias object
+                v1.set_batch_bias(bias_file_content);
+                bias_file_content.close();
+            }
+        }
+        v1.set_ligand_from_object_gpu(batch_ligands);
+        v1.global_search_gpu_small(exhaustiveness, num_modes, min_rmsd, max_evals, max_step,
+                                batch_ligand_names.size(), (unsigned long long)seed,
+                                refine_step, local_only);
+        v1.write_poses_gpu(gpu_out_name, num_modes, energy_range);
+        auto end = std::chrono::system_clock::now();
+        std::cout << "Batch " << batch_id << " running time: "
+                    << std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
+                            .count()
+                    << "ms" << std::endl;
+    }
     }
 int main(int argc, char* argv[]) {
     using namespace boost::program_options;
@@ -876,7 +987,7 @@ bug reporting, license agreements, and more information.      \n";
                 size_t max_num_lig_pairs = 0;
                 printf("all_ligands.size():%ld\n",all_ligands.size());
                 for (int i = 0; i <  all_ligands.size(); ++i) {
-                    printf("i=:%d\n",i);
+                    // printf("i=:%d\n",i);
                     num_atoms_vector.at(i) = all_ligands[i].second.num_atoms();
                     num_torsions_vector.at(i)=sum(all_ligands[i].second.ligands.count_torsions());
                     num_rigids_vector.at(i)=all_ligands[i].second.ligands[0].children.size();
@@ -886,12 +997,12 @@ bug reporting, license agreements, and more information.      \n";
                     max_num_rigids = std::max(max_num_rigids,num_rigids_vector.at(i));
                     max_num_lig_pairs = std::max(max_num_lig_pairs,num_lig_pairs_vector.at(i));
 
-                    printf("num_atoms%ld\n",num_atoms_vector.at(i));
-                    printf("num_torsions:%ld\n",num_torsions_vector.at(i));
-                    printf("num_rigids:%ld\n",num_rigids_vector.at(i));
-                    printf("num_internal_pairs:%ld\n",num_lig_pairs_vector.at(i));
+                    // printf("num_atoms%ld\n",num_atoms_vector.at(i));
+                    // printf("num_torsions:%ld\n",num_torsions_vector.at(i));
+                    // printf("num_rigids:%ld\n",num_rigids_vector.at(i));
+                    // printf("num_internal_pairs:%ld\n",num_lig_pairs_vector.at(i));
                     
-                    all_ligands[i].second.about();
+                    // all_ligands[i].second.about();
                         
                 // printf("max_num_ligands%ld\n",max_num_ligands);
                 // printf("max_num_other_pairs%ld\n",max_num_other_pairs);
@@ -940,64 +1051,77 @@ bug reporting, license agreements, and more information.      \n";
                 int large_batch_id = 0;
                 int processed_ligands_extra_large = 0;
                 int extra_larg_batch_id = 0;
-                while (processed_ligands_smile < smallGroup.size()) {
-                    std::cout << "small batch"<< std::endl;
-                    printMaxValues(smallGroup);
-                    ++smile_batch_id;
-                    auto start = std::chrono::system_clock::now();
-                    Vina v1(v);  // reuse init'ed maps
-                    int batch_size = 0;
-                    int all_atom2_numbers = 0;         // total number of atom^2 in current batch
-                    std::vector<model> batch_ligands;  // ligands in current batch
-                    v1.bias_batch_list.clear();
-                    while (predict_peak_memory(batch_size, exhaustiveness, all_atom2_numbers,
-                                               multi_bias)
-                               < max_memory
-                           && processed_ligands_smile + batch_size < smallGroup.size()) {
-                        batch_ligands.emplace_back(
-                            all_ligands[smallGroup[processed_ligands_smile + batch_size].index].second);
-                        int next_atom_numbers
-                            = batch_ligands.back().get_atoms().size() + receptor_atom_numbers;
-                        int next_atom2_numbers
-                            = next_atom_numbers * next_atom_numbers;  // Memory ~ atom numbers^2
-                        all_atom2_numbers += next_atom2_numbers;
-                        batch_size++;
-                    }
-                    DEBUG_PRINTF("batch size=%d, all_atom2_numbers=%d\n", batch_size,
-                                 all_atom2_numbers);
+                template_batch_docking<SmallConfig>(v,all_ligands,smallGroup,"Small",exhaustiveness, multi_bias,max_memory,
+                        receptor_atom_numbers, out_dir,bias_file, num_modes,
+                        min_rmsd,max_evals,max_step,seed, refine_step, local_only, energy_range);
+                template_batch_docking(v,all_ligands,mediumGroup,"Medium",exhaustiveness, multi_bias,max_memory,
+                        receptor_atom_numbers, out_dir,bias_file, num_modes,
+                        min_rmsd,max_evals,max_step,seed, refine_step, local_only, energy_range);
+                template_batch_docking(v,all_ligands,largeGroup,"Large",exhaustiveness, multi_bias,max_memory,
+                        receptor_atom_numbers, out_dir,bias_file, num_modes,
+                        min_rmsd,max_evals,max_step,seed, refine_step, local_only, energy_range);
+                template_batch_docking(v,all_ligands,extraLargeGroup,"Extra Large",exhaustiveness, multi_bias,max_memory,
+                        receptor_atom_numbers, out_dir,bias_file, num_modes,
+                        min_rmsd,max_evals,max_step,seed, refine_step, local_only, energy_range);
+                
+                // while (processed_ligands_smile < smallGroup.size()) {
+                //     std::cout << "small batch"<< std::endl;
+                //     printMaxValues(smallGroup);
+                //     ++smile_batch_id;
+                //     auto start = std::chrono::system_clock::now();
+                //     Vina v1(v);  // reuse init'ed maps
+                //     int batch_size = 0;
+                //     int all_atom2_numbers = 0;         // total number of atom^2 in current batch
+                //     std::vector<model> batch_ligands;  // ligands in current batch
+                //     v1.bias_batch_list.clear();
+                //     while (predict_peak_memory(batch_size, exhaustiveness, all_atom2_numbers,
+                //                                multi_bias)
+                //                < max_memory
+                //            && processed_ligands_smile + batch_size < smallGroup.size()) {
+                //         batch_ligands.emplace_back(
+                //             all_ligands[smallGroup[processed_ligands_smile + batch_size].index].second);
+                //         int next_atom_numbers
+                //             = batch_ligands.back().get_atoms().size() + receptor_atom_numbers;
+                //         int next_atom2_numbers
+                //             = next_atom_numbers * next_atom_numbers;  // Memory ~ atom numbers^2
+                //         all_atom2_numbers += next_atom2_numbers;
+                //         batch_size++;
+                //     }
+                //     DEBUG_PRINTF("batch size=%d, all_atom2_numbers=%d\n", batch_size,
+                //                  all_atom2_numbers);
 
-                    std::cout << "Small Batch " << smile_batch_id << " size: " << batch_size << std::endl;
-                    std::vector<std::string> batch_ligand_names;
-                    for (int i = processed_ligands_smile; i < processed_ligands_smile + batch_size; i++) {
-                        batch_ligand_names.push_back(all_ligands[smallGroup[i].index].first);
-                    }
-                    processed_ligands_smile += batch_size;
-                    gpu_out_name = {};
-                    VINA_RANGE(i, 0, batch_ligand_names.size()) {
-                        gpu_out_name.push_back(
-                            default_output(get_filename(batch_ligand_names[i]), out_dir));
-                        if (v1.multi_bias) {
-                            std::ifstream bias_file_content(get_biasname(batch_ligand_names[i]));
-                            if (!bias_file_content.is_open()) {
-                                throw file_error(bias_file, true);
-                            }
+                //     std::cout << "Small Batch " << smile_batch_id << " size: " << batch_size << std::endl;
+                //     std::vector<std::string> batch_ligand_names;
+                //     for (int i = processed_ligands_smile; i < processed_ligands_smile + batch_size; i++) {
+                //         batch_ligand_names.push_back(all_ligands[smallGroup[i].index].first);
+                //     }
+                //     processed_ligands_smile += batch_size;
+                //     gpu_out_name = {};
+                //     VINA_RANGE(i, 0, batch_ligand_names.size()) {
+                //         gpu_out_name.push_back(
+                //             default_output(get_filename(batch_ligand_names[i]), out_dir));
+                //         if (v1.multi_bias) {
+                //             std::ifstream bias_file_content(get_biasname(batch_ligand_names[i]));
+                //             if (!bias_file_content.is_open()) {
+                //                 throw file_error(bias_file, true);
+                //             }
 
-                            // initialize bias object
-                            v1.set_batch_bias(bias_file_content);
-                            bias_file_content.close();
-                        }
-                    }
-                    v1.set_ligand_from_object_gpu(batch_ligands);
-                    v1.global_search_gpu(exhaustiveness, num_modes, min_rmsd, max_evals, max_step,
-                                         batch_ligand_names.size(), (unsigned long long)seed,
-                                         refine_step, local_only);
-                    v1.write_poses_gpu(gpu_out_name, num_modes, energy_range);
-                    auto end = std::chrono::system_clock::now();
-                    std::cout << "Batch " << batch_id << " running time: "
-                              << std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
-                                     .count()
-                              << "ms" << std::endl;
-                }
+                //             // initialize bias object
+                //             v1.set_batch_bias(bias_file_content);
+                //             bias_file_content.close();
+                //         }
+                //     }
+                //     v1.set_ligand_from_object_gpu(batch_ligands);
+                //     v1.global_search_gpu(exhaustiveness, num_modes, min_rmsd, max_evals, max_step,
+                //                          batch_ligand_names.size(), (unsigned long long)seed,
+                //                          refine_step, local_only);
+                //     v1.write_poses_gpu(gpu_out_name, num_modes, energy_range);
+                //     auto end = std::chrono::system_clock::now();
+                //     std::cout << "Batch " << smile_batch_id << " running time: "
+                //               << std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
+                //                      .count()
+                //               << "ms" << std::endl;
+                // }
 
 
 
