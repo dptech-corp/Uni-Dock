@@ -105,6 +105,8 @@ struct monte_carlo_template {
     void do_docking();
     std::vector<output_type> cuda_to_vina(output_type_cuda_t* results_p, int thread) const;
     template <typename Config>
+    std::vector<output_type> cuda_to_vina(output_type_cuda_t_<Config>* results_p, int thread) const;
+    template <typename Config>
     void do_docking(std::vector<model>& m, std::vector<output_container>& out,
                     std::vector<precalculate_byatom>& p, triangular_matrix_cuda_t* m_data_list_gpu,
                     const igrid& ig, const vec& corner1, const vec& corner2, rng& generator,
