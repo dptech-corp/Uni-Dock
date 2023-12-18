@@ -204,10 +204,10 @@ static constexpr size_t MAX_THREAD_ = 41700000 ; // modified for vina1.2, to cal
 static constexpr size_t MAX_LIGAND_NUM_  = 10250;
 };
 struct ExtraLargeConfig {
-static constexpr size_t MAX_NUM_OF_LIG_TORSION_ = 24;
+static constexpr size_t MAX_NUM_OF_LIG_TORSION_ = 16;
 static constexpr size_t MAX_NUM_OF_FLEX_TORSION_ = 1;
-static constexpr size_t MAX_NUM_OF_RIGID_ = 20;
-static constexpr size_t MAX_NUM_OF_ATOMS_ = 80;
+static constexpr size_t MAX_NUM_OF_RIGID_ = 16;
+static constexpr size_t MAX_NUM_OF_ATOMS_ = 60;
 static constexpr size_t SIZE_OF_MOLEC_STRUC_ =
 ((3 + 4 + MAX_NUM_OF_LIG_TORSION_ + MAX_NUM_OF_FLEX_TORSION_ + 1) * sizeof(float));
 static constexpr size_t SIZE_OF_CHANGE_STRUC_ =
@@ -215,7 +215,7 @@ static constexpr size_t SIZE_OF_CHANGE_STRUC_ =
 static constexpr size_t MAX_HESSIAN_MATRIX_D_SIZE_  =                         
     ((6 + MAX_NUM_OF_LIG_TORSION_ + MAX_NUM_OF_FLEX_TORSION_) 
      * (6 + MAX_NUM_OF_LIG_TORSION_ + MAX_NUM_OF_FLEX_TORSION_ + 1) / 2);
-static constexpr size_t MAX_NUM_OF_LIG_PAIRS_ =2048;
+static constexpr size_t MAX_NUM_OF_LIG_PAIRS_ =1024;
 static constexpr size_t MAX_NUM_OF_BFGS_STEPS_ =64;
 static constexpr size_t MAX_NUM_OF_RANDOM_MAP_= 1000  ;// not too large (stack overflow!)
 static constexpr size_t GRIDS_SIZE_ =34   ;            // larger than vina1.1, max(XS_TYPE_SIZE, AD_TYPE_SIZE + 2)
