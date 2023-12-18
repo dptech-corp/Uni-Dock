@@ -156,6 +156,21 @@ public:
                            const int max_step = 0, int num_of_ligands = 1,
                            unsigned long long seed = 181129, const int refine_step = 5,
                            const bool local_only = false);
+    void global_search_gpu_medium(const int exhaustiveness = 8, const int n_poses = 20,
+                           const double min_rmsd = 1.0, const int max_evals = 0,
+                           const int max_step = 0, int num_of_ligands = 1,
+                           unsigned long long seed = 181129, const int refine_step = 5,
+                           const bool local_only = false);
+    void global_search_gpu_large(const int exhaustiveness = 8, const int n_poses = 20,
+                           const double min_rmsd = 1.0, const int max_evals = 0,
+                           const int max_step = 0, int num_of_ligands = 1,
+                           unsigned long long seed = 181129, const int refine_step = 5,
+                           const bool local_only = false);
+    void global_search_gpu_extra_large(const int exhaustiveness = 8, const int n_poses = 20,
+                           const double min_rmsd = 1.0, const int max_evals = 0,
+                           const int max_step = 0, int num_of_ligands = 1,
+                           unsigned long long seed = 181129, const int refine_step = 5,
+                           const bool local_only = false);
     
    
     std::string get_poses(int how_many = 9, double energy_range = 3.0);
