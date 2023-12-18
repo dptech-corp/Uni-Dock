@@ -3480,7 +3480,7 @@ __host__ void monte_carlo_template::do_docking<ExtraLargeConfig>(std::vector<mod
 
     // rand_molec_struc_gpu
     float *rand_molec_struc_gpu;
-    checkCUDA(cudaMalloc(&rand_molec_struc_gpu, thread * SIZE_OF_MOLEC_STRUC));
+    checkCUDA(cudaMalloc(&rand_molec_struc_gpu, thread * ExtraLargeConfig::SIZE_OF_MOLEC_STRUC_));
     float epsilon_fl_float = static_cast<float>(epsilon_fl);
 
     // use cuRand to generate random values on GPU
