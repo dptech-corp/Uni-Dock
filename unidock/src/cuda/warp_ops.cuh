@@ -426,7 +426,7 @@ __device__ __forceinline__ void ligand_init_with_ligand_warp(cg::thread_block_ti
         ligand_cuda_new->rigid.parent[i] = ligand_cuda_old->rigid.parent[i];
     }
 
-    for (int i = 0; i < MAX_NUM_OF_RIGID; i++) {
+    for (int i = 0; i < Config::MAX_NUM_OF_RIGID_; i++) {
         for (int j = tile.thread_rank(); j < Config::MAX_NUM_OF_RIGID_; j += tile.num_threads())
             ligand_cuda_new->rigid.children_map[i][j] = ligand_cuda_old->rigid.children_map[i][j];
 

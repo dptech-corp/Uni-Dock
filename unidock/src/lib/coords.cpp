@@ -41,7 +41,7 @@ std::pair<sz, fl> find_closest(const vecv& a, const output_container& b) {
 
 void add_to_output_container(output_container& out, const output_type& t, fl min_rmsd,
                              sz max_size) {
-    // printf("entering add_to_output_container\n");
+    // printf("entering add_to_output_container\n")
     if (out.size() > 0 && t.coords.size() != out[0].coords.size()) {
         printf(
             "WARNING: in add_to_output_container, adding the %luth ligand\nt.coords.size()=%lu, "

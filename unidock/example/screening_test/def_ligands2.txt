@@ -1,0 +1,1 @@
+./indata/def_unique_charged/decoys4329.pdbqt ./indata/def_unique_charged/decoys4321.pdbqt ./indata/def_unique_charged/decoys5389.pdbqt ./indata/def_unique_charged/decoys3309.pdbqt ./indata/def_unique_charged/decoys3998.pdbqt 

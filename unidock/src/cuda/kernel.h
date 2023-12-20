@@ -134,7 +134,7 @@ static constexpr size_t MAX_LIGAND_NUM_  = 10250;
 struct MediumConfig {
 static constexpr size_t MAX_NUM_OF_LIG_TORSION_ = 12;
 static constexpr size_t MAX_NUM_OF_FLEX_TORSION_ = 1;
-static constexpr size_t MAX_NUM_OF_RIGID_ = 10;
+static constexpr size_t MAX_NUM_OF_RIGID_ = 12;
 static constexpr size_t MAX_NUM_OF_ATOMS_ = 50;
 static constexpr size_t SIZE_OF_MOLEC_STRUC_ =
 ((3 + 4 + MAX_NUM_OF_LIG_TORSION_ + MAX_NUM_OF_FLEX_TORSION_ + 1) * sizeof(float));
@@ -170,7 +170,7 @@ static constexpr size_t MAX_LIGAND_NUM_  = 10250;
 struct LargeConfig {
 static constexpr size_t MAX_NUM_OF_LIG_TORSION_ = 14;
 static constexpr size_t MAX_NUM_OF_FLEX_TORSION_ = 1;
-static constexpr size_t MAX_NUM_OF_RIGID_ = 12;
+static constexpr size_t MAX_NUM_OF_RIGID_ = 14;
 static constexpr size_t MAX_NUM_OF_ATOMS_ = 50;
 static constexpr size_t SIZE_OF_MOLEC_STRUC_ =
 ((3 + 4 + MAX_NUM_OF_LIG_TORSION_ + MAX_NUM_OF_FLEX_TORSION_ + 1) * sizeof(float));
@@ -206,7 +206,7 @@ static constexpr size_t MAX_LIGAND_NUM_  = 10250;
 struct ExtraLargeConfig {
 static constexpr size_t MAX_NUM_OF_LIG_TORSION_ = 16;
 static constexpr size_t MAX_NUM_OF_FLEX_TORSION_ = 1;
-static constexpr size_t MAX_NUM_OF_RIGID_ = 16;
+static constexpr size_t MAX_NUM_OF_RIGID_ = 24;
 static constexpr size_t MAX_NUM_OF_ATOMS_ = 60;
 static constexpr size_t SIZE_OF_MOLEC_STRUC_ =
 ((3 + 4 + MAX_NUM_OF_LIG_TORSION_ + MAX_NUM_OF_FLEX_TORSION_ + 1) * sizeof(float));
@@ -451,7 +451,7 @@ struct rigid_cuda_t_{  // depth-first order
     float relative_axis[Config::MAX_NUM_OF_RIGID_][3];    // 1st column is root node, all 0s
     float relative_origin[Config::MAX_NUM_OF_RIGID_][3];  // 1st column is root node, all 0s
 
-    int parent[Config::MAX_NUM_OF_RIGID_];  // every node has only 1 parent node
+    int parent[Config::MAX_NUM_OF_RIGID_] ={0};  // every node has only 1 parent node
     bool children_map[Config::MAX_NUM_OF_RIGID_]
                      [Config::MAX_NUM_OF_RIGID_];  // chidren_map[i][j] = true if node i's child is node j
     bool descendant_map[Config::MAX_NUM_OF_RIGID_][Config::MAX_NUM_OF_RIGID_];
