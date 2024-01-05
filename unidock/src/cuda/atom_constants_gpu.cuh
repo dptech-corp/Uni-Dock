@@ -299,7 +299,8 @@ __device__ __constant__ fl xs_vdw_radii_gpu[] = {
     0.0,  // G1
     0.0,  // G2
     0.0,  // G3
-    0.0   // W
+    0.0,  // W
+    0.0   //HD
 };
 
 __device__ __constant__ fl xs_vinardo_vdw_radii_gpu[] = {
@@ -334,7 +335,8 @@ __device__ __constant__ fl xs_vinardo_vdw_radii_gpu[] = {
     0.0,  // G1
     0.0,  // G2
     0.0,  // G3
-    0.0   // W
+    0.0,  // W
+    0.0   // HD
 };
 
 __device__ __forceinline__ fl xs_radius_gpu(sz t) {
@@ -362,7 +364,7 @@ __device__ __forceinline__ bool is_non_ad_metal_name_gpu(const char name[4]) {
 
 __device__ __forceinline__ bool xs_is_hydrophobic_gpu(sz xs) {
     return xs == XS_TYPE_C_H || xs == XS_TYPE_F_H || xs == XS_TYPE_Cl_H || xs == XS_TYPE_Br_H
-           || xs == XS_TYPE_I_H;
+           || xs == XS_TYPE_I_H || XS_TYPE_C_HD;
 }
 
 __device__ __forceinline__ bool xs_is_acceptor_gpu(sz xs) {

@@ -323,7 +323,8 @@ const fl xs_vdw_radii[] = {
     0.0,  // G1
     0.0,  // G2
     0.0,  // G3
-    0.0   // W
+    0.0,   // W
+    0.0   // HD
 };
 
 const fl xs_vinardo_vdw_radii[] = {
@@ -358,7 +359,8 @@ const fl xs_vinardo_vdw_radii[] = {
     0.0,  // G1
     0.0,  // G2
     0.0,  // G3
-    0.0   // W
+    0.0,   // W
+    0.0    //HD
 };
 
 inline fl xs_radius(sz t) {
