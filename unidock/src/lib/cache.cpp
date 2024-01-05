@@ -623,7 +623,12 @@ void cache::populate(const model& m, const precalculate& p, const szv& atom_type
                     DEBUG_PRINTF("bias type=%d x=%d y=%d z=%d\n", bias->type, x, y, z);
                     switch (bias->type) {
                         case bias_element::itype::don: {  // HD
-                            break;                        // no polar H used in vina/vinardo docking
+                            fl dE = bias->vset * exp(-rb2 / bias->r / bias->r);
+                            if (dE >= -0.01) break;
+                            std::cout << "dE=" << dE << std::endl;
+                            // choose atom constants, XS
+                            if (m_grids[XS_TYPE_C_HD].initialized())
+                                m_grids[XS_TYPE_C_HD].m_data(x, y, z) += dE;  // acceptor O
                         }
                         case bias_element::itype::acc: {  // OA, NA
                             fl dE = bias->vset * exp(-rb2 / bias->r / bias->r);

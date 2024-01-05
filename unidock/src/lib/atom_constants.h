@@ -109,7 +109,8 @@ const sz XS_TYPE_C_H_CG3 = 28;
 const sz XS_TYPE_C_P_CG3 = 29;
 const sz XS_TYPE_G3 = 30;
 const sz XS_TYPE_W = 31;  // hydrated ligand
-const sz XS_TYPE_SIZE = 32;
+const sz XS_TYPE_C_HD = 32;
+const sz XS_TYPE_SIZE = 33;
 
 // DrugScore-CSD
 const sz SY_TYPE_C_3 = 0;

@@ -23,6 +23,7 @@
 #include <random>
 
 #include "model.h"
+#include <atom_constants.h>
 #include "file.h"
 #include "curl.h"
 #include "precalculate.h"
@@ -411,7 +412,7 @@ void model::assign_bonds(
 bool model::bonded_to_HD(const atom& a) const {
     VINA_FOR_IN(i, a.bonds) {
         const bond& b = a.bonds[i];
-        if (get_atom(b.connected_atom_index).ad == AD_TYPE_HD) return true;
+        if (get_atom(b.connected_atom_index).ad == AD_TYPE_HD || get_atom(b.connected_atom_index).xs == XS_TYPE_C_HD) return true;
     }
     return false;
 }
@@ -437,6 +438,19 @@ void model::assign_types() {
 
         switch (a.el) {
             case EL_TYPE_H:
+                if (acceptor && donor_NorO) {
+                        x =  XS_TYPE_N_DA;
+                    } else {
+                        if (acceptor) {
+                            x= XS_TYPE_N_A;
+                        } else {
+                            if (donor_NorO) {
+                                x= XS_TYPE_N_D;
+                            } else {
+                                x= XS_TYPE_N_P;
+                            }
+                        }
+                    }
                 break;
             case EL_TYPE_C: {
                 if (a.ad == AD_TYPE_CG0) {
