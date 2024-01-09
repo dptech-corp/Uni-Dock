@@ -24,7 +24,6 @@
 #include <iostream>
 #include <string>
 #include <vector>  // ligand paths
-#include <exception>
 #include <boost/program_options.hpp>
 #include "conf.h"
 #include "kernel.h"
@@ -32,7 +31,6 @@
 #include "utils.h"
 #include "scoring_function.h"
 
-#include <cuda.h>
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
 #include <unistd.h>
@@ -83,25 +81,39 @@ void check_occurrence(boost::program_options::variables_map& vm,
 }
 
 int predict_peak_memory(int batch_size, int exhaustiveness, int all_atom2_numbers,
-                        bool use_v100 = true, bool multi_bias = false) {
-    if (!multi_bias) {
-        if (use_v100) {
-            return 1.214869 * batch_size + .0038522 * exhaustiveness * batch_size
-                   + .011978 * all_atom2_numbers + 20017.72;  // this is based on V100, 32G
-        } else {
-            return 1.166067 * batch_size + .0038676 * exhaustiveness * batch_size
-                   + .0119598 * all_atom2_numbers + 5313.848;  // this is based on T4, 16G
-        }
-    } else {
-        if (use_v100) {
-            return 65.214869 * batch_size + .0038522 * exhaustiveness * batch_size
-                   + .011978 * all_atom2_numbers + 20017.72;  // this is based on V100, 32G
-        } else {
-            return 65.166067 * batch_size + .0038676 * exhaustiveness * batch_size
-                   + .0119598 * all_atom2_numbers + 5313.848;  // this is based on T4, 16G
-        }
-    }
-    return 0;
+                        bool multi_bias) {
+    int64_t gpu_memory = 0;
+    // precalculate
+    gpu_memory += (int64_t)(1) * all_atom2_numbers * sizeof(precalculate_element_cuda_t);
+
+    // m_cuda_gpu
+    gpu_memory += (int64_t)(1) * batch_size * sizeof(m_cuda_t);
+    // ig_cuda_gpu
+    if (multi_bias)
+        gpu_memory += (int64_t)(1) * batch_size * sizeof(ig_cuda_t);
+    else
+        gpu_memory += sizeof(ig_cuda_t);
+    // p_cuda_gpu
+    gpu_memory += (int64_t)(1) * batch_size * sizeof(p_cuda_t);
+    // rand_molec_struc_gpu
+    gpu_memory += (int64_t)(1) * batch_size * exhaustiveness * SIZE_OF_MOLEC_STRUC;
+    // results_gpu
+    gpu_memory += (int64_t)(1) * batch_size * exhaustiveness * sizeof(output_type_cuda_t);
+    // m_cuda_global
+    gpu_memory += (int64_t)(1) * batch_size * exhaustiveness * sizeof(m_cuda_t);
+    // h_cuda_global
+    gpu_memory += (int64_t)(1) * batch_size * exhaustiveness * sizeof(matrix_d);
+    // change_aux
+    gpu_memory += (int64_t)(6) * batch_size * exhaustiveness * sizeof(change_cuda_t);
+    // results_aux
+    gpu_memory += (int64_t)(5) * batch_size * exhaustiveness * sizeof(output_type_cuda_t);
+    // pot_aux
+    gpu_memory += (int64_t)(1) * batch_size * exhaustiveness * sizeof(pot_cuda_t);
+    // states
+    gpu_memory
+        += (int64_t)(1) * batch_size * exhaustiveness * 64;  // sizeof(curandStatePhilox4_32_10_t)
+
+    return gpu_memory / (1024 * 1024);
 }
 
 
@@ -804,7 +816,9 @@ bug reporting, license agreements, and more information.      \n";
             int deviceCount = 0;
             size_t avail;
             size_t total;
-            float max_memory = 32000;
+            // get total memory in MB and leave 5%
+            float max_memory
+                = sysconf(_SC_PHYS_PAGES) * sysconf(_SC_PAGE_SIZE) / 1024 / 1024 * 0.95;
             bool use_v100 = true;
             bool ad4 = false;
             if (sf_name.compare("ad4") == 0) ad4 = true;
@@ -814,12 +828,9 @@ bug reporting, license agreements, and more information.      \n";
                 cudaMemGetInfo(&avail, &total);
                 printf("Available Memory = %dMiB   Total Memory = %dMiB\n",
                        int(avail / 1024 / 1024), int(total / 1024 / 1024));
-                max_memory = avail / 1024 / 1024 * 0.95;  // leave 5% to prevent error
+                max_gpu_memory = avail / 1024 / 1024 * 0.95;  // leave 5%
             }
-            if (max_memory < 17000) {
-                // using T4 or other 16G global memory GPU
-                use_v100 = false;
-            }
+
             if (max_gpu_memory > 0 && max_gpu_memory < max_memory) {
                 max_memory = (float)max_gpu_memory;
             }
@@ -861,7 +872,7 @@ bug reporting, license agreements, and more information.      \n";
                     // while (predict_peak_memory(batch_size, exhaustiveness, all_atom2_numbers,
                     //                            use_v100, v.multi_bias)
                     while (predict_peak_memory(batch_size, exhaustiveness, all_atom2_numbers,
-                        multi_bias)
+                                               multi_bias)
                                < max_memory
                            && processed_ligands + batch_size < all_ligands.size()) {
                         batch_ligands.emplace_back(
