@@ -26,6 +26,13 @@ if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
 	)
 endif()
 
+# Add fast math
+option(BUILD_FAST_MATH "Build in fast math mode" ON)
+if(BUILD_FAST_MATH)
+	set(CMAKE_CUDA_FLAGS_RELEASE "${CMAKE_CUDA_FLAGS_RELEASE} --use_fast_math")
+	message("CMAKE_CUDA_FLAGS_RELEASE updated for fast_math: ${CMAKE_CUDA_FLAGS_RELEASE}")
+endif()
+
 set(VINA_BIN_NAME unidock)
 add_compile_definitions(ENABLE_CUDA)
 add_compile_definitions(VERSION="v${PROJECT_VERSION}")
