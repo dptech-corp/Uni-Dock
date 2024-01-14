@@ -68,6 +68,14 @@ std::string convert_XS_to_string(sz t) {
             return "Met_D";
         case XS_TYPE_W:
             return "W";
+        case XS_TYPE_O_XA: 
+            return "O_XA";
+		case XS_TYPE_N_XA: 
+            return "N_XA";
+		case XS_TYPE_O_XD: 
+            return "O_XD";
+		case XS_TYPE_N_XD: 
+            return "N_XD";
         default:
             VINA_CHECK(false);
     }
