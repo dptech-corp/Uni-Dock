@@ -145,6 +145,7 @@ __device__ __forceinline__ fl vina_non_dir_h_bond_cuda_eval(sz t1, sz t2, fl r, 
     if (r >= cutoff) return 0.0;
     if ((t1 >= XS_TYPE_SIZE) || (t2 >= XS_TYPE_SIZE)) return 0.0;
     if (xs_h_bond_possible_gpu(t1, t2))
+        
         {
         if (t1 == XS_TYPE_O_XA || t1 == XS_TYPE_N_XA || t1 == XS_TYPE_O_XD || t1 == XS_TYPE_N_XD ||
             t2 == XS_TYPE_O_XA || t2 == XS_TYPE_N_XA || t2 == XS_TYPE_O_XD || t2 == XS_TYPE_N_XD)
