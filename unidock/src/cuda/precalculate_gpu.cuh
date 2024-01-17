@@ -147,13 +147,16 @@ __device__ __forceinline__ fl vina_non_dir_h_bond_cuda_eval(sz t1, sz t2, fl r, 
     if (xs_h_bond_possible_gpu(t1, t2))
         
         {
-        if (t1 == XS_TYPE_O_XA || t1 == XS_TYPE_N_XA || t1 == XS_TYPE_O_XD || t1 == XS_TYPE_N_XD ||
-            t2 == XS_TYPE_O_XA || t2 == XS_TYPE_N_XA || t2 == XS_TYPE_O_XD || t2 == XS_TYPE_N_XD)
+        // if (t1 == XS_TYPE_O_XA || t1 == XS_TYPE_N_XA || t1 == XS_TYPE_O_XD || t1 == XS_TYPE_N_XD ||
+        //     t2 == XS_TYPE_O_XA || t2 == XS_TYPE_N_XA || t2 == XS_TYPE_O_XD || t2 == XS_TYPE_N_XD)
+        if  ((t1 >= 32 && t1 <= 35) || (t2 >= 32 && t2 <= 35))
             return 10.0*slope_step_gpu(bad, good, r - optimal_distance_gpu(t1, t2));
         else return slope_step_gpu(bad, good, r - optimal_distance_gpu(t1, t2));
         }
     else{
-        return slope_step_gpu(bad, good, r - optimal_distance_gpu(t1, t2));}
+        return slope_step_gpu(bad, good, r - optimal_distance_gpu(t1, t2));
+        // return 0.0;
+        }
     return 0.0;
 };
 

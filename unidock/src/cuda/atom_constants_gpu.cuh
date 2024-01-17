@@ -399,7 +399,7 @@ __device__ __forceinline__ bool xs_is_acceptor_gpu(sz xs) {
 
 __device__ __forceinline__ bool xs_is_donor_gpu(sz xs) {
     return xs == XS_TYPE_N_D || xs == XS_TYPE_N_DA || xs == XS_TYPE_O_D || xs == XS_TYPE_O_DA
-           || xs == XS_TYPE_Met_D||xs == XS_TYPE_O_XA ||xs == XS_TYPE_N_XA;
+           || xs == XS_TYPE_Met_D||xs == XS_TYPE_O_XD ||xs == XS_TYPE_N_XD;
 }
 
 __device__ __forceinline__ bool xs_donor_acceptor_gpu(sz t1, sz t2) {
