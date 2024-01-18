@@ -235,3 +235,28 @@ DOI 10.1002/jcc.21334
 3. Uni-Dock computes slowly for few (<10) ligands.
 
      The optimal application of Uni-Dock occurs in scenarios where one binding pocket interacts with numerous (in an order of 1000) ligands. As the number of ligands within a single computational batch increases, the average processing speed improves. In instances where only a few ligands are present for one binding pocket, the overhead proportion becomes considerably large, leading to slower computational performance.
+     
+### Addendum to "FAQ 3 - Uni-Dock computes slowly for few (<10) ligands.":
+
+The `paired_batch` mode provides a mechanism to accelerate simultaneous 1:1 docking in batches using Vina scoring, using CUDA streams. To run docking using this mode, invoke unidock with the parameter `--paired_batch_size` value >0, with the protein:ligand configurations passed in JSON form using `--ligand_index`. The JSON file should use schema defined in paired_batching.schema.json.
+
+A sample input data.json is as below, complying to the schema:
+```
+{
+    "7LCU": {
+        "protein": "molecular_docking/PoseBuster/7LCU/7LCU_receptor.pdbqt",
+        "ligand": "molecular_docking/PoseBuster/7LCU/7LCU_ligand_prep.sdf",
+        "ligand_config": "molecular_docking/PoseBuster/7LCU/docking_grid.json"
+    },
+    "7KZ9": {
+        "protein": "molecular_docking/PoseBuster/7KZ9/7KZ9_receptor.pdbqt",
+        "ligand": "molecular_docking/PoseBuster/7KZ9/7KZ9_ligand_prep.sdf",
+        "ligand_config": "molecular_docking/PoseBuster/7KZ9/docking_grid.json"
+    }
+}
+```
+
+A typical usage using paired_batch mode is as shown below, with batch size of 10.
+
+`build/unidock --paired_batch_size 10 --ligand_index data_pb1.json --size_x 25 --size_y 25 --size_z 25 --dir test/prof_25_1024_80 --exhaustiveness 1024 --max_step 80 --seed 5`
+

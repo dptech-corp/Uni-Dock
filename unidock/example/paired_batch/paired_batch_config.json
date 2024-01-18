@@ -1,0 +1,22 @@
+{
+    "def1": {
+        "protein": "example/paired_batch/def1.pdbqt",
+        "ligand": "example/paired_batch/actives1.pdbqt",
+        "ligand_config": "example/paired_batch/ligand_config.json"
+    },
+    "def3": {
+        "protein": "example/paired_batch/def3.pdbqt",
+        "ligand": "example/paired_batch/actives3.pdbqt",
+        "ligand_config": "example/paired_batch/ligand_config.json"
+    },
+    "def4": {
+        "protein": "example/paired_batch/def4.pdbqt",
+        "ligand": "example/paired_batch/actives4.pdbqt",
+        "ligand_config": "example/paired_batch/ligand_config.json"
+    },
+    "def5": {
+        "protein": "example/paired_batch/def5.pdbqt",
+        "ligand": "example/paired_batch/actives5.pdbqt",
+        "ligand_config": "example/paired_batch/ligand_config.json"
+    }        
+}

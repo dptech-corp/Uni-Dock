@@ -1,0 +1,28 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "type": "object",
+    "properties": {
+      "batch": {
+        "type": "object",
+        "properties": {
+          "protein": {
+            "type": "string"
+          },
+          "ligand": {
+            "type": "string"
+          },
+          "ligand_config": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "protein",
+          "ligand",
+          "ligand_config"
+        ]
+      }
+    },
+    "required": [
+      "batch"
+    ]
+  }

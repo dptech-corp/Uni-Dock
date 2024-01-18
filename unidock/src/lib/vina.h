@@ -55,6 +55,7 @@
 #include "scoring_function.h"
 #include "precalculate.h"
 #include "bias.h"
+#include <memory>
 
 #ifdef DEBUG
 #    define DEBUG_PRINTF printf
@@ -75,7 +76,6 @@ public:
         m_no_refine = no_refine;
         m_progress_callback = progress_callback;
         gpu = false;
-
         // Look for the number of cpu
         if (cpu <= 0) {
             unsigned num_cpus = boost::thread::hardware_concurrency();
@@ -149,7 +149,8 @@ public:
                            const double min_rmsd = 1.0, const int max_evals = 0,
                            const int max_step = 0, int num_of_ligands = 1,
                            unsigned long long seed = 181129, const int refine_step = 5,
-                           const bool local_only = false);
+                           const bool local_only = false,
+                           const bool create_new_stream = false);
     std::string get_poses(int how_many = 9, double energy_range = 3.0);
     std::string get_sdf_poses(int how_many = 9, double energy_range = 3.0);
     std::string get_poses_gpu(int ligand_id, int how_many = 9, double energy_range = 3.0);
@@ -189,7 +190,7 @@ public:
     // scoring function
     scoring_function_choice m_sf_choice;
     flv m_weights;
-    ScoringFunction m_scoring_function;
+    std::shared_ptr<ScoringFunction> m_scoring_function;
     precalculate_byatom m_precalculated_byatom;
     precalculate m_precalculated_sf;
     // gpu scoring function precalculated
