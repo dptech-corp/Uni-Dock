@@ -36,7 +36,7 @@ void check(T result, char const *const func, const char *const file, int const l
 #define MAX_NUM_OF_LIG_PAIRS 4096
 #define MAX_NUM_OF_BFGS_STEPS 64
 #define MAX_NUM_OF_RANDOM_MAP 1000  // not too large (stack overflow!)
-#define GRIDS_SIZE 34               // larger than vina1.1, max(XS_TYPE_SIZE, AD_TYPE_SIZE + 2)
+#define GRIDS_SIZE 37               // larger than vina1.1, max(XS_TYPE_SIZE, AD_TYPE_SIZE + 2)
 
 #define MAX_NUM_OF_GRID_MI 128  // 55
 #define MAX_NUM_OF_GRID_MJ 128  // 55

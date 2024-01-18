@@ -49,7 +49,11 @@ __device__ __constant__ sz AD_TYPE_CG1 = 27;
 __device__ __constant__ sz AD_TYPE_CG2 = 28;
 __device__ __constant__ sz AD_TYPE_CG3 = 29;
 __device__ __constant__ sz AD_TYPE_W = 30;  // hydrated ligand
-__device__ __constant__ sz AD_TYPE_SIZE = 31;
+__device__ __constant__ sz AD_TYPE_OXA  = 31; // biased protein hydrogen bond acceptor
+__device__ __constant__ sz AD_TYPE_NXA  = 32; // biased protein hydrogen bond acceptor
+__device__ __constant__ sz AD_TYPE_OXD  = 33; // biased protein hydrogen bond donor
+__device__ __constant__ sz AD_TYPE_NXD  = 34; // biased protein hydrogen bond donor
+__device__ __constant__ sz AD_TYPE_SIZE = 35;
 
 // X-Score
 __device__ __constant__ sz XS_TYPE_C_H = 0;
@@ -84,7 +88,11 @@ __device__ __constant__ sz XS_TYPE_C_H_CG3 = 28;
 __device__ __constant__ sz XS_TYPE_C_P_CG3 = 29;
 __device__ __constant__ sz XS_TYPE_G3 = 30;
 __device__ __constant__ sz XS_TYPE_W = 31;  // hydrated ligand
-__device__ __constant__ sz XS_TYPE_SIZE = 32;
+__device__ __constant__  sz XS_TYPE_O_XA    = 32;
+__device__ __constant__  sz XS_TYPE_N_XA    = 33;
+__device__ __constant__  sz XS_TYPE_O_XD	 = 34;
+__device__ __constant__  sz XS_TYPE_N_XD    = 35;
+__device__ __constant__  sz XS_TYPE_SIZE = 36;
 
 // DrugScore-CSD
 __device__ __constant__ sz SY_TYPE_C_3 = 0;
@@ -155,7 +163,11 @@ __device__ atom_kind_gpu atom_kind_data_gpu[] = {
     {"CG1", 2.00000, 0.15000, 0.0, 0.0, -0.00143, 33.51030, 0.77},  // 27
     {"CG2", 2.00000, 0.15000, 0.0, 0.0, -0.00143, 33.51030, 0.77},  // 28
     {"CG3", 2.00000, 0.15000, 0.0, 0.0, -0.00143, 33.51030, 0.77},  // 29
-    {"W", 0.00000, 0.00000, 0.0, 0.0, 0.00000, 0.00000, 0.00}       // 30
+    {"W", 0.00000, 0.00000, 0.0, 0.0, 0.00000, 0.00000, 0.00},       // 30
+    {"OXA", 1.60000, 0.20000, 0.0, 0.0,   -0.00251,   17.15730,   0.73}, //  31
+	{"NXA", 1.75000, 0.16000, 0.0, 0.0,   -0.00162,   22.44930,   0.75}, //  32
+	{"OXD", 1.60000, 0.20000, 0.0, 0.0,   -0.00251,   17.15730,   0.73}, //  33
+	{"NXD", 1.75000, 0.16000, 0.0, 0.0,   -0.00162,   22.44930,   0.75}  //  34
 };
 
 __device__ __constant__ fl metal_solvation_parameter_gpu = -0.00110;
@@ -258,6 +270,14 @@ __device__ __forceinline__ sz ad_type_to_el_type_gpu(sz t) {
             return EL_TYPE_Dummy;
         case AD_TYPE_W:
             return EL_TYPE_Dummy;
+        case AD_TYPE_OXA: 
+            return EL_TYPE_O;
+		case AD_TYPE_NXA: 
+            return EL_TYPE_N;
+		case AD_TYPE_OXD: 
+            return EL_TYPE_O;
+		case AD_TYPE_NXD: 
+            return EL_TYPE_N;
         case AD_TYPE_SIZE:
             return EL_TYPE_SIZE;
         default:
@@ -299,7 +319,11 @@ __device__ __constant__ fl xs_vdw_radii_gpu[] = {
     0.0,  // G1
     0.0,  // G2
     0.0,  // G3
-    0.0   // W
+    0.0,   // W
+    1.7, // O_XA
+	1.8, // N_XA
+	1.7, // O_XD
+	1.8  // N_XD
 };
 
 __device__ __constant__ fl xs_vinardo_vdw_radii_gpu[] = {
@@ -334,7 +358,11 @@ __device__ __constant__ fl xs_vinardo_vdw_radii_gpu[] = {
     0.0,  // G1
     0.0,  // G2
     0.0,  // G3
-    0.0   // W
+    0.0,   // W
+    1.6, // O_XA
+	1.7, // N_XA
+	1.6, // O_XD
+	1.7
 };
 
 __device__ __forceinline__ fl xs_radius_gpu(sz t) {
@@ -366,12 +394,12 @@ __device__ __forceinline__ bool xs_is_hydrophobic_gpu(sz xs) {
 }
 
 __device__ __forceinline__ bool xs_is_acceptor_gpu(sz xs) {
-    return xs == XS_TYPE_N_A || xs == XS_TYPE_N_DA || xs == XS_TYPE_O_A || xs == XS_TYPE_O_DA;
+    return xs == XS_TYPE_N_A || xs == XS_TYPE_N_DA || xs == XS_TYPE_O_A || xs == XS_TYPE_O_DA||xs == XS_TYPE_O_XA ||xs == XS_TYPE_N_XA;
 }
 
 __device__ __forceinline__ bool xs_is_donor_gpu(sz xs) {
     return xs == XS_TYPE_N_D || xs == XS_TYPE_N_DA || xs == XS_TYPE_O_D || xs == XS_TYPE_O_DA
-           || xs == XS_TYPE_Met_D;
+           || xs == XS_TYPE_Met_D||xs == XS_TYPE_O_XD ||xs == XS_TYPE_N_XD;
 }
 
 __device__ __forceinline__ bool xs_donor_acceptor_gpu(sz t1, sz t2) {

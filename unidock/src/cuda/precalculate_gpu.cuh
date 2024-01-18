@@ -144,8 +144,11 @@ __device__ __forceinline__ fl vina_non_dir_h_bond_cuda_eval(sz t1, sz t2, fl r, 
                                                             fl cutoff) {
     if (r >= cutoff) return 0.0;
     if ((t1 >= XS_TYPE_SIZE) || (t2 >= XS_TYPE_SIZE)) return 0.0;
-    if (xs_h_bond_possible_gpu(t1, t2))
-        return slope_step_gpu(bad, good, r - optimal_distance_gpu(t1, t2));
+    if (xs_h_bond_possible_gpu(t1, t2)){        
+        if  ((t1 >= 32 && t1 <= 35) || (t2 >= 32 && t2 <= 35))
+            return 10.0*slope_step_gpu(bad, good, r - optimal_distance_gpu(t1, t2));
+        else 
+            return slope_step_gpu(bad, good, r - optimal_distance_gpu(t1, t2));}
     return 0.0;
 };
 

@@ -115,7 +115,7 @@ struct vec {
 
 private:
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned version) { ar& data; }
+    template <class Archive> void serialize(Archive& ar, const unsigned version) { ar & data; }
 };
 
 inline vec operator*(fl s, const vec& v) { return vec(s * v[0], s * v[1], s * v[2]); }

@@ -34,8 +34,8 @@ struct atom_index {
 private:
     friend class boost::serialization::access;
     template <class Archive> void serialize(Archive& ar, const unsigned version) {
-        ar& i;
-        ar& in_grid;
+        ar & i;
+        ar & in_grid;
     }
 };
 
@@ -54,9 +54,9 @@ struct bond {
 private:
     friend class boost::serialization::access;
     template <class Archive> void serialize(Archive& ar, const unsigned version) {
-        ar& connected_atom_index;
-        ar& length;
-        ar& rotatable;
+        ar & connected_atom_index;
+        ar & length;
+        ar & rotatable;
     }
 };
 
@@ -70,8 +70,8 @@ private:
     friend class boost::serialization::access;
     template <class Archive> void serialize(Archive& ar, const unsigned version) {
         ar& boost::serialization::base_object<atom_base>(*this);
-        ar& coords;
-        ar& bonds;
+        ar & coords;
+        ar & bonds;
     }
 };
 

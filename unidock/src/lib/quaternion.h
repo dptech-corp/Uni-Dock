@@ -40,17 +40,17 @@ namespace boost {
             fl q3 = q.R_component_3();
             fl q4 = q.R_component_4();
 
-            ar& q1;
-            ar& q2;
-            ar& q3;
-            ar& q4;
+            ar & q1;
+            ar & q2;
+            ar & q3;
+            ar & q4;
         }
         template <typename Archive> void load(Archive& ar, qt& q, const unsigned version) {
             fl a, b, c, d;
-            ar& a;
-            ar& b;
-            ar& c;
-            ar& d;
+            ar & a;
+            ar & b;
+            ar & c;
+            ar & d;
             q = qt(a, b, c, d);
         }
     }  // namespace serialization
