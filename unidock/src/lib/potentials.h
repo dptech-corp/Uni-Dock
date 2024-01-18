@@ -214,9 +214,7 @@ public:
         if (r >= cutoff) return 0.0;
         if ((a.xs >= XS_TYPE_SIZE) || (b.xs >= XS_TYPE_SIZE)) return 0.0;
         if (xs_h_bond_possible(a.xs, b.xs)) {
-            if (a.xs == XS_TYPE_O_XA || a.xs == XS_TYPE_N_XA || a.xs == XS_TYPE_O_XD
-                || a.xs == XS_TYPE_N_XD || b.xs == XS_TYPE_O_XA || b.xs == XS_TYPE_N_XA
-                || b.xs == XS_TYPE_O_XD || b.xs == XS_TYPE_N_XD) {
+            if(a.xs  >= 32 && a.xs  <= 35) || (b.xs >= 32 && b.xs <= 35)  {
                 return 10.0 * slope_step(bad, good, r - optimal_distance(a.xs, b.xs));
             } else
                 return slope_step(bad, good, r - optimal_distance(a.xs, b.xs));
