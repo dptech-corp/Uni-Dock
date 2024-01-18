@@ -73,10 +73,10 @@ struct atom_type {
 private:
     friend class boost::serialization::access;
     template <class Archive> void serialize(Archive& ar, const unsigned version) {
-        ar& el;
-        ar& ad;
-        ar& xs;
-        ar& sy;
+        ar & el;
+        ar & ad;
+        ar & xs;
+        ar & sy;
     }
 };
 

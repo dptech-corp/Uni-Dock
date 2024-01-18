@@ -22,6 +22,6 @@
 
 #include "parallel_progress.h"
 
-//#include <boost/thread/condition.hpp> // FIXME do we need this?
+// #include <boost/thread/condition.hpp> // FIXME do we need this?
 
 // FIXME rm

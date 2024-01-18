@@ -39,7 +39,7 @@
 #include <boost/filesystem/convenience.hpp>  // filesystem::basename
 #include <boost/thread/thread.hpp>           // hardware_concurrency // FIXME rm ?
 #include <boost/algorithm/string.hpp>
-//#include <openbabel/mol.h>
+// #include <openbabel/mol.h>
 #include "parse_pdbqt.h"
 #include "parallel_mc.h"
 #include "file.h"

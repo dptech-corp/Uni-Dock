@@ -68,13 +68,13 @@ std::string convert_XS_to_string(sz t) {
             return "Met_D";
         case XS_TYPE_W:
             return "W";
-        case XS_TYPE_O_XA: 
+        case XS_TYPE_O_XA:
             return "O_XA";
-		case XS_TYPE_N_XA: 
+        case XS_TYPE_N_XA:
             return "N_XA";
-		case XS_TYPE_O_XD: 
+        case XS_TYPE_O_XD:
             return "O_XD";
-		case XS_TYPE_N_XD: 
+        case XS_TYPE_N_XD:
             return "N_XD";
         default:
             VINA_CHECK(false);
@@ -453,12 +453,12 @@ void cache::write(const std::string& out_prefix, const szv& atom_types,
                         VINA_FOR(x, m_grids[t].m_data.dim0()) {
                             out << std::setprecision(4) << m_grids[t].m_data(x, y, z)
                                 << "\n";  // slow?
-                        }                 // x
-                    }                     // y
-                }                         // z
-            }                             // even voxels
-        }                                 // map initialized
-    }                                     // map atom type
+                        }  // x
+                    }  // y
+                }  // z
+            }  // even voxels
+        }  // map initialized
+    }  // map atom type
 }  // cache::write
 
 float cache::get_slope() const { return this->m_slope; }

@@ -145,8 +145,8 @@ struct rigid_conf {
 private:
     friend class boost::serialization::access;
     template <class Archive> void serialize(Archive& ar, const unsigned version) {
-        ar& position;
-        ar& orientation;
+        ar & position;
+        ar & orientation;
     }
 };
 
@@ -182,8 +182,8 @@ struct ligand_conf {
 private:
     friend class boost::serialization::access;
     template <class Archive> void serialize(Archive& ar, const unsigned version) {
-        ar& rigid;
-        ar& torsions;
+        ar & rigid;
+        ar & torsions;
     }
 };
 
@@ -203,7 +203,7 @@ struct residue_conf {
 
 private:
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned version) { ar& torsions; }
+    template <class Archive> void serialize(Archive& ar, const unsigned version) { ar & torsions; }
 };
 
 struct change {
@@ -348,8 +348,8 @@ struct conf {
 private:
     friend class boost::serialization::access;
     template <class Archive> void serialize(Archive& ar, const unsigned version) {
-        ar& ligands;
-        ar& flex;
+        ar & ligands;
+        ar & flex;
     }
 };
 

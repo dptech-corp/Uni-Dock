@@ -41,10 +41,10 @@ template <typename T> class array3d {
 
     friend class boost::serialization::access;
     template <typename Archive> void serialize(Archive& ar, const unsigned version) {
-        ar& m_i;
-        ar& m_j;
-        ar& m_k;
-        ar& m_data;
+        ar & m_i;
+        ar & m_j;
+        ar & m_k;
+        ar & m_data;
     }
 
 public:

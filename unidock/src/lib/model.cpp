@@ -453,23 +453,26 @@ void model::assign_types() {
                 break;
             }
             case EL_TYPE_N:
-                if (a.ad == AD_TYPE_NXA)
-                    {x = XS_TYPE_N_XA;
-                }else if (a.ad == AD_TYPE_NXD)
-                 {x = XS_TYPE_N_XD;}
-                else
-                {x = (acceptor && donor_NorO)
-                        ? XS_TYPE_N_DA
-                        : (acceptor ? XS_TYPE_N_A : (donor_NorO ? XS_TYPE_N_D : XS_TYPE_N_P));}
+                if (a.ad == AD_TYPE_NXA) {
+                    x = XS_TYPE_N_XA;
+                } else if (a.ad == AD_TYPE_NXD) {
+                    x = XS_TYPE_N_XD;
+                } else {
+                    x = (acceptor && donor_NorO)
+                            ? XS_TYPE_N_DA
+                            : (acceptor ? XS_TYPE_N_A : (donor_NorO ? XS_TYPE_N_D : XS_TYPE_N_P));
+                }
                 break;
             case EL_TYPE_O:
-                if (a.ad == AD_TYPE_OXA) 
-                    {x = XS_TYPE_N_XA;
-                }else if (a.ad == AD_TYPE_OXD) {x = XS_TYPE_N_XD;}
-                else
-                {x = (acceptor && donor_NorO)
-                        ? XS_TYPE_O_DA
-                        : (acceptor ? XS_TYPE_O_A : (donor_NorO ? XS_TYPE_O_D : XS_TYPE_O_P));}
+                if (a.ad == AD_TYPE_OXA) {
+                    x = XS_TYPE_N_XA;
+                } else if (a.ad == AD_TYPE_OXD) {
+                    x = XS_TYPE_N_XD;
+                } else {
+                    x = (acceptor && donor_NorO)
+                            ? XS_TYPE_O_DA
+                            : (acceptor ? XS_TYPE_O_A : (donor_NorO ? XS_TYPE_O_D : XS_TYPE_O_P));
+                }
                 break;
             case EL_TYPE_S:
                 x = XS_TYPE_S_P;
