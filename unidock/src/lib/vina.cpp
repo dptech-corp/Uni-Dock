@@ -272,8 +272,8 @@ void Vina::set_ligand_from_object_gpu(const std::vector<model>& ligands) {
             m_model_gpu[i].bias_list = bias_batch_list[i];
         }
         m_precalculated_byatom_gpu[i].init_without_calculation(m_scoring_function, m_model_gpu[i]);
+        m_model_gpu[i].torsions_ranges = ligands[i].torsions_ranges;
     }
-
     // calculate common rs data
     flv common_rs = m_precalculated_byatom_gpu[0].calculate_rs();
 

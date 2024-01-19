@@ -173,7 +173,7 @@ struct non_rigid_parsed {
     distance_type_matrix atoms_atoms_bonds;
     matrix<distance_type> atoms_inflex_bonds;
     distance_type_matrix inflex_inflex_bonds;
-
+    torsion_ranges torsion_range;
     distance_type_matrix mobility_matrix() const {
         distance_type_matrix tmp(atoms_atoms_bonds);
         tmp.append(atoms_inflex_bonds, inflex_inflex_bonds);
@@ -227,6 +227,7 @@ public:
                                                  // non_rigid_parsed::atoms, this is its index there
     std::vector<node> atoms;
 
+    torsion_ranges torsion_range;
     void add(const parsed_atom& a, const context& c, bool keep_H = true) {
         VINA_CHECK(c.size() > 0);
         if (a.ad == AD_TYPE_H && keep_H == false) return;
@@ -541,6 +542,7 @@ void postprocess_ligand(non_rigid_parsed& nr, parsing_struct& p, context& c, uns
                                 torsdof));  // postprocess_branch will assign begin and end
     postprocess_branch(nr, p, c, nr.ligands.back());
     nr_update_matrixes(nr);  // FIXME ?
+    nr.torsion_range = p.torsion_range;
 }
 
 void postprocess_residue(non_rigid_parsed& nr, parsing_struct& p, context& c) {
@@ -658,6 +660,9 @@ void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, c
     std::vector<std::vector<int> > frags;
     std::vector<std::vector<int> > torsions;
 
+    std::vector<std::vector<int>> torsions_r;
+    std::vector<TorsionRange> torsionRanges;
+
     while (std::getline(in, str)) {
         if (str.find("$$$$") < str.length()) continue;
         add_context(c, str);
@@ -682,7 +687,7 @@ void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, c
                     p.atoms[atomid - 1].a.charge = charge;
                     p.atoms[atomid - 1].a.ad = ad;
                 }
-            } else if (str.find("torsion") < str.length()) {
+            } else if (str.find("torsionInfo") < str.length()) {
                 // update p.atoms[num].a.charge
                 // std::cout << "start torsion" << std::endl;
                 while (std::getline(in, str)) {
@@ -727,7 +732,32 @@ void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, c
                     frag.push_back(num);
                     frags.push_back(frag);
                 }
-            } else {
+            }else if (str.find("torsionSamplingRangeInfo") < str.length()) {
+                TorsionRange torsionRange;
+                std::cout << "start torsionSamplingRangeInfo" << std::endl;
+                while (std::getline(in, str)) {
+                    add_context(c, str);
+                    // std::cout << "read torsion range sdf line:" << str << std::endl;
+                    if (str.empty()) {
+                        break;
+                    }
+                    std::istringstream iss(str);
+
+
+
+                if (str.find("TORSION") != std::string::npos) {
+            TorsionRange torsionRange;
+            torsionRanges.push_back(torsionRange); // Create a new TorsionRange for each TORSION
+        } else if (str.find("RANGE") != std::string::npos) {
+            double start, end;
+            std::istringstream iss(str.substr(6)); // Skip "RANGE "
+            iss >> start >> end;
+            torsionRanges.back().torsions_range.push_back({std::fmod(start+360,360)/180*M_PI, std::fmod(end+360,360)/180*M_PI}); // Add range to the last TorsionRange
+        }
+
+            }
+            }
+            else {
                 while (std::getline(in, str)) {
                     add_context(c, str);
                     // std::cout << "read und sdf line:" << str << std::endl;
@@ -863,6 +893,7 @@ void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, c
             }
         }
     }
+    new_p.torsion_range = torsionRanges;
 }
 
 void parse_sdf_ligand(const path& name, non_rigid_parsed& nr, context& c, bool keep_H = true) {
@@ -885,6 +916,15 @@ void parse_sdf_ligand(const path& name, non_rigid_parsed& nr, context& c, bool k
         if (e == 1) {
             throw struct_parse_error("Ligand with zero coords.");
         }
+    }
+    int i=0;
+     for (const auto& torsion : nr.torsion_range) {
+        std::cout<< "torsion:"<<i<<std::endl;
+        i++;
+        for (const auto& range : torsion.torsions_range) {
+            std::cout << "Range: " << range[0] << ", " << range[1] << std::endl;
+        }
+        std::cout << "-----" << std::endl;
     }
 
     VINA_CHECK(nr.atoms_atoms_bonds.dim() == nr.atoms.size());
@@ -1021,7 +1061,7 @@ struct pdbqt_initializer {
 
         m.ligands = nrp.ligands;
         m.flex = nrp.flex;
-
+        m.torsions_ranges = nrp.torsion_range;
         VINA_CHECK(m.atoms.empty());
 
         sz n = nrp.atoms.size() + nrp.inflex.size();

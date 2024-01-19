@@ -1,1 +1,1 @@
-/home/ysy/Documents/Uni-Dock/unidock/example/screening_test/ligand_prepared_split_0_root_conf_0.sdf
+/home/yxyy/Documents/code/unidock_test/Uni-Dock/unidock/example/screening_test/ligand_with_torsion_range.sdf

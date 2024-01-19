@@ -43,6 +43,8 @@ void check(T result, char const *const func, const char *const file, int const l
 #define MAX_NUM_OF_GRID_MK 128  // 81
 #define MAX_NUM_OF_GRID_POINT 512000
 
+#define MAX_NUM_OF_TORSION_RANGE 10
+#define MAX_NUM_OF_TORSION 10
 // #define GRID_MI 65//55
 // #define GRID_MJ 71//55
 // #define GRID_MK 61//81
@@ -137,12 +139,17 @@ typedef struct {
     float sphere_map[MAX_NUM_OF_RANDOM_MAP][3];
 } random_maps_t;
 
+typedef struct{
+    float torsions_range[MAX_NUM_OF_TORSION_RANGE][2];
+}torsions_range_cuda_t;
+
 typedef struct {
     atom_cuda_t atoms[MAX_NUM_OF_ATOMS];
     m_coords_cuda_t m_coords;
     m_minus_forces_t minus_forces;
     ligand_cuda_t ligand;
     int m_num_movable_atoms;  // will be -1 if ligand parsing failed
+    float torsions_range[MAX_NUM_OF_TORSION][MAX_NUM_OF_TORSION_RANGE][2];
 } m_cuda_t;
 
 typedef struct {

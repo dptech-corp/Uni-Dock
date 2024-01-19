@@ -40,6 +40,10 @@ struct interacting_pair {
         : type_pair_index(type_pair_index_), a(a_), b(b_) {}
 };
 
+struct TorsionRange {
+    std::vector<std::vector<double>> torsions_range;
+};
+typedef std::vector<TorsionRange> torsion_ranges;
 typedef std::vector<interacting_pair> interacting_pairs;
 
 typedef std::pair<std::string, boost::optional<sz> > parsed_line;
@@ -228,6 +232,7 @@ public:
     atomv grid_atoms;
     vector_mutable<residue> flex;
     context flex_context;
+    torsion_ranges torsions_ranges;
     interacting_pairs
         other_pairs;  // INTRAmolecular interactions: flex_i - flex_j and flex_i - flex_i
     interacting_pairs
