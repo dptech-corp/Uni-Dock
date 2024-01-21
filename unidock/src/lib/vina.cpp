@@ -26,7 +26,7 @@
 #include "scoring_function.h"
 #include "precalculate.h"
 #include "omp.h"
-
+#include "math.h"
 void Vina::cite() {
     const std::string cite_message
         = "\
@@ -324,8 +324,18 @@ void Vina::set_ligand_from_object(const std::vector<model>& ligands) {
     }
 
     VINA_RANGE(i, 0, ligands.size())
-    m_model.append(ligands[i]);
-
+    {m_model.append(ligands[i]);
+    m_model.torsions_ranges = ligands[i].torsions_ranges;}
+    int i=1;
+    for (const auto& torsion : m_model.torsions_ranges) {
+            std::cout<< "torsion:"<<i<<std::endl;
+            i++;
+            for (const auto& range : torsion.torsions_range) {
+                std::cout << "Range: " << range[0] << ", " << range[1] << std::endl;
+            }
+            std::cout << "-----" << std::endl;
+        }
+        
     // Because we precalculate ligand atoms interactions
     precalculate_byatom precalculated_byatom(m_scoring_function, m_model);
 
@@ -1340,7 +1350,16 @@ void Vina::conf_exhaustion_with_range( sz max_steps,vec center,vec box_size,std:
 
     sstm << "exhaustion conformation (random seed: " << seed << ")";
     doing(sstm.str(), m_verbosity, 0);
+
     auto positions =generatePoints(max_steps, center[0], center[1], center[2], box_size[0], box_size[1], box_size[2]);
+    // for (const auto& torsion : m_model.torsions_ranges) {
+    //         std::cout<< "torsion:"<<i<<std::endl;
+    //         i++;
+    //         for (const auto& range : torsion.torsions_range) {
+    //             std::cout << "Range: " << range[0] << ", " << range[1] << std::endl;
+    //         }
+    //         std::cout << "-----" << std::endl;
+    //     }
     VINA_FOR(i, max_steps) {
         for (int j =0;j<10;j++){
         c = init_conf;
@@ -1349,39 +1368,157 @@ void Vina::conf_exhaustion_with_range( sz max_steps,vec center,vec box_size,std:
         // printf("corner1[0]:%f,corner1[1]:%f,corner1[2]:%f\n",m_grid.corner1()[0],m_grid.corner1()[1],m_grid.corner1()[2]);
         // printf("corner2[0]:%f,corner2[1]:%f,corner2[2]:%f\n",m_grid.corner2()[0],m_grid.corner2()[1],m_grid.corner2()[2]);
         penalty = m_model.clash_penalty();
-        // if (i == 0 || penalty < best_clash_penalty) {
-        //     best_conf = c;
-        //     best_clash_penalty = penalty;
-        // }
-    // }
-    // done(m_verbosity, 0);
-
-    m_model.set(c);
-
-    if (m_verbosity > 1) {
-        std::cout << "Clash penalty: " << best_clash_penalty << "\n";
-    }
-    if (!m_grid.is_in_grid(m_model)){
-        // printf("The ligand is outside the grid box\n");
-        // printf("i:%ld,x:%lf,y:%lf,z:%lf\n",i,positions[i][0],positions[i][1],positions[i][2]);
-        continue;
-
-    }
-    printf("i:%ld,j:%ld,x:%lf,y:%lf,z:%lf\n",i,j,positions[i][0],positions[i][1],positions[i][2]);
-    total_conf+=1;
-   std::vector<double> energies;
-    energies = score();
-    // show_score(energies);
-    std::string remarks = sdf_remarks(energies, m_model.rmsd_lower_bound(m_model), m_model.rmsd_upper_bound(m_model));
-    std::string score = write_score(energies);
-    // std::cout<<m_model.rmsd_upper_bound(m_model);
-    // m_poses
-    // std::cout<<get_sdf_poses(1,3.0 );
-    write_sdf_pose(out_dir+"/"+out_name,remarks);
-    write_score_to_file_with_mark(energies, out_dir, out_name, ligand_name);
-    }
+        m_model.set(c);
+        if (m_verbosity > 1) {
+            std::cout << "Clash penalty: " << best_clash_penalty << "\n";
+        }
+        if (!m_grid.is_in_grid(m_model)){
+            // printf("The ligand is outside the grid box\n");
+            // printf("i:%ld,x:%lf,y:%lf,z:%lf\n",i,positions[i][0],positions[i][1],positions[i][2]);
+            continue;
+        }
+        // printf("i:%ld,j:%ld,x:%lf,y:%lf,z:%lf\n",i,j,positions[i][0],positions[i][1],positions[i][2]);
+        total_conf+=1;
+        std::vector<double> energies;
+        energies = score();
+        // show_score(energies);
+        std::string remarks = sdf_remarks(energies, m_model.rmsd_lower_bound(m_model), m_model.rmsd_upper_bound(m_model));
+        std::string score = write_score(energies);
+        // std::cout<<m_model.rmsd_upper_bound(m_model);
+        // m_poses
+        // std::cout<<get_sdf_poses(1,3.0 );
+        write_sdf_pose(out_dir+"/"+out_name,remarks);
+        write_score_to_file_with_mark(energies, out_dir, out_name, ligand_name);
+        }
     }
     printf("total_conformation:%d\n",total_conf);
+}
+float convertToRange(float radians) {
+    const float PI = std::acos(-1);
+    radians = std::fmod(radians, 2 * PI);
+    if (radians < -PI) {
+        radians += 2 * PI;
+    } else if (radians > PI) {
+        radians -= 2 * PI;
+    }
+    return radians;
+}
+float getRandomInRange(float start, float end) {
+    std::random_device rd;  
+    std::mt19937 gen(rd()); 
+    std::uniform_real_distribution<> dis(start, end);
+
+    return dis(gen);
+}
+std::vector<float> getUniformSamplesInRange(float start, float end, int numSamples) {
+    std::vector<float> samples;
+    float step = (end - start) / (numSamples - 1);
+    for (int i = 0; i < numSamples; ++i) {
+        samples.push_back(start + i * step);
+    }
+    return samples;
+}
+void generateCombinations(const model& m_model, std::vector<std::vector<float>>& allCombinations, std::vector<float>& currentCombination, size_t torsionIndex,int numSamples) {
+    if (torsionIndex == m_model.torsions_ranges.size()) {
+        allCombinations.push_back(currentCombination);
+        return;
+    }
+
+    const auto& torsion = m_model.torsions_ranges[torsionIndex];
+    for (const auto& range : torsion.torsions_range) {
+        std::vector<float> samples = getUniformSamplesInRange(range[0], range[1], numSamples);
+        for (float samplePoint : samples) {
+            currentCombination.push_back(samplePoint);
+            generateCombinations(m_model, allCombinations, currentCombination, torsionIndex + 1,numSamples);
+            currentCombination.pop_back();
+        }
+    }
+}
+void Vina::conf_exhaustion_with_torsion_range( sz max_steps,vec center,vec box_size,sz numSamples,std::string out_dir,std::string out_name,std::string ligand_name) {
+    // Randomize ligand/flex residues conformation
+    // Check the box was defined
+    if (!m_ligand_initialized) {
+        std::cerr << "ERROR: Cannot do ligand randomization. Ligand(s) was(ere) not initialized.\n";
+        exit(EXIT_FAILURE);
+    } else if (!m_map_initialized) {
+        std::cerr << "ERROR: Cannot do ligand randomization. Affinity maps were not initialized.\n";
+        exit(EXIT_FAILURE);
+    }
+    int total_conf = 0;
+    int successfully_conf = 0;
+    conf c;
+    int seed = generate_seed();
+    double penalty = 0;
+    double best_clash_penalty = 0;
+    std::stringstream sstm;
+    rng generator(static_cast<rng::result_type>(seed));
+
+    // It's okay to take the initial conf since we will randomize it
+    conf init_conf = m_model.get_initial_conf();
+    conf best_conf = init_conf;
+
+    sstm << "exhaustion conformation (random seed: " << seed << ")";
+    doing(sstm.str(), m_verbosity, 0);
+
+    auto positions =generatePoints(max_steps, center[0], center[1], center[2], box_size[0], box_size[1], box_size[2]);
+    int i=0;
+    for (const auto& torsion : m_model.torsions_ranges) {
+            std::cout<< "torsion:"<<i<<std::endl;
+            i++;
+            for (const auto& range : torsion.torsions_range) {
+                std::cout << "Range: " << range[0] << ", " << range[1] << std::endl;
+            }
+            std::cout << "-----" << std::endl;
+        }
+    std::vector<std::vector<float>> allCombinations;
+    std::vector<float> currentCombination;
+    generateCombinations(m_model, allCombinations, currentCombination, 0,numSamples);
+
+    // 打印所有组合
+    // for (const auto& combination : allCombinations) {
+    //     for (double value : combination) {
+    //         std::cout << value << " ";
+    //     }
+    //     std::cout << std::endl;
+    // }
+    std::cout<<"total search conf:" <<allCombinations.size()*10*max_steps<< std::endl;
+    std::vector<int> thread_ids(10, -1);
+    #pragma omp parallel for collapse(3)
+    for(int i=0;i<max_steps;i++) {
+        for (int j =0;j<10;j++){
+            // c.exhaustion_rigid_with_torsion(positions[i],generate,torsions[i]);
+            for ( auto& combination : allCombinations) {
+                c = init_conf;
+                c.exhaustion_rigid_with_torsion(positions[i],generator,combination);
+                penalty = m_model.clash_penalty();
+                m_model.set(c);
+                if (m_verbosity > 1) {
+                    std::cout << "Clash penalty: " << best_clash_penalty << "\n";
+                }
+                if (!m_grid.is_in_grid(m_model)){
+                    // printf("The ligand is outside the grid box\n");
+                    // printf("i:%ld,x:%lf,y:%lf,z:%lf\n",i,positions[i][0],positions[i][1],positions[i][2]);
+                    continue;
+                }
+                // printf("i:%ld,j:%ld,x:%lf,y:%lf,z:%lf\n",i,j,positions[i][0],positions[i][1],positions[i][2]);
+                total_conf+=1;
+                std::vector<double> energies;
+                energies = score();
+                // show_score(energies);
+                std::string remarks = sdf_remarks(energies, m_model.rmsd_lower_bound(m_model), m_model.rmsd_upper_bound(m_model));
+                std::string score = write_score(energies);
+                if (std::abs(energies[0])<50.0)
+                {
+                    successfully_conf+=1;
+                    if (total_conf%1000==0){
+                        std::cout<<"total_conf: "<<total_conf<<"successfully_conf:"<<successfully_conf<<std::endl;
+                    }
+                write_sdf_pose(out_dir+"/"+out_name,remarks);
+                write_score_to_file_with_mark(energies, out_dir, out_name, ligand_name);}
+            }
+        }
+    }
+    printf("total search conformation:%d, successfully_conf:%d\n",total_conf,successfully_conf);
 }
 void Vina::randomize_score_with_range( sz max_steps,vec center,fl range,std::string out_name,std::string ligand_name) {
     // Randomize ligand/flex residues conformation

@@ -59,7 +59,10 @@ inline void torsions_randomize(flv& torsions, rng& generator) {
     VINA_FOR_IN(i, torsions)
     torsions[i] = random_fl(-pi, pi, generator);
 }
-
+inline void torsions_exhaustion(flv& torsions_set,flv& torsion_from ) {
+    VINA_FOR_IN(i, torsions_set)
+    torsions_set[i] = torsion_from[i];
+}
 inline bool torsions_too_close(const flv& torsions1, const flv& torsions2, fl cutoff) {
     assert(torsions1.size() == torsions2.size());
     VINA_FOR_IN(i, torsions1)
@@ -187,6 +190,10 @@ struct ligand_conf {
     void exhaustion_rigid(const vec& corner1, rng& generator) {
         rigid.exhaustion(corner1,  generator);
         // torsions_randomize(torsions, generator);
+    }
+    void exhaustion_rigid_with_torsion(const vec& corner1, rng& generator,  flv& torsion) {
+        rigid.exhaustion(corner1,  generator);
+        torsions_exhaustion(torsions,torsion);
     }
 
     void print() const {
@@ -362,6 +369,10 @@ struct conf {
     void exhaustion_rigid(const vec& corner1, rng& generator) {
         VINA_FOR_IN(i, ligands)
         ligands[i].exhaustion_rigid(corner1,  generator);
+    }
+    void exhaustion_rigid_with_torsion(const vec& corner1, rng& generator,  flv& torsion) {
+        VINA_FOR_IN(i, ligands)
+        ligands[i].exhaustion_rigid_with_torsion(corner1,  generator, torsion);
     }
     void print() const {
         VINA_FOR_IN(i, ligands)

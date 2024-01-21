@@ -242,6 +242,7 @@ bug reporting, license agreements, and more information.      \n";
         bool randomize_score = false;
         bool conf_exhaustion = false;
         int conf_exhaustion_num = 100;
+        int torsion_exhaustion_num = 3;
         // float conf_exhaustion_range = 2.0;
         int randomize_score_num = 100;
         float randomize_range = 2.0;
@@ -317,6 +318,7 @@ bug reporting, license agreements, and more information.      \n";
             ("mobility",value<float> (&mobility))
             ("conf_exhaustion",bool_switch(&conf_exhaustion))
             ("conf_exhaustion_num",value<int> (&conf_exhaustion_num))
+            ("torsion_exhaustion_num",value<int>(&torsion_exhaustion_num))
             ("randomize_score",bool_switch(&randomize_score))
             ("randomize_score_num",value<int> (&randomize_score_num))
             ("randomize_range",value<float> (&randomize_range))
@@ -802,7 +804,7 @@ bug reporting, license agreements, and more information.      \n";
                     std::cout << "The provided path is not an absolute path." << std::endl;
                 }
                 vec box_size(size_x,size_y,size_z);
-                v1.conf_exhaustion_with_range(conf_exhaustion_num,center,box_size,out_dir,out_name,ligand_names[i]); 
+                v1.conf_exhaustion_with_torsion_range(conf_exhaustion_num,center,box_size,torsion_exhaustion_num,out_dir,out_name,ligand_names[i]); 
                 // std::cout<<out_name<<std::endl;
                 // v1.randomize_score_with_range(randomize_score_num,center,randomize_range,out_name,ligand_names[i]); 
 

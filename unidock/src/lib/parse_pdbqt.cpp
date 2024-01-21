@@ -737,7 +737,7 @@ void parse_sdf_aux(std::istream& in, parsing_struct& new_p, parsing_struct& p, c
                 std::cout << "start torsionSamplingRangeInfo" << std::endl;
                 while (std::getline(in, str)) {
                     add_context(c, str);
-                    // std::cout << "read torsion range sdf line:" << str << std::endl;
+                    std::cout << "read torsion range sdf line:" << str << std::endl;
                     if (str.empty()) {
                         break;
                     }
