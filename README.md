@@ -1,3 +1,5 @@
+![Uni-Dock LOGO](./unidock/assets/Uni-Dock-LOGO-White.png)
+
 # Uni-Dock
 [![DeepModeling](https://img.shields.io/badge/DeepModeling-Incubating_Project-blue)](https://github.com/deepmodeling)
 ## Introduction
