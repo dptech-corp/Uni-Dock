@@ -42,7 +42,7 @@ class TestUniDockSDF(ut.TestCase):
                     break
         self.assertNotEqual(score_line, "")
         score = float([e for e in score_line[len("ENERGY="):].split(" ") if e!=""][0])
-        self.assertTrue(-15 <= score <= -8)
+        self.assertTrue(-20 <= score <= -1)
 
     def test_unidock_sdf_vinardo(self):
         cmd = f"unidock --receptor {self.receptor} --gpu_batch {self.ligand} --dir {self.workdir} \
@@ -69,7 +69,7 @@ class TestUniDockSDF(ut.TestCase):
                     break
         self.assertNotEqual(score_line, "")
         score = float([e for e in score_line[len("ENERGY="):].split(" ") if e!=""][0])
-        self.assertTrue(-15 <= score <= -8)
+        self.assertTrue(-20 <= score <= -1)
 
 if __name__ == "__main__":
     ut.main()

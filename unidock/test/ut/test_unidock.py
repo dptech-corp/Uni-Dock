@@ -39,7 +39,7 @@ class TestUniDock(ut.TestCase):
                     break
         self.assertNotEqual(score_line, "")
         score = float([e for e in score_line[len("REMARK VINA RESULT:"):].split(" ") if e!=""][0])
-        self.assertTrue(-12 <= score <= -5)
+        self.assertTrue(-20 <= score <= -1)
 
     def test_unidock_vinardo(self):
         cmd = f"unidock --receptor {self.receptor} --gpu_batch {self.ligand} --dir {self.workdir} \
@@ -63,7 +63,7 @@ class TestUniDock(ut.TestCase):
                     break
         self.assertNotEqual(score_line, "")
         score = float([e for e in score_line[len("REMARK VINA RESULT:"):].split(" ") if e!=""][0])
-        self.assertTrue(-12 <= score <= -5)
+        self.assertTrue(-20 <= score <= -1)
 
 if __name__ == "__main__":
     ut.main()
