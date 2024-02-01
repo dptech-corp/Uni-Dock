@@ -1,9 +1,7 @@
 name: Uni-Dock Tools CI/CD
 on:
   push:
-    branches: [ fix_unidock_ut ]
   pull_request:
-    branches: [ main ]
 
 jobs:
   flake8:
@@ -15,7 +13,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Set up Python  ${{ matrix.python-version }}
+    - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v3
       with:
         python-version: ${{ matrix.python-version }}
@@ -88,10 +86,10 @@ jobs:
       options: --gpus all
     steps:
     - name: checkout repo
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Setup conda
-      uses: conda-incubator/setup-miniconda@v2
+      uses: conda-incubator/setup-miniconda@v3
       with:
         miniconda-version: "latest"
         python-version: ${{ matrix.python-version }}
@@ -113,3 +111,4 @@ jobs:
       run: |
         export PATH=/__w/Uni-Dock/Uni-Dock/3/envs/test/bin:$PATH
         pytest unidock_tools/tests/ut -v
+ 
