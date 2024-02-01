@@ -1,4 +1,7 @@
 # Uni-Dock
+
+<picture><source media="(prefers-color-scheme: dark)" srcset="./unidock/assets/logo-dark.svg"><source media="(prefers-color-scheme: light)" srcset="./unidock/assets/logo.svg"><img alt="Uni-Dock logo" src="./unidock/assets/logo.svg"></picture>
+
 [![DeepModeling](https://img.shields.io/badge/DeepModeling-Incubating_Project-blue)](https://github.com/deepmodeling)
 ## Introduction
 
