@@ -80,6 +80,7 @@ class vina_cuda_worker : public Vina
     double center_z; 
     std::string protein_name;
     std::string ligand_name;
+    int m_device_id = 0;
     void init(std::string out_phrase)
     {
         out_dir = workdir + "/" + out_phrase;
@@ -88,6 +89,7 @@ class vina_cuda_worker : public Vina
             boost::filesystem::create_directory(out_dir);
         }
 	    m_seed = seed;
+        checkCUDA(cudaSetDevice(m_device_id));
     }
 public:            
     vina_cuda_worker(
@@ -106,7 +108,8 @@ public:
             int exh,
             std::string workdir,
             std::string input_dir,
-            std::string out_phrase):
+            std::string out_phrase,
+            int device_id):
 
             seed(seed),
             num_modes(num_modes),
@@ -125,6 +128,7 @@ public:
             ligand_name(ligand_name),
             local_only(local_only),
             out_dir(out_phrase),
+            m_device_id(device_id),
             Vina{"vina", 0, seed, verbosity, false, NULL}
     {
         init(out_phrase);

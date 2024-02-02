@@ -59,6 +59,7 @@ struct simulation_container
     int m_seed = 5;
     int m_num_modes = 9;
     int m_refine_steps = 3;
+    int m_device_id = 0;
 
     std::vector<std::string> m_complex_names;
     std::string m_config_json_path;
@@ -79,7 +80,8 @@ struct simulation_container
         int local_only,
         int max_step,
         int verbosity,
-        int exh):
+        int exh,
+        int device_id):
 
         m_seed(seed),
         m_num_modes(num_modes),
@@ -93,7 +95,8 @@ struct simulation_container
         m_verbosity(verbosity),
         m_exhaustiveness(exh),
         m_isGPU(true),
-        m_successful_property_count (0)
+        m_successful_property_count (0),
+        m_device_id(device_id)
      {
         //m_out_phrase = util_random_string(5);
      }
@@ -490,7 +493,7 @@ struct simulation_container
                     vina_cuda_worker vcw(m_seed, m_num_modes, m_refine_steps, props[i].center_x, props[i].center_y, 
                             props[i].center_z, props[i].protein_name,props[i].ligand_name,
                             local_only, std::vector<double>{props[i].box_x, props[i].box_y, props[i].box_z}, m_max_global_steps, m_verbosity,
-                            m_exhaustiveness, workdir, input_dir, out_phrase);
+                            m_exhaustiveness, workdir, input_dir, out_phrase, m_device_id);
                     try
                     {
                         int ret = vcw.launch();

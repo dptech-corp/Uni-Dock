@@ -237,6 +237,8 @@ bug reporting, license agreements, and more information.      \n";
         std::string score_file("scores.txt");
 
         positional_options_description positional;  // remains empty
+        // GPU Device id to use
+        int device_id = 0;
 
         options_description inputs("Input");
         inputs.add_options()("receptor", value<std::string>(&rigid_name),
@@ -281,7 +283,9 @@ bug reporting, license agreements, and more information.      \n";
             "output filename (directory + prefix name) for maps. Option --force_even_voxels may be "
             "needed to comply with .map format");
         options_description advanced("Advanced options (see the manual)");
-        advanced.add_options()("score_only", bool_switch(&score_only),
+        advanced.add_options()("device_id", value<int>(&device_id)->default_value(0), 
+            "GPU device id to use (default 0)")
+            ("score_only", bool_switch(&score_only),
                                "score only - search space can be omitted")(
             "score_file", value<std::string>(&score_file)->default_value(score_file),
             "score only output file in batch mode, with 'score_only' option")(
@@ -498,7 +502,8 @@ bug reporting, license agreements, and more information.      \n";
 
             std::vector<double> box_size = {size_x, size_y, size_z};
             simulation_container sc(seed, num_modes, refine_step, out_dir,
-                ligand_index, paired_batch_size, box_size, local_only, max_step, verbosity, exhaustiveness);
+                ligand_index, paired_batch_size, box_size, local_only, max_step, 
+                verbosity, exhaustiveness, device_id);
 
             int res = sc.prime();
             if (res <= 0)
@@ -766,7 +771,9 @@ bug reporting, license agreements, and more information.      \n";
             if (sf_name.compare("ad4") == 0) ad4 = true;
             cudaGetDeviceCount(&deviceCount);
             if (deviceCount > 0) {
-                cudaSetDevice(0);
+                checkCUDA(cudaSetDevice(device_id));
+
+                printf("Set GPU device id to %d\n", device_id);
                 cudaMemGetInfo(&avail, &total);
                 printf("Available Memory = %dMiB   Total Memory = %dMiB\n",
                        int(avail / 1024 / 1024), int(total / 1024 / 1024));
