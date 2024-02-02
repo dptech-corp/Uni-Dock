@@ -8,7 +8,7 @@ on:
 jobs:
   unidock_test:
     runs-on: nvidia
-    container: 
+    container:
       image: nvidia/cuda:12.2.0-devel-ubuntu22.04
       options: --gpus all
     steps:
@@ -19,7 +19,7 @@ jobs:
       run: |
         apt-get update
         apt-get install -y build-essential cmake libboost-all-dev ninja-build
-    
+
     - if: ${{ env.ACT }}
       name: Hack container for local development
       run: |
@@ -59,13 +59,11 @@ jobs:
     steps:
 
     - name: log in to docker hub
-      uses: docker/login-action@v2
+      uses: docker/login-action@v3
+      if: github.event_name == 'push'
       with:
         username: dptechnology
         password: ${{ secrets.DOCKERHUB_PAT }}
-
-    - name: set up QEMU
-      uses: docker/setup-qemu-action@v2
 
     - name: set up docker buildx
       id: buildx
@@ -85,4 +83,4 @@ jobs:
         tags: dptechnology/unidock:${{ steps.short-sha.outputs.sha }},dptechnology/unidock:latest
         file: Dockerfile
         context: "{{defaultContext}}:unidock"
-        push: true
+        push: ${{ github.event_name == 'push' }}
