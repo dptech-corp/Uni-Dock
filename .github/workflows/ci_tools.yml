@@ -81,7 +81,7 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.9"]
-    container: 
+    container:
       image: docker.io/dptechnology/unidock:latest
       options: --gpus all
     steps:
@@ -105,10 +105,9 @@ jobs:
       working-directory: ./unidock_tools
       run: |
         export PATH=/__w/Uni-Dock/Uni-Dock/3/envs/test/bin:$PATH
-        python setup.py install
+        conda run -n test python setup.py install
 
     - name: perform unit-test
       run: |
         export PATH=/__w/Uni-Dock/Uni-Dock/3/envs/test/bin:$PATH
-        pytest unidock_tools/tests/ut -v
- 
+        conda run -n test pytest unidock_tools/tests/ut -v
