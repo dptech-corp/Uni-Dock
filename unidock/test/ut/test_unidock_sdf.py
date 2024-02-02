@@ -10,8 +10,12 @@ class TestUniDockSDF(ut.TestCase):
     def setUp(self):
         self.workdir = Path(f"/tmp/{uuid.uuid4()}")
         self.workdir.mkdir(parents=True, exist_ok=True)
-        self.receptor = os.path.join(os.path.dirname(os.path.dirname(__file__)), "receptor", "1a30_protein.pdbqt")
-        self.ligand = os.path.join(os.path.dirname(os.path.dirname(__file__)), "ligands", "1a30_ligand.sdf")
+        self.receptor = os.path.join(
+            os.path.dirname(os.path.dirname(__file__)), "receptor", "1a30_protein.pdbqt"
+        )
+        self.ligand = os.path.join(
+            os.path.dirname(os.path.dirname(__file__)), "ligands", "1a30_ligand.sdf"
+        )
         self.pocket = [8.729, 25.62, 4.682, 19.12, 16.56, 18.65]
 
     def tearDown(self):
@@ -22,10 +26,14 @@ class TestUniDockSDF(ut.TestCase):
             --center_x {self.pocket[0]} --center_y {self.pocket[1]} --center_z {self.pocket[2]} \
             --size_x {self.pocket[3]} --size_y {self.pocket[4]} --size_z {self.pocket[5]} \
             --scoring vina --search_mode fast --num_modes 1 --seed 181129"
-        resp = subprocess.run(cmd, shell=True, 
-                              capture_output=True,
-                              encoding="utf-8", 
-                              cwd=self.workdir)
+        resp = subprocess.run(
+            cmd,
+            shell=True,
+            capture_output=True,
+            encoding="utf-8",
+            cwd=self.workdir,
+            check=True,
+        )
         print(resp.stdout)
         if resp.returncode != 0:
             print(resp.stderr)
@@ -41,7 +49,9 @@ class TestUniDockSDF(ut.TestCase):
                 if not line:
                     break
         self.assertNotEqual(score_line, "")
-        score = float([e for e in score_line[len("ENERGY="):].split(" ") if e!=""][0])
+        score = float(
+            [e for e in score_line[len("ENERGY=") :].split(" ") if e != ""][0]
+        )
         self.assertTrue(-20 <= score <= -1)
 
     def test_unidock_sdf_vinardo(self):
@@ -49,10 +59,14 @@ class TestUniDockSDF(ut.TestCase):
             --center_x {self.pocket[0]} --center_y {self.pocket[1]} --center_z {self.pocket[2]} \
             --size_x {self.pocket[3]} --size_y {self.pocket[4]} --size_z {self.pocket[5]} \
             --scoring vinardo --search_mode fast --num_modes 1 --seed 181129"
-        resp = subprocess.run(cmd, shell=True, 
-                              capture_output=True,
-                              encoding="utf-8", 
-                              cwd=self.workdir)
+        resp = subprocess.run(
+            cmd,
+            shell=True,
+            capture_output=True,
+            encoding="utf-8",
+            cwd=self.workdir,
+            check=True,
+        )
         print(resp.stdout)
         if resp.returncode != 0:
             print(resp.stderr)
@@ -68,8 +82,11 @@ class TestUniDockSDF(ut.TestCase):
                 if not line:
                     break
         self.assertNotEqual(score_line, "")
-        score = float([e for e in score_line[len("ENERGY="):].split(" ") if e!=""][0])
+        score = float(
+            [e for e in score_line[len("ENERGY=") :].split(" ") if e != ""][0]
+        )
         self.assertTrue(-20 <= score <= -1)
+
 
 if __name__ == "__main__":
     ut.main()
