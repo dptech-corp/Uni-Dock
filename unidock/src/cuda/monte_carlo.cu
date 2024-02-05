@@ -1039,7 +1039,7 @@ __host__ void monte_carlo::operator()(
     cudaEventSynchronize(stop);
     float msecTotal = 0.0f;
     cudaEventElapsedTime(&msecTotal, start, stop);
-    DEBUG_PRINTF("Time spend on GPU is %f ms\n", msecTotal);
+    printf("Time spend on GPU is %f ms\n", msecTotal);
 
     /* Convert result data. Can be improved by mapping memory
      */
@@ -1604,7 +1604,7 @@ __host__ void monte_carlo_template::operator()(
     cudaEventSynchronize(stop);
     float msecTotal = 0.0f;
     cudaEventElapsedTime(&msecTotal, start, stop);
-    DEBUG_PRINTF("Time spend on GPU is %f ms\n", msecTotal);
+    printf("Time spend on GPU is %f ms\n", msecTotal);
 
     /* Convert result data. Can be improved by mapping memory
      */
@@ -2261,7 +2261,7 @@ __host__ void monte_carlo_template::do_docking<Config>(std::vector<model> &m_gpu
     cudaEventSynchronize(stop);
     float msecTotal = 0.0f;
     cudaEventElapsedTime(&msecTotal, start, stop);
-    DEBUG_PRINTF("Time spend on GPU is %f ms\n", msecTotal);
+    printf("Time spend on GPU is %f ms\n", msecTotal);
 
     /* Convert result data. Can be improved by mapping memory
      */
@@ -2316,7 +2316,6 @@ __host__ void monte_carlo_template::do_docking<Config>(std::vector<model> &m_gpu
 
     DEBUG_PRINTF("exit monte_carlo\n");
     }
-
 template <>
 __host__ void monte_carlo_template::do_docking<SmallConfig>(std::vector<model> &m_gpu, std::vector<output_container> &out_gpu,
     std::vector<precalculate_byatom> &p_gpu, triangular_matrix_cuda_t *m_data_list_gpu,
@@ -2840,7 +2839,7 @@ __host__ void monte_carlo_template::do_docking<SmallConfig>(std::vector<model> &
     cudaEventSynchronize(stop);
     float msecTotal = 0.0f;
     cudaEventElapsedTime(&msecTotal, start, stop);
-    DEBUG_PRINTF("Time spend on GPU is %f ms\n", msecTotal);
+    printf("Time spend on GPU is %f ms\n", msecTotal);
 
     /* Convert result data. Can be improved by mapping memory
      */
@@ -3433,7 +3432,7 @@ __host__ void monte_carlo_template::do_docking<MediumConfig>(std::vector<model> 
     cudaEventSynchronize(stop);
     float msecTotal = 0.0f;
     cudaEventElapsedTime(&msecTotal, start, stop);
-    DEBUG_PRINTF("Time spend on GPU is %f ms\n", msecTotal);
+    printf("Time spend on GPU is %f ms\n", msecTotal);
 
     /* Convert result data. Can be improved by mapping memory
      */
@@ -4000,7 +3999,7 @@ __host__ void monte_carlo_template::do_docking<LargeConfig>(std::vector<model> &
     cudaEventSynchronize(stop);
     float msecTotal = 0.0f;
     cudaEventElapsedTime(&msecTotal, start, stop);
-    DEBUG_PRINTF("Time spend on GPU is %f ms\n", msecTotal);
+    printf("Time spend on GPU is %f ms\n", msecTotal);
 
     /* Convert result data. Can be improved by mapping memory
      */
@@ -4567,7 +4566,7 @@ __host__ void monte_carlo_template::do_docking<ExtraLargeConfig>(std::vector<mod
     cudaEventSynchronize(stop);
     float msecTotal = 0.0f;
     cudaEventElapsedTime(&msecTotal, start, stop);
-    DEBUG_PRINTF("Time spend on GPU is %f ms\n", msecTotal);
+    printf("Time spend on GPU is %f ms\n", msecTotal);
 
     /* Convert result data. Can be improved by mapping memory
      */

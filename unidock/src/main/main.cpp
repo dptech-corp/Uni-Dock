@@ -250,6 +250,7 @@ void template_batch_docking(Vina &v,std::vector<named_model> &all_ligands,std::v
                     << "ms" << std::endl;
     }
     }
+
 template<typename Config>
 void template_batch_docking(Vina &v,std::vector<named_model> &all_ligands,std::vector<Ligand> &sized_group,
                         std::string batch_type,int exhaustiveness, bool multi_bias,float max_memory,
@@ -307,7 +308,7 @@ void template_batch_docking(Vina &v,std::vector<named_model> &all_ligands,std::v
         }
         v1.set_ligand_from_object_gpu(batch_ligands);
         
-        v1.global_search_gpu(exhaustiveness, num_modes, min_rmsd, max_evals, max_step,
+        v1.global_search_gpu<Config>(exhaustiveness, num_modes, min_rmsd, max_evals, max_step,
                                 batch_ligand_names.size(), (unsigned long long)seed,
                                 refine_step, local_only);
                                 
@@ -377,7 +378,7 @@ void template_batch_docking<SmallConfig>(Vina &v,std::vector<named_model> &all_l
             }
         }
         v1.set_ligand_from_object_gpu(batch_ligands);
-        v1.global_search_gpu_small(exhaustiveness, num_modes, min_rmsd, max_evals, max_step,
+        v1.global_search_gpu<SmallConfig>(exhaustiveness, num_modes, min_rmsd, max_evals, max_step,
                                 batch_ligand_names.size(), (unsigned long long)seed,
                                 refine_step, local_only);
         v1.write_poses_gpu(gpu_out_name, num_modes, energy_range);
@@ -444,7 +445,7 @@ void template_batch_docking<MediumConfig>(Vina &v,std::vector<named_model> &all_
             }
         }
         v1.set_ligand_from_object_gpu(batch_ligands);
-        v1.global_search_gpu_medium(exhaustiveness, num_modes, min_rmsd, max_evals, max_step,
+        v1.global_search_gpu<MediumConfig>(exhaustiveness, num_modes, min_rmsd, max_evals, max_step,
                                 batch_ligand_names.size(), (unsigned long long)seed,
                                 refine_step, local_only);
         v1.write_poses_gpu(gpu_out_name, num_modes, energy_range);
@@ -511,7 +512,7 @@ void template_batch_docking<LargeConfig>(Vina &v,std::vector<named_model> &all_l
             }
         }
         v1.set_ligand_from_object_gpu(batch_ligands);
-        v1.global_search_gpu_large(exhaustiveness, num_modes, min_rmsd, max_evals, max_step,
+        v1.global_search_gpu<LargeConfig>(exhaustiveness, num_modes, min_rmsd, max_evals, max_step,
                                 batch_ligand_names.size(), (unsigned long long)seed,
                                 refine_step, local_only);
         v1.write_poses_gpu(gpu_out_name, num_modes, energy_range);
@@ -578,7 +579,7 @@ void template_batch_docking<ExtraLargeConfig>(Vina &v,std::vector<named_model> &
             }
         }
         v1.set_ligand_from_object_gpu(batch_ligands);
-        v1.global_search_gpu_extra_large(exhaustiveness, num_modes, min_rmsd, max_evals, max_step,
+        v1.global_search_gpu<ExtraLargeConfig>(exhaustiveness, num_modes, min_rmsd, max_evals, max_step,
                                 batch_ligand_names.size(), (unsigned long long)seed,
                                 refine_step, local_only);
         v1.write_poses_gpu(gpu_out_name, num_modes, energy_range);
