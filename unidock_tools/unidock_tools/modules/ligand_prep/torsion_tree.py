@@ -1,52 +1,136 @@
+from typing import Dict, Tuple
 import os
-import shutil
-import re
-
 import numpy as np
 import networkx as nx
-import glob
-
-from concurrent.futures import ThreadPoolExecutor
-
 from rdkit import Chem
 from rdkit.Chem import GetMolFrags, FragmentOnBonds
 from rdkit.Chem.rdPartialCharges import ComputeGasteigerCharges
 
-from unidock_tools.ligand_prepare.atom_type import AtomType
-from unidock_tools.ligand_prepare.rotatable_bond import RotatableBond
-from unidock_tools.ligand_prepare import utils
 
-class TopologyBuilder(object):
+ATOM_TYPE_DEFINITION_LIST = [{'smarts': '[#1]', 'atype': 'H', 'comment': 'invisible'},
+                             {'smarts': '[#1][#7,#8,#9,#15,#16]', 'atype': 'HD', 'comment': None},
+                             {'smarts': '[#5]', 'atype': 'B', 'comment': None},
+                             {'smarts': '[C]', 'atype': 'C', 'comment': None},
+                             {'smarts': '[c]', 'atype': 'A', 'comment': None},
+                             {'smarts': '[#7]', 'atype': 'NA', 'comment': None},
+                             {'smarts': '[#8]', 'atype': 'OA', 'comment': None},
+                             {'smarts': '[#9]', 'atype': 'F', 'comment': None},
+                             {'smarts': '[#12]', 'atype': 'Mg', 'comment': None},
+                             {'smarts': '[#14]', 'atype': 'Si', 'comment': None},
+                             {'smarts': '[#15]', 'atype': 'P', 'comment': None},
+                             {'smarts': '[#16]', 'atype': 'S', 'comment': None},
+                             {'smarts': '[#17]', 'atype': 'Cl', 'comment': None},
+                             {'smarts': '[#20]', 'atype': 'Ca', 'comment': None},
+                             {'smarts': '[#25]', 'atype': 'Mn', 'comment': None},
+                             {'smarts': '[#26]', 'atype': 'Fe', 'comment': None},
+                             {'smarts': '[#30]', 'atype': 'Zn', 'comment': None},
+                             {'smarts': '[#35]', 'atype': 'Br', 'comment': None},
+                             {'smarts': '[#53]', 'atype': 'I', 'comment': None},
+                             {'smarts': '[#7X3v3][a]', 'atype': 'N', 'comment': 'pyrrole, aniline'},
+                             {'smarts': '[#7X3v3][#6X3v4]', "atype": 'N', 'comment': 'amide'},
+                             {'smarts': '[#7+1]', 'atype': 'N', 'comment': 'ammonium, pyridinium'},
+                             {'smarts': '[SX2]', 'atype': 'SA', 'comment': 'sulfur acceptor'}]
+
+
+def assign_atom_properties(mol: Chem.rdchem.Mol):
+    atom_positions = mol.GetConformer().GetPositions()
+    num_atoms = mol.GetNumAtoms()
+
+    internal_atom_idx = 0
+    for atom_idx in range(num_atoms):
+        atom = mol.GetAtomWithIdx(atom_idx)
+        atom.SetIntProp('sdf_atom_idx', atom_idx + 1)
+        if not atom.HasProp('atom_name'):
+            atom_element = atom.GetSymbol()
+            atom_name = atom_element + str(internal_atom_idx + 1)
+            atom.SetProp('atom_name', atom_name)
+            atom.SetProp('residue_name', 'MOL')
+            atom.SetIntProp('residue_idx', 1)
+            atom.SetProp('chain_idx', 'A')
+            internal_atom_idx += 1
+
+        atom.SetDoubleProp('charge', atom.GetDoubleProp('_GasteigerCharge'))
+        atom.SetDoubleProp('x', atom_positions[atom_idx, 0])
+        atom.SetDoubleProp('y', atom_positions[atom_idx, 1])
+        atom.SetDoubleProp('z', atom_positions[atom_idx, 2])
+
+
+class AtomType:
+    def __init__(self):
+        self.atom_type_definition_list = ATOM_TYPE_DEFINITION_LIST
+
+    def assign_atom_types(self, mol: Chem.rdchem.Mol):
+        for atom_type_dict in self.atom_type_definition_list:
+            smarts = atom_type_dict['smarts']
+            atom_type = atom_type_dict['atype']
+
+            pattern_mol = Chem.MolFromSmarts(smarts)
+            pattern_matches = mol.GetSubstructMatches(pattern_mol)
+            for pattern_match in pattern_matches:
+                atom = mol.GetAtomWithIdx(pattern_match[0])
+                atom.SetProp('atom_type', atom_type)
+
+    def get_docking_atom_types(self, mol: Chem.rdchem.Mol) -> Dict[int, str]:
+        atom_ind_type_map = dict()
+        for atom_type_dict in self.atom_type_definition_list:
+            smarts = atom_type_dict["smarts"]
+            atom_type = atom_type_dict["atype"]
+            pattern_mol = Chem.MolFromSmarts(smarts)
+            pattern_matches = mol.GetSubstructMatches(pattern_mol)
+            for pattern_match in pattern_matches:
+                atom_ind = pattern_match[0]
+                atom_ind_type_map[atom_ind] = atom_type
+        return atom_ind_type_map
+
+
+class RotatableBond:
     def __init__(self,
-                 ligand_sdf_file_name,
-                 working_dir_name='.'):
+                 min_macrocycle_size: int = 7,
+                 max_macrocycle_size: int = 33,
+                 double_bond_penalty: int = 50,
+                 max_breaks: int = 4):
 
-        self.ligand_sdf_file_name = ligand_sdf_file_name
+        self.rotatable_bond_smarts = '[!$(*#*)&!D1]-&!@[!$(*#*)&!D1]'
+        self.amide_bond_smarts = '[C&$(C=O)]-[N&$(NC=O);v3;H1,H2;0]'
+        self.conjugate_bond_smarts = '*=*[*]=,#,:[*]'
+        self.rotatable_bond_pattern = Chem.MolFromSmarts(self.rotatable_bond_smarts)
+        self.amide_bond_pattern = Chem.MolFromSmarts(self.amide_bond_smarts)
+        self.conjugate_bond_pattern = Chem.MolFromSmarts(self.conjugate_bond_smarts)
 
-        self.working_dir_name = os.path.abspath(working_dir_name)
+        self.min_macrocycle_size = min_macrocycle_size
+        self.max_macrocycle_size = max_macrocycle_size
+        self.double_bond_penalty = double_bond_penalty
+        self.max_breaks = max_breaks
 
-        ligand_sdf_base_file_name = os.path.basename(self.ligand_sdf_file_name)
-        ligand_file_name_prefix = ligand_sdf_base_file_name.split('.')[0]
+    def identify_rotatable_bonds(self, mol: Chem.rdchem.Mol):
+        default_rotatable_bond_info_list = list(mol.GetSubstructMatches(self.rotatable_bond_pattern))
+        amide_rotatable_bond_info_list = list(mol.GetSubstructMatches(self.amide_bond_pattern))
 
-        ligand_pdbqt_base_file_name = ligand_file_name_prefix + '.pdbqt'
-        self.ligand_pdbqt_file_name = os.path.join(self.working_dir_name, ligand_pdbqt_base_file_name)
+        for amide_rotatable_bond_info in amide_rotatable_bond_info_list:
+            amide_rotatable_bond_info_reversed = tuple(reversed(amide_rotatable_bond_info))
+            if amide_rotatable_bond_info in default_rotatable_bond_info_list:
+                default_rotatable_bond_info_list.remove(amide_rotatable_bond_info)
+            elif amide_rotatable_bond_info_reversed in default_rotatable_bond_info_list:
+                default_rotatable_bond_info_list.remove(amide_rotatable_bond_info_reversed)
 
-        ligand_torsion_tree_sdf_base_file_name = ligand_file_name_prefix + '_prepared.sdf'
-        self.ligand_torsion_tree_sdf_file_name = os.path.join(self.working_dir_name, ligand_torsion_tree_sdf_base_file_name)
+        return default_rotatable_bond_info_list
+
+
+class TopologyBuilder:
+    def __init__(self, mol: Chem.rdchem.Mol):
+        self.mol = mol
 
         self.atom_typer = AtomType()
         self.rotatable_bond_finder = RotatableBond()
 
     def build_molecular_graph(self):
-        mol = Chem.SDMolSupplier(self.ligand_sdf_file_name, removeHs=False)[0]
-
+        mol = self.mol
 
         self.atom_typer.assign_atom_types(mol)
         ComputeGasteigerCharges(mol)
-        utils.assign_atom_properties(mol)
+        assign_atom_properties(mol)
         rotatable_bond_info_list = self.rotatable_bond_finder.identify_rotatable_bonds(mol)
 
-    
         bond_list = list(mol.GetBonds())
         rotatable_bond_idx_list = []
         for bond in bond_list:
@@ -63,8 +147,7 @@ class TopologyBuilder(object):
 
         num_fragments = len(splitted_mol_list)
 
-        ## Find fragment as the root node
-        ##############################################################################
+        # 1. Find fragment as the root node
         num_fragment_atoms_list = [None] * num_fragments
         for fragment_idx in range(num_fragments):
             fragment = splitted_mol_list[fragment_idx]
@@ -73,11 +156,10 @@ class TopologyBuilder(object):
 
         root_fragment_idx = None
         root_fragment_idx = np.argmax(num_fragment_atoms_list)
-        ##############################################################################
 
-        ## Build torsion tree
-        ### Add atom info into nodes
-        ##############################################################################
+        # 2. Build torsion tree
+
+        # 2-1. Add atom info into nodes
         torsion_tree = nx.Graph()
         node_idx = 0
         root_fragment = splitted_mol_list[root_fragment_idx]
@@ -110,7 +192,6 @@ class TopologyBuilder(object):
                 fragment = splitted_mol_list[fragment_idx]
                 num_fragment_atoms = fragment.GetNumAtoms()
                 atom_info_list = [None] * num_fragment_atoms
-
                 for atom_idx in range(num_fragment_atoms):
                     atom = fragment.GetAtomWithIdx(atom_idx)
                     atom_info_dict = {}
@@ -130,10 +211,7 @@ class TopologyBuilder(object):
                 torsion_tree.add_node(node_idx, atom_info_list=atom_info_list)
                 node_idx += 1
 
-        ##############################################################################
-
-        ### Add edge info
-        ##############################################################################
+        # 2-2. Add edge info
         num_rotatable_bonds = len(rotatable_bond_info_list)
         for edge_idx in range(num_rotatable_bonds):
             rotatable_bond_info = rotatable_bond_info_list[edge_idx]
@@ -175,12 +253,10 @@ class TopologyBuilder(object):
                                   begin_atom_name=begin_atom_name,
                                   end_atom_name=end_atom_name)
 
-        ##############################################################################
-
         self.torsion_tree = torsion_tree
         self.mol = mol
 
-    def __deep_first_search__(self, node_idx):
+    def _deep_first_search(self, node_idx):
         if node_idx == 0:
             self.pdbqt_atom_line_list.append('ROOT\n')
             atom_info_list = self.torsion_tree.nodes[node_idx]['atom_info_list']
@@ -259,12 +335,15 @@ class TopologyBuilder(object):
                 parent_atom_idx = self.atom_idx_info_mapping_dict[parent_atom_name]
                 offspring_atom_idx = self.atom_idx_info_mapping_dict[offspring_atom_name]
 
-                self.branch_info_list.append((parent_atom_name, str(parent_atom_idx), offspring_atom_name, str(offspring_atom_idx)))
-                self.pdbqt_atom_line_list.append(self.pdbqt_branch_line_format.format('BRANCH', parent_atom_idx, offspring_atom_idx))
-                self.__deep_first_search__(neighbor_node_idx)
-                self.pdbqt_atom_line_list.append(self.pdbqt_end_branch_line_format.format('ENDBRANCH', parent_atom_idx, offspring_atom_idx))
+                self.branch_info_list.append(
+                    (parent_atom_name, str(parent_atom_idx), offspring_atom_name, str(offspring_atom_idx)))
+                self.pdbqt_atom_line_list.append(
+                    self.pdbqt_branch_line_format.format('BRANCH', parent_atom_idx, offspring_atom_idx))
+                self._deep_first_search(neighbor_node_idx)
+                self.pdbqt_atom_line_list.append(
+                    self.pdbqt_end_branch_line_format.format('ENDBRANCH', parent_atom_idx, offspring_atom_idx))
 
-    def write_pdbqt_file(self):
+    def write_pdbqt_file(self, out_file: str = ''):
         self.pdbqt_remark_line_list = []
         self.pdbqt_atom_line_list = []
 
@@ -274,26 +353,23 @@ class TopologyBuilder(object):
         self.pdbqt_end_branch_line_format = '{:9s} {:3d} {:3d}\n'
         self.torsion_dof_line_format = '{:7s} {:d}'
 
-        ## Prepare pdbqt atom lines
-        ####################################################################################################
+        # 1. Prepare PDBQT atom lines
         self.atom_idx_info_mapping_dict = {}
         self.branch_info_list = []
         self.visited_node_idx_set = set()
         self.pdbqt_atom_idx = 1
 
-        self.__deep_first_search__(0)
+        self._deep_first_search(0)
         self.num_torsions = len(self.branch_info_list)
         self.pdbqt_atom_line_list.append(self.torsion_dof_line_format.format('TORSDOF', self.num_torsions))
-        ####################################################################################################
 
-        ## Prepare pdbqt remark lines
-        ####################################################################################################
-        self.pdbqt_remark_line_list.append('REMARK  '  + str(self.num_torsions) + ' active torsions:\n')
+        # 2. Prepare PDBQT remark lines
+        self.pdbqt_remark_line_list.append('REMARK  ' + str(self.num_torsions) + ' active torsions:\n')
         self.pdbqt_remark_line_list.append("REMARK  status: ('A' for Active; 'I' for Inactive)\n")
         for torsion_idx in range(self.num_torsions):
             branch_info_tuple = self.branch_info_list[torsion_idx]
             remark_torsion_info_tuple = ('REMARK',
-                                         torsion_idx+1,
+                                         torsion_idx + 1,
                                          'A',
                                          'between',
                                          'atoms:',
@@ -302,15 +378,14 @@ class TopologyBuilder(object):
                                          branch_info_tuple[2] + '_' + branch_info_tuple[3])
 
             self.pdbqt_remark_line_list.append(self.pdbqt_remark_torsion_line_format.format(*remark_torsion_info_tuple))
-        ####################################################################################################
 
         self.pdbqt_line_list = self.pdbqt_remark_line_list + self.pdbqt_atom_line_list
 
-        with open(self.ligand_pdbqt_file_name, 'w') as ligand_pdbqt_file:
+        with open(out_file, 'w') as f:
             for pdbqt_line in self.pdbqt_line_list:
-                ligand_pdbqt_file.write(pdbqt_line)
+                f.write(pdbqt_line)
 
-    def write_constraint_bpf_file(self):
+    def write_constraint_bpf_file(self, out_path: str = ''):
         self.core_bpf_remark_line_list = []
         self.core_bpf_atom_line_list = []
         self.core_bpf_atom_line_format = '{:8.3f}\t{:8.3f}\t{:8.3f}\t{:6.2f}\t{:6.2f}\t{:3s}\t{:<2s}\n'
@@ -331,11 +406,12 @@ class TopologyBuilder(object):
 
         self.core_bpf_line_list = self.core_bpf_remark_line_list + self.core_bpf_atom_line_list
 
-        with open(self.ligand_core_bpf_file_name, 'w') as ligand_core_bpf_file:
+        os.makedirs(os.path.dirname(os.path.abspath(out_path)), exist_ok=True)
+        with open(out_path, 'w') as ligand_core_bpf_file:
             for core_bpf_line in self.core_bpf_line_list:
                 ligand_core_bpf_file.write(core_bpf_line)
 
-    def write_torsion_tree_sdf_file(self):
+    def get_sdf_torsion_tree_info(self) -> Tuple[str, str, str]:
         fragment_info_string = ''
         torsion_info_string = ''
         atom_info_string = ''
@@ -348,7 +424,7 @@ class TopologyBuilder(object):
             for atom_info_dict in atom_info_list:
                 fragment_info_string += str(atom_info_dict['sdf_atom_idx'])
                 fragment_info_string += ' '
-    
+
             fragment_info_string = fragment_info_string[:-1]
             fragment_info_string += '\n'
 
@@ -367,91 +443,27 @@ class TopologyBuilder(object):
         for atom in self.mol.GetAtoms():
             sdf_atom_idx = str(atom.GetIntProp('sdf_atom_idx'))
             charge = str(atom.GetDoubleProp('charge'))
+            if charge == "nan":
+                charge = "0"
             atom_type = atom.GetProp('atom_type')
-            atom_info = str(sdf_atom_idx).ljust(3) + str(charge)[:10].ljust(10) + atom_type.ljust(2)
+            atom_info = str(sdf_atom_idx).ljust(3) + charge[:10].ljust(10) + atom_type.ljust(2)
             atom_info_string += atom_info
             atom_info_string += '\n'
 
-        self.mol.SetProp('fragInfo', fragment_info_string)
-        self.mol.SetProp('torsionInfo', torsion_info_string)
-        self.mol.SetProp('atomInfo', atom_info_string)
+        return fragment_info_string, torsion_info_string, atom_info_string
 
-        writer = Chem.SDWriter(self.ligand_torsion_tree_sdf_file_name)
-        writer.write(self.mol)
-        writer.flush()
-        writer.close()
-
-
-def set_properties(mol, props_dict):
-    for key, value in props_dict.items():
-        if isinstance(value, int):
-            mol.SetIntProp(key, value)
-        elif isinstance(value, float):
-            mol.SetDoubleProp(key, value)
-        elif isinstance(value, str):
-            mol.SetProp(key, value)
+    def write_sdf_file(self, out_file: str = ''):
+        fragment_info_string, torsion_info_string, atom_info_string = self.get_sdf_torsion_tree_info()
+        self.mol.SetProp("fragInfo", fragment_info_string)
+        self.mol.SetProp("torsionInfo", torsion_info_string)
+        self.mol.SetProp("atomInfo", atom_info_string)
+        if out_file:
+            os.makedirs(os.path.dirname(os.path.abspath(out_file)), exist_ok=True)
+            with Chem.SDWriter(out_file) as writer:
+                writer.write(self.mol)
 
 
-def add_hydrogen_from_sdf(ligand_file:str, output_file:str, rdkit: bool = True):
-    import subprocess
-    from io import BytesIO
-
-    mol = Chem.SDMolSupplier(ligand_file, removeHs=False, sanitize=True)[0]
-    props_dict = mol.GetPropsAsDict()
-
-    if rdkit:
-        addH_mol = Chem.AddHs(mol, addCoords=True)
-    else:
-        mol_block = Chem.MolToMolBlock(mol, kekulize=True)
-        assert subprocess.call("which obabel", shell=True) == 0, "OpenBabel is not installed. Please install it first"
-        mol_str = subprocess.check_output(["obabel", "-imol", "-osdf", "-h", "--gen3d"],
-                                        text=True, input=mol_block, stderr=subprocess.DEVNULL)
-        bstr = BytesIO(bytes(mol_str, encoding='utf-8'))
-        addH_mol = next(Chem.ForwardSDMolSupplier(bstr, removeHs=False, sanitize=True))
-
-    set_properties(mol=addH_mol, props_dict=props_dict)
-    with Chem.SDWriter(output_file) as writer:
-        writer.write(addH_mol)
-
-
-def prepare_ligands(SDFFiles, output_dir='./ligands_prepared'):
-    os.makedirs(output_dir, exist_ok=True)
-
-    addh_sdf_files = []
-    tmp_dir = f'./addh_dir'
-    os.makedirs(tmp_dir, exist_ok=True)
-    for sdf_file in SDFFiles:
-        addh_path = os.path.join(tmp_dir, os.path.basename(sdf_file))
-        add_hydrogen_from_sdf(sdf_file, addh_path)
-        addh_sdf_files.append(addh_path)
-
-    def _convert_file(ligand):
-        basename =  os.path.basename(ligand)
-        basename_prefix = basename.split('.')[0]
-        try:
-            topo=TopologyBuilder(ligand, output_dir)
-            topo.build_molecular_graph()
-            topo.write_torsion_tree_sdf_file()
-            print("ligand %s preperation successful"%basename_prefix)
-        except Exception as e:
-            print("%s, ligand %s preperation failed"%(e, basename_prefix))
-
-
-    with ThreadPoolExecutor() as executor:
-        executor.map(_convert_file, addh_sdf_files)
-    
-    basenames =  [os.path.basename(ligand) for ligand in SDFFiles]
-    basename_prefixs = [basename.split('.')[0] for basename in basenames]
-    
-    ligands_prepared = []
-    for basename_prefix in basename_prefixs:
-        ligand_prepared_filename = "%s/%s_prepared.sdf"%(output_dir, basename_prefix)
-        if os.path.exists(ligand_prepared_filename):
-            ligands_prepared.append(ligand_prepared_filename)
-
-    ligands_num = len(SDFFiles)
-    ligands_prepared_num = len(ligands_prepared)
-    print("%d sdf format ligands have been prepared successfully in total %d"%(ligands_prepared_num, ligands_num))
-    shutil.rmtree(tmp_dir, ignore_errors=True)
-
-    return ligands_prepared
+def generate_topology(mol: Chem.rdchem.Mol, out_file: str = ''):
+    topology_builder = TopologyBuilder(mol)
+    topology_builder.build_molecular_graph()
+    topology_builder.write_pdbqt_file(out_file=out_file)
