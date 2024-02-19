@@ -226,9 +226,9 @@ public:
     }
     auto end = std::chrono::system_clock::now();
     std::cout << "Kernel running time: "
-              << std::chrono::duration_cast<std::chrono::seconds>(end - start).count() << std::endl;
+              << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << std::endl;
     done(m_verbosity, 1);
-
+    start = std::chrono::system_clock::now();
     // Docking post-processing and rescoring
     m_poses_gpu.resize(num_of_ligands);
     non_cache m_non_cache_tmp = m_non_cache;
@@ -352,6 +352,9 @@ public:
         // Store results in Vina object
         m_poses_gpu[l] = poses;
     }
+    end = std::chrono::system_clock::now();
+    std::cout << "poses saveing time: "
+              << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << std::endl;
 }
 
     std::string get_poses(int how_many = 9, double energy_range = 3.0);
@@ -364,7 +367,7 @@ public:
     std::vector<std::vector<double> > get_poses_energies(int how_many = 9,
                                                          double energy_range = 3.0);
     void write_pose(const std::string& output_name, const std::string& remark = std::string());
-    void write_poses(const std::string& output_name, int how_many = 9, double energy_range = 3.0);
+    void write_poses(const std::string& output_name, int how_many = 9,double energy_range = 3.0);
     void write_poses_gpu(const std::vector<std::string>& gpu_output_name, int how_many = 9,
                          double energy_range = 3.0);
     void write_maps(const std::string& map_prefix = "receptor",
