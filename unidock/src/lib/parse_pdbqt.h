@@ -47,4 +47,8 @@ model parse_ligand_pdbqt_from_string(const std::string &string_name,
                                      atom_type::t atype);  // can exit with code EXIT_FAILURE
 model parse_ligand_pdbqt_from_string_no_failure(
     const std::string &string_name, atom_type::t atype);  // can return empty model as failure
+struct rigid {
+    atomv atoms;
+};
+void parse_pdbqt_rigid(const path& name, rigid& r);
 #endif

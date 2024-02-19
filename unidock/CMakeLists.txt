@@ -41,9 +41,17 @@ find_package(OpenMP REQUIRED) # OpenMP only required in main.cpp
 find_package(Boost 1.72 REQUIRED
 	COMPONENTS system thread serialization filesystem program_options timer)
 include_directories(${Boost_INCLUDE_DIRS})
-include_directories(src/lib src/cuda)
+include_directories(src/lib src/cuda )
 add_executable(${VINA_BIN_NAME} src/main/main.cpp)
 add_executable(split src/split/split.cpp)
+
+# add_executable(unitest unitest/test.cpp  unitest/catch_amalgamated.cpp)
+# target_include_directories(unitest PUBLIC unitest)
+include_directories(${CMAKE_SOURCE_DIR}/unitest)
+file(GLOB_RECURSE TEST_SOURCES "${CMAKE_SOURCE_DIR}/unitest/*.cpp")
+add_executable(unit_tests ${TEST_SOURCES})
+
+
 
 target_link_libraries(${VINA_BIN_NAME} Boost::system Boost::thread Boost::serialization Boost::filesystem Boost::program_options Boost::timer)
 target_link_libraries(split Boost::system Boost::thread Boost::serialization Boost::filesystem Boost::program_options Boost::timer)
@@ -52,6 +60,10 @@ target_link_libraries(${VINA_BIN_NAME} OpenMP::OpenMP_CXX)
 # set(CMAKE_CURRENT_SOURCE_DIR ${CMAKE_SOURCE_DIR}/src/lib)
 add_library(lib OBJECT
 	src/lib/ad4cache.cpp src/lib/cache.cpp src/lib/non_cache.cpp src/lib/conf_independent.cpp src/lib/coords.cpp src/lib/grid.cpp src/lib/szv_grid.cpp src/lib/model.cpp src/lib/mutate.cpp src/lib/parallel_mc.cpp src/lib/parse_pdbqt.cpp src/lib/quasi_newton.cpp src/lib/quaternion.cpp src/lib/random.cpp src/lib/utils.cpp src/lib/vina.cpp src/lib/precalculate.h)
+
+target_link_libraries(unit_tests Boost::system Boost::thread Boost::serialization Boost::filesystem Boost::program_options Boost::timer)
+target_link_libraries(unit_tests OpenMP::OpenMP_CXX)
+target_link_libraries(unit_tests lib)
 	# src/lib/monte_carlo
 # set(CMAKE_CURRENT_SOURCE_DIR ${CMAKE_SOURCE_DIR}/src/cuda)
 add_library(cuda OBJECT src/cuda/monte_carlo.cu src/cuda/precalculate.cu)

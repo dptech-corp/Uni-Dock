@@ -157,9 +157,9 @@ struct movable_atom : public atom {
     }
 };
 
-struct rigid {
-    atomv atoms;
-};
+// struct rigid {
+//     atomv atoms;
+// };
 
 typedef std::vector<movable_atom> mav;
 
