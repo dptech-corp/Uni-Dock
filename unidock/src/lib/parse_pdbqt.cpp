@@ -29,8 +29,8 @@
 #include <boost/optional.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/lexical_cast.hpp>
-//#include <openbabel/mol.h>
-//#include <openbabel/obconversion.h>
+// #include <openbabel/mol.h>
+// #include <openbabel/obconversion.h>
 #include "model.h"
 #include "atom_constants.h"
 #include "file.h"
@@ -462,7 +462,7 @@ void add_bonds(non_rigid_parsed& nr, boost::optional<atom_reference> atm, const 
             if (ar.inflex)
                 nr.atoms_inflex_bonds(i, ar.index)
                     = DISTANCE_FIXED;  //(max_unsigned); // first index - atoms, second index -
-                                       //inflex
+                                       // inflex
             else
                 nr.atoms_atoms_bonds(ar.index, i) = DISTANCE_FIXED;  // (max_unsigned);
         }

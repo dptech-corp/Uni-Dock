@@ -73,8 +73,12 @@ const sz AD_TYPE_CG0 = 26;
 const sz AD_TYPE_CG1 = 27;
 const sz AD_TYPE_CG2 = 28;
 const sz AD_TYPE_CG3 = 29;
-const sz AD_TYPE_W = 30;  // hydrated ligand
-const sz AD_TYPE_SIZE = 31;
+const sz AD_TYPE_W = 30;    // hydrated ligand
+const sz AD_TYPE_OXA = 31;  // biased protein hydrogen bond acceptor
+const sz AD_TYPE_NXA = 32;  // biased protein hydrogen bond acceptor
+const sz AD_TYPE_OXD = 33;  // biased protein hydrogen bond donor
+const sz AD_TYPE_NXD = 34;  // biased protein hydrogen bond donor
+const sz AD_TYPE_SIZE = 35;
 
 // X-Score
 const sz XS_TYPE_C_H = 0;
@@ -109,7 +113,11 @@ const sz XS_TYPE_C_H_CG3 = 28;
 const sz XS_TYPE_C_P_CG3 = 29;
 const sz XS_TYPE_G3 = 30;
 const sz XS_TYPE_W = 31;  // hydrated ligand
-const sz XS_TYPE_SIZE = 32;
+const sz XS_TYPE_O_XA = 32;
+const sz XS_TYPE_N_XA = 33;
+const sz XS_TYPE_O_XD = 34;
+const sz XS_TYPE_N_XD = 35;
+const sz XS_TYPE_SIZE = 36;
 
 // DrugScore-CSD
 const sz SY_TYPE_C_3 = 0;
@@ -178,7 +186,11 @@ const atom_kind atom_kind_data[] = {
     {"CG1", 2.00000, 0.15000, 0.0, 0.0, -0.00143, 33.51030, 0.77},  // 27
     {"CG2", 2.00000, 0.15000, 0.0, 0.0, -0.00143, 33.51030, 0.77},  // 28
     {"CG3", 2.00000, 0.15000, 0.0, 0.0, -0.00143, 33.51030, 0.77},  // 29
-    {"W", 0.00000, 0.00000, 0.0, 0.0, 0.00000, 0.00000, 0.00}       // 30
+    {"W", 0.00000, 0.00000, 0.0, 0.0, 0.00000, 0.00000, 0.00},      // 30
+    {"OXA", 1.60000, 0.20000, 0.0, 0.0, -0.00251, 17.15730, 0.73},  //  31
+    {"NXA", 1.75000, 0.16000, 0.0, 0.0, -0.00162, 22.44930, 0.75},  //  32
+    {"OXD", 1.60000, 0.20000, 0.0, 0.0, -0.00251, 17.15730, 0.73},  //  33
+    {"NXD", 1.75000, 0.16000, 0.0, 0.0, -0.00162, 22.44930, 0.75}   //  34
 };
 
 const fl metal_solvation_parameter = -0.00110;
@@ -281,6 +293,14 @@ inline sz ad_type_to_el_type(sz t) {
             return EL_TYPE_Dummy;
         case AD_TYPE_W:
             return EL_TYPE_Dummy;
+        case AD_TYPE_OXA:
+            return EL_TYPE_O;
+        case AD_TYPE_NXA:
+            return EL_TYPE_N;
+        case AD_TYPE_OXD:
+            return EL_TYPE_O;
+        case AD_TYPE_NXD:
+            return EL_TYPE_N;
         case AD_TYPE_SIZE:
             return EL_TYPE_SIZE;
         default:
@@ -322,7 +342,11 @@ const fl xs_vdw_radii[] = {
     0.0,  // G1
     0.0,  // G2
     0.0,  // G3
-    0.0   // W
+    0.0,  // W
+    1.7,  // O_XA
+    1.8,  // N_XA
+    1.7,  // O_XD
+    1.8   // N_XD
 };
 
 const fl xs_vinardo_vdw_radii[] = {
@@ -357,7 +381,11 @@ const fl xs_vinardo_vdw_radii[] = {
     0.0,  // G1
     0.0,  // G2
     0.0,  // G3
-    0.0   // W
+    0.0,  // W
+    1.6,  // O_XA
+    1.7,  // N_XA
+    1.6,  // O_XD
+    1.7   // N_XD
 };
 
 inline fl xs_radius(sz t) {
@@ -388,12 +416,13 @@ inline bool xs_is_hydrophobic(sz xs) {
 }
 
 inline bool xs_is_acceptor(sz xs) {
-    return xs == XS_TYPE_N_A || xs == XS_TYPE_N_DA || xs == XS_TYPE_O_A || xs == XS_TYPE_O_DA;
+    return xs == XS_TYPE_N_A || xs == XS_TYPE_N_DA || xs == XS_TYPE_O_A || xs == XS_TYPE_O_DA
+           || xs == XS_TYPE_O_XA || xs == XS_TYPE_N_XA;
 }
 
 inline bool xs_is_donor(sz xs) {
     return xs == XS_TYPE_N_D || xs == XS_TYPE_N_DA || xs == XS_TYPE_O_D || xs == XS_TYPE_O_DA
-           || xs == XS_TYPE_Met_D;
+           || xs == XS_TYPE_Met_D || xs == XS_TYPE_N_XD || xs == XS_TYPE_O_XD;
 }
 
 inline bool xs_donor_acceptor(sz t1, sz t2) { return xs_is_donor(t1) && xs_is_acceptor(t2); }

@@ -5,6 +5,7 @@ build/
 test/ligands
 test/results
 .vscode
+.idea
 unidock/build/
 unidock/example/screening_test/indata
 unidock/example/screening_test/result
@@ -12,8 +13,9 @@ unidock/example/screening_test/def_ligands.txt
 unidock/example/screening_test/rundock.sh
 unidock/example/screening_test/unidock
 unidock/example/screening_test/fail_result
-unidock/example/screening_test/unidock_root
 unidock/example/screening_test/receptor_grids
+unidock/example/screening_test/unidock_root
+unidock/example/screening_test/test_dock
 unidock_tools/dist
 unidock_tools/dist/*
 unidock_tools/unidock_tools.egg-info

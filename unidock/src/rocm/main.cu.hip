@@ -606,7 +606,7 @@ Thank you!\n";
 			{
 				auto& ligand=ligand_names[ligand_count];
 				auto l = parse_ligand_pdbqt_from_file_no_failure(
-						ligand, v.m_scoring_function.get_atom_typing());
+						ligand, v.m_scoring_function->get_atom_typing());
 				#pragma omp critical
 				all_ligands.emplace_back(std::make_pair(ligand,l));
 			}

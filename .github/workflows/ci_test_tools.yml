@@ -1,0 +1,99 @@
+name: Uni-Dock Tools CI/CD
+on:
+  push:
+    branches:
+      - '**ci**'
+  pull_request:
+    branches: 
+      - main
+
+env:
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  flake8:
+    continue-on-error: true
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install flake8
+
+    - name: Run flake8 formating
+      run: |
+        flake8 unidock_tools/unidock_tools --exit-zero
+
+  pyright:
+    continue-on-error: true
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pyright
+
+    - name: Run pyright check
+      id: pyright_check
+      working-directory: ./unidock_tools
+      run: |
+        pyright
+
+  tests:
+    if: ${{ always() }}
+    needs: [flake8,pyright]
+    runs-on: nvidia
+    strategy:
+      matrix:
+        cuda-version: ["12.0.0"]
+    container:
+      image: docker.io/xmyyn/unidock_tools_base:0.0.1_cuda${{ matrix.cuda-version }}
+      options: --gpus all
+    steps:
+    - name: checkout repo
+      uses: actions/checkout@v4
+
+    - name: install unidock
+      working-directory: ./unidock
+      run: |
+        apt-get update && apt-get install -y ninja-build
+        mkdir build
+        cd build
+        cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release
+        cmake --build .
+        cmake --install .
+        cd ..
+
+    - name: check env
+      run: |
+        unidock --version
+        confgen --version
+        which python
+
+    - name: install tools
+      working-directory: ./unidock_tools
+      run: |
+        pip install .
+
+    - name: run unit-test
+      run: |
+        pip install pytest pytest-cov
+        pytest unidock_tools/tests/ut -vv --cov --cov-report term
+    
+    - name: run application e2e test
+      run: |
+        pytest unidock_tools/tests/applications -vv --cov --cov-report term

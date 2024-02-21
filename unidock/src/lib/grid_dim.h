@@ -38,9 +38,9 @@ struct grid_dim {
 private:
     friend class boost::serialization::access;
     template <class Archive> void serialize(Archive& ar, const unsigned version) {
-        ar& begin;
-        ar& end;
-        ar& n_voxels;
+        ar & begin;
+        ar & end;
+        ar & n_voxels;
     }
 };
 

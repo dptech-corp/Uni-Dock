@@ -412,7 +412,7 @@ void ad4cache::read(const std::string& map_prefix) {
             read_ad4_map(p, gds, m_grids[t]);
 
         }  // if file exists
-    }      // map loop
+    }  // map loop
 
     //  elec map
     filename = map_prefix + ".e.map";
@@ -506,9 +506,9 @@ void ad4cache::write(const std::string& out_prefix, const szv& atom_types,
                 VINA_FOR(y, m_grids[t].m_data.dim1()) {
                     VINA_FOR(x, m_grids[t].m_data.dim0()) {
                         out << std::setprecision(4) << m_grids[t].m_data(x, y, z) << "\n";  // slow?
-                    }                                                                       // x
-                }                                                                           // y
-            }                                                                               // z
+                    }  // x
+                }  // y
+            }  // z
         }  // map initialized
-    }      // map atom type
+    }  // map atom type
 }  // cache::write

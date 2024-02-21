@@ -39,7 +39,7 @@
 #include <boost/filesystem/convenience.hpp>  // filesystem::basename
 #include <boost/thread/thread.hpp>           // hardware_concurrency // FIXME rm ?
 #include <boost/algorithm/string.hpp>
-//#include <openbabel/mol.h>
+// #include <openbabel/mol.h>
 #include "parse_pdbqt.h"
 #include "parallel_mc.h"
 #include "file.h"
@@ -55,6 +55,7 @@
 #include "scoring_function.h"
 #include "precalculate.h"
 #include "bias.h"
+#include <memory>
 
 #ifdef DEBUG
 #    define DEBUG_PRINTF printf
@@ -76,7 +77,6 @@ public:
         m_no_refine = no_refine;
         m_progress_callback = progress_callback;
         gpu = false;
-
         // Look for the number of cpu
         if (cpu <= 0) {
             unsigned num_cpus = boost::thread::hardware_concurrency();
@@ -396,7 +396,7 @@ public:
     // scoring function
     scoring_function_choice m_sf_choice;
     flv m_weights;
-    ScoringFunction m_scoring_function;
+    std::shared_ptr<ScoringFunction> m_scoring_function;
     precalculate_byatom m_precalculated_byatom;
     precalculate m_precalculated_sf;
     // gpu scoring function precalculated

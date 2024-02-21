@@ -191,9 +191,7 @@ Thank you!\n";
         }
 
         if (vm.count("input") <= 0) {
-            std::cerr << "Missing input.\n"
-                      << "\nCorrect usage:\n"
-                      << desc << '\n';
+            std::cerr << "Missing input.\n" << "\nCorrect usage:\n" << desc << '\n';
             return 1;
         }
         if (vm.count("ligand") <= 0) {
