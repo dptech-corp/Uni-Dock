@@ -17,11 +17,11 @@ check_language(CUDA)
 if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
 # https://en.wikipedia.org/wiki/CUDA#GPUs_supported
 	set(CMAKE_CUDA_ARCHITECTURES
-		60 # P100
 		70 # V100
-		# 75 # T4
-		80 # A100
-		# 89 # RTX 40
+		# 75 # RTX 20, T4
+		80 # A100, A800
+		86 # RTX 30
+		89 # RTX 40, L40
 		90 # H100
 	)
 endif()
