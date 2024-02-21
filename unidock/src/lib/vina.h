@@ -150,7 +150,7 @@ public:
                            const double min_rmsd = 1.0, const int max_evals = 0,
                            const int max_step = 0, int num_of_ligands = 1,
                            unsigned long long seed = 181129, const int refine_step = 5,
-                           const bool local_only = false);
+                           const bool local_only = false,const bool create_new_stream = false);
     template <typename Config>
     void global_search_gpu(const int exhaustiveness = 8, const int n_poses = 20,
                            const double min_rmsd = 1.0, const int max_evals = 0,

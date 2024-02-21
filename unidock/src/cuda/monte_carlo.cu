@@ -20,6 +20,8 @@
 
 */
 
+
+
 #include "common.cuh"
 #include "curand_kernel.h"
 #include "kernel.h"
@@ -38,6 +40,10 @@
 #include "quasi_newton.h"
 #include <cooperative_groups.h>
 #include <cooperative_groups/reduce.h>
+
+#undef DEBUG_PRINTF
+#define DEBUG
+#define DEBUG_PRINTF(...)
 
 namespace cg = cooperative_groups;
 

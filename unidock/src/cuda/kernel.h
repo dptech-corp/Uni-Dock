@@ -74,7 +74,7 @@ static constexpr size_t MAX_HESSIAN_MATRIX_D_SIZE_  =
 static constexpr size_t MAX_NUM_OF_LIG_PAIRS_ =4096;
 static constexpr size_t MAX_NUM_OF_BFGS_STEPS_ =64;
 static constexpr size_t MAX_NUM_OF_RANDOM_MAP_= 1000  ;// not too large (stack overflow!)
-static constexpr size_t GRIDS_SIZE_ =34   ;            // larger than vina1.1, max(XS_TYPE_SIZE, AD_TYPE_SIZE + 2)
+static constexpr size_t GRIDS_SIZE_ =37   ;            // larger than vina1.1, max(XS_TYPE_SIZE, AD_TYPE_SIZE + 2)
 
 static constexpr size_t MAX_NUM_OF_GRID_MI_ =128;  // 55
 static constexpr size_t MAX_NUM_OF_GRID_MJ_= 128;  // 55
@@ -110,7 +110,7 @@ static constexpr size_t MAX_HESSIAN_MATRIX_D_SIZE_  =
 static constexpr size_t MAX_NUM_OF_LIG_PAIRS_ =300;
 static constexpr size_t MAX_NUM_OF_BFGS_STEPS_ =64;
 static constexpr size_t MAX_NUM_OF_RANDOM_MAP_= 1000  ;// not too large (stack overflow!)
-static constexpr size_t GRIDS_SIZE_ =34   ;            // larger than vina1.1, max(XS_TYPE_SIZE, AD_TYPE_SIZE + 2)
+static constexpr size_t GRIDS_SIZE_ =37   ;            // larger than vina1.1, max(XS_TYPE_SIZE, AD_TYPE_SIZE + 2)
 
 static constexpr size_t MAX_NUM_OF_GRID_MI_ =128;  // 55
 static constexpr size_t MAX_NUM_OF_GRID_MJ_= 128;  // 55
@@ -146,7 +146,7 @@ static constexpr size_t MAX_HESSIAN_MATRIX_D_SIZE_  =
 static constexpr size_t MAX_NUM_OF_LIG_PAIRS_ =330;
 static constexpr size_t MAX_NUM_OF_BFGS_STEPS_ =64;
 static constexpr size_t MAX_NUM_OF_RANDOM_MAP_= 1000  ;// not too large (stack overflow!)
-static constexpr size_t GRIDS_SIZE_ =34   ;            // larger than vina1.1, max(XS_TYPE_SIZE, AD_TYPE_SIZE + 2)
+static constexpr size_t GRIDS_SIZE_ =37   ;            // larger than vina1.1, max(XS_TYPE_SIZE, AD_TYPE_SIZE + 2)
 
 static constexpr size_t MAX_NUM_OF_GRID_MI_ =128;  // 55
 static constexpr size_t MAX_NUM_OF_GRID_MJ_= 128;  // 55
@@ -182,7 +182,7 @@ static constexpr size_t MAX_HESSIAN_MATRIX_D_SIZE_  =
 static constexpr size_t MAX_NUM_OF_LIG_PAIRS_ =512;
 static constexpr size_t MAX_NUM_OF_BFGS_STEPS_ =64;
 static constexpr size_t MAX_NUM_OF_RANDOM_MAP_= 1000  ;// not too large (stack overflow!)
-static constexpr size_t GRIDS_SIZE_ =34   ;            // larger than vina1.1, max(XS_TYPE_SIZE, AD_TYPE_SIZE + 2)
+static constexpr size_t GRIDS_SIZE_ =37   ;            // larger than vina1.1, max(XS_TYPE_SIZE, AD_TYPE_SIZE + 2)
 
 static constexpr size_t MAX_NUM_OF_GRID_MI_ =128;  // 55
 static constexpr size_t MAX_NUM_OF_GRID_MJ_= 128;  // 55
@@ -218,7 +218,7 @@ static constexpr size_t MAX_HESSIAN_MATRIX_D_SIZE_  =
 static constexpr size_t MAX_NUM_OF_LIG_PAIRS_ =1024;
 static constexpr size_t MAX_NUM_OF_BFGS_STEPS_ =64;
 static constexpr size_t MAX_NUM_OF_RANDOM_MAP_= 1000  ;// not too large (stack overflow!)
-static constexpr size_t GRIDS_SIZE_ =34   ;            // larger than vina1.1, max(XS_TYPE_SIZE, AD_TYPE_SIZE + 2)
+static constexpr size_t GRIDS_SIZE_ =37   ;            // larger than vina1.1, max(XS_TYPE_SIZE, AD_TYPE_SIZE + 2)
 
 static constexpr size_t MAX_NUM_OF_GRID_MI_ =128;  // 55
 static constexpr size_t MAX_NUM_OF_GRID_MJ_= 128;  // 55
