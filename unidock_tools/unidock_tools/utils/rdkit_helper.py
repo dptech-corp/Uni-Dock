@@ -19,12 +19,12 @@ def clear_properties(mol: Chem.Mol) -> Chem.Mol:
         mol.ClearProp(prop)
     return mol
 
-def set_properties(mol: Chem.rdchem.Mol, properties: dict):
+def set_properties(mol: Chem.Mol, properties: dict):
     """
     Set properties to a molecule.
 
     Args:
-        mol (Chem.rdchem.Mol): The molecule.
+        mol (Chem.Mol): The molecule.
         properties (dict): A dictionary of properties.
 
     Returns:
@@ -42,7 +42,7 @@ def set_properties(mol: Chem.rdchem.Mol, properties: dict):
             logging.warning(f"set property {key} err: {traceback.format_exc()}")
 
 
-def sdf_writer(mols: List[Chem.rdchem.Mol],
+def sdf_writer(mols: List[Chem.Mol],
                output_file: Union[str, os.PathLike]):
     with Chem.SDWriter(str(output_file)) as writer:
         for mol in mols:

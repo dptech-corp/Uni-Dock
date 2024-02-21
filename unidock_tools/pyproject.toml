@@ -25,6 +25,9 @@ classifiers = [
 #    "networkx",
 #]
 
+[tool.setuptools.packages.find]
+exclude = ["containers"]
+
 [tool.setuptools.package-data]
 "*" = ["*.dat"]
 
@@ -37,3 +40,17 @@ unidocktools = "unidock_tools.main:main_cli"
 
 #[project.entry-points."unidocktools"]
 #unidocktools = "unidock_tools.main:main_cli"
+
+[tool.pyright]
+include = ["unidock_tools"]
+exclude = ["**/node_modules",
+    "**/__pycache__",
+    "unidock_tools/data"
+]
+pythonVersion = "3.11"
+pythonPlatform = "Linux"
+reportMissingImports = false
+reportMissingModuleSource = false
+reportMissingTypeStubs = false
+reportAttributeAccessIssue = false
+reportIncompatibleMethodOverride = false

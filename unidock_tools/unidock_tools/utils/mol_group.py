@@ -1,4 +1,4 @@
-from typing import List, Any, Optional, Union
+from typing import List, Generator, Any, Optional, Union
 from pathlib import Path
 import os
 import copy
@@ -26,7 +26,7 @@ class Mol:
     def get_mol_confs(self) -> List[Chem.Mol]:
         return self.mol_confs
 
-    def get_first_mol(self) -> Chem.rdchem.Mol:
+    def get_first_mol(self) -> Chem.Mol:
         return self.mol_confs[0]
 
     def update_mol_confs(self, mol_confs: List[Chem.Mol]):
@@ -45,7 +45,7 @@ class MolGroup:
         for mol in self.mol_group:
             yield mol
 
-    def iter_idx_list(self, batch_size: int) -> List[int]:
+    def iter_idx_list(self, batch_size: int) -> Generator[List[int], None, None]:
         real_batch_size = math.ceil(len(self.mol_group) / math.ceil(len(self.mol_group) / batch_size))
         batch_id_list = [list(range(i, min(len(self.mol_group), i + real_batch_size))) for i in range(0, len(self.mol_group), real_batch_size)]
         for sub_id_list in batch_id_list:
@@ -69,13 +69,15 @@ class MolGroup:
 
     def update_mol_confs_by_file_prefix(self, file_prefix: str, mol_confs_list: List[Chem.Mol]):
         file_prefix_dict = {mol.get_prop("file_prefix", ""): idx for idx, mol in enumerate(self.mol_group)}
-        if not file_prefix_dict.get(file_prefix):
+        logging.debug(file_prefix_dict)
+        if file_prefix not in file_prefix_dict:
             logging.error(f"Cannot find {file_prefix} in MoleculeGroup")
             return
         self.update_mol_confs(file_prefix_dict[file_prefix], mol_confs_list)
 
     def update_property_by_file_prefix(self, file_prefix: str, property_name: str, value: Any):
         file_prefix_dict = {mol.get_prop("file_prefix", ""): idx for idx, mol in enumerate(self.mol_group)}
+        logging.debug(file_prefix_dict)
         if file_prefix not in file_prefix_dict:
             logging.error(f"Cannot find {file_prefix} in MoleculeGroup")
             return

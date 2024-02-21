@@ -1,5 +1,5 @@
+from typing import List, Tuple, Union, Iterator
 import copy
-from typing import List, Tuple, Union
 from pathlib import Path
 import os
 import time
@@ -74,7 +74,7 @@ class UniDock(Base):
         if not shutil.which("unidock"):
             raise ModuleNotFoundError("To run Uni-Dock, you need to install Uni-Dock")
 
-    def _build_topology(self, id_mol_tup: Tuple[int, Chem.rdchem.Mol]):
+    def _build_topology(self, id_mol_tup: Tuple[int, Chem.Mol]):
         """
         Build topology for a molecule.
         :param id_mol_tup:
@@ -105,7 +105,7 @@ class UniDock(Base):
             yield input_list, input_dir
 
     @time_logger
-    def postprocessing(self, ligand_scores_list: List[Tuple[Path, List[float]]],
+    def postprocessing(self, ligand_scores_list: zip,
                        topn_conf: int = 10,
                        score_name: str = "score"):
         mol_score_dict = dict()
@@ -117,6 +117,8 @@ class UniDock(Base):
         for fprefix in mol_score_dict:
             mol_score_list = mol_score_dict[fprefix]
             mol_score_list.sort(key=lambda x: x[1], reverse=False)
+            logging.debug(fprefix)
+            logging.debug(mol_score_list)
             self.mol_group.update_mol_confs_by_file_prefix(fprefix,
                                                            [copy.copy(mol) for mol, _ in
                                                             mol_score_list[:topn_conf]])

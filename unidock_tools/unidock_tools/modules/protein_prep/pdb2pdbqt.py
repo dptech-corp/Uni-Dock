@@ -6,7 +6,7 @@ from rdkit.Chem import AllChem
 from rdkit.Chem.rdchem import BondType
 
 
-def get_pdbqt_atom_lines(mol: Chem.rdchem.Mol, donors: List[int], acceptors: List[int]):
+def get_pdbqt_atom_lines(mol: Chem.Mol, donors: List[int], acceptors: List[int]):
     atom_lines = [line.replace('HETATM', 'ATOM  ')
                   for line in Chem.MolToPDBBlock(mol).split('\n')
                   if line.startswith('HETATM') or line.startswith('ATOM')]
@@ -56,7 +56,7 @@ def get_pdbqt_atom_lines(mol: Chem.rdchem.Mol, donors: List[int], acceptors: Lis
     return pdbqt_lines
 
 
-def receptor_mol_to_pdbqt_str(mol: Chem.rdchem.Mol):
+def receptor_mol_to_pdbqt_str(mol: Chem.Mol):
     # make a copy of molecule
     mol = Chem.Mol(mol)
 

@@ -15,7 +15,7 @@ def main_cli():
     subparsers = parser.add_subparsers(dest="cmd", help="Uni-Dock-related applications")
     name_module_dict = dict()
 
-    app_files = glob.glob(os.path.join(application.__path__[0], "*.py"))
+    app_files = glob.glob(os.path.join(next(p for p in application.__path__), "*.py"))
     for app_file in app_files:
         app_name = str(Path(app_file).stem)
         if app_name in ["__init__", "base"]:

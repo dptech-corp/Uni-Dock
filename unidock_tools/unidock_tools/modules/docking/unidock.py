@@ -3,7 +3,6 @@ from pathlib import Path
 import logging
 import os
 import shutil
-import glob
 import subprocess
 import math
 
@@ -12,7 +11,7 @@ from unidock_tools.utils import randstr, make_tmp_dir, time_logger
 
 class UniDockRunner:
     def __init__(self,
-                 receptor: Union[str, os.PathLike],
+                 receptor: Union[str, Path, os.PathLike],
                  ligands: List[Path],
                  center_x: float,
                  center_y: float,
@@ -26,6 +25,7 @@ class UniDockRunner:
                  search_mode: str = "",
                  exhaustiveness: int = 256,
                  max_step: int = 10,
+                 energy_range: float = 3.0,
                  refine_step: int = 5,
                  score_only: bool = False,
                  local_only: bool = False
@@ -39,7 +39,7 @@ class UniDockRunner:
         cmd = ["unidock"]
         if scoring.lower() == "ad4":
             map_prefix = self.gen_ad4_map(
-                receptor, ligands,
+                Path(receptor), ligands,
                 center_x, center_y, center_z,
                 size_x, size_y, size_z,
             )
@@ -73,6 +73,7 @@ class UniDockRunner:
             "--size_z", str(size_z),
             "--scoring", scoring,
             "--num_modes", str(num_modes),
+            "--energy_range", str(energy_range),
             "--refine_step", str(refine_step),
             "--verbosity", "2",
             "--keep_nonpolar_H",
@@ -155,7 +156,7 @@ class UniDockRunner:
                             tag = True
                         elif tag and (line.startswith(">  <") or line.startswith("$$$$")):
                             tag = False
-                        if tag:
+                        elif tag:
                             atom_types.add(line[13:].strip())
         atom_types = list(atom_types)
         logging.info(f"atom_types: {atom_types}")
@@ -231,6 +232,7 @@ def run_unidock(
         search_mode: str = "",
         exhaustiveness: int = 256,
         max_step: int = 10,
+        energy_range: float = 3.0,
         refine_step: int = 5,
         score_only: bool = False,
         local_only: bool = False,
@@ -242,7 +244,8 @@ def run_unidock(
         output_dir=output_dir,
         scoring=scoring, num_modes=num_modes,
         search_mode=search_mode,
-        exhaustiveness=exhaustiveness, max_step=max_step, refine_step=refine_step,
+        exhaustiveness=exhaustiveness, max_step=max_step,
+        energy_range=energy_range, refine_step=refine_step,
         score_only=score_only, local_only=local_only,
     )
     result_ligands = runner.run()

@@ -18,8 +18,7 @@ def make_tmp_dir(
     name = prefix
     if date:
         now = datetime.datetime.now()
-        date = now.strftime('%Y%m%d%H%M%S')
-        name += f"_{date}"
+        name += f"_{now.strftime('%Y%m%d%H%M%S')}"
     if random_id:
         name += f"_{randstr(8)}"
     os.makedirs(name, exist_ok=True)

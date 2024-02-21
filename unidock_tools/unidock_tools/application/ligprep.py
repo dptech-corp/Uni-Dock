@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List, Tuple, Generator
 from pathlib import Path
 import os
 from functools import partial
@@ -11,7 +11,7 @@ from unidock_tools.modules.ligand_prep import TopologyBuilder
 
 
 def iter_ligands(ligands: List[Path], batch_size: int = 1200,
-                 use_file_name: bool = False) -> List[Tuple[Chem.Mol, str]]:
+                 use_file_name: bool = False) -> Generator[List[Tuple[Chem.Mol, str]], None, None]:
     curr_mol_name_list = []
     for ligand in ligands:
         mols = list(Chem.SDMolSupplier(str(ligand), removeHs=False))
@@ -34,6 +34,7 @@ def ligprep(mol_name_tup: Tuple[Chem.Mol, str], savedir: Path):
     tb = TopologyBuilder(mol)
     tb.build_molecular_graph()
     tb.write_sdf_file(os.path.join(savedir, f"{name}.sdf"))
+
 
 def main(args: dict):
     ligands = []

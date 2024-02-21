@@ -32,7 +32,7 @@ ATOM_TYPE_DEFINITION_LIST = [{'smarts': '[#1]', 'atype': 'H', 'comment': 'invisi
                              {'smarts': '[SX2]', 'atype': 'SA', 'comment': 'sulfur acceptor'}]
 
 
-def assign_atom_properties(mol: Chem.rdchem.Mol):
+def assign_atom_properties(mol: Chem.Mol):
     atom_positions = mol.GetConformer().GetPositions()
     num_atoms = mol.GetNumAtoms()
 
@@ -59,7 +59,7 @@ class AtomType:
     def __init__(self):
         self.atom_type_definition_list = ATOM_TYPE_DEFINITION_LIST
 
-    def assign_atom_types(self, mol: Chem.rdchem.Mol):
+    def assign_atom_types(self, mol: Chem.Mol):
         for atom_type_dict in self.atom_type_definition_list:
             smarts = atom_type_dict['smarts']
             atom_type = atom_type_dict['atype']
@@ -70,7 +70,7 @@ class AtomType:
                 atom = mol.GetAtomWithIdx(pattern_match[0])
                 atom.SetProp('atom_type', atom_type)
 
-    def get_docking_atom_types(self, mol: Chem.rdchem.Mol) -> Dict[int, str]:
+    def get_docking_atom_types(self, mol: Chem.Mol) -> Dict[int, str]:
         atom_ind_type_map = dict()
         for atom_type_dict in self.atom_type_definition_list:
             smarts = atom_type_dict["smarts"]
@@ -102,7 +102,7 @@ class RotatableBond:
         self.double_bond_penalty = double_bond_penalty
         self.max_breaks = max_breaks
 
-    def identify_rotatable_bonds(self, mol: Chem.rdchem.Mol):
+    def identify_rotatable_bonds(self, mol: Chem.Mol):
         default_rotatable_bond_info_list = list(mol.GetSubstructMatches(self.rotatable_bond_pattern))
         amide_rotatable_bond_info_list = list(mol.GetSubstructMatches(self.amide_bond_pattern))
 
@@ -117,7 +117,7 @@ class RotatableBond:
 
 
 class TopologyBuilder:
-    def __init__(self, mol: Chem.rdchem.Mol):
+    def __init__(self, mol: Chem.Mol):
         self.mol = mol
 
         self.atom_typer = AtomType()
@@ -148,13 +148,12 @@ class TopologyBuilder:
         num_fragments = len(splitted_mol_list)
 
         # 1. Find fragment as the root node
-        num_fragment_atoms_list = [None] * num_fragments
+        num_fragment_atoms_list = [0] * num_fragments
         for fragment_idx in range(num_fragments):
             fragment = splitted_mol_list[fragment_idx]
             num_atoms = fragment.GetNumAtoms()
             num_fragment_atoms_list[fragment_idx] = num_atoms
 
-        root_fragment_idx = None
         root_fragment_idx = np.argmax(num_fragment_atoms_list)
 
         # 2. Build torsion tree
@@ -165,7 +164,6 @@ class TopologyBuilder:
         root_fragment = splitted_mol_list[root_fragment_idx]
         num_root_atoms = root_fragment.GetNumAtoms()
         atom_info_list = [None] * num_root_atoms
-
         for root_atom_idx in range(num_root_atoms):
             root_atom = root_fragment.GetAtomWithIdx(root_atom_idx)
             atom_info_dict = {}
@@ -463,7 +461,7 @@ class TopologyBuilder:
                 writer.write(self.mol)
 
 
-def generate_topology(mol: Chem.rdchem.Mol, out_file: str = ''):
+def generate_topology(mol: Chem.Mol, out_file: str = ''):
     topology_builder = TopologyBuilder(mol)
     topology_builder.build_molecular_graph()
     topology_builder.write_pdbqt_file(out_file=out_file)

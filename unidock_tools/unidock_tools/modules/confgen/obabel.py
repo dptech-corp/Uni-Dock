@@ -18,10 +18,10 @@ class OBabelConfGenerator(ConfGeneratorBase):
         return shutil.which("obabel") is not None
 
     def generate_conformation(self,
-                              mol: Chem.rdchem.Mol,
+                              mol: Chem.Mol,
                               name: str = "",
                               max_num_confs_per_ligand: int = 1000,
-                              *args, **kwargs) -> List[Chem.rdchem.Mol]:
+                              *args, **kwargs) -> List[Chem.Mol]:
         workdir = make_tmp_dir("obabel")
         if not name:
             if mol.HasProp("_Name"):
@@ -60,5 +60,8 @@ class OBabelConfGenerator(ConfGeneratorBase):
         mol_list = [mol for mol in Chem.SDMolSupplier(f"{workdir}/{name}.sdf",
                                                       removeHs=False) if mol is not None]
         logging.info(f"OBabel generated {len(mol_list)} conformers")
+        if len(mol_list) > max_num_confs_per_ligand:
+            mol_list = mol_list[:max_num_confs_per_ligand]
+
         shutil.rmtree(workdir, ignore_errors=True)
         return mol_list
