@@ -319,15 +319,10 @@ void template_batch_docking(Vina &v,std::vector<named_model> &all_ligands,std::v
                                 
         
         
-        auto start1 = std::chrono::system_clock::now();
         v1.write_poses_gpu(gpu_out_name, num_modes, energy_range);
         auto end = std::chrono::system_clock::now();
         std::cout << "Batch " << batch_id << " running time: "
                     << std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
-                            .count()
-                    << "ms" << std::endl;
-        std::cout << "Batch " << batch_id << " write_poses running time: "
-                    << std::chrono::duration_cast<std::chrono::milliseconds>(end - start1)
                             .count()
                     << "ms" << std::endl;
     }
