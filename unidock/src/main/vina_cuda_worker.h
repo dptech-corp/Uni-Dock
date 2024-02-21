@@ -185,6 +185,14 @@ public:
             default_output(get_filename(ligand_name), out_dir));
         write_poses_gpu(gpu_out_name, num_modes, energy_range);
 
+        // write best score
+        if (!m_poses_gpu.empty())
+        {
+            std::string score_file_name = default_score_output(get_filename(ligand_name));
+            ofile f(make_path(out_dir + '/' + score_file_name));
+            f << "affinity(kcal/mol)[0]=" << m_poses_gpu[0][0].e << "\n";
+        }
+
         return 0;
     }
 
