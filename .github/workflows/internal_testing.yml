@@ -21,7 +21,7 @@ jobs:
         password: ${{ secrets.DPLC_PASSWORD }}
     
     - name: build and push
-      uses: docker/build-push-action@v2
+      uses: docker/build-push-action@v5
       with:
         context: .
         file: ./container/internal_testing.dockerfile
