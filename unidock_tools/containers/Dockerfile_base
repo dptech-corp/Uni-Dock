@@ -14,14 +14,9 @@ RUN wget -O /tmp/conda.sh \
     && rm /tmp/conda.sh
 ENV PATH /opt/conda/bin:$PATH
 
-RUN mamba install -y cmake boost -c conda-forge
-
-RUN git clone https://github.com/molinfo-vienna/CDPKit.git /tmp/CDPKit && \
-  cd /tmp/CDPKit && mkdir build && cd build \
-  && cmake .. -DCMAKE_INSTALL_PREFIX=/opt/CDPKit \
-  && make -j4 && make install \
-  && rm -rf /tmp/CDPKit
-ENV PATH=/opt/CDPKit/Bin:$PATH
+RUN wget -O CDPKit.sh https://github.com/molinfo-vienna/CDPKit/releases/download/v1.1.0/CDPKit-1.1.0-Linux-x86_64.sh  && \
+    echo y | bash CDPKit.sh --cpack_skip_license --include-subdir && \
+    rm CDPKit.sh
 
 WORKDIR /opt
 RUN mamba install -y ipython rdkit openbabel networkx numpy pandas -c conda-forge
