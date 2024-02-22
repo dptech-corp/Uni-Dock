@@ -6,32 +6,25 @@ SHELL ["/bin/bash", "-c"]
 ENV DEBIAN_FRONTEND noninteractive
 
 RUN apt-get clean && apt-get update \
-    && apt-get install -y build-essential zip unzip vim git wget \
-    && rm -rf /var/lib/apt/lists/*
+    && apt-get install -y build-essential zip unzip vim git wget
 
 RUN wget -O /tmp/conda.sh \
-    https://mirrors.tuna.tsinghua.edu.cn/github-release/conda-forge/miniforge/LatestRelease/Miniforge3-23.11.0-0-Linux-$(uname -m).sh \
+    https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh \
     && bash /tmp/conda.sh -b -p /opt/conda \
     && rm /tmp/conda.sh
 ENV PATH /opt/conda/bin:$PATH
 
 RUN mamba install -y cmake boost -c conda-forge
 
-RUN mkdir /root/.ssh
-RUN --mount=type=secret,id=rsa,target=/root/.ssh/id_rsa \
-  ssh-keyscan github.com >> /root/.ssh/known_hosts \
-  && git clone git@github.com:molinfo-vienna/CDPKit.git /tmp/CDPKit
-
-WORKDIR /tmp
-RUN cd /tmp/CDPKit && mkdir build && cd build \
+RUN git clone https://github.com/molinfo-vienna/CDPKit.git /tmp/CDPKit && \
+  cd /tmp/CDPKit && mkdir build && cd build \
   && cmake .. -DCMAKE_INSTALL_PREFIX=/opt/CDPKit \
-  && make -j4 && make install
-RUN rm -rf /tmp/CDPKit
+  && make -j4 && make install \
+  && rm -rf /tmp/CDPKit
 ENV PATH=/opt/CDPKit/Bin:$PATH
-WORKDIR /opt
 
+WORKDIR /opt
 RUN mamba install -y ipython rdkit openbabel networkx numpy pandas -c conda-forge
 RUN mamba create -y -n mgltools mgltools autogrid -c bioconda
 ENV PATH $PATH:/opt/conda/envs/mgltools/bin
 RUN pip install tqdm
-RUN rm -rf /opt/conda/pkgs/*
