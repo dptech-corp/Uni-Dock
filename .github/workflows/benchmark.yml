@@ -1,0 +1,27 @@
+name: Uni-Dock Benchmark
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Docker image used"
+        required: false
+        default: "latest"
+jobs:
+  unidock_benchmark:
+    runs-on: nvidia
+    container:
+      image: dptechnology/unidock:${{ github.event.inputs.tag }}
+      options: --gpus all
+    steps:
+      - name: Checkout test suites
+        uses: actions/checkout@v4
+        with:
+          repository: dptech-corp/Uni-Dock-Benchmarks
+      - name: Setup Python
+        uses: actions/setup-python@v5
+      - name: Install requirements
+        run:  pip install -r requirements.txt
+      - name: Run benchmarks
+        run: |
+          python test_molecular_docking.py
+          python test_virtual_screening.py
