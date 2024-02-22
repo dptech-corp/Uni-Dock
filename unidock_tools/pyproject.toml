@@ -25,9 +25,6 @@ classifiers = [
 #    "networkx",
 #]
 
-[tool.setuptools.packages.find]
-exclude = ["containers"]
-
 [tool.setuptools.package-data]
 "*" = ["*.dat"]
 

@@ -17,4 +17,4 @@ RUN cd /opt/unidock && \
 
 # Build this Docker image:
 # cd Uni-Dock-Dev/unidock && \
-# docker build . -f containers/Dockerfile -t unidock --build-arg CUDA_VERSION=12.2.0
+# docker build . -f Dockerfile -t unidock --build-arg CUDA_VERSION=12.2.0

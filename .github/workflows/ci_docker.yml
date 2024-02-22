@@ -32,7 +32,7 @@ jobs:
       with:
         platforms: linux/amd64
         tags: dptechnology/unidock:${{ steps.short-sha.outputs.sha }},dptechnology/unidock:latest
-        file: containers/Dockerfile
+        file: Dockerfile
         context: "{{defaultContext}}:unidock"
         push: true
 
@@ -64,5 +64,5 @@ jobs:
       with:
         platforms: linux/amd64
         tags: dptechnology/unidock_tools:${{ steps.short-sha.outputs.sha }},dptechnology/unidock_tools:latest
-        file: unidock_tools/containers/Dockerfile
+        file: unidock_tools/Dockerfile
         push: true
