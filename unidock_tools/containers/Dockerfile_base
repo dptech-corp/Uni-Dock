@@ -1,4 +1,4 @@
-ARG CUDA_VERSION
+ARG CUDA_VERSION=12.0.0
 FROM nvidia/cuda:${CUDA_VERSION}-devel-ubuntu22.04
 
 SHELL ["/bin/bash", "-c"]
@@ -8,10 +8,10 @@ ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get clean && apt-get update \
     && apt-get install -y build-essential zip unzip vim git wget
 
-RUN wget -O /tmp/conda.sh \
+RUN wget -O conda.sh \
     https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh \
-    && bash /tmp/conda.sh -b -p /opt/conda \
-    && rm /tmp/conda.sh
+    && bash conda.sh -b -p /opt/conda \
+    && rm conda.sh
 ENV PATH /opt/conda/bin:$PATH
 
 RUN wget -O CDPKit.sh https://github.com/molinfo-vienna/CDPKit/releases/download/v1.1.0/CDPKit-1.1.0-Linux-x86_64.sh  && \
