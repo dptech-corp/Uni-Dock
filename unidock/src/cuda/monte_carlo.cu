@@ -2857,12 +2857,9 @@ __host__ void monte_carlo_template::do_docking_base<Config>(std::vector<model> &
     for (int l = 0; l < num_of_ligands; ++l) {
         // copy data to m_data on CPU, then to p_gpu[l]
         int pnum = p_gpu[l].m_data.m_data.size();
-        std::cout<<"before cudaMemcpy "<<std::endl;
         checkCUDA(cudaMemcpy(p_data, m_data_list_gpu[l].p_data, sizeof(p_m_data_cuda_t_<Config>) * pnum,
                              cudaMemcpyDeviceToHost));
-        std::cout<<"after cudaMemcpy "<<std::endl;
         checkCUDA(cudaFree(m_data_list_gpu[l].p_data));  // free m_cuda pointers in p_cuda
-        std::cout<<"after cudaFree "<<std::endl;
         for (int i = 0; i < pnum; ++i) {
             memcpy(&p_gpu[l].m_data.m_data[i].fast[0], p_data[i].fast, sizeof(p_data[i].fast));
             memcpy(&p_gpu[l].m_data.m_data[i].smooth[0], p_data[i].smooth,
