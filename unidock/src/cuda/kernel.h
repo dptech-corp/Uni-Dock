@@ -24,8 +24,8 @@ void check(T result, char const *const func, const char *const file, int const l
 // kernel2 macros
 #define MAX_NUM_OF_LIG_TORSION 16
 #define MAX_NUM_OF_FLEX_TORSION 1
-#define MAX_NUM_OF_RIGID 16
-#define MAX_NUM_OF_ATOMS 50
+#define MAX_NUM_OF_RIGID 24
+#define MAX_NUM_OF_ATOMS 80
 #define SIZE_OF_MOLEC_STRUC \
     ((3 + 4 + MAX_NUM_OF_LIG_TORSION + MAX_NUM_OF_FLEX_TORSION + 1) * sizeof(float))
 #define SIZE_OF_CHANGE_STRUC \
@@ -207,7 +207,7 @@ struct ExtraLargeConfig {
 static constexpr size_t MAX_NUM_OF_LIG_TORSION_ = 16;
 static constexpr size_t MAX_NUM_OF_FLEX_TORSION_ = 1;
 static constexpr size_t MAX_NUM_OF_RIGID_ = 24;
-static constexpr size_t MAX_NUM_OF_ATOMS_ = 60;
+static constexpr size_t MAX_NUM_OF_ATOMS_ = 80;
 static constexpr size_t SIZE_OF_MOLEC_STRUC_ =
 ((3 + 4 + MAX_NUM_OF_LIG_TORSION_ + MAX_NUM_OF_FLEX_TORSION_ + 1) * sizeof(float));
 static constexpr size_t SIZE_OF_CHANGE_STRUC_ =
