@@ -1,0 +1,49 @@
+name: Uni-Dock Benchmark
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Docker image used"
+        required: false
+        default: "latest"
+jobs:
+  unidock_benchmark:
+    runs-on: nvidia
+    container:
+      image: dptechnology/unidock:${{ github.event.inputs.tag }}
+      options: --gpus all
+    steps:
+      - name: Checkout test suites
+        uses: actions/checkout@v4
+        with:
+          repository: dptech-corp/Uni-Dock-Benchmarks
+      - name: Setup Python
+        uses: actions/setup-python@v5
+      - name: Install requirements
+        run: |
+          apt update && apt install -y wget unzip
+          pip install -r scripts/requirements.txt
+
+      - name: Run molecular docking benchmarks
+        run: |
+          python3 scripts/test_molecular_docking.py
+      - name: Upload docking results
+        uses: actions/upload-artifact@v4
+        with:
+          name: molecular_docking_results.csv
+          path: results/results.csv
+      - name: Upload docking metrics
+        uses: actions/upload-artifact@v4
+        with:
+          name: molecular_docking_metrics.csv
+          path: results/metrics.csv
+
+      - name: Run virtual screening benchmarks
+        run: |
+          rm -rf results
+          python3 scripts/test_virtual_screening.py
+      - name: Upload virtual screening results
+        uses: actions/upload-artifact@v4
+        with:
+          name: virtual_screening_results.csv
+          path: results/results.csv
