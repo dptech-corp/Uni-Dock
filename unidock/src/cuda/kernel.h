@@ -99,7 +99,7 @@ struct SmallConfig {
 static constexpr size_t MAX_NUM_OF_LIG_TORSION_ = 10;
 static constexpr size_t MAX_NUM_OF_FLEX_TORSION_ = 1;
 static constexpr size_t MAX_NUM_OF_RIGID_ = 8;
-static constexpr size_t MAX_NUM_OF_ATOMS_ = 50;
+static constexpr size_t MAX_NUM_OF_ATOMS_ = 80;
 static constexpr size_t SIZE_OF_MOLEC_STRUC_ =
 ((3 + 4 + MAX_NUM_OF_LIG_TORSION_ + MAX_NUM_OF_FLEX_TORSION_ + 1) * sizeof(float));
 static constexpr size_t SIZE_OF_CHANGE_STRUC_ =
@@ -135,7 +135,7 @@ struct MediumConfig {
 static constexpr size_t MAX_NUM_OF_LIG_TORSION_ = 12;
 static constexpr size_t MAX_NUM_OF_FLEX_TORSION_ = 1;
 static constexpr size_t MAX_NUM_OF_RIGID_ = 12;
-static constexpr size_t MAX_NUM_OF_ATOMS_ = 50;
+static constexpr size_t MAX_NUM_OF_ATOMS_ = 80;
 static constexpr size_t SIZE_OF_MOLEC_STRUC_ =
 ((3 + 4 + MAX_NUM_OF_LIG_TORSION_ + MAX_NUM_OF_FLEX_TORSION_ + 1) * sizeof(float));
 static constexpr size_t SIZE_OF_CHANGE_STRUC_ =
@@ -171,7 +171,7 @@ struct LargeConfig {
 static constexpr size_t MAX_NUM_OF_LIG_TORSION_ = 14;
 static constexpr size_t MAX_NUM_OF_FLEX_TORSION_ = 1;
 static constexpr size_t MAX_NUM_OF_RIGID_ = 14;
-static constexpr size_t MAX_NUM_OF_ATOMS_ = 50;
+static constexpr size_t MAX_NUM_OF_ATOMS_ = 80;
 static constexpr size_t SIZE_OF_MOLEC_STRUC_ =
 ((3 + 4 + MAX_NUM_OF_LIG_TORSION_ + MAX_NUM_OF_FLEX_TORSION_ + 1) * sizeof(float));
 static constexpr size_t SIZE_OF_CHANGE_STRUC_ =
@@ -207,7 +207,7 @@ struct ExtraLargeConfig {
 static constexpr size_t MAX_NUM_OF_LIG_TORSION_ = 16;
 static constexpr size_t MAX_NUM_OF_FLEX_TORSION_ = 1;
 static constexpr size_t MAX_NUM_OF_RIGID_ = 24;
-static constexpr size_t MAX_NUM_OF_ATOMS_ = 80;
+static constexpr size_t MAX_NUM_OF_ATOMS_ = 100;
 static constexpr size_t SIZE_OF_MOLEC_STRUC_ =
 ((3 + 4 + MAX_NUM_OF_LIG_TORSION_ + MAX_NUM_OF_FLEX_TORSION_ + 1) * sizeof(float));
 static constexpr size_t SIZE_OF_CHANGE_STRUC_ =
