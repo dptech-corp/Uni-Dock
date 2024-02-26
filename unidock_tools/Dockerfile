@@ -25,7 +25,7 @@ RUN mamba create -y -n mgltools mgltools autogrid -c bioconda
 ENV PATH $PATH:/opt/conda/envs/mgltools/bin
 RUN pip install tqdm
 
-COPY ./unidock_tools /opt/unidock_tools
+COPY . /opt/unidock_tools
 RUN cd /opt/unidock_tools && \
     pip install . && \
     rm -r /opt/unidock_tools
