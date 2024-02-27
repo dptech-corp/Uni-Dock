@@ -22,10 +22,10 @@ void check(T result, char const *const func, const char *const file, int const l
     MAX_M_DATA_MI *MAX_M_DATA_MJ *MAX_M_DATA_MK *MAX_NUM_OF_EVERY_M_DATA_ELEMENT
 
 // kernel2 macros
-#define MAX_NUM_OF_LIG_TORSION 16
+#define MAX_NUM_OF_LIG_TORSION 36
 #define MAX_NUM_OF_FLEX_TORSION 1
 #define MAX_NUM_OF_RIGID 24
-#define MAX_NUM_OF_ATOMS 80
+#define MAX_NUM_OF_ATOMS 120
 #define SIZE_OF_MOLEC_STRUC \
     ((3 + 4 + MAX_NUM_OF_LIG_TORSION + MAX_NUM_OF_FLEX_TORSION + 1) * sizeof(float))
 #define SIZE_OF_CHANGE_STRUC \
@@ -96,7 +96,7 @@ static constexpr size_t MAX_THREAD_ = 41700000 ; // modified for vina1.2, to cal
 static constexpr size_t MAX_LIGAND_NUM_  = 10250;
 };
 struct SmallConfig {
-static constexpr size_t MAX_NUM_OF_LIG_TORSION_ = 10;
+static constexpr size_t MAX_NUM_OF_LIG_TORSION_ = 14;
 static constexpr size_t MAX_NUM_OF_FLEX_TORSION_ = 1;
 static constexpr size_t MAX_NUM_OF_RIGID_ = 8;
 static constexpr size_t MAX_NUM_OF_ATOMS_ = 80;
@@ -132,7 +132,7 @@ static constexpr size_t MAX_THREAD_ = 41700000 ; // modified for vina1.2, to cal
 static constexpr size_t MAX_LIGAND_NUM_  = 10250;
 };
 struct MediumConfig {
-static constexpr size_t MAX_NUM_OF_LIG_TORSION_ = 12;
+static constexpr size_t MAX_NUM_OF_LIG_TORSION_ = 18;
 static constexpr size_t MAX_NUM_OF_FLEX_TORSION_ = 1;
 static constexpr size_t MAX_NUM_OF_RIGID_ = 12;
 static constexpr size_t MAX_NUM_OF_ATOMS_ = 100;
@@ -168,7 +168,7 @@ static constexpr size_t MAX_THREAD_ = 41700000 ; // modified for vina1.2, to cal
 static constexpr size_t MAX_LIGAND_NUM_  = 10250;
 };
 struct LargeConfig {
-static constexpr size_t MAX_NUM_OF_LIG_TORSION_ = 14;
+static constexpr size_t MAX_NUM_OF_LIG_TORSION_ = 24;
 static constexpr size_t MAX_NUM_OF_FLEX_TORSION_ = 1;
 static constexpr size_t MAX_NUM_OF_RIGID_ = 14;
 static constexpr size_t MAX_NUM_OF_ATOMS_ = 100;
@@ -204,7 +204,7 @@ static constexpr size_t MAX_THREAD_ = 41700000 ; // modified for vina1.2, to cal
 static constexpr size_t MAX_LIGAND_NUM_  = 10250;
 };
 struct ExtraLargeConfig {
-static constexpr size_t MAX_NUM_OF_LIG_TORSION_ = 16;
+static constexpr size_t MAX_NUM_OF_LIG_TORSION_ = 36;
 static constexpr size_t MAX_NUM_OF_FLEX_TORSION_ = 1;
 static constexpr size_t MAX_NUM_OF_RIGID_ = 24;
 static constexpr size_t MAX_NUM_OF_ATOMS_ = 120;
