@@ -8,7 +8,7 @@ import logging
 
 from unidock_tools.utils import time_logger, randstr
 from unidock_tools.modules.confgen import generate_conf
-from .unidock import UniDock
+from .unidock_pipeline import UniDock
 
 
 class MultiConfDock(UniDock):
