@@ -2,10 +2,11 @@
 
 Uni-Dock is a GPU-accelerated molecular docking program developed by DP Technology.
 It supports various scoring functions including vina, vinardo, and ad4.
-Uni-Dock achieves more than 1000-fold speed-up on V100 GPU with high-accuracy compared with the AutoDock Vina running in single CPU core.
+Uni-Dock achieves more than 2000-fold speed-up on V100 GPU with high-accuracy compared with the AutoDock Vina running in single CPU core.
 The [paper](https://pubs.acs.org/doi/10.1021/acs.jctc.2c01145) has been accepted by JCTC (doi: 10.1021/acs.jctc.2c01145).
 
-![Runtime performance of Uni-Dock on different GPUs in three modes](assets/gpu_speeds.png)
+![Runtime docking performance of Uni-Dock on different GPUs in three modes](assets/1.1_docking_box.png)
+![Runtime vs performance of Uni-Dock on different GPUs in three modes](assets/1.1_vs_bar.png)
 
 ## Installation
 

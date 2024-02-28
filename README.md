@@ -5,12 +5,13 @@
 [![DeepModeling](https://img.shields.io/badge/DeepModeling-Incubating_Project-blue)](https://github.com/deepmodeling)
 
 **Uni-Dock** is a GPU-accelerated molecular docking program developed by DP Technology.
-It supports various scoring functions including vina, vinardo, and ad4. Uni-Dock achieves more than 1000-fold speed-up on V100 GPU with high-accuracy compared with the AutoDock Vina running in single CPU core.
+It supports various scoring functions including vina, vinardo, and ad4. Uni-Dock achieves more than 2000-fold speed-up on V100 GPU with high-accuracy compared with the AutoDock Vina running in single CPU core.
 The [paper](https://pubs.acs.org/doi/10.1021/acs.jctc.2c01145) has been accepted by JCTC (doi: 10.1021/acs.jctc.2c01145).
 
 **Uni-Dock** joins the DeepModeling community, a community devoted of AI for science, as an incubating level project. [Learn more about DeepModeling](https://github.com/deepmodeling/community)
 
-![Runtime performance of Uni-Dock on different GPUs in three modes](./unidock/assets/gpu_speeds.png)
+![Runtime docking performance of Uni-Dock on different GPUs in three modes](./unidock/assets/1.1_docking_box.png)
+![Runtime vs performance of Uni-Dock on different GPUs in three modes](./unidock/assets/1.1_vs_bar.png)
 
 Please check [`unidock` folder](./unidock/) for installing instructions, source codes, and usage.
 
@@ -21,6 +22,7 @@ Please check [`unidock_tools` folder](./unidock_tools/) for installing instructi
 
 ## Changelog
 
+- 2024-02-29: Release [Uni-Dock v1.1](./unidock/README.md#changelog) and [Uni-Dock Tools](./unidock_tools/README.md).
 - 2023-08-21: Upload source codes of Uni-Dock.
 - 2023-08-14: Add Uni-Dock Tools to support SDF format input for vina and vinardo scoring functions.
 
