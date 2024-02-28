@@ -13,7 +13,7 @@ Main features are:
 
 ## Dependency
 
-- Uni-Dock
+- [Uni-Dock](../unidock/README.md#installation)
 - Python >= 3.6
 - RDKit
 - networkx

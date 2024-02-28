@@ -12,7 +12,7 @@ def input_ligand():
 
 def test_ligprep_app_ligand_file(input_ligand):
     results_dir = "prepared_ligands"
-    cmd = f"unidocktools ligprep -l {input_ligand} -sd {results_dir}"
+    cmd = f"unidocktools ligandprep -l {input_ligand} -sd {results_dir}"
     print(cmd)
     resp = subprocess.run(cmd, shell=True, capture_output=True, encoding="utf-8")
     print(resp.stdout)
@@ -25,7 +25,7 @@ def test_ligprep_app_ligand_index(input_ligand):
     with open(index_file, "w") as f:
         f.write(input_ligand)
     results_dir = "prepared_ligands"
-    cmd = f"unidocktools ligprep -i {index_file} -sd {results_dir}"
+    cmd = f"unidocktools ligandprep -i {index_file} -sd {results_dir}"
     print(cmd)
     resp = subprocess.run(cmd, shell=True, capture_output=True, encoding="utf-8")
     print(resp.stdout)

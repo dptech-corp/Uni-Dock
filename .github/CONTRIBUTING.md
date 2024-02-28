@@ -11,7 +11,7 @@ Even better, you can submit a Pull Request with a patch.
 ## Feature requests
 
 We highly appreciate your contributions, and would like to help you crafting the changes and making contributions to the community.
-If you would like to implement a new feature, please **submit a feature requesting issue with a proposal for your work first**. 
+If you would like to implement a new feature, please **submit a feature requesting issue with a proposal for your work first**.
 This help fitting your ideas and work with the development road map well, coordinating our efforts, and avoiding duplication of work.
 
 ## Submitting a Pull Request
@@ -35,7 +35,7 @@ This help fitting your ideas and work with the development road map well, coordi
     ```
 
 5. On GitHub, create a pull request (PR) from your bug-fix branch targeting `dptech-corp/Uni-Dock`.
- 
+
 6. After your pull request is merged, you can safely delete your branch and sync the changes from the main (upstream) repository:
 
 - Delete the remote branch on GitHub either [through the GitHub web UI](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-branches-in-your-repository/deleting-and-restoring-branches-in-a-pull-request#deleting-a-branch-used-for-a-pull-request) or your local shell as follows:

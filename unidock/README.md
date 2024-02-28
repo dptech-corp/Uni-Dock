@@ -7,20 +7,6 @@ The [paper](https://pubs.acs.org/doi/10.1021/acs.jctc.2c01145) has been accepted
 
 ![Runtime performance of Uni-Dock on different GPUs in three modes](assets/gpu_speeds.png)
 
-## Changelog
-
-- 2023-08-14: Add `unidock_tools` to support SDF format input for vina and vinardo scoring functions.
-
-## License
-
-This project is licensed under the terms of the GNU Lesser General Public License v3.0. See [LICENSE](./LICENSE) for details.
-
-Developed by [DP Technology](https://dp.tech/en), [Hermite®](https://dp.tech/en/product/hermite) is a new-generation drug computing design platform which integrates artificial intelligence, physical modeling and high-performance computing to provide a one-stop computing solution for preclinical drug research and development. It integrates the features of Uni-Dock, along with virtual screening workflow for an efficient drug discovery process.
-
-Uni-Dock is now available on the new-generation drug computing design platform [Hermite®](https://dp.tech/en/product/hermite) for ultralarge virtual screening.
-
-For further cooperations on developing Uni-Dock and trying out Hermite®, please contact us at <bd@dp.tech> .
-
 ## Installation
 
 Uni-Dock officially supports NVIDIA GPUs with [compute capability](https://en.wikipedia.org/wiki/CUDA#GPUs_supported) >= 7.0 on Linux platform.
@@ -57,7 +43,7 @@ The performance is not guaranteed on legacy GPU models. To build Uni-Dock with a
                            # Otherwise, prepend the building directory to your `PATH` environment variable.
      ```
 
-code foramt
+To format codes if changes are made:
 
 ```shell
 cd ./build/
@@ -195,9 +181,33 @@ python run_dock.py
 
 If you want to use search mode presets, specify the parameter `search_mode` in `config.json` and delete `nt` and `ns` in `config.json`.
 
-## Bug Report
+## Contributing
 
-Please report bugs to [Issues](https://github.com/dptech-corp/Uni-Dock/issues) page.
+We warmly welcome contributions from the open source community. Your bug reports, feature requests, and pull requests helps Uni-Dock improve.
+
+Please submit bug reports and feature requests to the Github [issue tracker](https://github.com/dptech-corp/Uni-Dock/issues/new/choose).
+
+If you would like to improve the codes, please refer to the [contributing guide](../.github/CONTRIBUTING.md) for details.
+
+## Changelog
+
+Major changes are documented. For the detailed changes, please refer to the commit history.
+
+### v1.1
+
+- Optimize 1:1 ligand docking.
+- Optimize Monte-Carlo simulation speed.
+- Generate compute kernels for various ligands sizes.
+
+## License
+
+This project is licensed under the terms of the GNU Lesser General Public License v3.0. See [LICENSE](./LICENSE) for details.
+
+Developed by [DP Technology](https://dp.tech/en), [Hermite®](https://dp.tech/en/product/hermite) is a new-generation drug computing design platform which integrates artificial intelligence, physical modeling and high-performance computing to provide a one-stop computing solution for preclinical drug research and development. It integrates the features of Uni-Dock, along with virtual screening workflow for an efficient drug discovery process.
+
+Uni-Dock is now available on the new-generation drug computing design platform [Hermite®](https://dp.tech/en/product/hermite) for ultralarge virtual screening.
+
+For further cooperations on developing Uni-Dock and trying out Hermite®, please contact us at <bd@dp.tech> .
 
 ## Ackowledgement
 
