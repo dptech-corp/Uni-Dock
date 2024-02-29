@@ -5,7 +5,7 @@ ARG CUDA_VERSION=12.0.0
 FROM nvidia/cuda:${CUDA_VERSION}-devel-ubuntu22.04
 
 RUN apt-get update && apt install -y cmake \
-    libboost-system-dev libboost-thread-dev libboost-serialization-dev libboost-filesystem-dev libboost-program-options-dev libboost-timer-dev
+    libboost-system-dev libboost-thread-dev libboost-serialization-dev libboost-filesystem-dev libboost-program-options-dev libboost-timer-dev git
 
 COPY . /opt/unidock
 

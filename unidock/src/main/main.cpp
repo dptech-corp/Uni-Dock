@@ -177,7 +177,7 @@ int predict_peak_memory(int batch_size, int exhaustiveness, int all_atom2_number
     // states
     gpu_memory
         += (int64_t)(1) * batch_size * exhaustiveness * 64;  // sizeof(curandStatePhilox4_32_10_t)
-
+        
     return gpu_memory / (1024 * 1024);
 }
 

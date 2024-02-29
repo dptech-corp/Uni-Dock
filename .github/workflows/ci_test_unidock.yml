@@ -20,7 +20,7 @@ jobs:
     - name: install basic packages
       run: |
         apt-get update
-        apt-get install -y build-essential cmake libboost-all-dev ninja-build
+        apt-get install -y build-essential cmake libboost-all-dev ninja-build git
 
     - if: ${{ env.ACT }}
       name: Hack container for local development
