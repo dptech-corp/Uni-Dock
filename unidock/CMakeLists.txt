@@ -1,94 +1,155 @@
 cmake_minimum_required(VERSION 3.16)
-project(
-	Uni-Dock
-	VERSION 1.1.0
-	DESCRIPTION "GPU-Accelerated Docking with 1000-fold speedup"
-	HOMEPAGE_URL "https://github.com/dptech-corp/Uni-Dock"
-	LANGUAGES CXX CUDA
-)
-set(CMAKE_CXX_STANDARD 14)
 
+project(
+  Uni-Dock
+  VERSION 1.1.0
+  DESCRIPTION "GPU-Accelerated Docking with 1000-fold speedup"
+  HOMEPAGE_URL "https://github.com/dptech-corp/Uni-Dock"
+  LANGUAGES CXX CUDA)
+set(VINA_BIN_NAME unidock)
+
+# Make sure the default is a release build
 if(NOT CMAKE_BUILD_TYPE)
-	set(CMAKE_BUILD_TYPE Release)
+  set(CMAKE_BUILD_TYPE Release)
 endif()
 
+# >>>>>> Language Configuration Begin
+set(CMAKE_CXX_STANDARD 14)
+
 set(CMAKE_CUDA_FLAGS_DEBUG "-g -G")
-Option(Boost_USE_STATIC_LIBS "Whether to use static libs for boost" OFF)
+option(Boost_USE_STATIC_LIBS "Whether to use static libs for boost" OFF)
 
 include(CheckLanguage)
 check_language(CUDA)
 
 if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
-	# https://en.wikipedia.org/wiki/CUDA#GPUs_supported
-	set(CMAKE_CUDA_ARCHITECTURES
-		70 # V100
+  # https://en.wikipedia.org/wiki/CUDA#GPUs_supported
+  set(CMAKE_CUDA_ARCHITECTURES
+    70 # V100
 
-		# 75 # RTX 20, T4
-		80 # A100, A800
+    # 75 # RTX 20, T4
+    80 # A100, A800
 
-		# 86 # RTX 30
-		# 89 # RTX 40, L40
-		90 # H100
-	)
+    # 86 # RTX 30 89 # RTX 40, L40
+    90 # H100
+  )
 endif()
 
-# Add fast math
+# Add fast math for release build
 option(BUILD_FAST_MATH "Build in fast math mode" ON)
 
 if(BUILD_FAST_MATH)
-	set(CMAKE_CUDA_FLAGS_RELEASE "${CMAKE_CUDA_FLAGS_RELEASE} --use_fast_math")
-	message("CMAKE_CUDA_FLAGS_RELEASE updated for fast_math: ${CMAKE_CUDA_FLAGS_RELEASE}")
+  set(CMAKE_CUDA_FLAGS_RELEASE "${CMAKE_CUDA_FLAGS_RELEASE} --use_fast_math")
+  message(
+    "CMAKE_CUDA_FLAGS_RELEASE updated for fast_math: ${CMAKE_CUDA_FLAGS_RELEASE}"
+  )
 endif()
 
-set(VINA_BIN_NAME unidock)
-add_compile_definitions(ENABLE_CUDA)
+# Add preprocessor definitions
+add_compile_definitions(ENABLE_CUDA) # ENABLE_CUDA is required
 add_compile_definitions(VERSION="v${PROJECT_VERSION}")
 
-find_package(OpenMP REQUIRED) # OpenMP only required in main.cpp
-find_package(Boost 1.72 REQUIRED
-	COMPONENTS system thread serialization filesystem program_options timer)
-Include(FetchContent)
+# >>>>>> Language Configuration End
+
+# >>>>>> Dependencies Begin
+
+# OpenMP only required in main.cpp
+find_package(OpenMP REQUIRED)
+find_package(Boost 1.72 REQUIRED COMPONENTS system thread serialization
+  filesystem program_options timer)
+
+# Fetch dependencies through FetchContent
+include(FetchContent)
 
 FetchContent_Declare(
-	Catch2
-	GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-	GIT_TAG v3.4.0 # or a later release
+  Catch2
+  GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+  GIT_TAG v3.4.0 # or a later release
 )
 
 FetchContent_MakeAvailable(Catch2)
-include_directories(${Boost_INCLUDE_DIRS})
-include_directories(src/lib src/cuda)
-add_executable(${VINA_BIN_NAME} src/main/main.cpp)
-add_executable(split src/split/split.cpp)
 
-target_link_libraries(${VINA_BIN_NAME} Boost::system Boost::thread Boost::serialization Boost::filesystem Boost::program_options Boost::timer)
-target_link_libraries(split Boost::system Boost::thread Boost::serialization Boost::filesystem Boost::program_options Boost::timer)
-target_link_libraries(${VINA_BIN_NAME} OpenMP::OpenMP_CXX)
+# >>>>>> Dependencies End
 
-# set(CMAKE_CURRENT_SOURCE_DIR ${CMAKE_SOURCE_DIR}/src/lib)
-add_library(lib OBJECT
-	src/lib/ad4cache.cpp src/lib/cache.cpp src/lib/non_cache.cpp src/lib/conf_independent.cpp src/lib/coords.cpp src/lib/grid.cpp src/lib/szv_grid.cpp src/lib/model.cpp src/lib/mutate.cpp src/lib/parallel_mc.cpp src/lib/parse_pdbqt.cpp src/lib/quasi_newton.cpp src/lib/quaternion.cpp src/lib/random.cpp src/lib/utils.cpp src/lib/vina.cpp src/lib/precalculate.h)
+# >>>>>> Libraries Definitions Begin
 
-# src/lib/monte_carlo
-# set(CMAKE_CURRENT_SOURCE_DIR ${CMAKE_SOURCE_DIR}/src/cuda)
-include_directories(${CMAKE_SOURCE_DIR}/unittest)
-file(GLOB_RECURSE TEST_SOURCES ${CMAKE_SOURCE_DIR}/unittest/*.cpp ${CMAKE_SOURCE_DIR}/unittest/*.hpp)
-add_executable(unit_tests ${TEST_SOURCES})
+# Group boost dependencies
+add_library(boost_deps INTERFACE)
+target_link_libraries(
+  boost_deps INTERFACE Boost::system Boost::thread Boost::serialization
+  Boost::filesystem Boost::program_options Boost::timer)
 
-add_library(cuda OBJECT src/lib/monte_carlo.h src/cuda/monte_carlo.cu src/cuda/precalculate.cu)
-target_link_libraries(${VINA_BIN_NAME} cuda lib)
-target_include_directories(${VINA_BIN_NAME} PUBLIC ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}) # For detecting CUDA memory size
-install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/${VINA_BIN_NAME} TYPE BIN)
-target_link_libraries(unit_tests Boost::system Boost::thread Boost::serialization Boost::filesystem Boost::program_options Boost::timer)
-target_link_libraries(unit_tests OpenMP::OpenMP_CXX)
-target_link_libraries(unit_tests lib cuda)
-target_link_libraries(unit_tests Catch2::Catch2WithMain)
-file(GLOB_RECURSE sources CONFIGURE_DEPENDS src/*.cpp src/*.h src/*.cu)
-set(CLANG_FORMAT clang-format)
-
-add_custom_target(
-	clang-format
-	COMMAND ${CLANG_FORMAT} -i ${sources}
-	COMMENT "Running clang-format"
-	VERBATIM
+add_library(
+  lib OBJECT
+  src/lib/ad4cache.cpp
+  src/lib/cache.cpp
+  src/lib/non_cache.cpp
+  src/lib/conf_independent.cpp
+  src/lib/coords.cpp
+  src/lib/grid.cpp
+  src/lib/szv_grid.cpp
+  src/lib/model.cpp
+  src/lib/mutate.cpp
+  src/lib/parallel_mc.cpp
+  src/lib/parse_pdbqt.cpp
+  src/lib/quasi_newton.cpp
+  src/lib/quaternion.cpp
+  src/lib/random.cpp
+  src/lib/utils.cpp
+  src/lib/vina.cpp
 )
+target_include_directories(lib PUBLIC src/lib src/cuda)
+
+add_library(cuda OBJECT src/cuda/monte_carlo.cu src/cuda/precalculate.cu)
+target_include_directories(cuda PUBLIC src/lib src/cuda)
+
+# >>>>>> Libraries Definitions End
+
+# >>>>>> Binaries Definitions Begin
+
+# >>> Main binary (unidock)
+add_executable(${VINA_BIN_NAME} src/main/main.cpp)
+target_link_libraries(${VINA_BIN_NAME} PRIVATE
+  boost_deps cuda lib
+  OpenMP::OpenMP_CXX
+)
+
+# For detecting CUDA memory size
+target_include_directories(${VINA_BIN_NAME}
+  PUBLIC ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
+
+# >>> split
+add_executable(split src/split/split.cpp)
+target_link_libraries(split PRIVATE boost_deps)
+target_include_directories(split PRIVATE src/lib)
+
+# >>>>>> Binaries Definitions End
+
+# >>>>>> Tests Definitions Begin
+include_directories(${CMAKE_SOURCE_DIR}/unittest)
+file(GLOB_RECURSE TEST_SOURCES ${CMAKE_SOURCE_DIR}/unittest/*.cpp)
+add_executable(unit_tests ${TEST_SOURCES})
+target_link_libraries(unit_tests PRIVATE boost_deps lib cuda OpenMP::OpenMP_CXX
+  Catch2::Catch2WithMain)
+
+# >>>>>> Tests Definitions End
+
+# >>>>>> Clang Format Begin
+
+# Configure clang-format
+file(
+  GLOB_RECURSE
+  sources
+  CONFIGURE_DEPENDS
+  src/*.cpp
+  src/*.h
+  src/*.cu
+  src/*.cuh)
+set(CLANG_FORMAT clang-format)
+add_custom_target(
+  clang-format
+  COMMAND ${CLANG_FORMAT} -i ${sources}
+  COMMENT "Running clang-format"
+  VERBATIM)
+
+# >>>>>> Clang Format End
