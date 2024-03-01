@@ -71,6 +71,7 @@ Set(FETCHCONTENT_QUIET FALSE) # Needed to print downloading progress
 if(FETCH_BOOST)
   set(BOOST_ENABLE_CMAKE ON)
   set(BOOST_INCLUDE_LIBRARIES ${REQUIRED_BOOST_COMPONENTS})
+
   # downloading a compressed release speeds up the download
   FetchContent_Declare(
     Boost
@@ -102,6 +103,7 @@ add_library(boost_deps INTERFACE)
 target_link_libraries(
   boost_deps INTERFACE Boost::system Boost::thread Boost::serialization
   Boost::filesystem Boost::program_options Boost::timer)
+target_include_directories(boost_deps PUBLIC ${Boost_INCLUDE_DIRS})
 
 add_library(
   lib OBJECT
