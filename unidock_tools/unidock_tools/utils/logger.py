@@ -6,7 +6,7 @@ import logging
 
 def init_logging():
     logger = logging.getLogger()
-    logger.setLevel(os.environ.get("LOG_LEVEL", "DEBUG"))
+    logger.setLevel(os.environ.get("LOG_LEVEL", "INFO"))
     formatter = logging.Formatter(
         "[%(levelname)s][%(asctime)s][%(filename)s %(lineno)d] %(message)s"
     )

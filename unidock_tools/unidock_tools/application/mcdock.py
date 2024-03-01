@@ -69,17 +69,20 @@ class MultiConfDock(UniDock):
 
 
 def main(args: dict):
+    if args["debug"]:
+        logging.getLogger().setLevel("DEBUG")
+
     workdir = Path(args["workdir"]).resolve()
     savedir = Path(args["savedir"]).resolve()
 
     ligands = []
-    if args["ligands"]:
+    if args.get("ligands"):
         for lig in args["ligands"]:
             if not Path(lig).exists():
                 logging.error(f"Cannot find {lig}")
                 continue
             ligands.append(Path(lig).resolve())
-    if args["ligand_index"]:
+    if args.get("ligand_index"):
         with open(args["ligand_index"], "r") as f:
             for line in f.readlines():
                 if not Path(line.strip()).exists():
@@ -115,8 +118,10 @@ def main(args: dict):
         max_step=int(args["max_step_rigid_docking"]),
         num_modes=int(args["num_modes_rigid_docking"]),
         refine_step=int(args["refine_step_rigid_docking"]),
+        seed=args["seed"],
         topn=int(args["topn_rigid_docking"]),
         batch_size=int(args["batch_size"]),
+        docking_dir_name="rigid_docking",
     )
     logging.info("[MultiConfDock] Start local refine")
     mcd.run_unidock(
@@ -125,14 +130,17 @@ def main(args: dict):
         max_step=int(args["max_step_local_refine"]),
         num_modes=int(args["num_modes_local_refine"]),
         refine_step=int(args["refine_step_local_refine"]),
+        seed=args["seed"],
         topn=int(args["topn_local_refine"]),
         batch_size=int(args["batch_size"]),
         local_only=True,
+        docking_dir_name="local_refine_docking",
     )
     mcd.save_results(save_dir=savedir)
     end_time = time.time()
     logging.info(f"[MultiConfDock] Workflow finished ({end_time - start_time:.2f} s)")
-    shutil.rmtree(workdir)
+    if not args["debug"]:
+        shutil.rmtree(workdir, ignore_errors=True)
 
 
 def get_parser() -> argparse.ArgumentParser:
@@ -176,11 +184,11 @@ def get_parser() -> argparse.ArgumentParser:
                         type=str, default="vina",
                         help="Scoring function used in rigid docking. Default: 'vina'.")
     parser.add_argument("-ex_rd", "--exhaustiveness_rigid_docking",
-                        type=int, default=256,
+                        type=int, default=128,
                         help="Exhaustiveness used in rigid docking. Default: 128.")
     parser.add_argument("-ms_rd", "--max_step_rigid_docking",
-                        type=int, default=10,
-                        help="Max step used in rigid docking. Default: 10.")
+                        type=int, default=20,
+                        help="Max step used in rigid docking. Default: 20.")
     parser.add_argument("-nm_rd", "--num_modes_rigid_docking",
                         type=int, default=3,
                         help="Number of modes used in rigid docking. Default: 3.")
@@ -190,16 +198,16 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument("-topn_rd", "--topn_rigid_docking",
                         type=int, default=100,
                         help="Top N results used in rigid docking. Default: 100.")
-    parser.add_argument("-ex_lr", "--exhaustiveness_local_refine",
-                        type=int, default=32,
-                        help="Exhaustiveness used in rigid docking. Default: 128.")
-    parser.add_argument("-ms_lr", "--max_step_local_refine",
-                        type=int, default=40,
-                        help="Max step used in rigid docking. Default: 10.")
+
     parser.add_argument("-sf_lr", "--scoring_function_local_refine",
                         type=str, default="vina",
                         help="Scoring function used in local refine. Default: 'vina'.")
-
+    parser.add_argument("-ex_lr", "--exhaustiveness_local_refine",
+                        type=int, default=512,
+                        help="Exhaustiveness used in rigid docking. Default: 512.")
+    parser.add_argument("-ms_lr", "--max_step_local_refine",
+                        type=int, default=40,
+                        help="Max step used in rigid docking. Default: 40.")
     parser.add_argument("-nm_lr", "--num_modes_local_refine",
                         type=int, default=1,
                         help="Number of modes used in local refine. Default: 1.")
@@ -209,6 +217,11 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument("-topn_lr", "--topn_local_refine",
                         type=int, default=1,
                         help="Top N results used in local refine. Default: 1.")
+
+    parser.add_argument("--seed", type=int, default=181129, 
+                        help="Uni-Dock random seed")
+    parser.add_argument("--debug", action="store_true",
+                        help="Debug mode")
     return parser
 
 

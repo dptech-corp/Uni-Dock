@@ -27,6 +27,7 @@ class UniDockRunner:
                  max_step: int = 10,
                  energy_range: float = 3.0,
                  refine_step: int = 5,
+                 seed : int = 181129,
                  score_only: bool = False,
                  local_only: bool = False
                  ):
@@ -75,6 +76,7 @@ class UniDockRunner:
             "--num_modes", str(num_modes),
             "--energy_range", str(energy_range),
             "--refine_step", str(refine_step),
+            "--seed", str(seed),
             "--verbosity", "2",
             "--keep_nonpolar_H",
         ]
@@ -193,8 +195,9 @@ class UniDockRunner:
             capture_output=True,
             encoding="utf-8",
         )
-        logging.info(f"Run Uni-Dock log: {resp.stdout}")
+        logging.debug(f"Run Uni-Dock log: {resp.stdout}")
         if resp.returncode != 0:
+            logging.info(f"Run Uni-Dock log: {resp.stdout}")
             logging.error(f"Run Uni-Dock error: {resp.stderr}")
 
         result_ligands = [f for f in self.pre_result_ligands if os.path.exists(f)]
@@ -234,6 +237,7 @@ def run_unidock(
         max_step: int = 10,
         energy_range: float = 3.0,
         refine_step: int = 5,
+        seed: int = 181129,
         score_only: bool = False,
         local_only: bool = False,
 ) -> Tuple[List[Path], List[List[float]]]:
@@ -245,7 +249,7 @@ def run_unidock(
         scoring=scoring, num_modes=num_modes,
         search_mode=search_mode,
         exhaustiveness=exhaustiveness, max_step=max_step,
-        energy_range=energy_range, refine_step=refine_step,
+        energy_range=energy_range, refine_step=refine_step, seed=seed,
         score_only=score_only, local_only=local_only,
     )
     result_ligands = runner.run()
