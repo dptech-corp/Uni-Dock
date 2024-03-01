@@ -26,7 +26,7 @@ The performance is not guaranteed on legacy GPU models. To build Uni-Dock with a
           sudo apt install libboost-system-dev libboost-thread-dev libboost-serialization-dev libboost-filesystem-dev libboost-program-options-dev libboost-timer-dev
           ```
 
-          Alternatively, use FetchContent to build Boost from source by adding `-D FETCH_BOOST=ON` when generating (see the step 3).
+          Alternatively, download Boost from source by adding `-D FETCH_BOOST=ON` when compiling (see step 3).
 
           If the above methods don't satisify, install from [boost source codes](https://www.boost.org/users/download/) or from [anaconda](https://anaconda.org/anaconda/libboost) with `conda install -c anaconda libboost`.
 
