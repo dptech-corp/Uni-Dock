@@ -107,7 +107,7 @@ class MolGroup:
         sdf_file_list = []
         if seperate_conf:
             for conf_id, mol_conf in enumerate(mol_confs_copy):
-                save_name = f"{save_dir}/{props['file_prefix']}{conf_prefix}{idx}.sdf"
+                save_name = f"{save_dir}/{props['file_prefix']}{conf_prefix}{conf_id}.sdf"
                 sdf_writer([mol_conf], save_name)
                 sdf_file_list.append(Path(save_name))
         else:
