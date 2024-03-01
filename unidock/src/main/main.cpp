@@ -246,10 +246,11 @@ bug reporting, license agreements, and more information.      \n";
             "flex", value<std::string>(&flex_name), "flexible side chains, if any (PDBQT or PDB)")(
             "ligand", value<std::vector<std::string> >(&ligand_names)->multitoken(),
             "ligand (PDBQT)")("ligand_index", value<std::string>(&ligand_index),
-                              "file containing paths to ligands (PDBQT or SDF")
-            ("paired_batch_size",value<int>(&paired_batch_size),
-                "If > 0, uses batching for one-ligand-one-protein docking, with json config in ligand_index following paired_batching.schema.json")
-            ("batch", value<std::vector<std::string> >(&batch_ligand_names)->multitoken(),
+                              "file containing paths to ligands (PDBQT or SDF")(
+            "paired_batch_size", value<int>(&paired_batch_size),
+            "If > 0, uses batching for one-ligand-one-protein docking, with json config in "
+            "ligand_index following paired_batching.schema.json")(
+            "batch", value<std::vector<std::string> >(&batch_ligand_names)->multitoken(),
             "batch ligand (PDBQT)")(
             "gpu_batch", value<std::vector<std::string> >(&gpu_batch_ligand_names)->multitoken(),
             "gpu batch ligand (PDBQT or SDF)")
@@ -283,10 +284,9 @@ bug reporting, license agreements, and more information.      \n";
             "output filename (directory + prefix name) for maps. Option --force_even_voxels may be "
             "needed to comply with .map format");
         options_description advanced("Advanced options (see the manual)");
-        advanced.add_options()("device_id", value<int>(&device_id)->default_value(0), 
-            "GPU device id to use (default 0)")
-            ("score_only", bool_switch(&score_only),
-                               "score only - search space can be omitted")(
+        advanced.add_options()("device_id", value<int>(&device_id)->default_value(0),
+                               "GPU device id to use (default 0)")(
+            "score_only", bool_switch(&score_only), "score only - search space can be omitted")(
             "score_file", value<std::string>(&score_file)->default_value(score_file),
             "score only output file in batch mode, with 'score_only' option")(
             "local_only", bool_switch(&local_only), "do local search only")(
@@ -483,14 +483,15 @@ bug reporting, license agreements, and more information.      \n";
         }
 
         // Use multiple workers for 1:1 docking, and exit
-        if (paired_batch_size > 0)
-        {
-            if (0 == vm.count("ligand_index")){
-                std::cout << "ERROR: Paired batch size set, but no config json specified via --ligand_index\n";
+        if (paired_batch_size > 0) {
+            if (0 == vm.count("ligand_index")) {
+                std::cout << "ERROR: Paired batch size set, but no config json specified via "
+                             "--ligand_index\n";
                 return -1;
             }
-            if (0 == vm.count("size_x") || 0 == vm.count("size_y") || 0 == vm.count("size_z")){
-                std::cout << "WARN: Paired batch size set, but size_x/size_y/size_z not specified, using 25\n";
+            if (0 == vm.count("size_x") || 0 == vm.count("size_y") || 0 == vm.count("size_z")) {
+                std::cout << "WARN: Paired batch size set, but size_x/size_y/size_z not specified, "
+                             "using 25\n";
                 size_x = size_y = size_z = 25;
             }
             if (0 == vm.count("dir")) {
@@ -501,13 +502,12 @@ bug reporting, license agreements, and more information.      \n";
             std::cout << "Entering paired batch mode\n";
 
             std::vector<double> box_size = {size_x, size_y, size_z};
-            simulation_container sc(seed, num_modes, refine_step, out_dir,
-                ligand_index, paired_batch_size, box_size, local_only, max_step, 
-                verbosity, exhaustiveness, device_id);
+            simulation_container sc(seed, num_modes, refine_step, out_dir, ligand_index,
+                                    paired_batch_size, box_size, local_only, max_step, verbosity,
+                                    exhaustiveness, device_id);
 
             int res = sc.prime();
-            if (res <= 0)
-            {
+            if (res <= 0) {
                 std::cout << "Error priming [" << res << "]\n";
                 return res;
             }
@@ -517,8 +517,10 @@ bug reporting, license agreements, and more information.      \n";
             int err = sc.launch();
 
             auto end = std::chrono::steady_clock::now();
-            auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-            std::cout << "Completed Batched Operations in " << milliseconds << " mS with err = " << err << "\n";
+            auto milliseconds
+                = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+            std::cout << "Completed Batched Operations in " << milliseconds
+                      << " mS with err = " << err << "\n";
             return err;
         }
 

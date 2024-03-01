@@ -212,7 +212,6 @@ __global__ __launch_bounds__(MAX_THREADS_PER_BLOCK, MIN_BLOCKS_PER_MP) void kern
 
 /* Above based on kernel.cl */
 
-
 __host__ void monte_carlo::mc_stream(
     std::vector<model> &m_gpu, std::vector<output_container> &out_gpu,
     std::vector<precalculate_byatom> &p_gpu, triangular_matrix_cuda_t *m_data_list_gpu,
@@ -222,7 +221,7 @@ __host__ void monte_carlo::mc_stream(
     DEBUG_PRINTF("entering CUDA monte_carlo search\n");  // debug
 
     cudaStream_t curr_stream = 0;
-    checkCUDA(cudaStreamCreate ( &curr_stream));
+    checkCUDA(cudaStreamCreate(&curr_stream));
     DEBUG_PRINTF("Stream created [0x%p]\n", curr_stream);
 
     vec authentic_v(1000, 1000,
@@ -374,7 +373,8 @@ __host__ void monte_carlo::mc_stream(
         if (m.ligands.size() == 0) {  // ligand parsing error
             m_cuda->m_num_movable_atoms = -1;
             DEBUG_PRINTF("copy m_cuda to gpu, size=%lu\n", sizeof(m_cuda_t));
-            checkCUDA(cudaMemcpyAsync(m_cuda_gpu + l, m_cuda, sizeof(m_cuda_t), cudaMemcpyHostToDevice, curr_stream));
+            checkCUDA(cudaMemcpyAsync(m_cuda_gpu + l, m_cuda, sizeof(m_cuda_t),
+                                      cudaMemcpyHostToDevice, curr_stream));
         } else {
             for (int i = 0; i < m.atoms.size(); i++) {
                 m_cuda->atoms[i].types[0]
@@ -463,7 +463,8 @@ __host__ void monte_carlo::mc_stream(
             m_cuda->m_num_movable_atoms = m.num_movable_atoms();
 
             DEBUG_PRINTF("copy m_cuda to gpu, size=%lu\n", sizeof(m_cuda_t));
-            checkCUDA(cudaMemcpyAsync(m_cuda_gpu + l, m_cuda, sizeof(m_cuda_t), cudaMemcpyHostToDevice, curr_stream));
+            checkCUDA(cudaMemcpyAsync(m_cuda_gpu + l, m_cuda, sizeof(m_cuda_t),
+                                      cudaMemcpyHostToDevice, curr_stream));
 
             /* Prepare rand_molec_struc data */
             int lig_torsion_size = tmp.c.ligands[0].torsions.size();
@@ -508,7 +509,8 @@ __host__ void monte_carlo::mc_stream(
                     = rand_molec_struc_gpu
                       + (l * threads_per_ligand + i) * SIZE_OF_MOLEC_STRUC / sizeof(float);
                 checkCUDA(cudaMemcpyAsync(rand_molec_struc_gpu_tmp, rand_molec_struc_tmp,
-                                     SIZE_OF_MOLEC_STRUC, cudaMemcpyHostToDevice, curr_stream));
+                                          SIZE_OF_MOLEC_STRUC, cudaMemcpyHostToDevice,
+                                          curr_stream));
             }
 
             /* Preparing p related data */
@@ -519,10 +521,11 @@ __host__ void monte_carlo::mc_stream(
             p_cuda->factor = p.m_factor;
             p_cuda->n = p.m_n;
             p_cuda->m_data_size = p.m_data.m_data.size();
-            checkCUDA(cudaMemcpyAsync(p_cuda_gpu + l, p_cuda, sizeof(p_cuda_t), cudaMemcpyHostToDevice, curr_stream));
+            checkCUDA(cudaMemcpyAsync(p_cuda_gpu + l, p_cuda, sizeof(p_cuda_t),
+                                      cudaMemcpyHostToDevice, curr_stream));
             checkCUDA(cudaMemcpyAsync(&(p_cuda_gpu[l].m_data), &(m_data_list_gpu[l].p_data),
-                                 sizeof(p_m_data_cuda_t *),
-                                 cudaMemcpyHostToDevice, curr_stream));  // check if fl == float
+                                      sizeof(p_m_data_cuda_t *), cudaMemcpyHostToDevice,
+                                      curr_stream));  // check if fl == float
         }
     }
 
@@ -636,8 +639,8 @@ __host__ void monte_carlo::mc_stream(
                 }
             }
 
-            checkCUDA(
-                cudaMemcpyAsync(ig_cuda_gpu + l, ig_cuda_ptr, ig_cuda_size, cudaMemcpyHostToDevice, curr_stream));
+            checkCUDA(cudaMemcpyAsync(ig_cuda_gpu + l, ig_cuda_ptr, ig_cuda_size,
+                                      cudaMemcpyHostToDevice, curr_stream));
         }
         std::cout << "set\n";
     } else {
@@ -677,15 +680,17 @@ __host__ void monte_carlo::mc_stream(
         }
         DEBUG_PRINTF("memcpy ig_cuda, ig_cuda_size=%lu\n", ig_cuda_size);
         checkCUDA(cudaMalloc(&ig_cuda_gpu, ig_cuda_size));
-        checkCUDA(cudaMemcpyAsync(ig_cuda_gpu, ig_cuda_ptr, ig_cuda_size, cudaMemcpyHostToDevice, curr_stream));
+        checkCUDA(cudaMemcpyAsync(ig_cuda_gpu, ig_cuda_ptr, ig_cuda_size, cudaMemcpyHostToDevice,
+                                  curr_stream));
     }
 
     float mutation_amplitude_float = static_cast<float>(mutation_amplitude);
 
-    checkCUDA(cudaMemcpyAsync(hunt_cap_gpu, hunt_cap_float, 3 * sizeof(float), cudaMemcpyHostToDevice, curr_stream));
+    checkCUDA(cudaMemcpyAsync(hunt_cap_gpu, hunt_cap_float, 3 * sizeof(float),
+                              cudaMemcpyHostToDevice, curr_stream));
 
     checkCUDA(cudaMemcpyAsync(authentic_v_gpu, authentic_v_float, sizeof(authentic_v_float),
-                         cudaMemcpyHostToDevice, curr_stream));
+                              cudaMemcpyHostToDevice, curr_stream));
 
     /* Add timing */
     cudaEvent_t start, stop;
@@ -699,7 +704,8 @@ __host__ void monte_carlo::mc_stream(
 
     output_type_cuda_t *results_aux;
     checkCUDA(cudaMalloc(&results_aux, 5 * thread * sizeof(output_type_cuda_t)));
-    checkCUDA(cudaMemsetAsync(results_aux, 0, 5 * thread * sizeof(output_type_cuda_t), curr_stream));
+    checkCUDA(
+        cudaMemsetAsync(results_aux, 0, 5 * thread * sizeof(output_type_cuda_t), curr_stream));
     change_cuda_t *change_aux;
     checkCUDA(cudaMalloc(&change_aux, 6 * thread * sizeof(change_cuda_t)));
     checkCUDA(cudaMemsetAsync(change_aux, 0, 6 * thread * sizeof(change_cuda_t), curr_stream));
@@ -707,12 +713,11 @@ __host__ void monte_carlo::mc_stream(
     checkCUDA(cudaMalloc(&pot_aux, thread * sizeof(pot_cuda_t)));
     checkCUDA(cudaMemsetAsync(pot_aux, 0, thread * sizeof(pot_cuda_t), curr_stream));
 
-    kernel<32><<<thread, 32, 0, curr_stream>>>(m_cuda_gpu, ig_cuda_gpu, p_cuda_gpu, rand_molec_struc_gpu,
-                               quasi_newton_par_max_steps, mutation_amplitude_float, states, seed,
-                               epsilon_fl_float, hunt_cap_gpu, authentic_v_gpu, results_gpu,
-                               results_aux, change_aux, pot_aux, h_cuda_global, m_cuda_global,
-                               global_steps, num_of_ligands, threads_per_ligand, multi_bias);
-
+    kernel<32><<<thread, 32, 0, curr_stream>>>(
+        m_cuda_gpu, ig_cuda_gpu, p_cuda_gpu, rand_molec_struc_gpu, quasi_newton_par_max_steps,
+        mutation_amplitude_float, states, seed, epsilon_fl_float, hunt_cap_gpu, authentic_v_gpu,
+        results_gpu, results_aux, change_aux, pot_aux, h_cuda_global, m_cuda_global, global_steps,
+        num_of_ligands, threads_per_ligand, multi_bias);
 
     // Wait for stream operations to complete
     checkCUDA(cudaStreamSynchronize(curr_stream));
@@ -806,8 +811,7 @@ __host__ void monte_carlo::mc_stream(
     checkCUDA(cudaStreamDestroy(curr_stream));
     curr_stream = 0;
 
-    DEBUG_PRINTF("exit monte_carlo\n");       
-
+    DEBUG_PRINTF("exit monte_carlo\n");
 }
 
 /* Below based on monte-carlo.cpp */
