@@ -52,21 +52,44 @@ add_compile_definitions(VERSION="v${PROJECT_VERSION}")
 # >>>>>> Language Configuration End
 
 # >>>>>> Dependencies Begin
-
-# OpenMP only required in main.cpp
-find_package(OpenMP REQUIRED)
-find_package(Boost 1.72 REQUIRED COMPONENTS system thread serialization
-  filesystem program_options timer)
-
-# Fetch dependencies through FetchContent
 include(FetchContent)
 
+# OpenMP only required in main.cpp
+
+# >>> OpenMP
+find_package(OpenMP REQUIRED)
+
+# >>> CMake
+option(FETCH_BOOST "Whether to use FetchContent to include boost" OFF)
+set(REQUIRED_BOOST_COMPONENTS
+  system thread serialization
+  filesystem program_options timer
+)
+
+Set(FETCHCONTENT_QUIET FALSE) # Needed to print downloading progress
+
+if(FETCH_BOOST)
+  set(BOOST_ENABLE_CMAKE ON)
+  set(BOOST_INCLUDE_LIBRARIES ${REQUIRED_BOOST_COMPONENTS})
+  # downloading a compressed release speeds up the download
+  FetchContent_Declare(
+    Boost
+    URL https://github.com/boostorg/boost/releases/download/boost-1.84.0/boost-1.84.0.tar.gz
+    USES_TERMINAL_DOWNLOAD TRUE
+    GIT_PROGRESS TRUE
+    DOWNLOAD_NO_EXTRACT FALSE
+  )
+  FetchContent_MakeAvailable(Boost)
+else()
+  find_package(Boost 1.72 REQUIRED COMPONENTS ${REQUIRED_BOOST_COMPONENTS})
+endif()
+
+# >>> Catch2
 FetchContent_Declare(
   Catch2
   GIT_REPOSITORY https://github.com/catchorg/Catch2.git
   GIT_TAG v3.4.0 # or a later release
 )
-
 FetchContent_MakeAvailable(Catch2)
 list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
 
