@@ -83,6 +83,7 @@ if(FETCH_BOOST)
   FetchContent_MakeAvailable(Boost)
 else()
   find_package(Boost 1.72 REQUIRED COMPONENTS ${REQUIRED_BOOST_COMPONENTS})
+  include_directories(${Boost_INCLUDE_DIRS})
 endif()
 
 # >>> Catch2
@@ -103,7 +104,6 @@ add_library(boost_deps INTERFACE)
 target_link_libraries(
   boost_deps INTERFACE Boost::system Boost::thread Boost::serialization
   Boost::filesystem Boost::program_options Boost::timer)
-target_include_directories(boost_deps PUBLIC ${Boost_INCLUDE_DIRS})
 
 add_library(
   lib OBJECT
