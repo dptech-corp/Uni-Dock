@@ -1,0 +1,56 @@
+name: Bug Report
+description: Create a report to help us improve
+labels: [bug]
+assignees: ["ysyecust"]
+body:
+  - type: textarea
+    attributes:
+      label: Describe the bug
+      description: |
+        A clear and concise description of what the bug is. The bug may results in:
+        - abnormal interruption of the program,
+        - systematic or randomized numerical error, or
+        - relatively low efficiency.
+      placeholder: |
+        Example: Uni-Dock crashed with the following error message ...
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Expected behavior
+      description: |
+        A clear and concise description of what you expected to happen.
+      placeholder: |
+        Example: Uni-Dock should output the result as ...
+
+  - type: textarea
+    attributes:
+      label: To Reproduce
+      description: |
+        Steps to reproduce the behavior.
+        Please provide necessary information including input file, running commands, error log, etc.
+        It is strongly recommended to attach your input files here for the developers to reproduce the bug.
+      placeholder: |
+        Example:
+        1. Build Uni-Dock
+        2. Run the following command ...
+
+  - type: textarea
+    attributes:
+      label: Environment
+      description: |
+        - CUDA version
+        - GPU model
+        - Uni-Dock version
+      placeholder: |
+        Example:
+        - CUDA 12.2.0
+        - GPU: NVIDIA A100
+        - Uni-Dock on commit: 9ad06c4
+
+  - type: textarea
+    attributes:
+      label: Additional Context
+      description: |
+        Add any other context about the problem here.

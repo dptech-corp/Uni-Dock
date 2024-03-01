@@ -1,1 +1,3 @@
-from .unidock import UniDock
+from unidock_tools.utils import init_logging
+
+init_logging()
