@@ -65,6 +65,7 @@ class MultiConfDock(UniDock):
                                           max_num_confs_per_ligand=max_nconf,
                                           min_rmsd=min_rmsd)
             self.mol_group.update_mol_confs(idx, gen_mol_confs)
+            self.mol_group.write_sdf(save_dir=f"{self.workdir}/confgen_results", seperate_conf=False)
 
 
 def main(args: dict):
