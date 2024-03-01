@@ -58,11 +58,11 @@ Uni-Dock supports NVIDIA GPUs on Linux platform.
      ```
 
 
-code foramt
-```shell
-cd ./build/
-make clang-format
-```
+5. Code format
+     ```shell
+     cd ./build/
+     make clang-format
+     ```
 ### Using binary
 
 Please download the latest binary of Uni-Dock at the assets tab of [the Release page](https://github.com/dptech-corp/Uni-Dock/releases).
@@ -235,7 +235,9 @@ DOI 10.1002/jcc.21334
 3. Uni-Dock computes slowly for few (<10) ligands.
 
      The optimal application of Uni-Dock occurs in scenarios where one binding pocket interacts with numerous (in an order of 1000) ligands. As the number of ligands within a single computational batch increases, the average processing speed improves. In instances where only a few ligands are present for one binding pocket, the overhead proportion becomes considerably large, leading to slower computational performance.
-     
+4. Which GPU architectures does Uni-Dock support?
+   Before Uni-Dock v1.1, unidock supported rcom and cuda, but version 1.1 has a lot of performance optimizations for CUDA, so future updates will no longer support the rcom platform. If you need to use the rcom platform, you can use Uni-dock v1.0.
+
 ### Addendum to "FAQ 3 - Uni-Dock computes slowly for few (<10) ligands.":
 
 The `paired_batch` mode provides a mechanism to accelerate simultaneous 1:1 docking in batches using Vina scoring, using CUDA streams. To run docking using this mode, invoke unidock with the parameter `--paired_batch_size` value >0, with the protein:ligand configurations passed in JSON form using `--ligand_index`. The JSON file should use schema defined in paired_batching.schema.json.
