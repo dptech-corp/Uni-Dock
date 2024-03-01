@@ -137,6 +137,7 @@ target_link_libraries(${VINA_BIN_NAME} PRIVATE
   boost_deps cuda lib
   OpenMP::OpenMP_CXX
 )
+install(TARGETS ${VINA_BIN_NAME})
 
 # For detecting CUDA memory size
 target_include_directories(${VINA_BIN_NAME}
