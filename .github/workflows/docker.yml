@@ -1,0 +1,46 @@
+name: Uni-Dock/Tools Build Image Workflow
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    tags:
+      - "*"
+
+jobs:
+  build_and_push_docker_image:
+    runs-on: ubuntu-latest
+    if: github.repository_owner == 'dptech-corp'
+    strategy:
+      matrix:
+        target: [unidock, unidock_tools]
+      max-parallel: 1 # Ensures unidock_tools is built after unidock
+
+    steps:
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: dptechnology/${{ matrix.target }}
+          tags: |
+            type=sha
+            type=semver,pattern={{version}}
+            type=raw,value=latest
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: dptechnology
+          password: ${{ secrets.DOCKERHUB_PAT }}
+
+      - name: build and push container
+        uses: docker/build-push-action@v5
+        with:
+          platforms: linux/amd64
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          file: Dockerfile
+          context: "{{defaultContext}}:${{ matrix.target }}"
+          push: true

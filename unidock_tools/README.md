@@ -1,60 +1,94 @@
 # Introduction
 
-To make Uni-Dock more user-friendly and compatible with more ligand input formats and scoring functions, we have introduced **UniDockTools**.
-Now, UniDockTools has two new functions:
+Based on Uni-Dock, we have developed several user-friendly and enhanced applications in **Uni-Dock Tools**.
+Main features are:
 
-- support SDF format
+- Individual receptor and ligand preparation applications
 
-  UniDockTools has a built-in molecular preparation function, so users can use the original SDF files as the input for ligand files, provided that the compound structures in the original SDF files are reasonable.
+- End-to-End Uni-Dock pipeline starting from common formats receptor and ligands
 
-- support gnina CNNscores
-
-  Gnina CNNscores is a scoring function known for its outstanding screening performance. UniDockTools offers a workflow for Uni-Dock to generate ligand conformations and subsequently re-score them using Gnina CNNscores.
+- Multi-Conformation Docking (mcdock): See [MCDock Introduction](./MCDOCK.md#introduction)
 
 # Installation
 
-## 1. Install Uni-Dock and UniDockTools
+## Dependency
 
-To install UniDock, please follow [Uni-Dock installation docs](../unidock/README.md).
+- [Uni-Dock](../unidock/README.md#installation)
+- Python >= 3.6
+- RDKit
+- networkx
+- MGLTools, if you want to use AD4 scoring function in Uni-Dock
+- mcdock dependencies, see [MCDock Installation](./MCDOCK.md#installation)
 
-To install UniDockTools, please execute the following command in `Uni-Dock/unidock_tools` directory:
+## Install
 
-```python setup.py install```
+- ```pip install .```
 
-## 2. Install MGLTools
+## Docker
 
-If you want ro run Uni-Dock with receptor in PDB format, you need to install `mgltools`. Please use the command below:
+ We provide docker image with all the dependencies installed. You can pull the docker image from the following link:
 
-```conda create -n mgltools mgltools -c bioconda```
+```docker pull dptechnology:unidocktools```
 
-## 3. Install gnina
+And run the docker container using the following command:
 
-If you want to use gnina CNNscores to rescore docking poses, you should install gnina.
+```docker run --gpus 0 -it -v $(pwd):/workpsace unidocktools:v1.0.0 cd /workspace &&  <Your command>```
 
-- binary
-install gnina by download binary file from [gnina's release page](https://github.com/gnina/gnina/releases)
-- source code
-install gnina from source code according to [gnina installation document](https://github.com/gnina/gnina#installation)
+# Applications
 
-# Usage
+## 1. ProteinPrep
 
-By installing UniDockTools, you have obtained an executable file called **Unidock** (note the capitalized U), which you can use just like running **unidock**.
+Prepare and Convert PDB-format receptor protein into PDBQT format
 
-## Input ligands with origin sdf format
+`unidocktools proteinprep -r <Input PDB File> -o <Output PDBQT File Path>`
 
-`Unidock --receptor receptor.pdbqt --gpu_batch ligand1.sdf ligand2.sdf --center_x 9 --center_y -5  --center_z -5 --size_x 20  --size_y 20 --size_z 20 --search_mode balance  --dir .`
+## 2. LigandPrep
 
-## Use gnina CNNscores to rescore docking poses
+Prepare ligands to be used in Uni-Dock
 
-`Unidock --receptor receptor.pdbqt --gpu_batch ligand1.sdf ligand2.sdf  --scoring gnina --center_x 9 --center_y -5  --center_z -5 --size_x 20  --size_y 20 --size_z 20 --search_mode balance  --dir .`
+`unidocktools ligandprep -l <Input SDF ligand files, use commas to seperate> -sd <output_dir> -bs <batch_size=1200>`
 
-## Use ligands structure as bias
+or write a list of ligand files in a text file and use the following command:
 
-`Unidock --receptor receptor.pdbqt --gpu_batch ligand1.sdf ligand2.sdf --reference ref1.sdf ref2.sdf --scoring gnina --center_x 9 --center_y -5  --center_z -5 --size_x 20  --size_y 20 --size_z 20 --search_mode balance  --dir . `
+`unidocktools ligandprep -i <Txt File> -sd <output_dir>`
 
-## Other usage
+## 3. Uni-Dock Pipeline
 
-  To lower users' learning cost, the other usage methods of **Unidock** remain consistent with the usage of **unidock**.
+End-to-End pipeline to run Uni-Dock with common-format receptor and ligands
+
+`unidocktools unidock_pipeline -r <receptor file> -l <ligand files> -sd <output_dir> -cx <center_x> -cy <center_y> -cz <center_z>`
+
+### Parameters
+
+#### IO Parameters
+- `-r, --receptor`: Path to the receptor file in PDBQT format.
+- `-l, --ligands`: Path to the ligand file in SDF format. For multiple files, separate them by commas.
+- `-i, --ligand_index`: A text file containing the path of ligand files in sdf format.
+- `-sd, --savedir`: Save directory (default: 'unidock_results').
+
+#### Pocket Parameters
+- `-cx, --center_x`: X-coordinate of the docking box center.
+- `-cy, --center_y`: Y-coordinate of the docking box center.
+- `-cz, --center_z`: Z-coordinate of the docking box center.
+- `-sx, --size_x`: Width of the docking box in the X direction (default: 22.5).
+- `-sy, --size_y`: Width of the docking box in the Y direction (default: 22.5).
+- `-sz, --size_z`: Width of the docking box in the Z direction (default: 22.5).
+
+#### Docking Parameters
+- `-sf, --scoring_function`: Scoring function (default: 'vina').
+- `-ex, --exhaustiveness`: exhaustiveness (default: 128).
+- `-ms, --max_step`: max_step (default: 20)
+- `-nm, --num_modes`: Number of poses to output (default: 3).
+- `-rs, --refine_step`: Refine step (default: 3).
+- `-topn, --topn`: Top N pose results to keep (default: 100).
+
+#### Others
+- `-wd, --workdir`: Working directory (default: 'unidock_workdir').
+- `-bs, --batch_size`: Batch size (default: 20).
+
+## 4. Multi-Conformation Docking (mcdock)
+
+See [MCDock Usage](./MCDOCK.md#usage)
 
 # License
 
