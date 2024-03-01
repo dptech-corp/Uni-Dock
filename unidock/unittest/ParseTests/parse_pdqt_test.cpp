@@ -5,7 +5,7 @@
 
 TEST_CASE("parse pdbqt rigid", "[parse_pdbqt_rigid]") {
     // Test pdbqt atom number
-    std::string valid_pdbqt_receptor_path = "../unittest/ParseTests/def.pdbqt";
+    std::string valid_pdbqt_receptor_path = "./test_data/def.pdbqt";
     rigid r;
     REQUIRE_NOTHROW(parse_pdbqt_rigid(valid_pdbqt_receptor_path, r));
     REQUIRE(r.atoms.size() == 1613);

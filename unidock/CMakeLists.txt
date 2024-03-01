@@ -68,6 +68,7 @@ FetchContent_Declare(
 )
 
 FetchContent_MakeAvailable(Catch2)
+list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
 
 # >>>>>> Dependencies End
 
@@ -126,11 +127,25 @@ target_include_directories(split PRIVATE src/lib)
 # >>>>>> Binaries Definitions End
 
 # >>>>>> Tests Definitions Begin
-include_directories(${CMAKE_SOURCE_DIR}/unittest)
 file(GLOB_RECURSE TEST_SOURCES ${CMAKE_SOURCE_DIR}/unittest/*.cpp)
 add_executable(unit_tests ${TEST_SOURCES})
-target_link_libraries(unit_tests PRIVATE boost_deps lib cuda OpenMP::OpenMP_CXX
-  Catch2::Catch2WithMain)
+target_link_libraries(unit_tests PRIVATE
+  boost_deps lib cuda
+  OpenMP::OpenMP_CXX
+  Catch2::Catch2WithMain
+)
+
+include(CTest)
+include(Catch)
+catch_discover_tests(unit_tests
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+
+# Copy test data to build directory
+file(
+  COPY ${CMAKE_SOURCE_DIR}/unittest/test_data
+  DESTINATION ${CMAKE_CURRENT_BINARY_DIR}
+)
 
 # >>>>>> Tests Definitions End
 
