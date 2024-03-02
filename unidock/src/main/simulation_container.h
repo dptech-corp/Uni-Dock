@@ -41,10 +41,8 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
-
 // Information about current simulation
-struct simulation_container
-{
+struct simulation_container {
     std::string m_work_dir;
     std::string m_input_path;
     std::string m_out_phrase;
@@ -66,52 +64,39 @@ struct simulation_container
     std::vector<boost::filesystem::directory_entry> m_ligand_paths;
     std::vector<boost::filesystem::directory_entry> m_ligand_config_paths;
     std::vector<boost::filesystem::directory_entry> m_protein_paths;
-    complex_property_holder * m_ptr_complex_property_holder;
+    complex_property_holder* m_ptr_complex_property_holder;
     int m_successful_property_count;
 
-    simulation_container(
-        int seed,
-        int num_modes,
-        int refine_steps,
-        std::string out_dir,
-        std::string config_json_path,
-        int paired_batch_size,
-        std::vector<double> box_size_xyz,
-        int local_only,
-        int max_step,
-        int verbosity,
-        int exh,
-        int device_id):
+    simulation_container(int seed, int num_modes, int refine_steps, std::string out_dir,
+                         std::string config_json_path, int paired_batch_size,
+                         std::vector<double> box_size_xyz, int local_only, int max_step,
+                         int verbosity, int exh, int device_id)
+        :
 
-        m_seed(seed),
-        m_num_modes(num_modes),
-        m_refine_steps(refine_steps),
-        m_work_dir(out_dir),
-        m_config_json_path(config_json_path),
-        m_batch_size(paired_batch_size),
-        m_box_size(box_size_xyz),
-        m_local_only(local_only),
-        m_max_global_steps(max_step),
-        m_verbosity(verbosity),
-        m_exhaustiveness(exh),
-        m_isGPU(true),
-        m_successful_property_count (0),
-        m_device_id(device_id)
-     {
-        //m_out_phrase = util_random_string(5);
-     }
-     ~simulation_container()
-     {
-        if (m_ptr_complex_property_holder)
-        {
+          m_seed(seed),
+          m_num_modes(num_modes),
+          m_refine_steps(refine_steps),
+          m_work_dir(out_dir),
+          m_config_json_path(config_json_path),
+          m_batch_size(paired_batch_size),
+          m_box_size(box_size_xyz),
+          m_local_only(local_only),
+          m_max_global_steps(max_step),
+          m_verbosity(verbosity),
+          m_exhaustiveness(exh),
+          m_isGPU(true),
+          m_successful_property_count(0),
+          m_device_id(device_id) {
+        // m_out_phrase = util_random_string(5);
+    }
+    ~simulation_container() {
+        if (m_ptr_complex_property_holder) {
             delete m_ptr_complex_property_holder;
             m_ptr_complex_property_holder = 0;
         }
-     };
+    };
 
-
-    std::string util_random_string(std::size_t length)
-    {
+    std::string util_random_string(std::size_t length) {
         const std::string CHARACTERS = "iamafunnydogthatlaughsindeterministically";
 
         std::random_device random_device;
@@ -120,16 +105,14 @@ struct simulation_container
 
         std::string rstring;
 
-        for (std::size_t i = 0; i < length; ++i)
-        {
+        for (std::size_t i = 0; i < length; ++i) {
             rstring += CHARACTERS[distribution(generator)];
         }
 
         return rstring;
     }
 
-    void add_rank_combinations_from_json(std::string filename)
-    {
+    void add_rank_combinations_from_json(std::string filename) {
         int curr_entry_size = 0;
         boost::property_tree::ptree tree_root;
         boost::property_tree::read_json(filename, tree_root);
@@ -138,48 +121,41 @@ struct simulation_container
         ptree::const_iterator end = tree_root.end();
 
         for (ptree::const_iterator it = tree_root.begin(); it != end; ++it) {
-
             m_complex_names.emplace_back(it->first);
 
-            for (ptree::const_iterator it_entries = it->second.begin(); it_entries != it->second.end(); ++it_entries)
-            {
-                if (it_entries->first == "ligand")
-                {
+            for (ptree::const_iterator it_entries = it->second.begin();
+                 it_entries != it->second.end(); ++it_entries) {
+                if (it_entries->first == "ligand") {
                     m_ligand_paths.emplace_back(it_entries->second.get_value<std::string>());
                 }
-                if (it_entries->first == "protein")
-                {
+                if (it_entries->first == "protein") {
                     m_protein_paths.emplace_back(it_entries->second.get_value<std::string>());
                 }
-                if (it_entries->first == "ligand_config")
-                {
+                if (it_entries->first == "ligand_config") {
                     m_ligand_config_paths.emplace_back(it_entries->second.get_value<std::string>());
                 }
             }
-            curr_entry_size ++;
-            if (curr_entry_size >= m_max_limits)
-            {
-                std::cout << "Limiting number of ranked samples to max limits " << m_max_limits << "\n";
+            curr_entry_size++;
+            if (curr_entry_size >= m_max_limits) {
+                std::cout << "Limiting number of ranked samples to max limits " << m_max_limits
+                          << "\n";
                 break;
             }
         }
     }
 
-    std::string trim_eol(std::string line)
-    {
+    std::string trim_eol(std::string line) {
         std::string newString;
 
-        for (char ch : line)
-        {
-            if (ch == '\n' || ch == '\r')
-                continue;
+        for (char ch : line) {
+            if (ch == '\n' || ch == '\r') continue;
             newString += ch;
         }
         return newString;
     }
 
-    int fill_config_from_json(complex_property & cp, std::string path, std::string protein_name, std::string ligand_name)
-    {
+    int fill_config_from_json(complex_property& cp, std::string path, std::string protein_name,
+                              std::string ligand_name) {
         boost::property_tree::ptree tree_root;
         boost::property_tree::read_json(path, tree_root);
 
@@ -188,17 +164,14 @@ struct simulation_container
         cp.box_y = m_box_size[1];
         cp.box_z = m_box_size[2];
 
-        try
-        {
+        try {
             cp.center_x = tree_root.get<float>("center_x");
             cp.center_y = tree_root.get<float>("center_y");
             cp.center_z = tree_root.get<float>("center_z");
             cp.box_x = tree_root.get<float>("size_x");
             cp.box_y = tree_root.get<float>("size_y");
             cp.box_z = tree_root.get<float>("size_z");
-        }
-        catch(...)
-        {
+        } catch (...) {
             std::cout << "Error parsing config json " << path << "\n";
             return -1;
         }
@@ -209,37 +182,32 @@ struct simulation_container
         return 0;
     }
 
-    int_least32_t fill_config(complex_property & cp, std::string path, std::string protein_name, std::string ligand_name)
-    {
+    int_least32_t fill_config(complex_property& cp, std::string path, std::string protein_name,
+                              std::string ligand_name) {
         // Default to provided box, update if in config file
         cp.box_x = m_box_size[0];
         cp.box_y = m_box_size[1];
         cp.box_z = m_box_size[2];
 
-        if (path.empty())
-        {
+        if (path.empty()) {
             return -1;
-        }
-        else
-        {
+        } else {
             std::ifstream ifs(path);
             std::string line;
             double vals[3];
             int id = 0;
-            while (std::getline(ifs, line))
-            {
+            while (std::getline(ifs, line)) {
                 std::string trimmed(trim_eol(line));
                 int pos = trimmed.find('=');
-                vals[id] = std::stod(trimmed.substr(pos+1,  std::string::npos));
-                id ++;
+                vals[id] = std::stod(trimmed.substr(pos + 1, std::string::npos));
+                id++;
             }
 
             cp.center_x = vals[0];
             cp.center_y = vals[1];
             cp.center_z = vals[2];
 
-            if (id > 3)
-            {
+            if (id > 3) {
                 cp.box_x = vals[3];
                 cp.box_y = vals[4];
                 cp.box_z = vals[5];
@@ -253,72 +221,70 @@ struct simulation_container
         return 0;
     }
 
-    void add_rank_combinations(std::string effective_path)
-    {
+    void add_rank_combinations(std::string effective_path) {
         int curr_entry_size = 0;
-        //search for complex_rank<n>.pdbqt for ranked ligands
-        for (boost::filesystem::directory_entry& entry : boost::filesystem::recursive_directory_iterator(effective_path))
-        {
+        // search for complex_rank<n>.pdbqt for ranked ligands
+        for (boost::filesystem::directory_entry& entry :
+             boost::filesystem::recursive_directory_iterator(effective_path)) {
             int pos_rank = entry.path().string().find("_rank");
             int pos_config = entry.path().stem().string().find("_config");
             int pos_pdbqt = entry.path().extension().string().find(".pdbqt");
 
-            if (pos_rank != std::string::npos &&
-                pos_pdbqt != std::string::npos &&
-                pos_config == std::string::npos)
-            {
+            if (pos_rank != std::string::npos && pos_pdbqt != std::string::npos
+                && pos_config == std::string::npos) {
                 int pos_complex = entry.path().stem().string().find("_rank");
                 std::string complex = entry.path().stem().string().substr(0, pos_complex);
                 m_complex_names.emplace_back(complex);
                 m_ligand_paths.emplace_back(entry.path());
-                m_protein_paths.emplace_back(entry.path().parent_path() / boost::filesystem::path(complex + "_protein.pdbqt"));
-                m_ligand_config_paths.emplace_back(entry.path().parent_path() / boost::filesystem::path(entry.path().stem().string() + "_config.txt"));
+                m_protein_paths.emplace_back(entry.path().parent_path()
+                                             / boost::filesystem::path(complex + "_protein.pdbqt"));
+                m_ligand_config_paths.emplace_back(
+                    entry.path().parent_path()
+                    / boost::filesystem::path(entry.path().stem().string() + "_config.txt"));
 
-                curr_entry_size ++;
-                if (curr_entry_size >= m_max_limits)
-                {
-                    std::cout << "Limiting number of ranked samples to max limits " << m_max_limits << "\n";
+                curr_entry_size++;
+                if (curr_entry_size >= m_max_limits) {
+                    std::cout << "Limiting number of ranked samples to max limits " << m_max_limits
+                              << "\n";
                     break;
                 }
             }
         }
     }
-    void add_combinations(std::string effective_path)
-    {
+    void add_combinations(std::string effective_path) {
         int curr_entry_size = 0;
-        for (boost::filesystem::directory_entry& entry : boost::filesystem::recursive_directory_iterator(effective_path))
-        {
+        for (boost::filesystem::directory_entry& entry :
+             boost::filesystem::recursive_directory_iterator(effective_path)) {
             int pos = entry.path().string().find("_protein.pdbqt");
 
-            if (pos != std::string::npos)
-            {
+            if (pos != std::string::npos) {
                 int pos_complex = entry.path().stem().string().find("_protein");
                 std::string complex = entry.path().stem().string().substr(0, pos_complex);
-                
+
                 m_complex_names.emplace_back(complex);
                 m_protein_paths.emplace_back(entry.path());
-                m_ligand_paths.emplace_back(entry.path().parent_path() / boost::filesystem::path(complex + "_ligand.pdbqt"));
-                m_ligand_config_paths.emplace_back(entry.path().parent_path() / boost::filesystem::path(complex + "_ligand_config.txt"));
+                m_ligand_paths.emplace_back(entry.path().parent_path()
+                                            / boost::filesystem::path(complex + "_ligand.pdbqt"));
+                m_ligand_config_paths.emplace_back(
+                    entry.path().parent_path()
+                    / boost::filesystem::path(complex + "_ligand_config.txt"));
 
-                curr_entry_size ++;
-                if (curr_entry_size >= m_max_limits)
-                {
-                    std::cout << "Limiting number of samples to max limits " << m_max_limits << "\n";
+                curr_entry_size++;
+                if (curr_entry_size >= m_max_limits) {
+                    std::cout << "Limiting number of samples to max limits " << m_max_limits
+                              << "\n";
                     break;
                 }
             }
         }
     }
 
-    void add_combinations(std::vector<std::string> ligand_names)
-    {
+    void add_combinations(std::vector<std::string> ligand_names) {
         int curr_entry_size = 0;
-        for (std::string& path : ligand_names)
-        {
+        for (std::string& path : ligand_names) {
             int pos = path.find("_ligand.pdbqt");
 
-            if (pos != std::string::npos)
-            {
+            if (pos != std::string::npos) {
                 int pos_complex = path.find("_ligand");
                 std::string complex = path.substr(0, pos_complex);
 
@@ -327,31 +293,24 @@ struct simulation_container
                 m_ligand_paths.emplace_back(path);
                 m_ligand_config_paths.emplace_back(complex + "_ligand_config.txt");
 
-                curr_entry_size ++;
-                if (curr_entry_size >= m_max_limits)
-                {
-                    std::cout << "Limiting number of samples to max limits " << m_max_limits << "\n";
+                curr_entry_size++;
+                if (curr_entry_size >= m_max_limits) {
+                    std::cout << "Limiting number of samples to max limits " << m_max_limits
+                              << "\n";
                     break;
                 }
             }
         }
     }
 
-    int prime()
-    {
-        if (m_config_json_path.empty())
-        {
+    int prime() {
+        if (m_config_json_path.empty()) {
             std::cout << "Found nothing to prime.\n";
             return -1;
-        }
-        else
-        {
-            try
-            {
+        } else {
+            try {
                 add_rank_combinations_from_json(m_config_json_path);
-            }
-            catch(const std::exception& e)
-            {
+            } catch (const std::exception& e) {
                 std::cerr << e.what() << '\n';
                 std::cout << e.what() << '\n';
                 return -1;
@@ -362,159 +321,131 @@ struct simulation_container
 
         m_ptr_complex_property_holder = new complex_property_holder(m_complex_names.size());
 
-        for (int id = 0;id < m_complex_names.size();id ++)
-        {
+        for (int id = 0; id < m_complex_names.size(); id++) {
             int success_filled = -1;
 
-            complex_property& cp = m_ptr_complex_property_holder->m_properties[m_successful_property_count];
+            complex_property& cp
+                = m_ptr_complex_property_holder->m_properties[m_successful_property_count];
 
-            if (boost::filesystem::extension(m_ligand_config_paths[id].path().string()) == ".json")
-            {
-                try
-                {
-                    success_filled = fill_config_from_json(cp, m_ligand_config_paths[id].path().string(), m_protein_paths[id].path().string(), m_ligand_paths[id].path().string());
+            if (boost::filesystem::extension(m_ligand_config_paths[id].path().string())
+                == ".json") {
+                try {
+                    success_filled = fill_config_from_json(
+                        cp, m_ligand_config_paths[id].path().string(),
+                        m_protein_paths[id].path().string(), m_ligand_paths[id].path().string());
+                } catch (const std::exception& e) {
+                    std::cout << "Error reading config json " << e.what() << "\n";
+                    success_filled = -1;
                 }
-                catch(const std::exception& e)
-                {
-                    std::cout << "Error reading config json " << e.what() << "\n";                   
-                    success_filled = -1;                    
-                }
-            }
-            else
-            {
-                success_filled = fill_config(cp, m_ligand_config_paths[id].path().string(), m_protein_paths[id].path().string(), m_ligand_paths[id].path().string());
+            } else {
+                success_filled = fill_config(cp, m_ligand_config_paths[id].path().string(),
+                                             m_protein_paths[id].path().string(),
+                                             m_ligand_paths[id].path().string());
             }
 
-            if (0 == success_filled)
-            {
-                m_successful_property_count ++;
+            if (0 == success_filled) {
+                m_successful_property_count++;
             }
         }
         std::cout << "Filled " << m_successful_property_count << " properties successfully.\n";
         return m_successful_property_count;
-    }   
-    // Launch simulations 
-    int launch()
-    {
-        if (0 == m_successful_property_count)
-        {
+    }
+    // Launch simulations
+    int launch() {
+        if (0 == m_successful_property_count) {
             std::cout << "m_successful_property_count = 0\n";
             return -1;
         }
-        int batches = m_successful_property_count/m_batch_size;
-        std::cout << "Parameters: exh = " << m_exhaustiveness << \
-            ", box[0] = " << m_box_size[0] << \
-            ", max_eval_steps global = " << m_max_global_steps << \
-            ", num_modes = " << m_num_modes << \
-            ", refine_steps = " << m_refine_steps << "\n";
+        int batches = m_successful_property_count / m_batch_size;
+        std::cout << "Parameters: exh = " << m_exhaustiveness << ", box[0] = " << m_box_size[0]
+                  << ", max_eval_steps global = " << m_max_global_steps
+                  << ", num_modes = " << m_num_modes << ", refine_steps = " << m_refine_steps
+                  << "\n";
 
         std::cout << "To do [" << batches << "] batches\n";
         std::cout << "Batched output to " << m_work_dir << "\n";
 
-        if (!boost::filesystem::exists(m_work_dir))
-        {
-            std::cout << "Creating work dir " << m_work_dir  << "\n";
+        if (!boost::filesystem::exists(m_work_dir)) {
+            std::cout << "Creating work dir " << m_work_dir << "\n";
             boost::filesystem::create_directory(m_work_dir);
         }
 
-
         std::vector<complex_property> cp;
-	    int total_err_count = 0;
-        for (int i = 0;i < batches;i ++)
-        {            
-            for (int curr = 0;curr < m_batch_size;curr ++)
-            {
-                int index = i*m_batch_size + curr;
+        int total_err_count = 0;
+        for (int i = 0; i < batches; i++) {
+            for (int curr = 0; curr < m_batch_size; curr++) {
+                int index = i * m_batch_size + curr;
                 cp.emplace_back(m_ptr_complex_property_holder->m_properties[index]);
-                std::cout << "Processing " << m_ptr_complex_property_holder->m_properties[index].ligand_name << "\n";
+                std::cout << "Processing "
+                          << m_ptr_complex_property_holder->m_properties[index].ligand_name << "\n";
             }
             // run
-            int err_count = batch_dock_with_worker(cp, m_local_only, m_work_dir, m_input_path, m_out_phrase);  
-            std::cout << "Batch [" << i+1 << "/" << batches << "] completed. " << err_count << " errors.\n";
-	        total_err_count += err_count;
+            int err_count
+                = batch_dock_with_worker(cp, m_local_only, m_work_dir, m_input_path, m_out_phrase);
+            std::cout << "Batch [" << i + 1 << "/" << batches << "] completed. " << err_count
+                      << " errors.\n";
+            total_err_count += err_count;
             cp.clear();
         }
         // Remaining if any
         int remaining = m_complex_names.size() - batches * m_batch_size;
-        if (remaining > 0)
-        {
-            for (int i = 0;i < remaining;i ++)
-            {
+        if (remaining > 0) {
+            for (int i = 0; i < remaining; i++) {
                 int index = i + batches * m_batch_size;
                 cp.emplace_back(m_ptr_complex_property_holder->m_properties[index]);
             }
-            int err_count = batch_dock_with_worker(cp, m_local_only, m_work_dir, m_input_path, m_out_phrase);
+            int err_count
+                = batch_dock_with_worker(cp, m_local_only, m_work_dir, m_input_path, m_out_phrase);
             total_err_count += err_count;
-	        cp.clear();
+            cp.clear();
         }
-        std::cout << "Remaining [" << remaining << "/" << m_complex_names.size() << "] completed.\n" << total_err_count << " Total errors\n";
+        std::cout << "Remaining [" << remaining << "/" << m_complex_names.size() << "] completed.\n"
+                  << total_err_count << " Total errors\n";
 
         return total_err_count;
     };
 
-    struct err_counter
-    {
+    struct err_counter {
         std::atomic<int> err_count;
-        void update()
-        {
-            err_count ++;
-        }
-        int get()
-        {
-            return err_count;
-        }
-        void clear()
-        {
-            err_count = 0;
-        }
+        void update() { err_count++; }
+        int get() { return err_count; }
+        void clear() { err_count = 0; }
     };
     err_counter counter;
 
-// Launches a batch of vcw workers in separate threads
-// to perform 1:1 docking.
-// Each launch uses CUDA stream for concurrent operation of the batches
+    // Launches a batch of vcw workers in separate threads
+    // to perform 1:1 docking.
+    // Each launch uses CUDA stream for concurrent operation of the batches
 
-    int batch_dock_with_worker(
-                std::vector<complex_property> props, 
-                bool local_only,
-                std::string workdir,
-                std::string input_dir,
-                std::string out_phrase)
-    {
+    int batch_dock_with_worker(std::vector<complex_property> props, bool local_only,
+                               std::string workdir, std::string input_dir, std::string out_phrase) {
         std::vector<std::thread> worker_threads;
 
         counter.clear();
 
-        for (int i = 0;i < props.size();i ++)
-        {
-            worker_threads.emplace_back(std::thread(
-                [=]()
-                {
-                    vina_cuda_worker vcw(m_seed, m_num_modes, m_refine_steps, props[i].center_x, props[i].center_y, 
-                            props[i].center_z, props[i].protein_name,props[i].ligand_name,
-                            local_only, std::vector<double>{props[i].box_x, props[i].box_y, props[i].box_z}, m_max_global_steps, m_verbosity,
-                            m_exhaustiveness, workdir, input_dir, out_phrase, m_device_id);
-                    try
-                    {
-                        int ret = vcw.launch();
-                        if (ret)
-                        {
-                            counter.update();
-                        }
+        for (int i = 0; i < props.size(); i++) {
+            worker_threads.emplace_back(std::thread([=]() {
+                vina_cuda_worker vcw(
+                    m_seed, m_num_modes, m_refine_steps, props[i].center_x, props[i].center_y,
+                    props[i].center_z, props[i].protein_name, props[i].ligand_name, local_only,
+                    std::vector<double>{props[i].box_x, props[i].box_y, props[i].box_z},
+                    m_max_global_steps, m_verbosity, m_exhaustiveness, workdir, input_dir,
+                    out_phrase, m_device_id);
+                try {
+                    int ret = vcw.launch();
+                    if (ret) {
+                        counter.update();
                     }
-                    catch(const std::exception& e)
-                    {
-                        std::cerr << "Exception processing " << props[i].ligand_name << ", " << e.what() << "\n";
-			            counter.update();
-                    }
+                } catch (const std::exception& e) {
+                    std::cerr << "Exception processing " << props[i].ligand_name << ", " << e.what()
+                              << "\n";
+                    counter.update();
                 }
-            )
-            );
+            }));
         }
-        for (int i = 0;i < props.size();i ++)
-        {
+        for (int i = 0; i < props.size(); i++) {
             worker_threads[i].join();
         }
-	    return counter.get();
+        return counter.get();
     }
-}; // simulation_container
+};  // simulation_container

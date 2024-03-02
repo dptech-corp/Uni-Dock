@@ -117,8 +117,8 @@ class UniDock(Base):
         for fprefix in mol_score_dict:
             mol_score_list = mol_score_dict[fprefix]
             mol_score_list.sort(key=lambda x: x[1], reverse=False)
-            logging.debug(fprefix)
-            logging.debug(mol_score_list)
+            logging.debug([item[1] for item in mol_score_list])
+            logging.info(f"docking result pose num: {len(mol_score_list)}, keep num: {topn_conf}")
             self.mol_group.update_mol_confs_by_file_prefix(fprefix,
                                                            [copy.copy(mol) for mol, _ in
                                                             mol_score_list[:topn_conf]])
@@ -133,13 +133,15 @@ class UniDock(Base):
                     max_step: int = 10,
                     num_modes: int = 3,
                     refine_step: int = 3,
+                    seed : int = 181129,
                     topn: int = 10,
                     batch_size: int = 20,
                     local_only: bool = False,
-                    score_name: str = "docking_score"
+                    score_name: str = "docking_score",
+                    docking_dir_name : str = "docking_dir",
                     ):
-        input_dir = make_tmp_dir(f"{self.workdir}/docking_inputs")
-        output_dir = make_tmp_dir(f"{self.workdir}/docking_results")
+        input_dir = make_tmp_dir(f"{self.workdir}/{docking_dir_name}/docking_inputs", date=False)
+        output_dir = make_tmp_dir(f"{self.workdir}/{docking_dir_name}/docking_results", date=False)
         for ligand_list, input_dir in self.init_docking_data(
                 input_dir=input_dir,
                 batch_size=batch_size
@@ -150,14 +152,12 @@ class UniDock(Base):
                 center_x=self.center_x, center_y=self.center_y, center_z=self.center_z,
                 size_x=self.size_x, size_y=self.size_y, size_z=self.size_z,
                 scoring=scoring_function, num_modes=num_modes,
-                exhaustiveness=exhaustiveness, max_step=max_step,
+                exhaustiveness=exhaustiveness, max_step=max_step, seed=seed,
                 refine_step=refine_step, local_only=local_only,
             )
             # Ranking
             self.postprocessing(zip(ligands, scores_list), topn, score_name)
 
-        shutil.rmtree(input_dir)
-        shutil.rmtree(output_dir)
 
     @time_logger
     def save_results(self, save_dir: Union[str, os.PathLike] = ""):
@@ -212,13 +212,15 @@ def main(args: dict):
         max_step=int(args["max_step"]),
         num_modes=int(args["num_modes"]),
         refine_step=int(args["refine_step"]),
+        seed=args["seed"],
         topn=int(args["topn"]),
         batch_size=int(args["batch_size"]),
     )
     runner.save_results(save_dir=savedir)
     end_time = time.time()
     logging.info(f"UniDock Pipeline finished ({end_time - start_time:.2f} s)")
-    shutil.rmtree(workdir, ignore_errors=True)
+    if not args["debug"]:
+        shutil.rmtree(workdir, ignore_errors=True)
 
 
 def get_parser() -> argparse.ArgumentParser:
@@ -255,11 +257,11 @@ def get_parser() -> argparse.ArgumentParser:
                         type=str, default="vina",
                         help="Scoring function used in rigid docking. Default: 'vina'.")
     parser.add_argument("-ex", "--exhaustiveness",
-                        type=int, default=256,
+                        type=int, default=128,
                         help="Exhaustiveness used in rigid docking. Default: 128.")
     parser.add_argument("-ms", "--max_step",
-                        type=int, default=10,
-                        help="Max step used in rigid docking. Default: 10.")
+                        type=int, default=20,
+                        help="Max step used in rigid docking. Default: 20.")
     parser.add_argument("-nm", "--num_modes",
                         type=int, default=3,
                         help="Number of modes used in rigid docking. Default: 3.")
@@ -269,6 +271,11 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument("-topn", "--topn",
                         type=int, default=100,
                         help="Top N results used in rigid docking. Default: 100.")
+
+    parser.add_argument("--seed", type=int, default=181129, 
+                        help="Uni-Dock random seed")
+    parser.add_argument("--debug", action="store_true",
+                        help="Debug mode")
     return parser
 
 

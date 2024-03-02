@@ -252,6 +252,10 @@ DOI 10.1002/jcc.21334
 
      The optimal application of Uni-Dock occurs in scenarios where one binding pocket interacts with numerous (in an order of 1000) ligands. As the number of ligands within a single computational batch increases, the average processing speed improves. In instances where only a few ligands are present for one binding pocket, the overhead proportion becomes considerably large, leading to slower computational performance.
 
+4. Which GPU architectures does Uni-Dock support?
+
+     Starting from v1.1, Uni-Dock supports NVIDIA GPUs with [compute capability](https://en.wikipedia.org/wiki/CUDA#GPUs_supported) >= 7.0 . Uni-Dock v1.0 supports both CUDA platform for NVIDIA GPUs and ROCm platform for AMD GPUs. Since the performance optimizations are targeted at CUDA, future updates will no longer support the ROCm platform.
+
 ### Addendum to "FAQ 3 - Uni-Dock computes slowly for few (<10) ligands."
 
 The `paired_batch` mode provides a mechanism to accelerate simultaneous 1:1 docking in batches using Vina scoring, using CUDA streams. To run docking using this mode, invoke unidock with the parameter `--paired_batch_size` value >0, with the protein:ligand configurations passed in JSON form using `--ligand_index`. The JSON file should use schema defined in paired_batching.schema.json.
