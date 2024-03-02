@@ -4,7 +4,7 @@ on:
     branches:
       - '**ci**'
   pull_request:
-    branches: 
+    branches:
       - main
 
 env:
@@ -57,11 +57,8 @@ jobs:
     if: ${{ always() }}
     needs: [flake8,pyright]
     runs-on: nvidia
-    strategy:
-      matrix:
-        cuda-version: ["12.0.0"]
     container:
-      image: docker.io/xmyyn/unidock_tools_base:0.0.1_cuda${{ matrix.cuda-version }}
+      image: dptechnology/unidock_tools
       options: --gpus all
     steps:
     - name: checkout repo
@@ -93,7 +90,7 @@ jobs:
       run: |
         pip install pytest pytest-cov
         pytest unidock_tools/tests/ut -vv --cov --cov-report term
-    
+
     - name: run application e2e test
       run: |
         pytest unidock_tools/tests/applications -vv --cov --cov-report term
