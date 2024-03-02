@@ -93,24 +93,19 @@ public:
         m_num_conf_independents = m_conf_independents.size();
         m_weights = weights;
     };
-    void Destroy()
-    {
-        for (auto p : m_potentials)
-        {
+    void Destroy() {
+        for (auto p : m_potentials) {
             delete p;
         }
         m_potentials.clear();
         m_num_potentials = 0;
-        for (auto p : m_conf_independents)
-        {
+        for (auto p : m_conf_independents) {
             delete p;
         }
         m_conf_independents.clear();
         m_num_conf_independents = 0;
     }
-    ~ScoringFunction() {
-        Destroy();
-    }
+    ~ScoringFunction() { Destroy(); }
     fl eval(atom& a, atom& b, fl r) const {  // intentionally not checking for cutoff
         fl acc = 0;
         VINA_FOR(i, m_num_potentials) { acc += m_weights[i] * m_potentials[i]->eval(a, b, r); }

@@ -27,7 +27,7 @@
 #include <exception>
 #include <boost/program_options.hpp>
 
-//#define DEBUG
+// #define DEBUG
 
 #include "vina.h"
 #include "utils.h"
@@ -41,13 +41,12 @@
 #include "complex_property.h"
 // Use vina sf, and accelerate operations with CUDA streams
 
-class vina_cuda_worker : public Vina
-{
+class vina_cuda_worker : public Vina {
     int exhaustiveness = 512;
     int num_modes = 1;
     int min_rmsd = 0;
     int max_evals = 0;
-    int max_step = 60;   
+    int max_step = 60;
     int seed = 5;
     int refine_step = 3;
     bool local_only = false;
@@ -67,107 +66,86 @@ class vina_cuda_worker : public Vina
     double weight_repulsion = 0.840245;
     double weight_hydrophobic = -0.035069;
     double weight_hydrogen = -0.587439;
-    double weight_rot = 0.05846;    
+    double weight_rot = 0.05846;
     // macrocycle closure
     double weight_glue = 50.000000;  // linear attraction
     std::vector<std::string> gpu_out_name;
     std::string workdir;
     std::string input_dir;
     std::string out_dir;
-    std::vector<model> batch_ligands; 
+    std::vector<model> batch_ligands;
     double center_x;
-    double center_y; 
-    double center_z; 
+    double center_y;
+    double center_z;
     std::string protein_name;
     std::string ligand_name;
     int m_device_id = 0;
-    void init(std::string out_phrase)
-    {
+    void init(std::string out_phrase) {
         out_dir = workdir + "/" + out_phrase;
-        if (!boost::filesystem::exists(out_dir))
-        {
+        if (!boost::filesystem::exists(out_dir)) {
             boost::filesystem::create_directory(out_dir);
         }
-	    m_seed = seed;
+        m_seed = seed;
         checkCUDA(cudaSetDevice(m_device_id));
     }
-public:            
-    vina_cuda_worker(
-            int seed,
-            int num_modes,
-            int refine_steps,
-            double center_x, 
-            double center_y, 
-            double center_z, 
-            std::string protein_name,
-            std::string ligand_name,
-            bool local_only,
-            std::vector<double> box_size_xyz,
-            int max_step,
-            int verbosity,
-            int exh,
-            std::string workdir,
-            std::string input_dir,
-            std::string out_phrase,
-            int device_id):
 
-            seed(seed),
-            num_modes(num_modes),
-            refine_step(refine_steps),
-            workdir(workdir),
-            input_dir(input_dir),
-            center_x(center_x),
-            center_y(center_y),
-            center_z(center_z),
-            size_x(box_size_xyz[0]),
-            size_y(box_size_xyz[1]),
-            size_z(box_size_xyz[2]),
-            max_step(max_step),
-            exhaustiveness(exh),
-            protein_name(protein_name),
-            ligand_name(ligand_name),
-            local_only(local_only),
-            out_dir(out_phrase),
-            m_device_id(device_id),
-            Vina{"vina", 0, seed, verbosity, false, NULL}
-    {
+public:
+    vina_cuda_worker(int seed, int num_modes, int refine_steps, double center_x, double center_y,
+                     double center_z, std::string protein_name, std::string ligand_name,
+                     bool local_only, std::vector<double> box_size_xyz, int max_step, int verbosity,
+                     int exh, std::string workdir, std::string input_dir, std::string out_phrase,
+                     int device_id)
+        :
+
+          seed(seed),
+          num_modes(num_modes),
+          refine_step(refine_steps),
+          workdir(workdir),
+          input_dir(input_dir),
+          center_x(center_x),
+          center_y(center_y),
+          center_z(center_z),
+          size_x(box_size_xyz[0]),
+          size_y(box_size_xyz[1]),
+          size_z(box_size_xyz[2]),
+          max_step(max_step),
+          exhaustiveness(exh),
+          protein_name(protein_name),
+          ligand_name(ligand_name),
+          local_only(local_only),
+          out_dir(out_phrase),
+          m_device_id(device_id),
+          Vina{"vina", 0, seed, verbosity, false, NULL} {
         init(out_phrase);
     }
 
-    ~vina_cuda_worker()
-    {
-
-    }
-
+    ~vina_cuda_worker() {}
 
     // Performs CUDA Stream based docking of 1 ligand and 1 protein
 
-    int launch()
-    {
+    int launch() {
         multi_bias = false;
-	    bias_batch_list.clear();
-        
+        bias_batch_list.clear();
+
         set_vina_weights(weight_gauss1, weight_gauss2, weight_repulsion, weight_hydrophobic,
-                                weight_hydrogen, weight_glue, weight_rot);        
+                         weight_hydrogen, weight_glue, weight_rot);
         std::string flex;
         std::string rigid(protein_name);
 
-        if (! boost::filesystem::exists( ligand_name ) )
-        {
-            std::cout << "Input ligand file does not exist ("  << ligand_name << ")\n";
+        if (!boost::filesystem::exists(ligand_name)) {
+            std::cout << "Input ligand file does not exist (" << ligand_name << ")\n";
             return -1;
-        }        
-        if (! boost::filesystem::exists( rigid ) )
-        {
+        }
+        if (!boost::filesystem::exists(rigid)) {
             std::cout << "Input (rigid) protein file does not exist (" << rigid << ")\n";
             return -1;
-        }    
- 
-        set_receptor(rigid, flex);                                
+        }
+
+        set_receptor(rigid, flex);
 
         enable_gpu();
-        compute_vina_maps(center_x, center_y, center_z, size_x, size_y, size_z,
-                                                grid_spacing, force_even_voxels);
+        compute_vina_maps(center_x, center_y, center_z, size_x, size_y, size_z, grid_spacing,
+                          force_even_voxels);
 
         auto parsed_ligand = parse_ligand_from_file_no_failure(
             ligand_name, m_scoring_function->get_atom_typing(), keep_H);
@@ -176,18 +154,15 @@ public:
         set_ligand_from_object_gpu(batch_ligands);
 
         bool create_new_stream = true;
-        global_search_gpu(  exhaustiveness, num_modes, min_rmsd, max_evals, max_step,
-                            1, (unsigned long long)seed, refine_step,
-                            local_only, create_new_stream);
+        global_search_gpu(exhaustiveness, num_modes, min_rmsd, max_evals, max_step, 1,
+                          (unsigned long long)seed, refine_step, local_only, create_new_stream);
 
         std::vector<std::string> gpu_out_name;
-        gpu_out_name.push_back(
-            default_output(get_filename(ligand_name), out_dir));
+        gpu_out_name.push_back(default_output(get_filename(ligand_name), out_dir));
         write_poses_gpu(gpu_out_name, num_modes, energy_range);
 
         // write best score
-        if (!m_poses_gpu.empty())
-        {
+        if (!m_poses_gpu.empty()) {
             std::string score_file_name = default_score_output(get_filename(ligand_name));
             ofile f(make_path(out_dir + '/' + score_file_name));
             f << "affinity(kcal/mol)[0]=" << m_poses_gpu[0][0].e << "\n";
@@ -197,7 +172,6 @@ public:
     }
 
     // Protectors
-    vina_cuda_worker (const vina_cuda_worker&);
+    vina_cuda_worker(const vina_cuda_worker&);
     vina_cuda_worker& operator=(const vina_cuda_worker&);
 };
-
