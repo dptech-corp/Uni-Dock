@@ -19,6 +19,8 @@ jobs:
           repository: dptech-corp/Uni-Dock-Benchmarks
       - name: Setup Python
         uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
       - name: Install requirements
         run: |
           apt update && apt install -y wget unzip
