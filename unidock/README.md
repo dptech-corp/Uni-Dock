@@ -247,8 +247,10 @@ DOI 10.1002/jcc.21334
 3. Uni-Dock computes slowly for few (<10) ligands.
 
      The optimal application of Uni-Dock occurs in scenarios where one binding pocket interacts with numerous (in an order of 1000) ligands. As the number of ligands within a single computational batch increases, the average processing speed improves. In instances where only a few ligands are present for one binding pocket, the overhead proportion becomes considerably large, leading to slower computational performance.
+
 4. Which GPU architectures does Uni-Dock support?
-   Before Uni-Dock v1.1, Uni-Dock supported rcom and cuda, but version 1.1 has a lot of performance optimizations for CUDA, so future updates will no longer support the rcom platform. If you need to use the rcom platform, you can use Uni-dock v1.0.
+
+     Starting from v1.1, Uni-Dock supports NVIDIA GPUs with [compute capability](https://en.wikipedia.org/wiki/CUDA#GPUs_supported) >= 7.0 . Uni-Dock v1.0 supports both CUDA platform for NVIDIA GPUs and ROCm platform for AMD GPUs. Since the performance optimizations are targeted at CUDA, future updates will no longer support the ROCm platform.
 
 ### Addendum to "FAQ 3 - Uni-Dock computes slowly for few (<10) ligands."
 
