@@ -1654,8 +1654,8 @@ void Vina::global_search(const int exhaustiveness, const int n_poses, const doub
 
 void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const double min_rmsd,
                              const int max_evals, const int max_step, int num_of_ligands,
-                             unsigned long long seed, const int refine_step,
-                             const bool local_only, const bool create_new_stream) {
+                             unsigned long long seed, const int refine_step, const bool local_only,
+                             const bool create_new_stream) {
     // Vina search (Monte-carlo and local optimization)
     // Check if ff, box and ligand were initialized
     if (!m_ligand_initialized) {
@@ -1716,15 +1716,13 @@ void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const 
     doing(sstm.str(), m_verbosity, 0);
     auto start = std::chrono::system_clock::now();
     if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO) {
-        if (create_new_stream)
-        {
-            mc.mc_stream(m_model_gpu, poses_gpu, m_precalculated_byatom_gpu, m_data_list_gpu, m_grid,
-                m_grid.corner1(), m_grid.corner2(), generator, m_verbosity, seed, bias_batch_list);            
-        }
-        else
-        {
+        if (create_new_stream) {
+            mc.mc_stream(m_model_gpu, poses_gpu, m_precalculated_byatom_gpu, m_data_list_gpu,
+                         m_grid, m_grid.corner1(), m_grid.corner2(), generator, m_verbosity, seed,
+                         bias_batch_list);
+        } else {
             mc(m_model_gpu, poses_gpu, m_precalculated_byatom_gpu, m_data_list_gpu, m_grid,
-                m_grid.corner1(), m_grid.corner2(), generator, m_verbosity, seed, bias_batch_list);
+               m_grid.corner1(), m_grid.corner2(), generator, m_verbosity, seed, bias_batch_list);
         }
     } else {
         mc(m_model_gpu, poses_gpu, m_precalculated_byatom_gpu, m_data_list_gpu, m_ad4grid,
