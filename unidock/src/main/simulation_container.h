@@ -194,7 +194,7 @@ struct simulation_container {
         } else {
             std::ifstream ifs(path);
             std::string line;
-            double vals[3];
+            double vals[6];
             int id = 0;
             while (std::getline(ifs, line)) {
                 std::string trimmed(trim_eol(line));
