@@ -135,6 +135,14 @@ std::string get_adtype_str(sz& t) {
             return "At";
         case AD_TYPE_W:
             return "W";
+        case AD_TYPE_OXA:
+            return "OXA";
+        case AD_TYPE_NXA:
+            return "NXA";
+        case AD_TYPE_OXD:
+            return "OXD";
+        case AD_TYPE_NXD:
+            return "NXD";
         default:
             VINA_CHECK(false);
     }
