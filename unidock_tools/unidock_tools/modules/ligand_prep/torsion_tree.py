@@ -409,10 +409,10 @@ class TopologyBuilder:
             for core_bpf_line in self.core_bpf_line_list:
                 ligand_core_bpf_file.write(core_bpf_line)
 
-    def get_sdf_torsion_tree_info(self) -> Tuple[str, str, str]:
-        fragment_info_string = ''
-        torsion_info_string = ''
-        atom_info_string = ''
+    def get_sdf_torsion_tree_info(self) -> Tuple[str, str, str, str]:
+        frag_info_str = ''
+        torsion_info_str = ''
+        atom_info_str = ''
 
         num_nodes = self.torsion_tree.number_of_nodes()
         num_edges = self.torsion_tree.number_of_edges()
@@ -420,11 +420,11 @@ class TopologyBuilder:
         for node_idx in range(num_nodes):
             atom_info_list = self.torsion_tree.nodes[node_idx]['atom_info_list']
             for atom_info_dict in atom_info_list:
-                fragment_info_string += str(atom_info_dict['sdf_atom_idx'])
-                fragment_info_string += ' '
+                frag_info_str += str(atom_info_dict['sdf_atom_idx'])
+                frag_info_str += ' '
 
-            fragment_info_string = fragment_info_string[:-1]
-            fragment_info_string += '\n'
+            frag_info_str = frag_info_str[:-1]
+            frag_info_str += '\n'
 
         edge_key_list = list(self.torsion_tree.edges.keys())
         for edge_idx in range(num_edges):
@@ -435,8 +435,8 @@ class TopologyBuilder:
             begin_node_idx = str(edge_info_dict['begin_node_idx'])
             end_node_idx = str(edge_info_dict['end_node_idx'])
 
-            torsion_info_string += f'{begin_sdf_atom_idx} {end_sdf_atom_idx} {begin_node_idx} {end_node_idx}'
-            torsion_info_string += '\n'
+            torsion_info_str += f'{begin_sdf_atom_idx} {end_sdf_atom_idx} {begin_node_idx} {end_node_idx}'
+            torsion_info_str += '\n'
 
         for atom in self.mol.GetAtoms():
             sdf_atom_idx = str(atom.GetIntProp('sdf_atom_idx'))
@@ -445,16 +445,21 @@ class TopologyBuilder:
                 charge = "0"
             atom_type = atom.GetProp('atom_type')
             atom_info = str(sdf_atom_idx).ljust(3) + charge[:10].ljust(10) + atom_type.ljust(2)
-            atom_info_string += atom_info
-            atom_info_string += '\n'
+            atom_info_str += atom_info
+            atom_info_str += '\n'
+        
+        frag_all_info_str = " ".join([str(i) for i in range(1, 1 + self.mol.GetNumAtoms())])
 
-        return fragment_info_string, torsion_info_string, atom_info_string
+        return frag_info_str, frag_all_info_str, torsion_info_str, atom_info_str
 
-    def write_sdf_file(self, out_file: str = ''):
-        fragment_info_string, torsion_info_string, atom_info_string = self.get_sdf_torsion_tree_info()
-        self.mol.SetProp("fragInfo", fragment_info_string)
-        self.mol.SetProp("torsionInfo", torsion_info_string)
-        self.mol.SetProp("atomInfo", atom_info_string)
+    def write_sdf_file(self, out_file: str = '', do_rigid_docking: bool = False):
+        frag_info_str, frag_all_info_str, torsion_info_str, atom_info_str = self.get_sdf_torsion_tree_info()
+        if do_rigid_docking:
+            self.mol.SetProp("fragInfo", frag_all_info_str)
+        else:
+            self.mol.SetProp("fragInfo", frag_info_str)
+            self.mol.SetProp("torsionInfo", torsion_info_str)
+        self.mol.SetProp("atomInfo", atom_info_str)
         if out_file:
             os.makedirs(os.path.dirname(os.path.abspath(out_file)), exist_ok=True)
             with Chem.SDWriter(out_file) as writer:
