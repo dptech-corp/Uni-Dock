@@ -409,7 +409,7 @@ class TopologyBuilder:
             for core_bpf_line in self.core_bpf_line_list:
                 ligand_core_bpf_file.write(core_bpf_line)
 
-    def get_sdf_torsion_tree_info(self) -> Tuple[str, str, str]:
+    def get_sdf_torsion_tree_info(self) -> Tuple[str, str, str, str]:
         frag_info_str = ''
         torsion_info_str = ''
         atom_info_str = ''
