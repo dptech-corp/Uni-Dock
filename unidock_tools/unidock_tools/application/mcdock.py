@@ -122,6 +122,7 @@ def main(args: dict):
         topn=int(args["topn_rigid_docking"]),
         batch_size=int(args["batch_size"]),
         docking_dir_name="rigid_docking",
+        props_list=["fragAllInfo", "atomInfo"],
     )
     logging.info("[MultiConfDock] Start local refine")
     mcd.run_unidock(
@@ -135,6 +136,7 @@ def main(args: dict):
         batch_size=int(args["batch_size"]),
         local_only=True,
         docking_dir_name="local_refine_docking",
+        props_list=["fragInfo", "torsionInfo", "atomInfo"],
     )
     mcd.save_results(save_dir=savedir)
     end_time = time.time()
@@ -193,7 +195,7 @@ def get_parser() -> argparse.ArgumentParser:
                         type=int, default=3,
                         help="Number of modes used in rigid docking. Default: 3.")
     parser.add_argument("-rs_rd", "--refine_step_rigid_docking",
-                        type=int, default=3,
+                        type=int, default=5,
                         help="Refine step used in rigid docking. Default: 3.")
     parser.add_argument("-topn_rd", "--topn_rigid_docking",
                         type=int, default=100,

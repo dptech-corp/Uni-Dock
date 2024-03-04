@@ -83,25 +83,27 @@ class UniDock(Base):
         idx, mol = id_mol_tup
         topo_builder = TopologyBuilder(mol=mol)
         topo_builder.build_molecular_graph()
-        fragment_info, torsion_info, atom_info = topo_builder.get_sdf_torsion_tree_info()
-        return idx, fragment_info, torsion_info, atom_info
+        fragment_info, fragment_all_info, torsion_info, atom_info = topo_builder.get_sdf_torsion_tree_info()
+        return idx, fragment_info, fragment_all_info, torsion_info, atom_info
 
     @time_logger
     def build_topology(self):
         id_mol_tup_list = [(idx, mol.get_first_mol()) for idx, mol in enumerate(self.mol_group)]
         with Pool(os.cpu_count()) as pool:
-            for idx, frag_info, torsion_info, atom_info in pool \
+            for idx, frag_info, fragment_all_info, torsion_info, atom_info in pool \
                     .imap_unordered(self._build_topology, id_mol_tup_list):
                 self.mol_group.update_property_by_idx(idx, "fragInfo", frag_info)
+                self.mol_group.update_property_by_idx(idx, "fragAllInfo", fragment_all_info)
                 self.mol_group.update_property_by_idx(idx, "torsionInfo", torsion_info)
                 self.mol_group.update_property_by_idx(idx, "atomInfo", atom_info)
 
     @time_logger
-    def init_docking_data(self, input_dir: Union[str, os.PathLike], batch_size: int = 20):
+    def init_docking_data(self, input_dir: Union[str, os.PathLike], batch_size: int = 20, props_list : List[str] = []):
         for sub_idx_list in self.mol_group.iter_idx_list(batch_size):
             input_list = []
             for idx in sub_idx_list:
-                input_list += self.mol_group.write_sdf_by_idx(idx, save_dir=input_dir, seperate_conf=True)
+                input_list += self.mol_group.write_sdf_by_idx(idx, save_dir=input_dir, 
+                                                              seperate_conf=True, props_list=props_list)
             yield input_list, input_dir
 
     @time_logger
@@ -120,11 +122,10 @@ class UniDock(Base):
             logging.debug([item[1] for item in mol_score_list])
             logging.info(f"docking result pose num: {len(mol_score_list)}, keep num: {topn_conf}")
             self.mol_group.update_mol_confs_by_file_prefix(fprefix,
-                                                           [copy.copy(mol) for mol, _ in
-                                                            mol_score_list[:topn_conf]])
-            self.mol_group.update_property_by_file_prefix(fprefix, score_name,
-                                                          [score for _, score in
-                                                           mol_score_list[:topn_conf]])
+                                                           [mol for mol, _ in mol_score_list[:topn_conf]])
+            self.mol_group.update_property_by_file_prefix(fprefix, property_name=score_name,
+                                                          value=[score for _, score in mol_score_list[:topn_conf]],
+                                                          is_conf_prop=True)
 
     @time_logger
     def run_unidock(self,
@@ -139,12 +140,14 @@ class UniDock(Base):
                     local_only: bool = False,
                     score_name: str = "docking_score",
                     docking_dir_name : str = "docking_dir",
+                    props_list : List[str] = [],
                     ):
         input_dir = make_tmp_dir(f"{self.workdir}/{docking_dir_name}/docking_inputs", date=False)
         output_dir = make_tmp_dir(f"{self.workdir}/{docking_dir_name}/docking_results", date=False)
         for ligand_list, input_dir in self.init_docking_data(
                 input_dir=input_dir,
-                batch_size=batch_size
+                batch_size=batch_size,
+                props_list=props_list,
         ):
             # Run docking
             ligands, scores_list = run_unidock(
@@ -164,7 +167,7 @@ class UniDock(Base):
         if not save_dir:
             save_dir = f"{self.workdir}/results_dir"
         save_dir = make_tmp_dir(str(save_dir), False, False)
-        res_list = self.mol_group.write_sdf(save_dir=save_dir, seperate_conf=False, conf_prefix="_unidock", conf_props=["docking_score"])
+        res_list = self.mol_group.write_sdf(save_dir=save_dir, seperate_conf=False, conf_prefix="_unidock")
         return res_list
 
 
