@@ -55,7 +55,7 @@ jobs:
     needs: [flake8,pyright]
     runs-on: nvidia
     container:
-      image: dptechnology/unidock_tools:base_1.0.0
+      image: dptechnology/unidock_tools
       options: --gpus all
     steps:
     - name: checkout repo
