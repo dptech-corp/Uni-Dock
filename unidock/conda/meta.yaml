@@ -1,22 +1,36 @@
 {% set version = os.popen('git describe --tags --abbrev=0').read().strip('\n').lstrip('v').replace('-', '_') %}
 
+# This script is used for building a conda package for Uni-Dock.
+# CUDA Toolkit is required.
+# If you are using CUDA Toolkit 11.x, check conda_build_config.yaml for instructions.
+
+# conda build . -c conda-forge
+
 package:
   name: unidock
   version: {{ version }}
 
-source:
-  path: ..
+# By default it builds the source codes from the local directory.
+# To build the release version from GitHub,
+# comment out the 'path' line and uncomment the 'git_url' and 'git_rev' line,
+# and replace {{ version }} with the release version number.
 
-# To build a conda package locally: `conda build . -c conda-forge`
+source:
+  path: ../.. # Root dir of Uni-Dock
+  # git_url: https://github.com/dptech-corp/Uni-Dock.git
+  # git_rev: {{ version }}
+
 build:
   skip: true  # [not linux]
 
   # ${CMAKE_ARGS} applys restrictions for CMake to search libs under conda building env.
   # See https://conda-forge.org/docs/maintainer/knowledge_base.html#using-cmake .
+  # https://docs.conda.io/projects/conda-build/en/stable/user-guide/environment-variables.html#environment-variables-set-during-the-build-process
   script: |
-    mkdir build && cd build
-    cmake ${CMAKE_ARGS} ${SRC_DIR}
-    make unidock -j`nproc`
+    cd unidock
+    mkdir conda_build && cd conda_build
+    cmake ${CMAKE_ARGS} ${SRC_DIR}/unidock
+    make unidock -j$CPU_COUNT
     make install
 
   string: {{ GIT_BUILD_STR }}
@@ -29,10 +43,10 @@ requirements:
     - cmake
 
   host:
-    - boost-cpp
+    - libboost-devel
+    - libcurand-dev
 
-  run:
-    - boost
+  # run:
 
 
 test:
@@ -42,17 +56,17 @@ test:
 
 about:
   home: https://github.com/dptech-corp/Uni-Dock
-  # doc_url: https://github.com/dptech-corp/Uni-Dock
-  # dev_url: https://github.com/dptech-corp/Uni-Dock
+  doc_url: https://github.com/dptech-corp/Uni-Dock
+  dev_url: https://github.com/dptech-corp/Uni-Dock
   license: LGPL-3.0
   license_family: LGPL
-  license_file: LICENSE
+  license_file: unidock/LICENSE
   summary: A GPU-accelerated molecular docking program
   description: >
-    Uni-Dock is a GPU-accelerated molecular docking program developed by DP Technology. 
-    It supports various scoring functions including vina, vinardo, and ad4. 
-    Uni-Dock achieves more than 1000-fold speed-up on V100 GPU with high-accuracy, 
-    compared with the AutoDock Vina running in single CPU core. 
+    Uni-Dock is a GPU-accelerated molecular docking program developed by DP Technology.
+    It supports various scoring functions including vina, vinardo, and ad4.
+    Uni-Dock achieves more than 1000-fold speed-up on V100 GPU with high-accuracy,
+    compared with the AutoDock Vina running in single CPU core.
     The paper has been accepted by JCTC (doi: 10.1021/acs.jctc.2c01145).
 
 extra:
