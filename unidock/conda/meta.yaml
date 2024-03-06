@@ -46,7 +46,8 @@ requirements:
     - libboost-devel
     - libcurand-dev
 
-  # run:
+  run:
+    - libboost
 
 
 test:
