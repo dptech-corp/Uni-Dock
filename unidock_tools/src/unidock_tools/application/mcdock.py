@@ -11,6 +11,41 @@ from unidock_tools.modules.confgen import generate_conf
 from .unidock_pipeline import UniDock
 
 
+DEFAULT_ARGS = {
+    "receptor": None,
+    "ligands": None,
+    "ligand_index": None,
+    "gen_conf": False,
+    "max_num_confs_per_ligand": 200,
+    "min_rmsd": 0.3,
+    "center_x": None,
+    "center_y": None,
+    "center_z": None,
+    "size_x": 22.5,
+    "size_y": 22.5,
+    "size_z": 22.5,
+    "workdir": "mcdock_workdir",
+    "savedir": "mcdock_results",
+    "batch_size": 1200,
+    "scoring_function_rigid_docking": "vina",
+    "search_mode_rigid_docking": "",
+    "exhaustiveness_rigid_docking": 128,
+    "max_step_rigid_docking": 20,
+    "num_modes_rigid_docking": 3,
+    "refine_step_rigid_docking": 3,
+    "topn_rigid_docking": 100,
+    "scoring_function_local_refine": "vina",
+    "search_mode_local_refine": "",
+    "exhaustiveness_local_refine": 512,
+    "max_step_local_refine": 40,
+    "num_modes_local_refine": 1,
+    "refine_step_local_refine": 3,
+    "topn_local_refine": 1,
+    "seed": 181129,
+    "debug": False,
+}
+
+
 class MultiConfDock(UniDock):
     def __init__(self,
                  receptor: Path,
@@ -69,6 +104,7 @@ class MultiConfDock(UniDock):
 
 
 def main(args: dict):
+    args = {**DEFAULT_ARGS, **args}
     if args["debug"]:
         logging.getLogger().setLevel("DEBUG")
 
@@ -154,7 +190,7 @@ def get_parser() -> argparse.ArgumentParser:
                         help="Receptor file in pdbqt format.")
     parser.add_argument("-l", "--ligands", type=lambda s: s.split(','), default=None,
                         help="Ligand file in sdf format. Specify multiple files separated by commas.")
-    parser.add_argument("-i", "--ligand_index", type=str, default="",
+    parser.add_argument("-i", "--ligand_index", type=str, default=None,
                         help="A text file containing the path of ligand files in sdf format.")
 
     parser.add_argument("-g", "--gen_conf", action="store_true",
@@ -181,8 +217,8 @@ def get_parser() -> argparse.ArgumentParser:
                         help="Working directory. Default: 'MultiConfDock'.")
     parser.add_argument("-sd", "--savedir", type=str, default="mcdock_results",
                         help="Save directory. Default: 'MultiConfDock-Result'.")
-    parser.add_argument("-bs", "--batch_size", type=int, default=20,
-                        help="Batch size for docking. Default: 20.")
+    parser.add_argument("-bs", "--batch_size", type=int, default=1200,
+                        help="Batch size for docking. Default: 1200.")
 
     parser.add_argument("-sf_rd", "--scoring_function_rigid_docking",
                         type=str, default="vina",
@@ -200,7 +236,7 @@ def get_parser() -> argparse.ArgumentParser:
                         type=int, default=3,
                         help="Number of modes used in rigid docking. Default: 3.")
     parser.add_argument("-rs_rd", "--refine_step_rigid_docking",
-                        type=int, default=5,
+                        type=int, default=3,
                         help="Refine step used in rigid docking. Default: 3.")
     parser.add_argument("-topn_rd", "--topn_rigid_docking",
                         type=int, default=100,
@@ -222,8 +258,8 @@ def get_parser() -> argparse.ArgumentParser:
                         type=int, default=1,
                         help="Number of modes used in local refine. Default: 1.")
     parser.add_argument("-rs_lr", "--refine_step_local_refine",
-                        type=int, default=5,
-                        help="Refine step used in local refine. Default: 5.")
+                        type=int, default=3,
+                        help="Refine step used in local refine. Default: 3.")
     parser.add_argument("-topn_lr", "--topn_local_refine",
                         type=int, default=1,
                         help="Top N results used in local refine. Default: 1.")

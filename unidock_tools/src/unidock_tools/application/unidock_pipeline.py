@@ -16,6 +16,34 @@ from unidock_tools.modules.docking import run_unidock
 from .base import Base
 
 
+DEFAULT_ARGS = {
+    "receptor": None,
+    "ligands": None,
+    "ligand_index": None,
+    "center_x": None,
+    "center_y": None,
+    "center_z": None,
+    "size_x": 22.5,
+    "size_y": 22.5,
+    "size_z": 22.5,
+    "workdir": "docking_workdir",
+    "savedir": "docking_results",
+    "batch_size": 1200,
+    "scoring_function": "vina",
+    "search_mode": "",
+    "exhaustiveness": 128,
+    "max_step": 20,
+    "num_modes": 3,
+    "refine_step": 3,
+    "energy_range": 3.0,
+    "topn": 100,
+    "score_only": False,
+    "local_only": False,
+    "seed": 181129,
+    "debug": False,
+}
+
+
 class UniDock(Base):
     def __init__(self,
                  receptor: Path,
@@ -177,17 +205,18 @@ class UniDock(Base):
 
 
 def main(args: dict):
+    args = {**DEFAULT_ARGS, **args}
     workdir = Path(args["workdir"]).resolve()
     savedir = Path(args["savedir"]).resolve()
 
     ligands = []
-    if args["ligands"]:
+    if args.get("ligands"):
         for lig in args["ligands"]:
             if not Path(lig).exists():
                 logging.error(f"Cannot find {lig}")
                 continue
             ligands.append(Path(lig).resolve())
-    if args["ligand_index"]:
+    if args.get("ligand_index"):
         with open(args["ligand_index"], "r") as f:
             index_content = f.read()
         index_lines1 = [Path(line.strip()).resolve() for line in index_content.split("\n") 
@@ -243,7 +272,7 @@ def get_parser() -> argparse.ArgumentParser:
                         help="Receptor file in pdbqt format.")
     parser.add_argument("-l", "--ligands", type=lambda s: s.split(','), default=None,
                         help="Ligand file in sdf format. Specify multiple files separated by commas.")
-    parser.add_argument("-i", "--ligand_index", type=str, default="",
+    parser.add_argument("-i", "--ligand_index", type=str, default=None,
                         help="A text file containing the path of ligand files in sdf format.")
 
     parser.add_argument("-cx", "--center_x", type=float, required=True,

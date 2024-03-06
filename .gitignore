@@ -18,5 +18,4 @@ unidock/example/screening_test/unidock_root
 unidock/example/screening_test/test_dock
 unidock_tools/dist
 unidock_tools/dist/*
-unidock_tools/unidock_tools.egg-info
-unidock_tools/unidock_tools.egg-info/*
+*.egg-info
