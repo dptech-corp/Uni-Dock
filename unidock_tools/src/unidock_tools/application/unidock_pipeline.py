@@ -1,4 +1,4 @@
-from typing import List, Tuple, Union, Iterator
+from typing import List, Tuple, Union
 import copy
 from pathlib import Path
 import os
@@ -14,6 +14,34 @@ from unidock_tools.modules.protein_prep import pdb2pdbqt
 from unidock_tools.modules.ligand_prep import TopologyBuilder
 from unidock_tools.modules.docking import run_unidock
 from .base import Base
+
+
+DEFAULT_ARGS = {
+    "receptor": None,
+    "ligands": None,
+    "ligand_index": None,
+    "center_x": None,
+    "center_y": None,
+    "center_z": None,
+    "size_x": 22.5,
+    "size_y": 22.5,
+    "size_z": 22.5,
+    "workdir": "docking_workdir",
+    "savedir": "docking_results",
+    "batch_size": 1200,
+    "scoring_function": "vina",
+    "search_mode": "",
+    "exhaustiveness": 128,
+    "max_step": 20,
+    "num_modes": 3,
+    "refine_step": 3,
+    "energy_range": 3.0,
+    "topn": 100,
+    "score_only": False,
+    "local_only": False,
+    "seed": 181129,
+    "debug": False,
+}
 
 
 class UniDock(Base):
@@ -53,10 +81,6 @@ class UniDock(Base):
         if receptor.suffix != ".pdbqt":
             logging.error("receptor file must be pdb/pdbqt format")
             exit(1)
-        for ligand in ligands:
-            if ligand.suffix != ".sdf":
-                logging.error(f"ligand file must be sdf format (file: {str(ligand)})")
-                exit(1)
         self.receptor = receptor
         self.mol_group = MolGroup(ligands)
         self.build_topology()
@@ -112,7 +136,10 @@ class UniDock(Base):
                        score_name: str = "score"):
         mol_score_dict = dict()
         for ligand, scores in ligand_scores_list:
-            fprefix = ligand.stem.rpartition("_out")[0].split("_CONF")[0]
+            fprefix = ligand.stem.rpartition("_out")[0]
+            if not fprefix:
+                fprefix = ligand.stem
+            fprefix = fprefix.split("_CONF")[0]
             result_mols = [mol for mol in Chem.SDMolSupplier(str(ligand), removeHs=False)]
             mol_score_dict[fprefix] = mol_score_dict.get(fprefix, []) + [(mol, s) for mol, s in zip(
                 result_mols, scores)]
@@ -130,13 +157,16 @@ class UniDock(Base):
     @time_logger
     def run_unidock(self,
                     scoring_function: str = "vina",
+                    search_mode: str = "",
                     exhaustiveness: int = 256,
                     max_step: int = 10,
                     num_modes: int = 3,
                     refine_step: int = 3,
+                    energy_range: float = 3.0,
                     seed : int = 181129,
                     topn: int = 10,
-                    batch_size: int = 20,
+                    batch_size: int = 1200,
+                    score_only: bool = False,
                     local_only: bool = False,
                     score_name: str = "docking_score",
                     docking_dir_name : str = "docking_dir",
@@ -155,8 +185,9 @@ class UniDock(Base):
                 center_x=self.center_x, center_y=self.center_y, center_z=self.center_z,
                 size_x=self.size_x, size_y=self.size_y, size_z=self.size_z,
                 scoring=scoring_function, num_modes=num_modes,
-                exhaustiveness=exhaustiveness, max_step=max_step, seed=seed,
-                refine_step=refine_step, local_only=local_only,
+                search_mode=search_mode, exhaustiveness=exhaustiveness, max_step=max_step, 
+                seed=seed, refine_step=refine_step, energy_range=energy_range,
+                score_only=score_only, local_only=local_only,
             )
             # Ranking
             self.postprocessing(zip(ligands, scores_list), topn, score_name)
@@ -167,28 +198,32 @@ class UniDock(Base):
         if not save_dir:
             save_dir = f"{self.workdir}/results_dir"
         save_dir = make_tmp_dir(str(save_dir), False, False)
-        res_list = self.mol_group.write_sdf(save_dir=save_dir, seperate_conf=False, conf_prefix="_unidock")
+        res_list = self.mol_group.write_sdf(save_dir=save_dir, seperate_conf=False, conf_prefix="_unidock", 
+                                            exclude_props_list=["file_prefix", 
+                                                                "fragInfo", "fragAllInfo", "torsionInfo", "atomInfo"])
         return res_list
 
 
 def main(args: dict):
+    args = {**DEFAULT_ARGS, **args}
     workdir = Path(args["workdir"]).resolve()
     savedir = Path(args["savedir"]).resolve()
 
     ligands = []
-    if args["ligands"]:
+    if args.get("ligands"):
         for lig in args["ligands"]:
             if not Path(lig).exists():
                 logging.error(f"Cannot find {lig}")
                 continue
             ligands.append(Path(lig).resolve())
-    if args["ligand_index"]:
+    if args.get("ligand_index"):
         with open(args["ligand_index"], "r") as f:
-            for line in f.readlines():
-                if not Path(line.strip()).exists():
-                    logging.error(f"Cannot find {line.strip()}")
-                    continue
-                ligands.append(Path(line.strip()).resolve())
+            index_content = f.read()
+        index_lines1 = [Path(line.strip()).resolve() for line in index_content.split("\n") 
+                        if line.strip() and Path(line.strip()).exists()]
+        index_lines2 = [Path(line.strip()).resolve() for line in index_content.split(" ") 
+                        if line.strip() and Path(line.strip()).exists()]
+        ligands.extend(index_lines2 if len(index_lines2) > len(index_lines1) else index_lines1)
 
     if len(ligands) == 0:
         logging.error("No ligands found.")
@@ -211,13 +246,17 @@ def main(args: dict):
     logging.info("[UniDock Pipeline] Start docking")
     runner.run_unidock(
         scoring_function=str(args["scoring_function"]),
+        search_mode=str(args["search_mode"]),
         exhaustiveness=int(args["exhaustiveness"]),
         max_step=int(args["max_step"]),
         num_modes=int(args["num_modes"]),
         refine_step=int(args["refine_step"]),
+        energy_range=float(args["energy_range"]),
         seed=args["seed"],
         topn=int(args["topn"]),
         batch_size=int(args["batch_size"]),
+        score_only=bool(args["score_only"]),
+        local_only=bool(args["local_only"]),
     )
     runner.save_results(save_dir=savedir)
     end_time = time.time()
@@ -233,7 +272,7 @@ def get_parser() -> argparse.ArgumentParser:
                         help="Receptor file in pdbqt format.")
     parser.add_argument("-l", "--ligands", type=lambda s: s.split(','), default=None,
                         help="Ligand file in sdf format. Specify multiple files separated by commas.")
-    parser.add_argument("-i", "--ligand_index", type=str, default="",
+    parser.add_argument("-i", "--ligand_index", type=str, default=None,
                         help="A text file containing the path of ligand files in sdf format.")
 
     parser.add_argument("-cx", "--center_x", type=float, required=True,
@@ -253,32 +292,42 @@ def get_parser() -> argparse.ArgumentParser:
                         help="Working directory. Default: 'MultiConfDock'.")
     parser.add_argument("-sd", "--savedir", type=str, default="unidock_results",
                         help="Save directory. Default: 'MultiConfDock-Result'.")
-    parser.add_argument("-bs", "--batch_size", type=int, default=20,
-                        help="Batch size for docking. Default: 20.")
+    parser.add_argument("-bs", "--batch_size", type=int, default=1200,
+                        help="Batch size for docking. Default: 1200.")
 
     parser.add_argument("-sf", "--scoring_function",
                         type=str, default="vina",
-                        help="Scoring function used in rigid docking. Default: 'vina'.")
+                        help="Scoring function. Default: 'vina'.")
+    parser.add_argument("-sm", "--search_mode",
+                        type=str, default="",
+                        help="Searching mode. Default: <empty string>.")
     parser.add_argument("-ex", "--exhaustiveness",
                         type=int, default=128,
-                        help="Exhaustiveness used in rigid docking. Default: 128.")
+                        help="Exhaustiveness. Default: 128.")
     parser.add_argument("-ms", "--max_step",
                         type=int, default=20,
-                        help="Max step used in rigid docking. Default: 20.")
+                        help="Max step. Default: 20.")
     parser.add_argument("-nm", "--num_modes",
                         type=int, default=3,
-                        help="Number of modes used in rigid docking. Default: 3.")
+                        help="Number of modes. Default: 3.")
     parser.add_argument("-rs", "--refine_step",
                         type=int, default=3,
-                        help="Refine step used in rigid docking. Default: 3.")
+                        help="Refine step. Default: 3.")
+    parser.add_argument("-er", "--energy_range", 
+                        type=float, default=3.0,
+                        help="Energy range. Default: 3.0")
     parser.add_argument("-topn", "--topn",
                         type=int, default=100,
-                        help="Top N results used in rigid docking. Default: 100.")
+                        help="Top N results pose to keep. Default: 100.")
+    parser.add_argument("--score_only", action="store_true",
+                        help="Whether to use score_only mode.")
+    parser.add_argument("--local_only", action="store_true",
+                        help="Whether to use local_only mode.")
 
     parser.add_argument("--seed", type=int, default=181129, 
                         help="Uni-Dock random seed")
     parser.add_argument("--debug", action="store_true",
-                        help="Debug mode")
+                        help="Whether to use debug mode (debug-level log, keep workdir)")
     return parser
 
 

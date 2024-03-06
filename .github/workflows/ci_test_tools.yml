@@ -25,8 +25,9 @@ jobs:
         pip install flake8
 
     - name: Run flake8 formating
+      working-directory: ./unidock_tools
       run: |
-        flake8 unidock_tools/unidock_tools --exit-zero
+        flake8 src --exit-zero
 
   pyright:
     continue-on-error: true
@@ -48,7 +49,7 @@ jobs:
       id: pyright_check
       working-directory: ./unidock_tools
       run: |
-        pyright
+        pyright src
 
   tests:
     if: ${{ always() }}
@@ -84,10 +85,12 @@ jobs:
         pip install .
 
     - name: run unit-test
+      working-directory: ./unidock_tools
       run: |
         pip install pytest pytest-cov
-        pytest unidock_tools/tests/ut -vv --cov --cov-report term
+        pytest tests/ut -vv --cov --cov-report term
 
     - name: run application e2e test
+      working-directory: ./unidock_tools
       run: |
-        pytest unidock_tools/tests/applications -vv --cov --cov-report term
+        pytest tests/applications -vv --cov --cov-report term
