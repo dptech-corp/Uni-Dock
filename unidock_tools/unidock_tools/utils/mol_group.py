@@ -9,6 +9,7 @@ from rdkit import Chem
 
 from .string import make_tmp_dir, randstr
 from .rdkit_helper import sdf_writer, set_properties, clear_properties
+from .read_ligand import read_ligand
 
 
 class Mol:
@@ -55,7 +56,8 @@ class Mol:
             "conf props length should be same as mol_confs length"
         self.conf_props.update(conf_props)
 
-    def get_rdkit_mol_conf_with_props(self, conf_idx: int, props_list: List[str] = []):
+    def get_rdkit_mol_conf_with_props(self, conf_idx: int, props_list: List[str] = [], 
+                                      exclude_props_list: List[str] = []):
         mol = copy.copy(self.mol_confs[conf_idx])
         props = copy.deepcopy(self.get_props())
         props.update({k:v[conf_idx] for k, v in self.get_conf_props().items()})
@@ -64,8 +66,8 @@ class Mol:
             if "fragAllInfo" in props:
                 frag_all_info_str = props.pop("fragAllInfo")
                 props["fragInfo"] = frag_all_info_str
-        else:
-            props = {k:v for k, v in props.items() if k not in ["file_prefix", "fragInfo", "fragAllInfo", "torsionInfo", "atomInfo"]}
+        if exclude_props_list:
+            props = {k:v for k, v in props.items() if k not in exclude_props_list}
         set_properties(mol, props)
         return mol
 
@@ -88,7 +90,8 @@ class MolGroup:
     def _initialize(self, ligand_files: List[Path]):
         for ligand_file in ligand_files:
             file_prefix = ligand_file.stem
-            for mol in Chem.SDMolSupplier(str(ligand_file), removeHs=False):
+            mols = read_ligand(ligand_file)
+            for mol in mols:
                 if mol:
                     self.mol_group.append(Mol(mol, {"file_prefix": file_prefix}))
 
@@ -127,12 +130,13 @@ class MolGroup:
                          seperate_conf: bool = False,
                          conf_prefix: str = "_CONF",
                          props_list: List[str] = [],
+                         exclude_props_list: List[str] = [],
                          ) -> List[Path]:
         save_dir = make_tmp_dir(str(save_dir), False, False)
 
         mol_confs_copy = [None] * len(self.mol_group[idx])
         for conf_idx in range(len(self.mol_group[idx])):
-            mol_conf_copy = self.mol_group[idx].get_rdkit_mol_conf_with_props(conf_idx, props_list)
+            mol_conf_copy = self.mol_group[idx].get_rdkit_mol_conf_with_props(conf_idx, props_list, exclude_props_list)
             mol_confs_copy[conf_idx] = mol_conf_copy
         # save SDF files
         file_prefix = self.mol_group[idx].get_props()['file_prefix']
@@ -151,11 +155,13 @@ class MolGroup:
     def write_sdf(self, save_dir: Union[str, os.PathLike],
                   seperate_conf: bool = False,
                   conf_prefix: str = "_CONF",
-                  props_list: List[str] = []) -> List[Path]:
+                  props_list: List[str] = [],
+                  exclude_props_list: List[str] = []) -> List[Path]:
         result_files = []
         for idx in range(len(self.mol_group)):
             result_files.extend(self.write_sdf_by_idx(idx=idx, save_dir=save_dir,
                                                       seperate_conf=seperate_conf,
                                                       conf_prefix=conf_prefix,
-                                                      props_list=props_list))
+                                                      props_list=props_list,
+                                                      exclude_props_list=exclude_props_list))
         return result_files

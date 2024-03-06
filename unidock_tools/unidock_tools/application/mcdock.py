@@ -114,6 +114,7 @@ def main(args: dict):
     logging.info("[MultiConfDock] Start rigid docking")
     mcd.run_unidock(
         scoring_function=str(args["scoring_function_rigid_docking"]),
+        search_mode=str(args["search_mode_rigid_docking"]),
         exhaustiveness=int(args["exhaustiveness_rigid_docking"]),
         max_step=int(args["max_step_rigid_docking"]),
         num_modes=int(args["num_modes_rigid_docking"]),
@@ -127,6 +128,7 @@ def main(args: dict):
     logging.info("[MultiConfDock] Start local refine")
     mcd.run_unidock(
         scoring_function=str(args["scoring_function_local_refine"]),
+        search_mode=str(args["search_mode_local_refine"]),
         exhaustiveness=int(args["exhaustiveness_local_refine"]),
         max_step=int(args["max_step_local_refine"]),
         num_modes=int(args["num_modes_local_refine"]),
@@ -185,6 +187,9 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument("-sf_rd", "--scoring_function_rigid_docking",
                         type=str, default="vina",
                         help="Scoring function used in rigid docking. Default: 'vina'.")
+    parser.add_argument("-sm_rd", "--search_mode_rigid_docking",
+                        type=str, default="",
+                        help="Search mode used in rigid docking. Default: <empty string>.")
     parser.add_argument("-ex_rd", "--exhaustiveness_rigid_docking",
                         type=int, default=128,
                         help="Exhaustiveness used in rigid docking. Default: 128.")
@@ -204,6 +209,9 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument("-sf_lr", "--scoring_function_local_refine",
                         type=str, default="vina",
                         help="Scoring function used in local refine. Default: 'vina'.")
+    parser.add_argument("-sm_lr", "--search_mode_local_refine",
+                        type=str, default="",
+                        help="Search mode used in local refine. Default <empty string>.")
     parser.add_argument("-ex_lr", "--exhaustiveness_local_refine",
                         type=int, default=512,
                         help="Exhaustiveness used in rigid docking. Default: 512.")

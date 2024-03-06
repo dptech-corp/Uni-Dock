@@ -73,24 +73,23 @@ def test_unidock_pipeline_ligand_index(receptor, ligand, pocket):
     shutil.rmtree(results_dir, ignore_errors=True)
 
 
-# TODO: fix unidock ad4 error
-# def test_unidock_pipeline_scoring_ad4(receptor, ligand, pocket):
-#     results_dir = "unidock_results_ad4"
-#     cmd = f"unidocktools unidock -r {receptor} -l {ligand} -sd {results_dir} \
-#         -cx {pocket[0]} -cy {pocket[1]} -cz {pocket[2]} -sx {pocket[3]} -sy {pocket[4]} -sz {pocket[5]} \
-#         -sf ad4 -nm 1"
-#     print(cmd)
-#     resp = subprocess.run(cmd, shell=True, capture_output=True, encoding="utf-8")
-#     print(resp.stdout)
-#     assert resp.returncode == 0, f"run unidock pipeline app err:\n{resp.stderr}"
-#
-#     result_file = os.path.join(results_dir, "1bcu_ligand.sdf")
-#     assert os.path.exists(result_file), f"docking result file not found"
-#
-#     score_list = read_scores(result_file, "docking_score")
-#     score = score_list[0]
-#     assert -20 <= score <= 0, f"Uni-Dock score not in range: {score}"
-#     shutil.rmtree(results_dir, ignore_errors=True)
+def test_unidock_pipeline_scoring_ad4(receptor, ligand, pocket):
+    results_dir = "unidock_results_ad4"
+    cmd = f"unidocktools unidock_pipeline -r {receptor} -l {ligand} -sd {results_dir} \
+        -cx {pocket[0]} -cy {pocket[1]} -cz {pocket[2]} -sx {pocket[3]} -sy {pocket[4]} -sz {pocket[5]} \
+        -sf ad4 -nm 1"
+    print(cmd)
+    resp = subprocess.run(cmd, shell=True, capture_output=True, encoding="utf-8")
+    print(resp.stdout)
+    assert resp.returncode == 0, f"run unidock pipeline app err:\n{resp.stderr}"
+
+    result_file = os.path.join(results_dir, "1bcu_ligand.sdf")
+    assert os.path.exists(result_file), f"docking result file not found"
+
+    score_list = read_scores(result_file, "docking_score")
+    score = score_list[0]
+    assert -20 <= score <= 0, f"Uni-Dock score not in range: {score}"
+    shutil.rmtree(results_dir, ignore_errors=True)
 
 
 def test_unidock_pipeline_multi_pose(receptor, ligand, pocket):
