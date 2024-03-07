@@ -17,7 +17,7 @@ The performance is not guaranteed on legacy GPU models. To build Uni-Dock with a
 
 1. Install dependencies
 
-     - CUDA toolkit: Please refer to the [installation tutorial](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html) provided by nvidia.
+     - CUDA toolkit >= 11.8: Please refer to the [installation tutorial](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html) provided by nvidia.
      - CMake >= 3.16
      - A C++ compiler (should be [compatible with NVCC](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html#host-compiler-support-policy); `g++` works for most cases)
      - Boost >= 1.72
