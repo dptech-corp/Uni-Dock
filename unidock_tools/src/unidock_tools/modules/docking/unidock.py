@@ -203,8 +203,8 @@ class UniDockRunner:
         )
         logging.debug(f"Run Uni-Dock log: {resp.stdout}")
         if resp.returncode != 0:
-            logging.info(f"Run Uni-Dock log: {resp.stdout}")
-            logging.error(f"Run Uni-Dock error: {resp.stderr}")
+            logging.info(f"Run Uni-Dock log\n{resp.stdout}")
+            logging.error(f"Run Uni-Dock error\n{resp.stderr}")
 
         result_ligands = [f for f in self.pre_result_ligands if os.path.exists(f)]
         return result_ligands

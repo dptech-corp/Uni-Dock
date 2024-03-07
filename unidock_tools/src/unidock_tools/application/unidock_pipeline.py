@@ -147,7 +147,7 @@ class UniDock(Base):
             mol_score_list = mol_score_dict[fprefix]
             mol_score_list.sort(key=lambda x: x[1], reverse=False)
             logging.debug([item[1] for item in mol_score_list])
-            logging.info(f"docking result pose num: {len(mol_score_list)}, keep num: {topn_conf}")
+            logging.debug(f"docking result pose num: {len(mol_score_list)}, keep num: {topn_conf}")
             self.mol_group.update_mol_confs_by_file_prefix(fprefix,
                                                            [mol for mol, _ in mol_score_list[:topn_conf]])
             self.mol_group.update_property_by_file_prefix(fprefix, property_name=score_name,

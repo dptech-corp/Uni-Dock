@@ -91,9 +91,10 @@ class MolGroup:
         for ligand_file in ligand_files:
             file_prefix = ligand_file.stem
             mols = read_ligand(ligand_file)
-            for mol in mols:
+            for i, mol in enumerate(mols):
                 if mol:
-                    self.mol_group.append(Mol(mol, {"file_prefix": file_prefix}))
+                    self.mol_group.append(Mol(mol, {"file_prefix": f"{file_prefix}_{i}" if len(mols) > 1 
+                                                    else file_prefix}))
 
     def update_property_by_idx(self, idx: int, property_name: str, value: Any, is_conf_prop: bool = False):
         if is_conf_prop:
