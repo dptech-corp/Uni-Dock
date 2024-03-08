@@ -58,7 +58,7 @@ make clang-format
 ### Using binary
 
 Please download the latest binary of Uni-Dock at the assets tab of [the Release page](https://github.com/dptech-corp/Uni-Dock/releases).
-Executable `unidock` supports vina and vinardo scoring functions, and `unidock_ad4` supports ad4 scoring function.
+Executable `unidock` to dock.
 
 After downloading, please make sure that the path to `unidock` is in your `PATH` environment variable.
 
@@ -69,7 +69,11 @@ After downloading, please make sure that the path to `unidock` is in your `PATH`
 To launch a Uni-Dock job, the most important parameters are as follows:
 
 - `--receptor`: filepath of the receptor (PDBQT)
+
+     (If you want to use `ad4` scoring function, you need to generate affinity maps first and use `--maps <mapdir/receptor_prefix>` instead of `--receptor`. The method to generate maps is in [here](https://autodock-vina.readthedocs.io/en/latest/docking_basic.html#optional-generating-affinity-maps-for-autodock-ff))
+
 - `--gpu_batch`: filepath of the ligands to dock with GPU (PDBQT), enter multiple at a time, separated by spaces (" ")
+
 - `--search_mode`: computational complexity, choose in \[*`fast`*, *`balance`*, and *`detail`*].
 
 ***Advanced options***
