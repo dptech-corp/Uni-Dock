@@ -257,6 +257,7 @@ def main(args: dict):
         batch_size=int(args["batch_size"]),
         score_only=bool(args["score_only"]),
         local_only=bool(args["local_only"]),
+        props_list=["fragInfo", "torsionInfo", "atomInfo"],
     )
     runner.save_results(save_dir=savedir)
     end_time = time.time()

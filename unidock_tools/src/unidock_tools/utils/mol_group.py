@@ -57,7 +57,7 @@ class Mol:
         self.conf_props.update(conf_props)
 
     def get_rdkit_mol_conf_with_props(self, conf_idx: int, props_list: List[str] = [], 
-                                      exclude_props_list: List[str] = []):
+                                      exclude_props_list: List[str] = []) -> Chem.Mol:
         mol = copy.copy(self.mol_confs[conf_idx])
         props = copy.deepcopy(self.get_props())
         props.update({k:v[conf_idx] for k, v in self.get_conf_props().items()})
@@ -135,10 +135,9 @@ class MolGroup:
                          ) -> List[Path]:
         save_dir = make_tmp_dir(str(save_dir), False, False)
 
-        mol_confs_copy = [None] * len(self.mol_group[idx])
-        for conf_idx in range(len(self.mol_group[idx])):
-            mol_conf_copy = self.mol_group[idx].get_rdkit_mol_conf_with_props(conf_idx, props_list, exclude_props_list)
-            mol_confs_copy[conf_idx] = mol_conf_copy
+        mol_confs_copy = [self.mol_group[idx].get_rdkit_mol_conf_with_props(
+            conf_idx, props_list, exclude_props_list) for conf_idx in range(
+                len(self.mol_group[idx]))]
         # save SDF files
         file_prefix = self.mol_group[idx].get_props()['file_prefix']
         sdf_file_list = []

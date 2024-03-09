@@ -1,4 +1,4 @@
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Union
 import os
 import numpy as np
 import networkx as nx
@@ -163,7 +163,7 @@ class TopologyBuilder:
         node_idx = 0
         root_fragment = splitted_mol_list[root_fragment_idx]
         num_root_atoms = root_fragment.GetNumAtoms()
-        atom_info_list = [None] * num_root_atoms
+        atom_info_list = [dict()] * num_root_atoms
         for root_atom_idx in range(num_root_atoms):
             root_atom = root_fragment.GetAtomWithIdx(root_atom_idx)
             atom_info_dict = {}
@@ -189,7 +189,7 @@ class TopologyBuilder:
             else:
                 fragment = splitted_mol_list[fragment_idx]
                 num_fragment_atoms = fragment.GetNumAtoms()
-                atom_info_list = [None] * num_fragment_atoms
+                atom_info_list = [dict()] * num_fragment_atoms
                 for atom_idx in range(num_fragment_atoms):
                     atom = fragment.GetAtomWithIdx(atom_idx)
                     atom_info_dict = {}
@@ -341,7 +341,7 @@ class TopologyBuilder:
                 self.pdbqt_atom_line_list.append(
                     self.pdbqt_end_branch_line_format.format('ENDBRANCH', parent_atom_idx, offspring_atom_idx))
 
-    def write_pdbqt_file(self, out_file: str = ''):
+    def write_pdbqt_file(self, out_file: Union[str, bytes, os.PathLike]):
         self.pdbqt_remark_line_list = []
         self.pdbqt_atom_line_list = []
 
@@ -383,7 +383,7 @@ class TopologyBuilder:
             for pdbqt_line in self.pdbqt_line_list:
                 f.write(pdbqt_line)
 
-    def write_constraint_bpf_file(self, out_path: str = ''):
+    def write_constraint_bpf_file(self, out_path: Union[str, bytes, os.PathLike]):
         self.core_bpf_remark_line_list = []
         self.core_bpf_atom_line_list = []
         self.core_bpf_atom_line_format = '{:8.3f}\t{:8.3f}\t{:8.3f}\t{:6.2f}\t{:6.2f}\t{:3s}\t{:<2s}\n'
@@ -452,7 +452,7 @@ class TopologyBuilder:
 
         return frag_info_str, frag_all_info_str, torsion_info_str, atom_info_str
 
-    def write_sdf_file(self, out_file: str = '', do_rigid_docking: bool = False):
+    def write_sdf_file(self, out_file: Union[str, bytes, os.PathLike], do_rigid_docking: bool = False):
         frag_info_str, frag_all_info_str, torsion_info_str, atom_info_str = self.get_sdf_torsion_tree_info()
         if do_rigid_docking:
             self.mol.SetProp("fragInfo", frag_all_info_str)
@@ -460,13 +460,5 @@ class TopologyBuilder:
             self.mol.SetProp("fragInfo", frag_info_str)
             self.mol.SetProp("torsionInfo", torsion_info_str)
         self.mol.SetProp("atomInfo", atom_info_str)
-        if out_file:
-            os.makedirs(os.path.dirname(os.path.abspath(out_file)), exist_ok=True)
-            with Chem.SDWriter(out_file) as writer:
-                writer.write(self.mol)
-
-
-def generate_topology(mol: Chem.Mol, out_file: str = ''):
-    topology_builder = TopologyBuilder(mol)
-    topology_builder.build_molecular_graph()
-    topology_builder.write_pdbqt_file(out_file=out_file)
+        with Chem.SDWriter(str(out_file)) as writer:
+            writer.write(self.mol)
