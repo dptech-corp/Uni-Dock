@@ -32,12 +32,12 @@ def set_properties(mol: Chem.Mol, properties: dict):
     """
     for key, value in properties.items():
         try:
-            if isinstance(key, int):
+            if isinstance(value, int):
                 mol.SetIntProp(key, value)
-            elif isinstance(key, float):
+            elif isinstance(value, float):
                 mol.SetDoubleProp(key, value)
             else:
-                mol.SetProp(key, str(value))
+                mol.SetProp(value, str(value))
         except:
             logging.warning(f"set property {key} err: {traceback.format_exc()}")
 

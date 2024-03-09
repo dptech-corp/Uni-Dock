@@ -3,7 +3,6 @@ import os
 from math import isnan, isinf
 from rdkit import Chem
 from rdkit.Chem import AllChem
-from rdkit.Chem.rdchem import BondType
 
 
 def get_pdbqt_atom_lines(mol: Chem.Mol, donors: List[int], acceptors: List[int]):

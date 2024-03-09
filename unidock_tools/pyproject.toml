@@ -48,6 +48,6 @@ pythonVersion = "3.11"
 pythonPlatform = "Linux"
 reportMissingImports = false
 reportMissingModuleSource = false
-reportMissingTypeStubs = false
 reportAttributeAccessIssue = false
 reportIncompatibleMethodOverride = false
+reportCallIssue = false
