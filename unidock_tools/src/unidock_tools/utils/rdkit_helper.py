@@ -37,7 +37,7 @@ def set_properties(mol: Chem.Mol, properties: dict):
             elif isinstance(value, float):
                 mol.SetDoubleProp(key, value)
             else:
-                mol.SetProp(value, str(value))
+                mol.SetProp(key, str(value))
         except:
             logging.warning(f"set property {key} err: {traceback.format_exc()}")
 
