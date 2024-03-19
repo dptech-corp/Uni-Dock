@@ -187,7 +187,7 @@ We have provided a target from DUD-E dataset for screening test. Python version 
 
 ```bash
 git clone https://github.com/dptech-corp/Uni-Dock.git
-cd Uni-Dock/example/screening_test
+cd Uni-Dock/unidock/example/screening_test
 
 # target def
 cp config_def.json config.json
