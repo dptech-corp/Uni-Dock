@@ -1,8 +1,0 @@
-cuda_compiler: cuda-nvcc # Required for compiler('cuda')
-channel_sources: conda-forge # Required for compiler('cxx')
-
-# nvcc requires a compatible gcc version. See https://gist.github.com/ax3l/9489132#nvcc
-# If you are using CUDA 11, the following settings are recommended:
-# cuda_compiler: nvcc
-# cxx_compiler_version: 10
-# cuda_compiler_version: 11
