@@ -13,6 +13,23 @@ The [paper](https://pubs.acs.org/doi/10.1021/acs.jctc.2c01145) has been accepted
 Uni-Dock officially supports NVIDIA GPUs with [compute capability](https://en.wikipedia.org/wiki/CUDA#GPUs_supported) >= 7.0 on Linux platform.
 The performance is not guaranteed on legacy GPU models. To build Uni-Dock with a customized compute capability, please change the `CMAKE_CUDA_ARCHITECTURES` variable in `CMakeLists.txt` to the corresponding value.
 
+### Installing by Conda
+
+Conda is a package management system with a separated environment, not requiring system privileges.
+You can refer to [DeepModeling conda FAQ](https://docs.deepmodeling.com/faq/conda.html) for how to setup a conda environment.
+A pre-built Uni-Dock binary with all requirements is available at [conda-forge](https://anaconda.org/conda-forge/unidock).
+
+```bash
+# Install
+# We recommend installing Uni-Dock in a new environment to avoid potential conflicts:
+conda create -n unidock_env unidock -c conda-forge
+# Run
+conda activate unidock
+unidock --help
+# Update
+conda update -n unidock_env unidock -c conda-forge
+```
+
 ### Building from source
 
 1. Install dependencies
@@ -54,13 +71,6 @@ To format codes if changes are made:
 cd ./build/
 make clang-format
 ```
-
-### Using binary
-
-Please download the latest binary of Uni-Dock at the assets tab of [the Release page](https://github.com/dptech-corp/Uni-Dock/releases).
-Executable `unidock` to dock.
-
-After downloading, please make sure that the path to `unidock` is in your `PATH` environment variable.
 
 ## Usage
 
