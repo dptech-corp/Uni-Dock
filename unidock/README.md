@@ -24,7 +24,7 @@ A pre-built Uni-Dock binary with all requirements is available at [conda-forge](
 # We recommend installing Uni-Dock in a new environment to avoid potential conflicts:
 conda create -n unidock_env unidock -c conda-forge
 # Run
-conda activate unidock
+conda activate unidock_env
 unidock --help
 # Update
 conda update -n unidock_env unidock -c conda-forge
