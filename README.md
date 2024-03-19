@@ -15,10 +15,18 @@ The [paper](https://pubs.acs.org/doi/10.1021/acs.jctc.2c01145) has been accepted
 
 Please check [`unidock` folder](./unidock/) for installing instructions, source codes, and usage.
 
+---
+
 **Uni-Dock Tools** is a Python package developed to handle the inputs and outputs of Uni-Dock.
 It is committed to support more input formats and scoring functions. We hope it could be an easy-to-use virtual screening workflow for users with diversed backgrounds.
 
 Please check [`unidock_tools` folder](./unidock_tools/) for installing instructions, source codes, and usage.
+
+---
+
+To evaluate the performance and accuracy under a uniform standard, we created **Uni-Dock Benchmarks** based on public datasets and papers.
+The benchmarks are publicly available at <https://github.com/dptech-corp/Uni-Dock-Benchmarks>.
+
 
 ## Changelog
 
