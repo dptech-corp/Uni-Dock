@@ -14,15 +14,15 @@ Main features are:
 ## Dependency
 
 - [Uni-Dock](../unidock/README.md#installation)
-- Python >= 3.6
-- RDKit
-- networkx
+- Python >= 3.8
 - MGLTools, if you want to use AD4 scoring function in Uni-Dock
 - mcdock dependencies, see [MCDock Installation](./MCDOCK.md#installation)
 
 ## Install
 
-- ```pip install .```
+In Uni-Dock repo, unidock_tools subdictionary, run ```pip install .```
+
+Or ```pip install git+https://github.com/dptech-corp/Uni-Dock.git#subdirectory=unidock_tools```
 
 ## Docker
 
