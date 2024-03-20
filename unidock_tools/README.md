@@ -20,7 +20,7 @@ Main features are:
 
 ## Install
 
-In Uni-Dock repo, unidock_tools subdictionary, run ```pip install .```
+Clone Uni-Dock repo, and under `unidock_tools` subdirectory run ```pip install .```
 
 Or ```pip install git+https://github.com/dptech-corp/Uni-Dock.git#subdirectory=unidock_tools```
 
