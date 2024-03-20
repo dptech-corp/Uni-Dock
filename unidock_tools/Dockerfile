@@ -20,12 +20,11 @@ RUN wget --quiet -O CDPKit.sh https://github.com/molinfo-vienna/CDPKit/releases/
     rm CDPKit.sh
 
 WORKDIR /opt
-RUN mamba install -y ipython requests rdkit openbabel networkx numpy pandas -c conda-forge
+RUN mamba install -y ipython requests openbabel pandas -c conda-forge
 RUN mamba create -y -n mgltools mgltools autogrid -c bioconda
 ENV PATH $PATH:/opt/conda/envs/mgltools/bin
-RUN pip install tqdm
 
 COPY . /opt/unidock_tools
 RUN cd /opt/unidock_tools && \
-    pip install . --no-deps && \
+    pip install . && \
     rm -r /opt/unidock_tools
