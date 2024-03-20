@@ -132,10 +132,13 @@ target_include_directories(cuda PUBLIC src/lib src/cuda)
 # >>>>>> Binaries Definitions Begin
 
 # >>> Main binary (unidock)
+# Find RDKit
+find_package(RDKit REQUIRED)
 add_executable(${VINA_BIN_NAME} src/main/main.cpp)
 target_link_libraries(${VINA_BIN_NAME} PRIVATE
   boost_deps cuda lib
   OpenMP::OpenMP_CXX
+  RDKit::RDKit
 )
 install(TARGETS ${VINA_BIN_NAME})
 

@@ -32,7 +32,10 @@
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
 #include "simulation_container.h"
-
+#include <GraphMol/SmilesParse/SmilesParse.h>
+#include <GraphMol/SmilesParse/SmilesWrite.h>
+#include <GraphMol/Descriptors/MolDescriptors.h>
+#include <GraphMol/Descriptors/MolSurf.h>
 struct usage_error : public std::runtime_error {
     usage_error(const std::string& message) : std::runtime_error(message) {}
 };
@@ -307,7 +310,24 @@ DOI 10.1002/jcc.21334                                         \n\
 \n\
 Please refer to https://github.com/dptech-corp/Uni-Dock/ for  \n\
 bug reporting, license agreements, and more information.      \n";
+    RDLog::InitLogs();
 
+    // 使用SMILES字符串创建一个分子对象
+    std::string smiles = "CCO";
+    RDKit::ROMOL_SPTR mol(RDKit::SmilesToMol(smiles));
+
+    if (!mol) {
+        std::cerr << "SMILES解析失败。" << std::endl;
+        return 1;
+    }
+
+    // 计算并输出分子量
+    double molWt = RDKit::Descriptors::calcAMW(*mol);
+    std::cout << "分子量: " << molWt << std::endl;
+
+    // 计算并输出回旋半径
+    double tpsa = RDKit::Descriptors::calcTPSA(*mol);
+    std::cout << "表面积: " << tpsa << std::endl;
     try {
         std::string rigid_name;
         std::string flex_name;
