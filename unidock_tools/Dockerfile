@@ -27,5 +27,5 @@ RUN pip install tqdm
 
 COPY . /opt/unidock_tools
 RUN cd /opt/unidock_tools && \
-    pip install . && \
+    pip install . --no-deps && \
     rm -r /opt/unidock_tools
