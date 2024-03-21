@@ -96,6 +96,8 @@ list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
 # >>>>>> Dependencies End
 
 # >>>>>> Libraries Definitions Begin
+# Find RDKit
+find_package(RDKit REQUIRED)
 
 # Group boost dependencies
 add_library(boost_deps INTERFACE)
@@ -132,13 +134,11 @@ target_include_directories(cuda PUBLIC src/lib src/cuda)
 # >>>>>> Binaries Definitions Begin
 
 # >>> Main binary (unidock)
-# Find RDKit
-find_package(RDKit REQUIRED)
 add_executable(${VINA_BIN_NAME} src/main/main.cpp)
 target_link_libraries(${VINA_BIN_NAME} PRIVATE
   boost_deps cuda lib
   OpenMP::OpenMP_CXX
-  RDKit::RDKit
+  RDKit::SmilesParse RDKit::MolHash
 )
 install(TARGETS ${VINA_BIN_NAME})
 
