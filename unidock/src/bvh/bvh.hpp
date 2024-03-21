@@ -112,60 +112,55 @@ public:
     }
 };
 
-struct BVHNode {
-    AABB box; // 当前节点的边界盒
-    BVHNode* left; // 左子节点
-    BVHNode* right; // 右子节点
-    std::vector<Geometry*> objects; // 仅叶子节点会持有几何体对象
+class BVHNode {
+public:
+    AABB box; // 节点的边界盒
+    BVHNode* left; // 指向左子节点
+    BVHNode* right; // 指向右子节点
+    std::vector<Geometry*> objects; // 只在叶子节点存储物体
 
-    // 构造函数和析构函数
     BVHNode() : left(nullptr), right(nullptr) {}
+
     ~BVHNode() {
         delete left;
         delete right;
     }
 
-    // 判断是否为叶子节点
     bool isLeaf() const { return !objects.empty(); }
 };
 
-#include <algorithm> // 用于std::sort
 
-// 定义构建BVH的辅助函数
-int partitionObjects(std::vector<Geometry*>& objects, int start, int end, const AABB& centroidBox) {
-    // 示例：简单的中点分割方法
-    float midpoint = 0.5f * (centroidBox.min.x + centroidBox.max.x);
-    auto midIter = std::partition(objects.begin() + start, objects.begin() + end,
-                                  [midpoint](const Geometry* obj) {
-                                      return obj->boundingBox().center().x < midpoint;
-                                  });
-    int mid = std::distance(objects.begin(), midIter);
-    return (mid == start || mid == end) ? (start + end) / 2 : mid; // 避免无限分割
-}
-
-// 实际的构建函数
 BVHNode* buildBVH(std::vector<Geometry*>& objects, int start, int end) {
-    if (start >= end) return nullptr; // 基本结束条件
+    if (start >= end) return nullptr;
 
     BVHNode* node = new BVHNode();
 
-    // 计算当前对象集的边界盒和中心点盒
-    AABB centroidBox;
+    // 计算所有对象的边界盒并合并，同时更新节点的边界盒
     for (int i = start; i < end; ++i) {
-        AABB objBox = objects[i]->boundingBox();
-        node->box.merge(objBox);
-        centroidBox.merge(objBox.center());
+        if (i == start) node->box = objects[i]->boundingBox();
+        else node->box.merge(objects[i]->boundingBox());
     }
 
     int objectCount = end - start;
-    if (objectCount <= 2) { // 叶子节点条件
-        node->objects.assign(objects.begin() + start, objects.begin() + end);
+    if (objectCount <= LEAF_OBJECT_THRESHOLD) {
+        // 达到叶子节点条件，添加对象到当前节点
+        for (int i = start; i < end; ++i) {
+            node->objects.push_back(objects[i]);
+        }
     } else {
-        int mid = partitionObjects(objects, start, end, centroidBox);
+        // 根据某种策略（如中点或SAH）分割物体集合，此处简化为使用中点策略
+        // 这是一个示例，具体实现应根据项目需求设计
+        std::nth_element(objects.begin() + start, objects.begin() + start + objectCount / 2, objects.begin() + end, 
+            [&](const Geometry* a, const Geometry* b) {
+                return a->boundingBox().center.x < b->boundingBox().center.x;
+            });
+        int mid = start + objectCount / 2;
+
         node->left = buildBVH(objects, start, mid);
         node->right = buildBVH(objects, mid, end);
     }
 
     return node;
 }
+
 
