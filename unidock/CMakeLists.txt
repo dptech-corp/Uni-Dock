@@ -133,7 +133,9 @@ target_include_directories(cuda PUBLIC src/lib src/cuda)
 
 # >>>>>> Binaries Definitions Begin
 # >>> Main binary (obb test)
-add_executable(obb_test src/cuda/obb.cu)
+add_executable(obb src/cuda/obb.cu)
+# >>> Main binary (obb test)
+add_executable(bvh src/bvh/bvh.cpp src/bvh/bvh.hpp)
 # >>> Main binary (unidock)
 add_executable(${VINA_BIN_NAME} src/main/main.cpp)
 target_link_libraries(${VINA_BIN_NAME} PRIVATE

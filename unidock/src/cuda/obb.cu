@@ -27,10 +27,10 @@ __global__ void computeCovarianceKernel(float* points, float* centroid, float* c
 }
 
 int main() {
-    const int numPoints = 1024; // 假设有1024个点
-    float points[3 * numPoints]; // 用于存储点的数组
-    float centroid[3] = {0}; // 质心
-    float covMatrix[6] = {0}; // 协方差矩阵，由于是对称的，只需要存储上三角部分
+    const int numPoints = 1024;
+    float points[3 * numPoints]; 
+    float centroid[3] = {0}; 
+    float covMatrix[6] = {0}; 
 
     // 初始化点集（示例中省略了具体的初始化代码）
     // 初始化随机数生成器
@@ -38,9 +38,9 @@ int main() {
 
     // 初始化点集
     for (int i = 0; i < numPoints; ++i) {
-        points[3*i] = (float)rand() / RAND_MAX;   // x坐标
-        points[3*i + 1] = (float)rand() / RAND_MAX; // y坐标
-        points[3*i + 2] = (float)rand() / RAND_MAX; // z坐标
+        points[3*i] = (float)rand() / RAND_MAX;   
+        points[3*i + 1] = (float)rand() / RAND_MAX; 
+        points[3*i + 2] = (float)rand() / RAND_MAX; 
     }
 
     float *d_points, *d_centroid, *d_covMatrix;
