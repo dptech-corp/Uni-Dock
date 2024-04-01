@@ -15,7 +15,7 @@ unidock/example/screening_test/unidock
 unidock/example/screening_test/fail_result
 unidock/example/screening_test/receptor_grids
 unidock/example/screening_test/unidock_root
-unidock/example/screening_test/test_dock
+unidock/example/screening_test/astex
 unidock_tools/dist
 unidock_tools/dist/*
 *.egg-info

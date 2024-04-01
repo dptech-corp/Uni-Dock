@@ -345,7 +345,7 @@ bug reporting, license agreements, and more information.      \n";
         int max_step = 0;
         int max_gpu_memory = 0;
         int refine_step = 5;
-
+        bool safe_mode = false;
         // autodock4.2 weights
         double weight_ad4_vdw = 0.1662;
         double weight_ad4_hb = 0.1209;
@@ -412,7 +412,8 @@ bug reporting, license agreements, and more information.      \n";
             // >(&gpu_batch_ligand_names_sdf)->multitoken(), "gpu batch ligand (SDF)")
 
             ("scoring", value<std::string>(&sf_name)->default_value(sf_name),
-             "scoring function (ad4, vina or vinardo)");
+             "scoring function (ad4, vina or vinardo)")
+            ("safe_mode",bool_switch(&safe_mode));
         // options_description search_area("Search area (required, except with --score_only)");
         options_description search_area("Search space (required)");
         search_area.add_options()(
@@ -1018,6 +1019,7 @@ bug reporting, license agreements, and more information.      \n";
                 }
                 std::sort(ligands.begin(), ligands.end(), compareLigands);
                 int groupSize = ligands.size() / 4;
+                if (safe_mode==false){
                 std::vector<Ligand> smallGroup(ligands.begin(), ligands.begin() + groupSize);
                 std::vector<Ligand> mediumGroup(ligands.begin() + groupSize, ligands.begin() + 2 * groupSize);
                 std::vector<Ligand> largeGroup(ligands.begin() + 2 * groupSize, ligands.begin() + 3 * groupSize);
@@ -1052,7 +1054,13 @@ bug reporting, license agreements, and more information.      \n";
                         min_rmsd,max_evals,max_step,seed, refine_step, local_only, energy_range);
                 template_batch_docking<ExtraLargeConfig>(v,all_ligands,extraLargeGroup,"Extra Large",exhaustiveness, multi_bias,max_memory,
                         receptor_atom_numbers, out_dir,bias_file, num_modes,
-                        min_rmsd,max_evals,max_step,seed, refine_step, local_only, energy_range);
+                        min_rmsd,max_evals,max_step,seed, refine_step, local_only, energy_range);}
+                else{
+                   std::vector<Ligand> extraLargeGroup(ligands.begin(), ligands.end()); 
+                   template_batch_docking<ExtraLargeConfig>(v,all_ligands,extraLargeGroup,"Extra Large in safe mode",exhaustiveness, multi_bias,max_memory,
+                        receptor_atom_numbers, out_dir,bias_file, num_modes,
+                        min_rmsd,max_evals,max_step,seed, refine_step, local_only, energy_range); 
+                }
             }
         }
     }
