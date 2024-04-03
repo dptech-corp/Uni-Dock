@@ -949,8 +949,10 @@ std::string Vina::get_sdf_poses_gpu(int ligand_id, int how_many, double energy_r
                     - If there is no conf to write
                     - The energy of the current conf is superior than best_energy + energy_range
             */
-            if (n >= how_many || !not_max(m_poses_gpu[ligand_id][i].e)
-                || m_poses_gpu[ligand_id][i].e > best_energy + energy_range)
+        //    std::cout<<i<<std::endl;
+            // if (n >= how_many || !not_max(m_poses_gpu[ligand_id][i].e)
+            //     || m_poses_gpu[ligand_id][i].e > best_energy + energy_range)
+            if (n >= how_many)
                 break;  // check energy_range sanity FIXME
 
             // Push the current pose to model
