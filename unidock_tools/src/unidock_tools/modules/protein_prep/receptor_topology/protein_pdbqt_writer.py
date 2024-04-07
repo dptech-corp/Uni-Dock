@@ -6,18 +6,14 @@ from rdkit.Chem.rdPartialCharges import ComputeGasteigerCharges
 from protein_topology import prepare_protein_residue_mol_list
 from smarts_definition import HB_DONOR, HB_ACCEPTOR
 from amber_atom_types import AMBER_RESIDUE_PARAMETER_DICT
-from schrodinger_atom_types import SCHRODINGER_RESIDUE_PARAMETER_DICT
+
 
 class ProteinPDBQTWriter(object):
     def __init__(self,
                  protein_pdb_file_name,
-                 atom_type_template='amber',
                  working_dir_name='.'):
 
-        if atom_type_template == 'amber':
-            self.residue_parameter_dict = AMBER_RESIDUE_PARAMETER_DICT
-        if atom_type_template == 'schrodinger':
-            self.residue_parameter_dict = SCHRODINGER_RESIDUE_PARAMETER_DICT
+        self.residue_parameter_dict = AMBER_RESIDUE_PARAMETER_DICT
 
         self.protein_pdb_file_name = os.path.abspath(protein_pdb_file_name)
         self.protein_mol, self.protein_residue_mol_list = prepare_protein_residue_mol_list(self.protein_pdb_file_name)
