@@ -77,6 +77,9 @@ class MolGroup:
         self.mol_group: List[Mol] = list()
         self._initialize(ligand_files)
 
+    def __len__(self) -> int:
+        return len(self.mol_group)
+
     def __iter__(self):
         for mol in self.mol_group:
             yield mol

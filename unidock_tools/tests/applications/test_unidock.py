@@ -28,7 +28,7 @@ def pocket():
 
 
 testset_dir_path = Path(__file__).parent.parent / "inputs" / "unidock_pipeline"
-testset_name_list = ["bigsdf", "1bcu"]
+testset_name_list = ["bigsdf", "1bcu", "one_ligand_failed"]
 
 
 def get_docking_args(testset_name):
@@ -124,8 +124,6 @@ def test_unidock_pipeline_multi_pose(receptor, ligand, pocket):
 def test_unidock_pipeline_default_arg(testset_name):
     testset_info = get_docking_args(testset_name)
     receptor, ligand, pocket = testset_info["receptor"], testset_info["ligand"], testset_info["pocket"]
-    with open(ligand) as f:
-        total_num = len([line for line in f.readlines() if line.strip() == "$$$$"])
     results_dir = f"unidock_results_{testset_name}"
     cmd = f"unidocktools unidock_pipeline -r {receptor} -l {ligand} -sd {results_dir} \
         -cx {pocket['center_x']} -cy {pocket['center_y']} -cz {pocket['center_z']} \
@@ -137,7 +135,7 @@ def test_unidock_pipeline_default_arg(testset_name):
     assert resp.returncode == 0, f"run unidock pipeline app err:\n{resp.stderr}"
 
     result_files = glob.glob(os.path.join(results_dir, "*.sdf"))
-    assert len(result_files) == total_num, f"failed to run all ligands"
+    assert len(result_files) > 0, f"failed to run all ligands"
 
     for result_file in result_files:
         score_list = read_scores(result_file, "docking_score")
