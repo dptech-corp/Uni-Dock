@@ -1,6 +1,8 @@
 from typing import Union, List
 from pathlib import Path
 import os
+import logging
+import traceback
 from rdkit import Chem
 
 
@@ -55,5 +57,11 @@ def read_ligand(ligand_file:Union[str, bytes, os.PathLike]) -> List[Chem.Mol]:
         mols = [Chem.MolFromPDBFile(ligand_file, removeHs=False)]
     elif fmt == ".smi":
         mols = read_smi(ligand_file)
-
-    return mols
+    final_mols = []
+    for i, mol in enumerate(mols):
+        if not mol:
+            logging.warning(f"ligand {str(ligand_file)} idx {i} is invalid mol")
+            continue
+        mol.SetProp("filename", f"{Path(ligand_file).stem}_{i}" if len(mols) > 1 else Path(ligand_file).stem)
+        final_mols.append(mol)
+    return final_mols

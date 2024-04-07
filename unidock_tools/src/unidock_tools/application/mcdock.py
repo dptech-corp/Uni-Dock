@@ -1,14 +1,19 @@
-from typing import List
+from typing import List, Union, Tuple
 from pathlib import Path
 import os
 import time
 import shutil
 import argparse
 import logging
+from multiprocessing import Pool
+from rdkit import Chem
 
-from unidock_tools.utils import time_logger, randstr
+from unidock_tools.utils import time_logger, randstr, make_tmp_dir, MolGroup
 from unidock_tools.modules.confgen import generate_conf
-from .unidock_pipeline import UniDock
+from unidock_tools.modules.protein_prep import pdb2pdbqt
+from unidock_tools.modules.ligand_prep import TopologyBuilder
+from unidock_tools.modules.docking import run_unidock
+from .unidock_pipeline import Base, UniDock
 
 
 DEFAULT_ARGS = {
@@ -46,7 +51,7 @@ DEFAULT_ARGS = {
 }
 
 
-class MultiConfDock(UniDock):
+class MultiConfDock(Base):
     def __init__(self,
                  receptor: Path,
                  ligands: List[Path],
@@ -75,11 +80,24 @@ class MultiConfDock(UniDock):
             size_z (float, optional): Size of the docking box in the z-dimension. Defaults to 22.5.
             workdir (Path, optional): Path to the working directory. Defaults to Path("MultiConfDock").
         """
-        super(MultiConfDock, self).__init__(receptor=receptor, ligands=ligands,
-                                            center_x=center_x, center_y=center_y, center_z=center_z,
-                                            size_x=size_x, size_y=size_y, size_z=size_z,
-                                            workdir=workdir)
         self.check_dependencies()
+        self.workdir = workdir
+        self.workdir.mkdir(parents=True, exist_ok=True)
+        if receptor.suffix == ".pdb":
+            pdb2pdbqt(receptor, workdir.joinpath(receptor.stem + ".pdbqt"))
+            receptor = workdir.joinpath(receptor.stem + ".pdbqt")
+        if receptor.suffix != ".pdbqt":
+            logging.error("receptor file must be pdb/pdbqt format")
+            exit(1)
+        self.receptor = receptor
+        self.mol_group = MolGroup(ligands)
+        self.build_topology()
+        self.center_x = center_x
+        self.center_y = center_y
+        self.center_z = center_z
+        self.size_x = size_x
+        self.size_y = size_y
+        self.size_z = size_z
         if gen_conf:
             self.generate_conformation(max_nconf=max_nconf, min_rmsd=min_rmsd)
 
@@ -89,6 +107,111 @@ class MultiConfDock(UniDock):
         """
         if not shutil.which("confgen") and not shutil.which("obabel"):
             raise ModuleNotFoundError("To run MultiConfDock, you need to install CDPKit confgen or OpenBabel")
+
+    def _build_topology(self, id_mol_tup: Tuple[int, Chem.Mol]):
+        """
+        Build topology for a molecule.
+        :param id_mol_tup:
+        :return:
+        """
+        idx, mol = id_mol_tup
+        topo_builder = TopologyBuilder(mol=mol)
+        topo_builder.build_molecular_graph()
+        fragment_info, fragment_all_info, torsion_info, atom_info = topo_builder.get_sdf_torsion_tree_info()
+        return idx, fragment_info, fragment_all_info, torsion_info, atom_info
+
+    @time_logger
+    def build_topology(self):
+        id_mol_tup_list = [(idx, mol.get_first_mol()) for idx, mol in enumerate(self.mol_group)]
+        with Pool(os.cpu_count()) as pool:
+            for idx, frag_info, fragment_all_info, torsion_info, atom_info in pool \
+                    .imap_unordered(self._build_topology, id_mol_tup_list):
+                self.mol_group.update_property_by_idx(idx, "fragInfo", frag_info)
+                self.mol_group.update_property_by_idx(idx, "fragAllInfo", fragment_all_info)
+                self.mol_group.update_property_by_idx(idx, "torsionInfo", torsion_info)
+                self.mol_group.update_property_by_idx(idx, "atomInfo", atom_info)
+
+    @time_logger
+    def init_docking_data(self, input_dir: Union[str, os.PathLike], batch_size: int = 20, props_list : List[str] = []):
+        for sub_idx_list in self.mol_group.iter_idx_list(batch_size):
+            input_list = []
+            for idx in sub_idx_list:
+                input_list += self.mol_group.write_sdf_by_idx(idx, save_dir=input_dir, 
+                                                              seperate_conf=True, props_list=props_list)
+            yield input_list, input_dir
+
+    @time_logger
+    def postprocessing(self, ligand_scores_list: zip,
+                       topn_conf: int = 10,
+                       score_name: str = "score"):
+        mol_score_dict = dict()
+        for ligand, scores in ligand_scores_list:
+            fprefix = ligand.stem.rpartition("_out")[0]
+            if not fprefix:
+                fprefix = ligand.stem
+            fprefix = fprefix.split("_CONF")[0]
+            result_mols = [mol for mol in Chem.SDMolSupplier(str(ligand), removeHs=False)]
+            mol_score_dict[fprefix] = mol_score_dict.get(fprefix, []) + [(mol, s) for mol, s in zip(
+                result_mols, scores)]
+        for fprefix in mol_score_dict:
+            mol_score_list = mol_score_dict[fprefix]
+            mol_score_list.sort(key=lambda x: x[1], reverse=False)
+            logging.debug([item[1] for item in mol_score_list])
+            logging.debug(f"docking result pose num: {len(mol_score_list)}, keep num: {topn_conf}")
+            self.mol_group.update_mol_confs_by_file_prefix(fprefix,
+                                                           [mol for mol, _ in mol_score_list[:topn_conf]])
+            self.mol_group.update_property_by_file_prefix(fprefix, property_name=score_name,
+                                                          value=[score for _, score in mol_score_list[:topn_conf]],
+                                                          is_conf_prop=True)
+
+    @time_logger
+    def run_unidock(self,
+                    scoring_function: str = "vina",
+                    search_mode: str = "",
+                    exhaustiveness: int = 256,
+                    max_step: int = 10,
+                    num_modes: int = 3,
+                    refine_step: int = 3,
+                    energy_range: float = 3.0,
+                    seed : int = 181129,
+                    topn: int = 10,
+                    batch_size: int = 1200,
+                    score_only: bool = False,
+                    local_only: bool = False,
+                    score_name: str = "docking_score",
+                    docking_dir_name : str = "docking_dir",
+                    props_list : List[str] = [],
+                    ):
+        input_dir = make_tmp_dir(f"{self.workdir}/{docking_dir_name}/docking_inputs", date=False)
+        output_dir = make_tmp_dir(f"{self.workdir}/{docking_dir_name}/docking_results", date=False)
+        for ligand_list, input_dir in self.init_docking_data(
+                input_dir=input_dir,
+                batch_size=batch_size,
+                props_list=props_list,
+        ):
+            # Run docking
+            ligands, scores_list = run_unidock(
+                receptor=self.receptor, ligands=ligand_list, output_dir=output_dir,
+                center_x=self.center_x, center_y=self.center_y, center_z=self.center_z,
+                size_x=self.size_x, size_y=self.size_y, size_z=self.size_z,
+                scoring=scoring_function, num_modes=num_modes,
+                search_mode=search_mode, exhaustiveness=exhaustiveness, max_step=max_step, 
+                seed=seed, refine_step=refine_step, energy_range=energy_range,
+                score_only=score_only, local_only=local_only,
+            )
+            # Ranking
+            self.postprocessing(zip(ligands, scores_list), topn, score_name)
+
+
+    @time_logger
+    def save_results(self, save_dir: Union[str, os.PathLike] = ""):
+        if not save_dir:
+            save_dir = f"{self.workdir}/results_dir"
+        save_dir = make_tmp_dir(str(save_dir), False, False)
+        res_list = self.mol_group.write_sdf(save_dir=save_dir, seperate_conf=False, conf_prefix="_unidock", 
+                                            exclude_props_list=["file_prefix", 
+                                                                "fragInfo", "fragAllInfo", "torsionInfo", "atomInfo"])
+        return res_list
 
     @time_logger
     def generate_conformation(self,
