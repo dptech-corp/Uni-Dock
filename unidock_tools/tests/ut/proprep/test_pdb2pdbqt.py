@@ -1,7 +1,8 @@
 from pathlib import Path
 import os
 import pytest
-
+import sys
+sys.path.append('/personal/Uni-Dock/unidock_tools/src')
 
 @pytest.fixture
 def pdb_file():

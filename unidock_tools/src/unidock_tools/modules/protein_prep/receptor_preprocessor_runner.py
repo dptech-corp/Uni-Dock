@@ -1,11 +1,10 @@
 
 import os
 from shutil import rmtree
-###
-import sys
+
 from typing import List, Tuple, Dict, Optional
-from receptor_standardization.receptor_pdb_reader import ReceptorPDBReader
-from receptor_topology.autogrid_runner import AutoGridRunner
+from unidock_tools.modules.protein_prep.receptor_standardization.receptor_pdb_reader import ReceptorPDBReader
+from unidock_tools.modules.protein_prep.receptor_topology.autogrid_runner import AutoGridRunner
 
 class ReceptorPreprocessorRunner(object):
     def __init__(self,

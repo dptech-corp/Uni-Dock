@@ -2,7 +2,7 @@ import os
 import numpy as np
 import pandas as pd
 
-from docking_grids_generator import DockingGridsGenerator
+from unidock_tools.modules.protein_prep.receptor_topology.docking_grids_generator import DockingGridsGenerator
 
 class AutoGridRunner(object):
     def __init__(self,

@@ -4,7 +4,7 @@ from rdkit import Chem
 from rdkit.Chem import AllChem
 from rdkit.Chem.rdPartialCharges import ComputeGasteigerCharges
 
-from atom_type import AtomType
+from unidock_tools.modules.protein_prep.receptor_topology.atom_type import AtomType
 #from nashtools.modules.docking_engines.ligand_topology import utils
 
 class SmallMoleculePDBQTWriter(object):

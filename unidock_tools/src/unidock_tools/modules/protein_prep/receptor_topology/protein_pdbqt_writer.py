@@ -3,9 +3,9 @@ import os
 from rdkit import Chem
 from rdkit.Chem.rdPartialCharges import ComputeGasteigerCharges
 
-from protein_topology import prepare_protein_residue_mol_list
-from smarts_definition import HB_DONOR, HB_ACCEPTOR
-from amber_atom_types import AMBER_RESIDUE_PARAMETER_DICT
+from unidock_tools.modules.protein_prep.receptor_topology.protein_topology import prepare_protein_residue_mol_list
+from unidock_tools.modules.protein_prep.receptor_topology.smarts_definition import HB_DONOR, HB_ACCEPTOR
+from unidock_tools.modules.protein_prep.receptor_topology.amber_atom_types import AMBER_RESIDUE_PARAMETER_DICT
 
 
 class ProteinPDBQTWriter(object):

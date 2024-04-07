@@ -3,11 +3,10 @@ import string
 import shutil
 
 import MDAnalysis as mda
-import openmm.app as app
 
-from protein_pdbqt_writer import ProteinPDBQTWriter
-from small_molecule_pdbqt_writer import SmallMoleculePDBQTWriter
-from grid_parameter_file_generator import GridParameterFileGenerator
+from unidock_tools.modules.protein_prep.receptor_topology.protein_pdbqt_writer import ProteinPDBQTWriter
+from unidock_tools.modules.protein_prep.receptor_topology.small_molecule_pdbqt_writer import SmallMoleculePDBQTWriter
+from unidock_tools.modules.protein_prep.receptor_topology.grid_parameter_file_generator import GridParameterFileGenerator
 
 SUPPORTED_NONSTANDARD_RESNAME_LIST = ['NCYM', 'NASH', 'NGLH', 'NLYN', 'CCYM', 'CASH', 'CGLH', 'CLYN', 'AIB', '0AO', '200', 'ABA', 'ASQ', 'BCS', 'DAL', 'DAR', 'DAS', 'DCY', 'DGL', 'DGN', 'DHI', 'DIL', 'DLE', 'DLY', 'DPN', 'DPR', 'DSG', 'DSN', 'DTH', 'DTR', 'DTY', 'DVA', 'EBZ', 'GNC', 'HBZ', 'MEA', 'MED', 'NA8', 'NLE', 'NVA', 'PTR', 'SEM', 'SEP', 'THP', 'TPO', 'TY5', 'Z3E']
 
@@ -214,7 +213,7 @@ class DockingGridsGenerator(object):
         self.__prepare_protein_pdb_file__(self.protein_pdb_file_name, protein_output_pdb_file_name)
 
         protein_pdbqt_writer = ProteinPDBQTWriter(protein_output_pdb_file_name,
-                                                  atom_type_template='amber',
+                                                  #atom_type_template='amber',
                                                   working_dir_name=self.working_dir_name)
 
         protein_pdbqt_writer.write_protein_pdbqt_file()
