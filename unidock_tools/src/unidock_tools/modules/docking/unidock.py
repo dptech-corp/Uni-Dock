@@ -45,11 +45,7 @@ class UniDockRunner:
             size_z = min(size_z*2, 25)
 
         if scoring.lower() == "ad4":
-            map_prefix = self.gen_ad4_map(
-                Path(receptor), ligands,
-                center_x, center_y, center_z,
-                size_x, size_y, size_z,
-            )
+            map_prefix = os.path.join(working_dir_name, 'protein.maps.fld')
             cmd += ["--maps", str(map_prefix)]
         else:
             cmd += ["--receptor", str(receptor)]
@@ -118,82 +114,6 @@ class UniDockRunner:
             self.prepare_gpf4_script_path = prepare_gpf4_script_path
             self.ad4_map_data_path = str(Path(__file__).parent.parent.parent.joinpath("data/docking/AD4.1_bound.dat"))
 
-    def gen_ad4_map(
-            self,
-            receptor: Path,
-            ligands: List[Path],
-            center_x: float,
-            center_y: float,
-            center_z: float,
-            size_x: float = 22.5,
-            size_y: float = 22.5,
-            size_z: float = 22.5,
-            spacing: float = 0.375,
-    ) -> str:
-        """
-        Generates AD4 map files for AutoDock4,
-
-        Args:
-            receptor (Path): Input receptor file.
-            ligands (List[Path]): Input ligand files.
-            center_x (float): X-coordinate of the grid center.
-            center_y (float): Y-coordinate of the grid center.
-            center_z (float): Z-coordinate of the grid center.
-            size_x (float): Grid size in the X-axis. Default is 22.5.
-            size_y (float): Grid size in the Y-axis. Default is 22.5.
-            size_z (float): Grid size in the Z-axis. Default is 22.5.
-            spacing (float): Grid spacing. Default is 0.375.
-
-        Returns:
-            str: Path of the generated AD4 map file.
-        """
-        # Initialize variables
-        prefix = receptor.stem
-        map_dir = os.path.join(self.workdir, "mapdir")
-        os.makedirs(map_dir, exist_ok=True)
-        shutil.copyfile(receptor, os.path.join(map_dir, receptor.name))
-        receptor = Path(os.path.join(map_dir, receptor.name))
-        # Extract atom types from ligands
-        atom_types = set()
-        for ligand in ligands:
-            tag = False
-            with open(ligand, "r") as f:
-                for line in f.readlines():
-                    if line.strip():
-                        if line.startswith(">  <atomInfo>"):
-                            tag = True
-                        elif tag and (line.startswith(">  <") or line.startswith("$$$$")):
-                            tag = False
-                        elif tag:
-                            atom_types.add(line[13:].strip())
-        atom_types = list(atom_types)
-        logging.info(f"atom_types: {atom_types}")
-
-        npts = [math.ceil(size / spacing) for size in [size_x, size_y, size_z]]
-
-        cmd = "".join([
-            f"{self.mgltools_python_path} {self.prepare_gpf4_script_path} ",
-            f"-r {receptor.name} ",
-            f"-p gridcenter='{center_x},{center_y},{center_z}' ",
-            f"-p npts='{npts[0]},{npts[1]},{npts[2]}' ",
-            f"-p spacing={spacing} -p ligand_types='{','.join(atom_types)}' ",
-            f"-o {prefix}.gpf && ",
-            f"sed -i '1i parameter_file {self.ad4_map_data_path}' {prefix}.gpf && ",
-            f"autogrid4 -p {prefix}.gpf -l {prefix}.glg"
-        ])
-        logging.info(cmd)
-        resp = subprocess.run(
-            cmd,
-            shell=True,
-            capture_output=True,
-            encoding="utf-8",
-            cwd=map_dir,
-        )
-        logging.info(f"Gen ad4 map log: {resp.stdout}")
-        if resp.returncode != 0:
-            logging.error(f"Gen ad4 map err: {resp.stderr}")
-
-        return os.path.join(map_dir, prefix)
 
     def run(self):
         resp = subprocess.run(
