@@ -3,6 +3,7 @@ import string
 import shutil
 
 import MDAnalysis as mda
+import openmm.app as app
 
 from unidock_tools.modules.protein_prep.receptor_topology.protein_pdbqt_writer import ProteinPDBQTWriter
 from unidock_tools.modules.protein_prep.receptor_topology.small_molecule_pdbqt_writer import SmallMoleculePDBQTWriter
