@@ -10,7 +10,8 @@ from rdkit import Chem
 
 from unidock_tools.utils import time_logger, randstr, make_tmp_dir, MolGroup
 from unidock_tools.modules.confgen import generate_conf
-from unidock_tools.modules.protein_prep import pdb2pdbqt
+#from unidock_tools.modules.protein_prep import pdb2pdbqt
+from unidock_tools.modules.protein_prep import receptor_preprocessor
 from unidock_tools.modules.ligand_prep import TopologyBuilder
 from unidock_tools.modules.docking import run_unidock
 from .unidock_pipeline import Base, UniDock
@@ -84,8 +85,10 @@ class MultiConfDock(Base):
         self.workdir = workdir
         self.workdir.mkdir(parents=True, exist_ok=True)
         if receptor.suffix == ".pdb":
-            pdb2pdbqt(receptor, workdir.joinpath(receptor.stem + ".pdbqt"))
-            receptor = workdir.joinpath(receptor.stem + ".pdbqt")
+            #pdb2pdbqt(receptor, workdir.joinpath(receptor.stem + ".pdbqt"))
+            #receptor = workdir.joinpath(receptor.stem + ".pdbqt")
+            receptor_pdbqt_file_name = receptor_preprocessor(receptor, working_dir_name=workdir)
+            self.receptor = receptor_pdbqt_file_name
         if receptor.suffix != ".pdbqt":
             logging.error("receptor file must be pdb/pdbqt format")
             exit(1)

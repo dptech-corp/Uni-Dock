@@ -1,20 +1,19 @@
 import os
-import shutil
 import tempfile
 import subprocess
 import pytest
-#from unidocktools.new_proteinprep import receptor_preprocessor
 
 @pytest.fixture
 def pdb_file():
-    temp_dir = tempfile.mkdtemp()
-    pdb_file = os.path.join(temp_dir, "protein.pdb")
-    yield pdb_file
-    shutil.rmtree(temp_dir)
+    return os.path.join(os.path.dirname(os.path.dirname(__file__)), "inputs", "protein.pdb")
 
 def test_receptor_processor_app(pdb_file):
     protein_pdbqt_file_name = "protein.pdbqt"
-    cmd = f"unidocktools proteinprep -r {pdb_file} -o {protein_pdbqt_file_name}"
-    subprocess.run(cmd, shell=True)
-    assert os.path.isfile(protein_pdbqt_file_name), "PDBQT file was not generated"
-    os.remove(protein_pdbqt_file_name)
+    with tempfile.TemporaryDirectory() as work_dir:
+        cmd = f"unidocktools proteinprep -r {pdb_file} -o {protein_pdbqt_file_name} -H -w {work_dir}"
+        subprocess.run(cmd, shell=True, cwd=work_dir)
+        assert os.path.isfile(os.path.join(work_dir, protein_pdbqt_file_name)), "PDBQT file was not generated"
+
+
+if __name__ == "__main__":
+    pytest.main([__file__])
