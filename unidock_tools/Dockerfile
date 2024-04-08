@@ -20,7 +20,7 @@ RUN wget --quiet -O CDPKit.sh https://github.com/molinfo-vienna/CDPKit/releases/
     rm CDPKit.sh
 
 WORKDIR /opt
-RUN mamba install -y ipython requests openbabel pandas -c conda-forge
+RUN mamba install -y ipython requests ambertools rdkit mdanalysis openmm openbabel pandas -c conda-forge
 RUN mamba create -y -n mgltools mgltools autogrid -c bioconda
 ENV PATH $PATH:/opt/conda/envs/mgltools/bin
 
