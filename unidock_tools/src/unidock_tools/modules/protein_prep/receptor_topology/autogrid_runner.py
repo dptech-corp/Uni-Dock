@@ -73,6 +73,7 @@ class AutoGridRunner(object):
                                                             num_grid_points=self.num_grid_points,
                                                             grid_spacing=self.grid_spacing,
                                                             covalent_residue_atom_info_list=covalent_residue_atom_info_list,
+                                                            generate_ad4_grids=self.generate_ad4_grids,
                                                             working_dir_name=current_working_dir_name)
 
             docking_grids_generator.generate_docking_grids()

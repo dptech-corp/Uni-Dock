@@ -7,14 +7,12 @@ from unidock_tools.modules.protein_prep.receptor_topology.protein_topology impor
 from unidock_tools.modules.protein_prep.receptor_topology.smarts_definition import HB_DONOR, HB_ACCEPTOR
 from unidock_tools.modules.protein_prep.receptor_topology.amber_atom_types import AMBER_RESIDUE_PARAMETER_DICT
 
-
 class ProteinPDBQTWriter(object):
     def __init__(self,
                  protein_pdb_file_name,
                  working_dir_name='.'):
 
         self.residue_parameter_dict = AMBER_RESIDUE_PARAMETER_DICT
-
         self.protein_pdb_file_name = os.path.abspath(protein_pdb_file_name)
         self.protein_mol, self.protein_residue_mol_list = prepare_protein_residue_mol_list(self.protein_pdb_file_name)
 
@@ -112,6 +110,10 @@ class ProteinPDBQTWriter(object):
         self.pdbqt_atom_line_list = []
         self.pdbqt_atom_line_format = '{:4s}  {:5d} {:^4s} {:3s} {:1s}{:4d}    {:8.3f}{:8.3f}{:8.3f}{:6.2f}{:6.2f}    {:6.3f} {:<2s}\n'
 
+        if self.protein_mol.GetNumAtoms() == 0:
+            raise ValueError('Empty protein mol!!')
+
+        atom_idx = 0
         for atom in self.protein_mol.GetAtoms():
             atom_idx = atom.GetIntProp('atom_idx')
             atom_info_tuple = ('ATOM',  # atom record name

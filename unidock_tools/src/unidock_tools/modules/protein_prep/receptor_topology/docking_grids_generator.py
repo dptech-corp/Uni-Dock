@@ -257,5 +257,7 @@ class DockingGridsGenerator(object):
             gpf_generator.write_grid_parameter_file()
 
             autogrid_binary_file_name = os.path.join(os.path.dirname(__file__), 'bin', 'autogrid4')
+            autogrid_chmod_command = f'chmod +x {autogrid_binary_file_name}'
             autogrid_command = f'cd {self.working_dir_name}; {autogrid_binary_file_name} -p {os.path.basename(protein_output_gpf_file_name)} -l {os.path.basename(protein_output_glg_file_name)}; cd -'
+            os.system(autogrid_chmod_command)
             os.system(autogrid_command)

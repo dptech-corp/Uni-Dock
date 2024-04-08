@@ -119,6 +119,10 @@ class ReceptorPDBReader(object):
         protein_cleaned_ag = protein_cleaned_universe.atoms
         residue_group = protein_cleaned_ag.residues
 
+        ########################################
+        ## to get rid of annoying test warnings
+        current_segid = 'A'
+        ########################################
         for current_residue_idx, current_residue in enumerate(residue_group):
             prepared_resid = current_residue.resid
             for segment_idx, segment_resid_list in enumerate(segment_resid_nested_list):
