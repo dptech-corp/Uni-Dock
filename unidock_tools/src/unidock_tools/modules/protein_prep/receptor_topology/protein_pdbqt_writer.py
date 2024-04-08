@@ -5,14 +5,14 @@ from rdkit.Chem.rdPartialCharges import ComputeGasteigerCharges
 
 from unidock_tools.modules.protein_prep.receptor_topology.protein_topology import prepare_protein_residue_mol_list
 from unidock_tools.modules.protein_prep.receptor_topology.smarts_definition import HB_DONOR, HB_ACCEPTOR
-from unidock_tools.modules.protein_prep.receptor_topology.amber_atom_types import AMBER_RESIDUE_PARAMETER_DICT
+from unidock_tools.modules.protein_prep.receptor_topology.amino_acid_atom_types import RESIDUE_PARAMETER_DICT
 
 class ProteinPDBQTWriter(object):
     def __init__(self,
                  protein_pdb_file_name,
                  working_dir_name='.'):
 
-        self.residue_parameter_dict = AMBER_RESIDUE_PARAMETER_DICT
+        self.residue_parameter_dict = RESIDUE_PARAMETER_DICT
         self.protein_pdb_file_name = os.path.abspath(protein_pdb_file_name)
         self.protein_mol, self.protein_residue_mol_list = prepare_protein_residue_mol_list(self.protein_pdb_file_name)
 

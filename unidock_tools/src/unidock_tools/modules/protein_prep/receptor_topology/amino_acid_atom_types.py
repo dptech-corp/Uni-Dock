@@ -1,4 +1,4 @@
-AMBER_RESIDUE_PARAMETER_DICT = {
+RESIDUE_PARAMETER_DICT = {
   "ALA": {
         "atom_names": [     "C",     "O",    "CA",    "HA",     "N",     "H",    "CB",   "HB1",   "HB2",   "HB3"],
         "atom_types": [     "C",    "OA",     "C",     "H",     "N",    "HD",     "C",     "H",     "H",     "H"],
