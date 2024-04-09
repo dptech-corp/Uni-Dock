@@ -34,7 +34,6 @@ class UniDockRunner:
         self.mgltools_python_path = ""
         self.prepare_gpf4_script_path = ""
         self.ad4_map_data_path = ""
-        self.check_env(scoring == "ad4")
 
         self.workdir = make_tmp_dir("unidock")
         cmd = ["unidock"]
