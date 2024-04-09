@@ -30,7 +30,8 @@ classifiers = [
 ]
 
 [tool.setuptools.package-data]
-"*" = ["*.dat"]
+"*" = ["*/templates/*", "*/receptor_topology/bin/*","*/receptor_topology/data/*"]
+
 
 [project.urls]
 Homepage = "https://github.com/dptech-corp/Uni-Dock"

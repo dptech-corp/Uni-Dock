@@ -45,7 +45,7 @@ class UniDockRunner:
             size_z = min(size_z*2, 25)
 
         if scoring.lower() == "ad4":
-            map_prefix = os.path.join(working_dir_name, 'protein.maps.fld')
+            map_prefix = os.path.join(self.workdir, 'receptor_grids','protein_conf_0', 'protein.maps.fld')
             cmd += ["--maps", str(map_prefix)]
         else:
             cmd += ["--receptor", str(receptor)]
@@ -91,28 +91,6 @@ class UniDockRunner:
         self.cmd = cmd
 
         self.pre_result_ligands = [Path(os.path.join(output_dir, f"{l.stem}_out.sdf")) for l in ligands]
-
-    def check_env(self, use_ad4: bool = False):
-        if not shutil.which("unidock"):
-            raise ModuleNotFoundError("UniDock is not installed.")
-        if use_ad4:
-            mgltools_python_path = shutil.which("pythonsh")
-            if not mgltools_python_path:
-                raise ModuleNotFoundError("MGLTools is not installed.")
-            prepare_gpf4_script_path = os.path.join(
-                os.path.dirname(os.path.dirname(mgltools_python_path)),
-                "MGLToolsPckgs",
-                "AutoDockTools",
-                "Utilities24",
-                "prepare_gpf4.py",
-            )
-            if not os.path.exists(prepare_gpf4_script_path):
-                raise ModuleNotFoundError("MGLTools is not installed.")
-            if not shutil.which("autogrid4"):
-                raise ModuleNotFoundError("AutoGrid4 is not installed.")
-            self.mgltools_python_path = mgltools_python_path
-            self.prepare_gpf4_script_path = prepare_gpf4_script_path
-            self.ad4_map_data_path = str(Path(__file__).parent.parent.parent.joinpath("data/docking/AD4.1_bound.dat"))
 
 
     def run(self):

@@ -84,7 +84,7 @@ class UniDock(Base):
         if receptor.suffix == ".pdb":
             ###pdb2pdbqt(receptor, workdir.joinpath(receptor.stem + ".pdbqt"))
             ###receptor = workdir.joinpath(receptor.stem + ".pdbqt")
-            receptor_pdbqt_file_name = receptor_preprocessor(receptor, working_dir_name=workdir)
+            receptor_pdbqt_file_name = receptor_preprocessor(str(receptor), working_dir_name=str(workdir))
             self.receptor = receptor_pdbqt_file_name
         if receptor.suffix != ".pdbqt":
             logging.error("receptor file must be pdb/pdbqt format")
