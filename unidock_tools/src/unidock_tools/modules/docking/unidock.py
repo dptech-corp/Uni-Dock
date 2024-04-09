@@ -4,10 +4,8 @@ import logging
 import os
 import shutil
 import subprocess
-import math
 
 from unidock_tools.utils import randstr, make_tmp_dir, time_logger
-
 
 class UniDockRunner:
     def __init__(self,
@@ -44,7 +42,7 @@ class UniDockRunner:
             size_z = min(size_z*2, 25)
 
         if scoring.lower() == "ad4":
-            map_prefix = os.path.join(self.workdir, 'receptor_grids','protein_conf_0', 'protein.maps.fld')
+            map_prefix = os.path.join(self.workdir, 'receptor_grids', 'protein_conf_0', 'protein')
             cmd += ["--maps", str(map_prefix)]
         else:
             cmd += ["--receptor", str(receptor)]
@@ -140,7 +138,6 @@ class UniDockRunner:
 
     def clean_workdir(self):
         shutil.rmtree(self.workdir, ignore_errors=True)
-
 
 @time_logger
 def run_unidock(
