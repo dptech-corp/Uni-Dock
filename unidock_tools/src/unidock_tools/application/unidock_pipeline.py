@@ -49,7 +49,6 @@ DEFAULT_ARGS = {
     "debug": False,
 }
 
-
 class UniDock(Base):
     def __init__(self,
                  receptor: Path,
@@ -60,36 +59,54 @@ class UniDock(Base):
                  size_x: float = 22.5,
                  size_y: float = 22.5,
                  size_z: float = 22.5,
-                 workdir: Path = Path("docking_pipeline"),
+                 kept_ligand_resname_list: Optional[List[str]] = None,
+                 prepared_hydrogen: bool = True,
+                 preserve_original_resname: bool = True,
+                 covalent_residue_atom_info_list: Optional[List[Tuple[str, str]]] = None,
+                 generate_ad4_grids: bool = False,
+                 workdir: Path = Path('docking_pipeline'),
                  ):
         """
-        Initializes a MultiConfDock object.
+        Initializes a UniDock object.
 
         Args:
-            receptor (Path): Path to the receptor file in pdbqt format.
-            ligands (List[Path]): List of paths to the ligand files in sdf format.
+            receptor (Path): Path to the receptor file in PDB format.
+            ligands (List[Path]): List of paths to the ligand files in SDF format.
             center_x (float): X-coordinate of the center of the docking box.
             center_y (float): Y-coordinate of the center of the docking box.
             center_z (float): Z-coordinate of the center of the docking box.
             size_x (float, optional): Size of the docking box in the x-dimension. Defaults to 22.5.
             size_y (float, optional): Size of the docking box in the y-dimension. Defaults to 22.5.
             size_z (float, optional): Size of the docking box in the z-dimension. Defaults to 22.5.
-            workdir (Path, optional): Path to the working directory. Defaults to Path("MultiConfDock").
+            workdir (Path, optional): Path to the working directory. Defaults to Path("docking_pipeline").
         """
         self.check_dependencies()
 
         self.workdir = workdir
         self.workdir.mkdir(parents=True, exist_ok=True)
 
-        if receptor.suffix == ".pdb":
-            ###pdb2pdbqt(receptor, workdir.joinpath(receptor.stem + ".pdbqt"))
-            ###receptor = workdir.joinpath(receptor.stem + ".pdbqt")
-            receptor_pdbqt_file_name = receptor_preprocessor(str(receptor), working_dir_name=str(workdir))
-            self.receptor = receptor_pdbqt_file_name
-        if receptor.suffix != ".pdbqt":
-            logging.error("receptor file must be pdb/pdbqt format")
+        if receptor.suffix != '.pdb':
+            logging.error('receptor file must be in PDB format!')
             exit(1)
-        self.receptor = receptor
+        else:
+            receptor_pdbqt_file_name = receptor_preprocessor(str(receptor),
+                                                             kept_ligand_resname_list=kept_ligand_resname_list,
+                                                             prepared_hydrogen=prepared_hydrogen,
+                                                             preserve_original_resname=preserve_original_resname,
+                                                             target_center=(center_x, center_y, center_z),
+                                                             box_size=(size_x, size_y, size_z),
+                                                             covalent_residue_atom_info_list=covalent_residue_atom_info_list,
+                                                             generate_ad4_grids=generate_ad4_grids,
+                                                             working_dir_name=str(workdir))
+
+            self.receptor = receptor_pdbqt_file_name
+
+            if generate_ad4_grids:
+                receptor_file_dir_name = os.path.dirname(self.receptor)
+                self.ad4_map_prefix = os.path.join(receptor_file_dir_name, 'protein')
+            else:
+                self.ad4_map_prefix = ''
+
         self.mols = sum([read_ligand(ligand) for ligand in ligands], [])
         self.mols = [PropertyMol(mol) for mol in self.mols]
         self.center_x = center_x
@@ -168,7 +185,7 @@ class UniDock(Base):
                 receptor=self.receptor, ligands=ligand_list, output_dir=output_dir,
                 center_x=self.center_x, center_y=self.center_y, center_z=self.center_z,
                 size_x=self.size_x, size_y=self.size_y, size_z=self.size_z,
-                scoring=scoring_function, num_modes=num_modes,
+                scoring=scoring_function, ad4_map_prefix=self.ad4_map_prefix, num_modes=num_modes,
                 search_mode=search_mode, exhaustiveness=exhaustiveness, max_step=max_step, 
                 seed=seed, refine_step=refine_step, energy_range=energy_range,
                 score_only=score_only, local_only=local_only,
@@ -269,9 +286,9 @@ def get_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="UniDock")
 
     parser.add_argument("-r", "--receptor", type=str, required=True,
-                        help="Receptor file in pdbqt format.")
+                        help="Receptor file in PDB format.")
     parser.add_argument("-l", "--ligands", type=lambda s: s.split(','), default=None,
-                        help="Ligand file in sdf format. Specify multiple files separated by commas.")
+                        help="Ligand file in SDF format. Specify multiple files separated by commas.")
     parser.add_argument("-i", "--ligand_index", type=str, default=None,
                         help="A text file containing the path of ligand files in sdf format.")
 
@@ -336,8 +353,8 @@ def main_cli():
     Command line interface for UniDock.
 
     Input files:
-    -r, --receptor: receptor file in pdbqt format
-    -l, --ligands: ligand file in sdf format, separated by commas(,)
+    -r, --receptor: receptor file in PDB format
+    -l, --ligands: ligand file in SDF format, separated by commas(,)
     -i, --ligand_index: a text file containing the path of ligand files in sdf format
 
     Docking box:

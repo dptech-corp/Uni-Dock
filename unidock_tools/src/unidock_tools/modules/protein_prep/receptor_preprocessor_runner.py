@@ -83,7 +83,7 @@ def receptor_preprocessor(
         protein_pdb_file_name: str,
         protein_conf_name: str = 'protein_conf_0',
         kept_ligand_resname_list: Optional[List[str]] = None,
-        prepared_hydrogen: bool = False,
+        prepared_hydrogen: bool = True,
         preserve_original_resname: bool = True,
         target_center: Tuple[float, float, float] = (0.0, 0.0, 0.0),
         box_size: Tuple[float, float, float] = (22.5, 22.5, 22.5),
@@ -106,9 +106,8 @@ def receptor_preprocessor(
     runner.run()
     protein_pdbqt_file_name = runner.protein_pdbqt_file_name
     return protein_pdbqt_file_name
-    
 
-    
+
 if __name__ == "__main__":
     import argparse
     import shutil

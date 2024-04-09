@@ -19,6 +19,7 @@ class UniDockRunner:
                  size_z: float = 22.5,
                  output_dir: Optional[Union[str, os.PathLike]] = None,
                  scoring: str = "vina",
+                 ad4_map_prefix: str = "",
                  num_modes: int = 10,
                  search_mode: str = "",
                  exhaustiveness: int = 256,
@@ -29,9 +30,6 @@ class UniDockRunner:
                  score_only: bool = False,
                  local_only: bool = False
                  ):
-        self.mgltools_python_path = ""
-        self.prepare_gpf4_script_path = ""
-        self.ad4_map_data_path = ""
 
         self.workdir = make_tmp_dir("unidock")
         cmd = ["unidock"]
@@ -42,8 +40,7 @@ class UniDockRunner:
             size_z = min(size_z*2, 25)
 
         if scoring.lower() == "ad4":
-            map_prefix = os.path.join(self.workdir, 'receptor_grids', 'protein_conf_0', 'protein')
-            cmd += ["--maps", str(map_prefix)]
+            cmd += ["--maps", str(ad4_map_prefix)]
         else:
             cmd += ["--receptor", str(receptor)]
 
