@@ -20,7 +20,7 @@ RUN wget --quiet -O CDPKit.sh https://github.com/molinfo-vienna/CDPKit/releases/
     rm CDPKit.sh
 
 WORKDIR /opt
-RUN mamba install -y ipython tqdm requests numpy pathos networkx ambertools rdkit openbabel openmm mdanalysis pandas -c conda-forge
+RUN mamba install -y ipython requests tqdm lmdb openbabel ambertools openmm -c conda-forge
 
 COPY . /opt/unidock_tools
 RUN cd /opt/unidock_tools && \
