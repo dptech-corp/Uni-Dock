@@ -15,7 +15,11 @@ description = "Several docking-related applications based on Uni-Dock."
 readme = "README.md"
 requires-python = ">=3.8"
 dependencies = [
+    "ambertools",
     "rdkit",
+    "mdanalysis",
+    "openmm",
+    "openbabel",
     "networkx",
     "tqdm",
     "numpy",
