@@ -79,24 +79,24 @@ def test_unidock_pipeline_ligand_index(receptor, ligand, pocket):
     shutil.rmtree(results_dir, ignore_errors=True)
 
 
-# def test_unidock_pipeline_scoring_ad4(receptor, ligand, pocket):
-#     results_dir = "unidock_results_ad4"
-#     cmd = f"unidocktools unidock_pipeline -r {receptor} -l {ligand} -sd {results_dir} \
-#             -cx {pocket['center_x']} -cy {pocket['center_y']} -cz {pocket['center_z']} \
-#             -sx {pocket['size_x']} -sy {pocket['size_y']} -sz {pocket['size_z']} \
-#             -sf ad4 -nm 1 --seed 181129"
-#     print(cmd)
-#     resp = subprocess.run(cmd, shell=True, capture_output=True, encoding="utf-8")
-#     print(resp.stdout)
-#     assert resp.returncode == 0, f"run unidock pipeline app err:\n{resp.stderr}"
+def test_unidock_pipeline_scoring_ad4(receptor, ligand, pocket):
+    results_dir = "unidock_results_ad4"
+    cmd = f"unidocktools unidock_pipeline -r {receptor} -l {ligand} -sd {results_dir} \
+            -cx {pocket['center_x']} -cy {pocket['center_y']} -cz {pocket['center_z']} \
+            -sx {pocket['size_x']} -sy {pocket['size_y']} -sz {pocket['size_z']} \
+            -sf ad4 -nm 1 --seed 181129"
+    print(cmd)
+    resp = subprocess.run(cmd, shell=True, capture_output=True, encoding="utf-8")
+    print(resp.stdout)
+    assert resp.returncode == 0, f"run unidock pipeline app err:\n{resp.stderr}"
 
-#     result_file = os.path.join(results_dir, Path(ligand).name)
-#     assert os.path.exists(result_file), f"docking result file not found"
+    result_file = os.path.join(results_dir, Path(ligand).name)
+    assert os.path.exists(result_file), f"docking result file not found"
 
-#     score_list = read_scores(result_file, "docking_score")
-#     score = score_list[0]
-#     assert -20 <= score <= 0, f"Uni-Dock score not in range: {score}"
-#     shutil.rmtree(results_dir, ignore_errors=True)
+    score_list = read_scores(result_file, "docking_score")
+    score = score_list[0]
+    assert -20 <= score <= 0, f"Uni-Dock score not in range: {score}"
+    shutil.rmtree(results_dir, ignore_errors=True)
 
 
 def test_unidock_pipeline_multi_pose(receptor, ligand, pocket):
