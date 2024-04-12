@@ -9,7 +9,9 @@ version = "0.0.1"
 keywords = [ "Docking" ]
 authors = [
     { name = "Yannan Yuan", email = "yuanyn@dp.tech" },
-    { name = "Hang Zheng", email = "zhengh@dp.tech" }
+    { name = "Hang Zheng", email = "zhengh@dp.tech" },
+    { name = "Hong-Rui Lin", email = "linhongrui@dp.tech" },
+    { name = "Pengli Zhang", email = "zhangpengli@dp.tech" }
 ]
 description = "Several docking-related applications based on Uni-Dock."
 readme = "README.md"
