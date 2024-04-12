@@ -152,7 +152,7 @@ if __name__ == "__main__":
         preserve_original_resname=args.preserve_resname,
         target_center=tuple(args.target_center),
         box_size=tuple(args.box_size),
-        covalent_residue_atom_info_list = parse_covalent_residue_atom_info(args['covalent_residue_atom_info']) if args['covalent_residue_atom_info'] is not None else None,
+        covalent_residue_atom_info_list = parse_covalent_residue_atom_info(args.covalent_residue_atom_info) if args.covalent_residue_atom_info is not None else None,
         generate_ad4_grids=args.generate_grids,
         working_dir_name=args.working_dir
     )
