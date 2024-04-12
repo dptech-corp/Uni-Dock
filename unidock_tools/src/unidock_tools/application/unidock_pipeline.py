@@ -14,9 +14,7 @@ from rdkit.Chem.PropertyMol import PropertyMol
 
 
 from unidock_tools.utils import time_logger, randstr, make_tmp_dir, read_ligand, sdf_writer
-#from unidock_tools.modules.protein_prep import pdb2pdbqt
 from unidock_tools.modules.protein_prep import receptor_preprocessor
-
 from unidock_tools.modules.ligand_prep import TopologyBuilder
 from unidock_tools.modules.docking import run_unidock
 from .base import Base
@@ -78,6 +76,10 @@ class UniDock(Base):
             size_x (float, optional): Size of the docking box in the x-dimension. Defaults to 22.5.
             size_y (float, optional): Size of the docking box in the y-dimension. Defaults to 22.5.
             size_z (float, optional): Size of the docking box in the z-dimension. Defaults to 22.5.
+            kept_ligand_resname_list (List[str], optional): List of ligand residue names to keep during receptor preprocessing. Defaults to None.
+            prepared_hydrogen (bool, optional): Whether to prepare hydrogen during receptor preprocessing. Defaults to True.
+            preserve_original_resname (bool, optional): Whether to preserve the original residue names during receptor preprocessing. Defaults to True.
+            covalent_residue_atom_info_list (List[Tuple[str, str]], optional): Atom information for covalent residues during receptor preprocessing. Defaults to None.
             workdir (Path, optional): Path to the working directory. Defaults to Path("docking_pipeline").
         """
         self.check_dependencies()
@@ -247,6 +249,15 @@ def main(args: dict):
 
     logging.info("[UniDock Pipeline] Start")
     start_time = time.time()
+    def parse_covalent_residue_atom_info(covalent_residue_atom_info_str: str) -> List[List[Tuple[str, str, int, str]]]:
+        residue_info_list = []
+        residue_atoms = covalent_residue_atom_info_str.split(',')
+        for residue_atom in residue_atoms:
+            residue_info = residue_atom.strip().split()
+            chain_id, residue_name, residue_number, atom_name = residue_info
+            residue_info_list.append((chain_id, residue_name, int(residue_number), atom_name))
+        return residue_info_list
+    
     runner = UniDock(
         receptor=Path(args["receptor"]).resolve(),
         ligands=ligands,
@@ -256,6 +267,11 @@ def main(args: dict):
         size_x=float(args["size_x"]),
         size_y=float(args["size_y"]),
         size_z=float(args["size_z"]),
+        kept_ligand_resname_list=args.get("kept_ligand_resname_list"),
+        prepared_hydrogen=args.get("prepared_hydrogen", True),
+        preserve_original_resname=args.get("preserve_original_resname", True),
+        covalent_residue_atom_info_list=parse_covalent_residue_atom_info(args.get("covalent_residue_atom_info")) if args.get("covalent_residue_atom_info") is not None else None,
+        generate_ad4_grids=args.get("generate_ad4_grids", False),
         workdir=workdir
     )
     logging.info("[UniDock Pipeline] Start docking")
@@ -304,6 +320,15 @@ def get_parser() -> argparse.ArgumentParser:
                         help="Width of the docking box in Y direction. Default: 22.5.")
     parser.add_argument("-sz", "--size_z", type=float, default=22.5,
                         help="Width of the docking box in Z direction. Default: 22.5.")
+
+    parser.add_argument("-kr", "--kept_ligand_resname_list", type=str, nargs='+', default=None,
+                        help="List of ligand residue names to keep during receptor preprocessing. Default:None")
+    parser.add_argument("-ph", "--prepared_hydrogen", action="store_false",
+                        help="Whether to prepare hydrogen during receptor preprocessing.")
+    parser.add_argument("-pr", "--preserve_resname", action="store_false",
+                        help="Whether to preserve the original residue names during receptor preprocessing.")
+    parser.add_argument("-cra", "--covalent_residue_atom_info", type=str, default=None,
+                        help="Atom information for covalent residues during receptor preprocessing.To use it like this: -cra 'A VAL 1 CA, A VAL 1 CB, A VAL 1 O'")
 
     parser.add_argument("-wd", "--workdir", type=str, default=f"unidock_pipeline_{randstr(5)}",
                         help="Working directory. Default: 'MultiConfDock'.")
@@ -364,6 +389,12 @@ def main_cli():
     -sx, --size_x: size_x of docking box (default: 22.5)
     -sy, --size_y: size_y of docking box (default: 22.5)
     -sz, --size_z: size_z of docking box (default: 22.5)
+    
+    Receptor processor argument:
+    -kr, --kept_ligand_resname_list: List of ligand residue names to keep during receptor preprocessing (Default: None)
+    -ph, --prepared_hydrogen: Whether to prepare hydrogen during receptor preprocessing  (Default: False)
+    -pr, --preserve_resname: Whether to preserve the original residue names during receptor preprocessing  (Default: False)
+    -cra, --covalent_residue_atom_info: Atom information for covalent residues during receptor preprocessing  (Default: None). To use it like this: -cra 'A VAL 1 CA, A VAL 1 CB, A VAL 1 O'
 
     Optional arguments:
     -wd, --workdir: working directory (default: MultiConfDock)

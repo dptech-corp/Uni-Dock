@@ -10,7 +10,7 @@ def pdb_file():
 def test_receptor_processor_app(pdb_file):
     protein_pdbqt_file_name = "protein.pdbqt"
     with tempfile.TemporaryDirectory() as work_dir:
-        cmd = f"unidocktools proteinprep -r {pdb_file} -o {protein_pdbqt_file_name} -H -w {work_dir}"
+        cmd = f"unidocktools proteinprep -r {pdb_file} -o {protein_pdbqt_file_name} -wd {work_dir}"
         subprocess.run(cmd, shell=True, cwd=work_dir)
         assert os.path.isfile(os.path.join(work_dir, protein_pdbqt_file_name)), "PDBQT file was not generated"
 
