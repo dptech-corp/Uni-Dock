@@ -1,10 +1,11 @@
-
 import os
 from shutil import rmtree
+from typing import List, Tuple, Optional
 
-from typing import List, Tuple, Dict, Optional
+import numpy as np
+
 from unidock_tools.modules.protein_prep.receptor_standardization.receptor_pdb_reader import ReceptorPDBReader
-from unidock_tools.modules.protein_prep.receptor_topology.autogrid_runner import AutoGridRunner
+from unidock_tools.modules.protein_prep.receptor_topology.docking_grids_generator import DockingGridsGenerator
 
 class ReceptorPreprocessorRunner(object):
     def __init__(self,
@@ -63,18 +64,29 @@ class ReceptorPreprocessorRunner(object):
 
         ####################################################################################################################################
         ## Run autogrid runner to generate protein PDBQT files and AD4 grids if necessary
-        autogrid_runner = AutoGridRunner(protein_pdb_file_name_list=[self.receptor_cleaned_pdb_file_name],
-                                         protein_conf_name_list=[self.protein_conf_name],
-                                         kept_ligand_resname_nested_list=[self.kept_ligand_resname_list],
-                                         target_center_list=[self.target_center],
-                                         box_size=self.box_size,
-                                         covalent_residue_atom_info_nested_list=[self.covalent_residue_atom_info_list],
-                                         generate_ad4_grids=self.generate_ad4_grids,
-                                         working_dir_name=self.receptor_grids_working_dir_name)
+        box_size_array = np.array(self.box_size)
+        num_grid_points_array = box_size_array / 0.375
+        num_grid_points_array = num_grid_points_array.astype(np.int32)
+        self.num_grid_points = tuple(num_grid_points_array)
+        self.grid_spacing = (0.375, 0.375, 0.375)
 
-        autogrid_runner.run()
+        docking_grids_generator = DockingGridsGenerator(self.receptor_cleaned_pdb_file_name,
+                                                        kept_ligand_resname_list=self.kept_ligand_resname_list,
+                                                        target_center=self.target_center,
+                                                        num_grid_points=self.num_grid_points,
+                                                        grid_spacing=self.grid_spacing,
+                                                        covalent_residue_atom_info_list=self.covalent_residue_atom_info_list,
+                                                        generate_ad4_grids=self.generate_ad4_grids,
+                                                        working_dir_name=self.receptor_grids_working_dir_name)
 
-        self.protein_pdbqt_file_name = autogrid_runner.protein_info_df.loc[:, 'protein_pdbqt_file_name'].values.tolist()[0] 
+        docking_grids_generator.generate_docking_grids()
+
+        self.protein_pdbqt_file_name = os.path.join(self.receptor_grids_working_dir_name, 'protein.pdbqt')
+
+        if self.generate_ad4_grids:
+            self.protein_grid_file_name = os.path.join(self.receptor_grids_working_dir_name, 'protein.maps.fld')
+        else:
+            self.protein_grid_file_name = None
         ####################################################################################################################################
 ###
 
@@ -159,4 +171,3 @@ if __name__ == "__main__":
 
     protein_pdbqt_dst = os.path.join(args.working_dir, args.protein_pdbqt)
     shutil.copy(protein_pdbqt_file_name, protein_pdbqt_dst)
-    
