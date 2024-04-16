@@ -21,7 +21,7 @@ def ad4_map_prefix():
 
 @pytest.fixture
 def pocket():
-    return [15.11, 53.98, 17.14, 19.23, 27.64, 24.19]
+    return [5.122, 18.327, 37.332, 22.5, 22.5, 22.5]
 
 def test_run_unidock_vina(receptor, ligand, pocket):
     from unidock_tools.modules.docking import run_unidock
@@ -55,7 +55,7 @@ def test_run_unidock_vina(receptor, ligand, pocket):
 
     shutil.rmtree(workdir, ignore_errors=True)
 
-def test_run_unidock_ad4(receptor, ligand, pocket):
+def test_run_unidock_ad4(receptor, ligand, ad4_map_prefix, pocket):
     from unidock_tools.modules.docking import run_unidock
 
     workdir = Path(f"./tmp+{uuid.uuid4()}")
