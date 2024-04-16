@@ -242,6 +242,11 @@ def main(args: dict):
         exit(1)
     logging.info(f"[UniDock Pipeline] {len(ligands)} ligands found.")
 
+    if args['scoring_function'] == 'ad4':
+        generate_ad4_grids = True
+    else:
+        generate_ad4_grids = False
+
     logging.info("[UniDock Pipeline] Start")
     start_time = time.time()
     def parse_covalent_residue_atom_info(covalent_residue_atom_info_str: str) -> List[List[Tuple[str, str, int, str]]]:
@@ -266,7 +271,7 @@ def main(args: dict):
         prepared_hydrogen=args.get("prepared_hydrogen", True),
         preserve_original_resname=args.get("preserve_original_resname", True),
         covalent_residue_atom_info_list=parse_covalent_residue_atom_info(args.get("covalent_residue_atom_info")) if args.get("covalent_residue_atom_info") is not None else None,
-        generate_ad4_grids=args.get("generate_ad4_grids", False),
+        generate_ad4_grids=generate_ad4_grids,
         workdir=workdir
     )
     logging.info("[UniDock Pipeline] Start docking")

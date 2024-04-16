@@ -16,7 +16,7 @@ def main(args: dict):
             residue_info_list.append((chain_id, residue_name, int(residue_number), atom_name))
         return residue_info_list
     
-    protein_pdbqt_file_name = receptor_preprocessor(
+    protein_pdbqt_file_name, protein_grid_prefix = receptor_preprocessor(
         protein_pdb_file_name=args['protein_pdb'],
         kept_ligand_resname_list=args['kept_ligand_resname_list'],
         prepared_hydrogen=args['prepared_hydrogen'],
