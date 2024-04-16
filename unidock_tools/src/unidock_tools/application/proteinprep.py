@@ -18,7 +18,6 @@ def main(args: dict):
     
     protein_pdbqt_file_name = receptor_preprocessor(
         protein_pdb_file_name=args['protein_pdb'],
-        protein_conf_name='protein_conf_0',
         kept_ligand_resname_list=args['kept_ligand_resname_list'],
         prepared_hydrogen=args['prepared_hydrogen'],
         preserve_original_resname=args['preserve_resname'],

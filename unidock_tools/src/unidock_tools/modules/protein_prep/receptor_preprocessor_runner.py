@@ -91,7 +91,6 @@ class ReceptorPreprocessorRunner(object):
 
 def receptor_preprocessor(
         protein_pdb_file_name: str,
-        protein_conf_name: str = 'protein_conf_0',
         kept_ligand_resname_list: Optional[List[str]] = None,
         prepared_hydrogen: bool = True,
         preserve_original_resname: bool = True,
@@ -103,7 +102,6 @@ def receptor_preprocessor(
         ):
     runner = ReceptorPreprocessorRunner(
         protein_pdb_file_name = protein_pdb_file_name,
-        protein_conf_name=protein_conf_name,
         kept_ligand_resname_list=kept_ligand_resname_list,
         prepared_hydrogen=prepared_hydrogen,
         preserve_original_resname=preserve_original_resname,
