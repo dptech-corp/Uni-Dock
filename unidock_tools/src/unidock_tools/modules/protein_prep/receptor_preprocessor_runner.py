@@ -10,7 +10,6 @@ from unidock_tools.modules.protein_prep.receptor_topology.docking_grids_generato
 class ReceptorPreprocessorRunner(object):
     def __init__(self,
                  protein_pdb_file_name,
-                 protein_conf_name='protein_conf_0',
                  kept_ligand_resname_list=None,
                  prepared_hydrogen=True,
                  preserve_original_resname=True,
@@ -21,7 +20,6 @@ class ReceptorPreprocessorRunner(object):
                  working_dir_name='.'):
 
         self.protein_pdb_file_name = protein_pdb_file_name
-        self.protein_conf_name = protein_conf_name
         self.kept_ligand_resname_list = kept_ligand_resname_list
         self.prepared_hydrogen = prepared_hydrogen
         self.preserve_original_resname = preserve_original_resname

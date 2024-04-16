@@ -214,7 +214,6 @@ class DockingGridsGenerator(object):
         self.__prepare_protein_pdb_file__(self.protein_pdb_file_name, protein_output_pdb_file_name)
 
         protein_pdbqt_writer = ProteinPDBQTWriter(protein_output_pdb_file_name,
-                                                  #atom_type_template='amber',
                                                   working_dir_name=self.working_dir_name)
 
         protein_pdbqt_writer.write_protein_pdbqt_file()
