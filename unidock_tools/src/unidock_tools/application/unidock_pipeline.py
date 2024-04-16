@@ -91,23 +91,18 @@ class UniDock(Base):
             logging.error('receptor file must be in PDB format!')
             exit(1)
         else:
-            receptor_pdbqt_file_name = receptor_preprocessor(str(receptor),
-                                                             kept_ligand_resname_list=kept_ligand_resname_list,
-                                                             prepared_hydrogen=prepared_hydrogen,
-                                                             preserve_original_resname=preserve_original_resname,
-                                                             target_center=(center_x, center_y, center_z),
-                                                             box_size=(size_x, size_y, size_z),
-                                                             covalent_residue_atom_info_list=covalent_residue_atom_info_list,
-                                                             generate_ad4_grids=generate_ad4_grids,
-                                                             working_dir_name=str(workdir))
+            receptor_pdbqt_file_name, protein_grid_prefix = receptor_preprocessor(str(receptor),
+                                                                                  kept_ligand_resname_list=kept_ligand_resname_list,
+                                                                                  prepared_hydrogen=prepared_hydrogen,
+                                                                                  preserve_original_resname=preserve_original_resname,
+                                                                                  target_center=(center_x, center_y, center_z),
+                                                                                  box_size=(size_x, size_y, size_z),
+                                                                                  covalent_residue_atom_info_list=covalent_residue_atom_info_list,
+                                                                                  generate_ad4_grids=generate_ad4_grids,
+                                                                                  working_dir_name=str(workdir))
 
             self.receptor = receptor_pdbqt_file_name
-
-            if generate_ad4_grids:
-                receptor_file_dir_name = os.path.dirname(self.receptor)
-                self.ad4_map_prefix = os.path.join(receptor_file_dir_name, 'protein')
-            else:
-                self.ad4_map_prefix = ''
+            self.ad4_map_prefix = protein_grid_prefix
 
         self.mols = sum([read_ligand(ligand) for ligand in ligands], [])
         self.mols = [PropertyMol(mol) for mol in self.mols]

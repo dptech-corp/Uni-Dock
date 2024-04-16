@@ -113,8 +113,8 @@ def receptor_preprocessor(
         )
     runner.run()
     protein_pdbqt_file_name = runner.protein_pdbqt_file_name
-    ad4_maps_prefix = runner.protein_grid_prefix
-    return protein_pdbqt_file_name, ad4_maps_prefix
+    protein_grid_prefix = runner.protein_grid_prefix
+    return protein_pdbqt_file_name, protein_grid_prefix
 
 
 if __name__ == "__main__":
@@ -154,7 +154,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    protein_pdbqt_file_name, ad4_maps_prefix = receptor_preprocessor(
+    protein_pdbqt_file_name, protein_grid_prefix = receptor_preprocessor(
         protein_pdb_file_name=args.protein_pdb,
         kept_ligand_resname_list=args.kept_ligand_resname_list,
         prepared_hydrogen=args.prepared_hydrogen,
