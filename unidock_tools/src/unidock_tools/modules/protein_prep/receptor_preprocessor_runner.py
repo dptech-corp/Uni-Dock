@@ -82,9 +82,9 @@ class ReceptorPreprocessorRunner(object):
         self.protein_pdbqt_file_name = os.path.join(self.receptor_grids_working_dir_name, 'protein.pdbqt')
 
         if self.generate_ad4_grids:
-            self.protein_grid_file_name = os.path.join(self.receptor_grids_working_dir_name, 'protein.maps.fld')
+            self.protein_grid_prefix = os.path.join(self.receptor_grids_working_dir_name, 'protein')
         else:
-            self.protein_grid_file_name = None
+            self.protein_grid_prefix = ''
         ####################################################################################################################################
 ###
 
@@ -113,7 +113,8 @@ def receptor_preprocessor(
         )
     runner.run()
     protein_pdbqt_file_name = runner.protein_pdbqt_file_name
-    return protein_pdbqt_file_name
+    ad4_maps_prefix = runner.protein_grid_prefix
+    return protein_pdbqt_file_name, ad4_maps_prefix
 
 
 if __name__ == "__main__":
@@ -153,7 +154,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    protein_pdbqt_file_name = receptor_preprocessor(
+    protein_pdbqt_file_name, ad4_maps_prefix = receptor_preprocessor(
         protein_pdb_file_name=args.protein_pdb,
         kept_ligand_resname_list=args.kept_ligand_resname_list,
         prepared_hydrogen=args.prepared_hydrogen,

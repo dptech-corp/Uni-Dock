@@ -71,7 +71,7 @@ class MultiConfDock(Base):
         Initializes a MultiConfDock object.
 
         Args:
-            receptor (Path): Path to the receptor file in pdbqt format.
+            receptor (Path): Path to the receptor file in PDB format.
             ligands (List[Path]): List of paths to the ligand files in sdf format.
             center_x (float): X-coordinate of the center of the docking box.
             center_y (float): Y-coordinate of the center of the docking box.
@@ -85,13 +85,13 @@ class MultiConfDock(Base):
         self.workdir = workdir
         self.workdir.mkdir(parents=True, exist_ok=True)
         if receptor.suffix == ".pdb":
-            #pdb2pdbqt(receptor, workdir.joinpath(receptor.stem + ".pdbqt"))
-            #receptor = workdir.joinpath(receptor.stem + ".pdbqt")
-            receptor_pdbqt_file_name = receptor_preprocessor(str(receptor), working_dir_name=str(workdir))
+            receptor_pdbqt_file_name, ad4_maps_prefix = receptor_preprocessor(str(receptor), working_dir_name=str(workdir))
             self.receptor = receptor_pdbqt_file_name
-        if receptor.suffix != ".pdbqt":
-            logging.error("receptor file must be pdb/pdbqt format")
+            self.ad4_maps_prefix = ad4_maps_prefix
+        else:
+            logging.error("receptor file must be PDB format!!")
             exit(1)
+
         self.receptor = receptor
         self.mol_group = MolGroup(ligands)
         self.build_topology()
@@ -197,7 +197,7 @@ class MultiConfDock(Base):
                 receptor=self.receptor, ligands=ligand_list, output_dir=output_dir,
                 center_x=self.center_x, center_y=self.center_y, center_z=self.center_z,
                 size_x=self.size_x, size_y=self.size_y, size_z=self.size_z,
-                scoring=scoring_function, num_modes=num_modes,
+                scoring=scoring_function, ad4_maps_prefix=self.ad4_maps_prefix, num_modes=num_modes,
                 search_mode=search_mode, exhaustiveness=exhaustiveness, max_step=max_step, 
                 seed=seed, refine_step=refine_step, energy_range=energy_range,
                 score_only=score_only, local_only=local_only,
