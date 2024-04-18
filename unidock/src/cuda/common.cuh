@@ -204,6 +204,58 @@ __device__ __forceinline__ void mutate_conf_cuda(const int num_steps, output_typ
         which -= flex_torsion_size;
     }
 }
+// template<typename Config>
+// __device__ __forceinline__ void mutate_conf_cuda(const int num_steps, output_type_cuda_t_<Config> *c,
+//                                                  curandStatePhilox4_32_10_t *state,
+//                                                  const int m_lig_begin, const int m_lig_end,
+//                                                  const atom_cuda_t *atoms,
+//                                                  const m_coords_cuda_t_<Config> *m_coords_gpu,
+//                                                  const float *m_lig_node_origin_gpu,
+//                                                  const float epsilon_fl, const float amplitude) {
+//     int flex_torsion_size = 0;  // FIX? 20210727
+//     int count_mutable_entities = 2 + c->lig_torsion_size + flex_torsion_size;
+//     int which = curand(state) % count_mutable_entities;
+//     float random_inside_sphere[4];
+//     random_inside_sphere_gpu(random_inside_sphere, state);
+//     if (which == 0) {
+//         DEBUG_PRINTF("random sphere r=%f\n", norm3(random_inside_sphere));
+//     }
+
+//     float random_pi = (random_inside_sphere[3] - 0.5) * 2.0 * pi;  // ~ U[-pi, pi]
+//     if (which == 0) {
+//         printf("random pi=%f\n", random_pi);
+//     }
+
+//     if (which == 0) {
+//         for (int i = 0; i < 3; i++) c->position[i] += amplitude * random_inside_sphere[i];
+//         return;
+//     }
+//     --which;
+//     if (which == 0) {
+//         float gr
+//             = gyration_radius<Config>(m_lig_begin, m_lig_end, atoms, m_coords_gpu, m_lig_node_origin_gpu);
+//         if (gr > epsilon_fl) {
+//             float rotation[3];
+//             for (int i = 0; i < 3; i++) rotation[i] = amplitude / gr * random_inside_sphere[i];
+//             quaternion_increment(c->orientation, rotation, epsilon_fl);
+//         }
+//         return;
+//     }
+//     --which;
+//     if (which < c->lig_torsion_size) {
+//         c->lig_torsion[which] = random_pi;
+//         return;
+//     }
+//     which -= c->lig_torsion_size;
+
+//     if (flex_torsion_size != 0) {
+//         if (which < flex_torsion_size) {
+//             c->flex_torsion[which] = random_pi;
+//             return;
+//         }
+//         which -= flex_torsion_size;
+//     }
+// }
 template<typename Config>
 __device__ __forceinline__ void mutate_conf_cuda(const int num_steps, output_type_cuda_t_<Config> *c,
                                                  curandStatePhilox4_32_10_t *state,
@@ -212,49 +264,35 @@ __device__ __forceinline__ void mutate_conf_cuda(const int num_steps, output_typ
                                                  const m_coords_cuda_t_<Config> *m_coords_gpu,
                                                  const float *m_lig_node_origin_gpu,
                                                  const float epsilon_fl, const float amplitude) {
-    int flex_torsion_size = 0;  // FIX? 20210727
-    int count_mutable_entities = 2 + c->lig_torsion_size + flex_torsion_size;
-    int which = curand(state) % count_mutable_entities;
-    float random_inside_sphere[4];
-    random_inside_sphere_gpu(random_inside_sphere, state);
-    if (which == 0) {
-        DEBUG_PRINTF("random sphere r=%f\n", norm3(random_inside_sphere));
+    float random_pos[3];
+    random_inside_sphere_gpu(random_pos, state);
+    float random_orientation[3];
+    random_inside_sphere_gpu(random_orientation, state);
+
+    float random_torsion = (curand_uniform(state) - 0.5f) * 2.0f * pi;
+
+
+    for (int i = 0; i < 3; i++) {
+        c->position[i] += amplitude * random_pos[i];
     }
 
-    float random_pi = (random_inside_sphere[3] - 0.5) * 2.0 * pi;  // ~ U[-pi, pi]
-    if (which == 0) {
-        DEBUG_PRINTF("random pi=%f\n", random_pi);
+
+    float gr = gyration_radius<Config>(m_lig_begin, m_lig_end, atoms, m_coords_gpu, m_lig_node_origin_gpu);
+    if (gr > epsilon_fl) {
+        float rotation[3];
+        for (int i = 0; i < 3; i++) rotation[i] = amplitude / gr * random_orientation[i];
+        quaternion_increment(c->orientation, rotation, epsilon_fl);
     }
 
-    if (which == 0) {
-        for (int i = 0; i < 3; i++) c->position[i] += amplitude * random_inside_sphere[i];
-        return;
-    }
-    --which;
-    if (which == 0) {
-        float gr
-            = gyration_radius<Config>(m_lig_begin, m_lig_end, atoms, m_coords_gpu, m_lig_node_origin_gpu);
-        if (gr > epsilon_fl) {
-            float rotation[3];
-            for (int i = 0; i < 3; i++) rotation[i] = amplitude / gr * random_inside_sphere[i];
-            quaternion_increment(c->orientation, rotation, epsilon_fl);
-        }
-        return;
-    }
-    --which;
-    if (which < c->lig_torsion_size) {
-        c->lig_torsion[which] = random_pi;
-        return;
-    }
-    which -= c->lig_torsion_size;
 
-    if (flex_torsion_size != 0) {
-        if (which < flex_torsion_size) {
-            c->flex_torsion[which] = random_pi;
-            return;
-        }
-        which -= flex_torsion_size;
+    for (int i = 0; i < c->lig_torsion_size; i++) {
+        c->lig_torsion[i] = (curand_uniform(state) - 0.5f) * 2.0f * pi;
+        // printf("lig_torsion[%d] = %f\n", i, c->lig_torsion[i]);
     }
+
+    // for (int i = 0; i < flex_torsion_size; i++) {
+    //     c->flex_torsion[i] = (curand_uniform(state) - 0.5f) * 2.0f * pi;
+    // }
 }
 /*  Above based on mutate_conf.cpp */
 
