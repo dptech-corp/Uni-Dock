@@ -40,7 +40,7 @@ def test_run_unidock_vina(receptor, ligand, pocket):
         size_z=pocket[5],
         scoring="vina",
         num_modes=10,
-        energy_range=6.0,
+        energy_range=9.0,
         seed=181129,
     )
 
