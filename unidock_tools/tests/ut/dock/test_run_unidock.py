@@ -73,7 +73,7 @@ def test_run_unidock_ad4(receptor, ligand, pocket):
         size_z=pocket[5],
         scoring="ad4",
         num_modes=5,
-        energy_range=6.0,
+        energy_range=9.0,
         seed=181129,
     )
 
