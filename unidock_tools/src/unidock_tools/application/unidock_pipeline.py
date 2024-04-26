@@ -212,11 +212,10 @@ def main(args: dict):
     if args.get("ligand_index"):
         with open(args["ligand_index"], "r") as f:
             index_content = f.read()
-        index_lines1 = [Path(line.strip()).resolve() for line in index_content.split("\n") 
-                        if line.strip() and Path(line.strip()).exists()]
-        index_lines2 = [Path(line.strip()).resolve() for line in index_content.split(" ") 
-                        if line.strip() and Path(line.strip()).exists()]
+        index_lines1 = [line.strip() for line in index_content.split("\n") if line.strip()]
+        index_lines2 = [line.strip() for line in index_content.split(" ") if line.strip()]
         ligands.extend(index_lines2 if len(index_lines2) > len(index_lines1) else index_lines1)
+        ligands = [Path(ligand).resolve() for ligand in ligands if Path(ligand).exists()]
 
     if len(ligands) == 0:
         logging.error("No ligands found.")
