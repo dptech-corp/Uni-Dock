@@ -3,18 +3,18 @@ import os
 from rdkit import Chem
 from rdkit.Chem.rdPartialCharges import ComputeGasteigerCharges
 
-from unidock_tools.modules.protein_prep.receptor_topology.protein_topology import prepare_protein_residue_mol_list
 from unidock_tools.modules.protein_prep.receptor_topology.smarts_definition import HB_DONOR, HB_ACCEPTOR
 from unidock_tools.modules.protein_prep.receptor_topology.amino_acid_atom_types import RESIDUE_PARAMETER_DICT
 
 class ProteinPDBQTWriter(object):
     def __init__(self,
-                 protein_pdb_file_name,
+                 protein_mol,
+                 protein_residue_mol_list,
                  working_dir_name='.'):
 
         self.residue_parameter_dict = RESIDUE_PARAMETER_DICT
-        self.protein_pdb_file_name = os.path.abspath(protein_pdb_file_name)
-        self.protein_mol, self.protein_residue_mol_list = prepare_protein_residue_mol_list(self.protein_pdb_file_name)
+        self.protein_mol = protein_mol
+        self.protein_residue_mol_list = protein_residue_mol_list
 
         self.working_dir_name = os.path.abspath(working_dir_name)
         self.protein_pdbqt_file_name = os.path.join(self.working_dir_name, 'protein_original.pdbqt')
@@ -108,7 +108,7 @@ class ProteinPDBQTWriter(object):
         self.atom_type_dict = self.__get_atom_types__()
 
         self.pdbqt_atom_line_list = []
-        self.pdbqt_atom_line_format = '{:4s}  {:5d} {:^4s} {:3s} {:1s}{:4d}    {:8.3f}{:8.3f}{:8.3f}{:6.2f}{:6.2f}    {:6.3f} {:<2s}\n'
+        self.pdbqt_atom_line_format = '{:4s}  {:5d} {:^4s} {:4s}{:1s}{:4d}    {:8.3f}{:8.3f}{:8.3f}{:6.2f}{:6.2f}    {:6.3f} {:<2s}\n'
 
         if self.protein_mol.GetNumAtoms() == 0:
             raise ValueError('Empty protein mol!!')
@@ -138,4 +138,3 @@ class ProteinPDBQTWriter(object):
                 f.write(line)
 
         self.next_atom_idx = atom_idx + 1
-

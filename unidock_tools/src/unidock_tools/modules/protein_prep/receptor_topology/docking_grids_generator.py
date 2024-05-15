@@ -1,10 +1,9 @@
 import os
-import string
 import shutil
 
 import MDAnalysis as mda
-import openmm.app as app
 
+from unidock_tools.modules.protein_prep.receptor_topology.protein_topology import prepare_protein_residue_mol_list
 from unidock_tools.modules.protein_prep.receptor_topology.protein_pdbqt_writer import ProteinPDBQTWriter
 from unidock_tools.modules.protein_prep.receptor_topology.small_molecule_pdbqt_writer import SmallMoleculePDBQTWriter
 from unidock_tools.modules.protein_prep.receptor_topology.grid_parameter_file_generator import GridParameterFileGenerator
@@ -39,9 +38,34 @@ class DockingGridsGenerator(object):
         protein_ag = protein_universe.select_atoms(protein_selection_str)
         protein_ag.write(output_pdb_file_name, bonds=None)
 
+    def __remove_h_for_covalent_atoms_on_protein_pdbqt_line_list__(self,
+                                                                   atom,
+                                                                   covalent_part_pdbqt_file_line_list,
+                                                                   protein_pdbqt_file_line_list):
+
+        neighbor_h_atom_info_list = []
+        for neighbor_atom in atom.GetNeighbors():
+            neighbor_chain_idx = neighbor_atom.GetProp('chain_idx')
+            neighbor_resname = neighbor_atom.GetProp('residue_name')
+            neighbor_resid = neighbor_atom.GetIntProp('residue_idx')
+            neighbor_atom_name = neighbor_atom.GetProp('atom_name')
+            neighbor_atom_info = (neighbor_chain_idx, neighbor_resname, neighbor_resid, neighbor_atom_name)
+
+            if neighbor_atom_name.startswith('H'):
+                neighbor_h_atom_info_list.append(neighbor_atom_info)
+
+            for neighbor_h_atom_info in neighbor_h_atom_info_list:
+                for protein_pdbqt_file_line in protein_pdbqt_file_line_list:
+                    if protein_pdbqt_file_line.startswith('ATOM') or protein_pdbqt_file_line.startswith('HETATM'):
+                        pdbqt_atom_info = (protein_pdbqt_file_line[21].strip(), protein_pdbqt_file_line[17:21].strip(), int(protein_pdbqt_file_line[22:26].strip()), protein_pdbqt_file_line[12:16].strip())
+                        if pdbqt_atom_info == neighbor_h_atom_info:
+                            covalent_part_pdbqt_file_line_list.append(protein_pdbqt_file_line)
+                            protein_pdbqt_file_line_list.remove(protein_pdbqt_file_line)
+                            break
+
     def __prepare_covalent_bond_on_residue__(self,
+                                             protein_mol,
                                              covalent_residue_atom_info_list,
-                                             protein_pdb_file_name,
                                              raw_protein_pdbqt_file_name,
                                              prepared_protein_pdbqt_file_name,
                                              covalent_part_pdbqt_file_name,
@@ -51,94 +75,59 @@ class DockingGridsGenerator(object):
         covalent_bond_start_atom_info = covalent_residue_atom_info_list[1]
         covalent_bond_end_atom_info = covalent_residue_atom_info_list[2]
 
-        pdbfile = app.PDBFile(protein_pdb_file_name)
-        protein_universe = mda.Universe(pdbfile)
-        protein_universe.add_TopologyAttr('chainID')
-        protein_universe.add_TopologyAttr('record_type')
-
-        protein_ag = protein_universe.atoms
-        segment_group = protein_ag.segments
-        available_segid_list = list(string.ascii_uppercase)
-        for current_segment_idx, current_segment in enumerate(segment_group):
-            current_segid = available_segid_list[current_segment_idx]
-            current_segment.segid = current_segid
-            for current_atom in current_segment.atoms:
-                current_atom.chainID = current_segid
-                current_atom.record_type = 'ATOM'
-
-        mda_to_rdkit = mda._CONVERTERS['RDKIT']().convert
-        protein_mol = mda_to_rdkit(protein_universe)
-        protein_atom_list = list(protein_mol.GetAtoms())
-
         with open(raw_protein_pdbqt_file_name, 'r') as protein_pdbqt_file:
             protein_pdbqt_file_line_list = protein_pdbqt_file.readlines()
 
         covalent_part_pdbqt_file_line_list = []
         covalent_atom_idx_list = [None] * 3
 
-        for atom in protein_atom_list:
-            monomer_info = atom.GetMonomerInfo()
-            current_chain_idx = monomer_info.GetChainId().strip()
-            current_resname = monomer_info.GetResidueName().strip()
-            current_resid = monomer_info.GetResidueNumber()
-            current_atom_name = monomer_info.GetName().strip()
+        num_protein_atoms = protein_mol.GetNumAtoms()
+        for atom_idx in range(num_protein_atoms):
+            atom = protein_mol.GetAtomWithIdx(atom_idx)
+            current_chain_idx = atom.GetProp('chain_idx')
+            current_resname = atom.GetProp('residue_name')
+            current_resid = atom.GetIntProp('residue_idx')
+            current_atom_name = atom.GetProp('atom_name')
             current_atom_info = (current_chain_idx, current_resname, current_resid, current_atom_name)
 
             if current_atom_info == covalent_anchor_atom_info:
                 for protein_pdbqt_file_line in protein_pdbqt_file_line_list:
                     if protein_pdbqt_file_line.startswith('ATOM') or protein_pdbqt_file_line.startswith('HETATM'):
-                        pdbqt_atom_line_list = protein_pdbqt_file_line.strip().split()
-                        pdbqt_atom_info = (pdbqt_atom_line_list[4], pdbqt_atom_line_list[3], int(pdbqt_atom_line_list[5]), pdbqt_atom_line_list[2])
-                        pdbqt_atom_idx = pdbqt_atom_line_list[1]
+                        pdbqt_atom_info = (protein_pdbqt_file_line[21].strip(), protein_pdbqt_file_line[17:21].strip(), int(protein_pdbqt_file_line[22:26].strip()), protein_pdbqt_file_line[12:16].strip())
+                        pdbqt_atom_idx = protein_pdbqt_file_line[6:11].strip()
                         if pdbqt_atom_info == current_atom_info:
-                            covalent_part_pdbqt_file_line_list.append(protein_pdbqt_file_line)
                             covalent_atom_idx_list[0] = pdbqt_atom_idx
+                            covalent_part_pdbqt_file_line_list.append(protein_pdbqt_file_line)
+                            protein_pdbqt_file_line_list.remove(protein_pdbqt_file_line)
                             break
+
+                self.__remove_h_for_covalent_atoms_on_protein_pdbqt_line_list__(atom, covalent_part_pdbqt_file_line_list, protein_pdbqt_file_line_list)
 
             elif current_atom_info == covalent_bond_start_atom_info:
                 for protein_pdbqt_file_line in protein_pdbqt_file_line_list:
                     if protein_pdbqt_file_line.startswith('ATOM') or protein_pdbqt_file_line.startswith('HETATM'):
-                        pdbqt_atom_line_list = protein_pdbqt_file_line.strip().split()
-                        pdbqt_atom_info = (pdbqt_atom_line_list[4], pdbqt_atom_line_list[3], int(pdbqt_atom_line_list[5]), pdbqt_atom_line_list[2])
-                        pdbqt_atom_idx = pdbqt_atom_line_list[1]
+                        pdbqt_atom_info = (protein_pdbqt_file_line[21].strip(), protein_pdbqt_file_line[17:21].strip(), int(protein_pdbqt_file_line[22:26].strip()), protein_pdbqt_file_line[12:16].strip())
+                        pdbqt_atom_idx = protein_pdbqt_file_line[6:11].strip()
                         if pdbqt_atom_info == current_atom_info:
-                            covalent_part_pdbqt_file_line_list.append(protein_pdbqt_file_line)
                             covalent_atom_idx_list[1] = pdbqt_atom_idx
+                            covalent_part_pdbqt_file_line_list.append(protein_pdbqt_file_line)
                             protein_pdbqt_file_line_list.remove(protein_pdbqt_file_line)
                             break
+
+                self.__remove_h_for_covalent_atoms_on_protein_pdbqt_line_list__(atom, covalent_part_pdbqt_file_line_list, protein_pdbqt_file_line_list)
 
             elif current_atom_info == covalent_bond_end_atom_info:
                 for protein_pdbqt_file_line in protein_pdbqt_file_line_list:
                     if protein_pdbqt_file_line.startswith('ATOM') or protein_pdbqt_file_line.startswith('HETATM'):
-                        pdbqt_atom_line_list = protein_pdbqt_file_line.strip().split()
-                        pdbqt_atom_info = (pdbqt_atom_line_list[4], pdbqt_atom_line_list[3], int(pdbqt_atom_line_list[5]), pdbqt_atom_line_list[2])
-                        pdbqt_atom_idx = pdbqt_atom_line_list[1]
+                        pdbqt_atom_info = (protein_pdbqt_file_line[21].strip(), protein_pdbqt_file_line[17:21].strip(), int(protein_pdbqt_file_line[22:26].strip()), protein_pdbqt_file_line[12:16].strip())
+                        pdbqt_atom_idx = protein_pdbqt_file_line[6:11].strip()
                         if pdbqt_atom_info == current_atom_info:
-                            covalent_part_pdbqt_file_line_list.append(protein_pdbqt_file_line)
                             covalent_atom_idx_list[2] = pdbqt_atom_idx
+                            covalent_part_pdbqt_file_line_list.append(protein_pdbqt_file_line)
                             protein_pdbqt_file_line_list.remove(protein_pdbqt_file_line)
                             break
 
-                neighbor_h_atom_info_list = []
-                for neighbor_atom in atom.GetNeighbors():
-                    neighbor_monomer_info = neighbor_atom.GetMonomerInfo()
-                    neighbor_chain_idx = neighbor_monomer_info.GetChainId().strip()
-                    neighbor_resname = neighbor_monomer_info.GetResidueName().strip()
-                    neighbor_resid = neighbor_monomer_info.GetResidueNumber()
-                    neighbor_atom_name = neighbor_monomer_info.GetName().strip()
-                    neighbor_atom_info = (neighbor_chain_idx, neighbor_resname, neighbor_resid, neighbor_atom_name)
-
-                    if neighbor_atom_name.startswith('H'):
-                        neighbor_h_atom_info_list.append(neighbor_atom_info)
-
-                    for neighbor_h_atom_info in neighbor_h_atom_info_list:
-                        for protein_pdbqt_file_line in protein_pdbqt_file_line_list:
-                            if protein_pdbqt_file_line.startswith('ATOM') or protein_pdbqt_file_line.startswith('HETATM'):
-                                pdbqt_atom_line_list = protein_pdbqt_file_line.strip().split()
-                                pdbqt_atom_info = (pdbqt_atom_line_list[4], pdbqt_atom_line_list[3], int(pdbqt_atom_line_list[5]), pdbqt_atom_line_list[2])
-                                if pdbqt_atom_info == neighbor_h_atom_info:
-                                    protein_pdbqt_file_line_list.remove(protein_pdbqt_file_line)
-                                    break
+                self.__remove_h_for_covalent_atoms_on_protein_pdbqt_line_list__(atom, covalent_part_pdbqt_file_line_list, protein_pdbqt_file_line_list)
 
         protein_pdbqt_file_line_scripts = ''.join(protein_pdbqt_file_line_list)
         covalent_part_pdbqt_file_line_scripts = ''.join(covalent_part_pdbqt_file_line_list)
@@ -213,17 +202,15 @@ class DockingGridsGenerator(object):
         protein_output_glg_file_name = os.path.join(self.working_dir_name, 'protein.glg')
         self.__prepare_protein_pdb_file__(self.protein_pdb_file_name, protein_output_pdb_file_name)
 
-        protein_pdbqt_writer = ProteinPDBQTWriter(protein_output_pdb_file_name,
+        protein_mol, protein_residue_mol_list = prepare_protein_residue_mol_list(protein_output_pdb_file_name)
+
+        protein_pdbqt_writer = ProteinPDBQTWriter(protein_mol,
+                                                  protein_residue_mol_list,
                                                   working_dir_name=self.working_dir_name)
 
         protein_pdbqt_writer.write_protein_pdbqt_file()
         protein_output_raw_pdbqt_file_name = protein_pdbqt_writer.protein_pdbqt_file_name
         next_atom_idx = protein_pdbqt_writer.next_atom_idx
-
-#        MGLPY = os.environ['MGLPY']
-#        MGLUTIL = os.environ['MGLUTIL']
-#        os.environ['PYTHONPATH'] = '%s/../..' % MGLUTIL
-#        os.system('%s %s/prepare_receptor4.py -r %s -A None -U lps_waters_nonstdres -o %s' % (MGLPY,  MGLUTIL, protein_output_pdb_file_name, protein_output_raw_pdbqt_file_name))
 
         if self.covalent_residue_atom_info_list is not None:
             if len(self.covalent_residue_atom_info_list) != 3:
@@ -231,8 +218,8 @@ class DockingGridsGenerator(object):
             else:
                 covalent_part_pdbqt_file_name = os.path.join(self.working_dir_name, 'covalent.pdbqt')
                 covalent_atom_idx_dat_file_name = os.path.join(self.working_dir_name, 'protein_covalent_atom_indices.dat')
-                self.__prepare_covalent_bond_on_residue__(self.covalent_residue_atom_info_list,
-                                                          self.protein_pdb_file_name,
+                self.__prepare_covalent_bond_on_residue__(protein_mol,
+                                                          self.covalent_residue_atom_info_list,
                                                           protein_output_raw_pdbqt_file_name,
                                                           protein_output_pdbqt_file_name,
                                                           covalent_part_pdbqt_file_name,
