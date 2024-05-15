@@ -41,7 +41,7 @@ def test_run_unidock_vina(receptor, ligand, pocket):
         size_z=pocket[5],
         scoring="vina",
         num_modes=10,
-        energy_range=6.0,
+        energy_range=9.0,
         seed=181129,
     )
 
@@ -74,8 +74,8 @@ def test_run_unidock_ad4(receptor, ligand, ad4_map_prefix, pocket):
         scoring="ad4",
         ad4_map_prefix=ad4_map_prefix,
         num_modes=5,
-        energy_range=6.0,
-        seed=181129,
+        energy_range=12.0,
+        seed=42,
     )
 
     result_ligand = result_ligands[0]

@@ -26,9 +26,11 @@ class UniDockRunner:
                  max_step: int = 10,
                  energy_range: float = 3.0,
                  refine_step: int = 5,
+                 bias_file: Optional[Path] = None,
                  seed : int = 181129,
                  score_only: bool = False,
-                 local_only: bool = False
+                 local_only: bool = False,
+                 multi_bias: bool = False,
                  ):
 
         self.workdir = make_tmp_dir("unidock")
@@ -76,10 +78,14 @@ class UniDockRunner:
             "--verbosity", "2",
             "--keep_nonpolar_H",
         ]
+        if bias_file:
+            cmd += ["--bias", str(bias_file)]
         if score_only:
             cmd.append("--score_only")
         if local_only:
             cmd.append("--local_only")
+        if multi_bias:
+            cmd.append("--multi_bias")
 
         logging.info(f"unidock cmd: {' '.join(cmd)}")
         self.cmd = cmd
@@ -155,9 +161,11 @@ def run_unidock(
         max_step: int = 10,
         energy_range: float = 3.0,
         refine_step: int = 5,
+        bias_file: Optional[Path] = None,
         seed: int = 181129,
         score_only: bool = False,
         local_only: bool = False,
+        multi_bias: bool = False,
 ) -> Tuple[List[Path], List[List[float]]]:
     runner = UniDockRunner(
         receptor=receptor, ligands=ligands,
@@ -167,8 +175,8 @@ def run_unidock(
         scoring=scoring, ad4_map_prefix=ad4_map_prefix, num_modes=num_modes,
         search_mode=search_mode,
         exhaustiveness=exhaustiveness, max_step=max_step,
-        energy_range=energy_range, refine_step=refine_step, seed=seed,
-        score_only=score_only, local_only=local_only,
+        energy_range=energy_range, refine_step=refine_step, seed=seed, bias_file=bias_file,
+        score_only=score_only, local_only=local_only, multi_bias=multi_bias,
     )
     result_ligands = runner.run()
     scores_list = [UniDockRunner.read_scores(ligand) for ligand in result_ligands]
