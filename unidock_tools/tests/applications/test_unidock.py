@@ -34,12 +34,14 @@ testset_name_list = ["bigsdf", "1bcu", "one_ligand_failed"]
 def get_docking_args(testset_name):
     receptor = os.path.join(testset_dir_path, testset_name, "protein.pdb")
     ligand = os.path.join(testset_dir_path, testset_name, "ligand.sdf")
+    multi_bias_file = os.path.join(testset_dir_path, testset_name, "ligand.bpf")
     with open(os.path.join(testset_dir_path, testset_name, "docking_grid.json")) as f:
         pocket = json.load(f)
     testset_info = {
         "receptor": receptor,
         "ligand": ligand,
         "pocket": pocket,
+        "multi_bias_file": multi_bias_file if os.path.exists(multi_bias_file) else None
     }
     return testset_info
 
@@ -119,6 +121,25 @@ def test_unidock_pipeline_multi_pose(receptor, ligand, pocket):
         assert -20 <= score <= 0, f"Uni-Dock score not in range: {score}"
     shutil.rmtree(results_dir, ignore_errors=True)
 
+def test_unidock_pipeline_multi_bias():
+    testset_name = "1gkc"
+    testset_info = get_docking_args(testset_name)
+    receptor, ligand, pocket, multi_bias_file = testset_info["receptor"], testset_info["ligand"], testset_info["pocket"], testset_info["multi_bias_file"]
+    results_dir = "unidock_results_multi_bias"
+    cmd = f"unidocktools unidock_pipeline -r {receptor} -l {ligand} -mbf {multi_bias_file} -sd {results_dir} \
+            -cx {pocket['center_x']} -cy {pocket['center_y']} -cz {pocket['center_z']} \
+            -sx {pocket['size_x']} -sy {pocket['size_y']} -sz {pocket['size_z']} \
+            -sf vina -nm 4 --seed 181129 --multi_bias --debug"
+    print(cmd)
+    resp = subprocess.run(cmd, shell=True, capture_output=True, encoding="utf-8")
+    print(resp.stdout)
+    assert resp.returncode == 0, f"run unidock pipeline app err:\n{resp.stderr}"
+
+    result_file = os.path.join(results_dir, Path(ligand).name)
+    assert os.path.exists(result_file), f"docking result file not found"
+
+    score_list = read_scores(result_file, "docking_score")
+    shutil.rmtree(results_dir, ignore_errors=True)
 
 @pytest.mark.parametrize("testset_name", testset_name_list)
 def test_unidock_pipeline_default_arg(testset_name):

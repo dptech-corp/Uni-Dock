@@ -44,6 +44,10 @@ DEFAULT_ARGS = {
     "local_only": False,
     "seed": 181129,
     "debug": False,
+    "bias_file": None,
+    "multi_bias": False,
+    "multi_bias_file": None,
+    "multi_bias_index": None,
 }
 
 
@@ -57,6 +61,8 @@ class UniDock(Base):
                  size_x: float = 22.5,
                  size_y: float = 22.5,
                  size_z: float = 22.5,
+                 bias_file: Optional[Path] = None,
+                 multi_bias_files: List[Path] = [],
                  workdir: Path = Path("docking_pipeline"),
                  ):
         """
@@ -87,6 +93,8 @@ class UniDock(Base):
         self.receptor = receptor
         self.mols = sum([read_ligand(ligand) for ligand in ligands], [])
         self.mols = [PropertyMol(mol) for mol in self.mols]
+        self.bias_file = bias_file
+        self.multi_bias_files_dict = {f.stem: f for f in multi_bias_files}
         self.center_x = center_x
         self.center_y = center_y
         self.center_z = center_z
@@ -127,11 +135,20 @@ class UniDock(Base):
         return prepared_sdf_list
 
     @time_logger
-    def init_docking_data(self, input_dir: Path, batch_size: int = 20):
+    def init_docking_data(self, input_dir: Path, multi_bias: bool = False, batch_size: int = 20):
         real_batch_size = math.ceil(len(self.mols) / math.ceil(len(self.mols) / batch_size))
         batched_mol_list = [self.mols[i:i+real_batch_size] for i in range(0, len(self.mols), real_batch_size)]
         for one_batch_mol_list in batched_mol_list:
             input_list = self.prepare_topology_sdf(one_batch_mol_list, input_dir)
+            if multi_bias:
+                for input_file in input_list:
+                    filename = input_file.stem
+                    logging.info(filename)
+                    logging.info(self.multi_bias_files_dict)
+                    if filename in self.multi_bias_files_dict:
+                        shutil.copyfile(self.multi_bias_files_dict[filename], os.path.join(input_dir, f"{filename}.bpf"))
+                    else:
+                        logging.warning(f"Cannot find bias file in multi-bias mode for {filename}")
             yield input_list
 
     @time_logger
@@ -148,6 +165,7 @@ class UniDock(Base):
                 batch_size: int = 1200,
                 score_only: bool = False,
                 local_only: bool = False,
+                multi_bias: bool = False,
                 score_name: str = "docking_score",
                 docking_dir_name : str = "docking_dir",
                 topn: int = 10,
@@ -157,6 +175,7 @@ class UniDock(Base):
         for ligand_list in self.init_docking_data(
                 input_dir=input_dir,
                 batch_size=batch_size,
+                multi_bias=multi_bias,
         ):
             # Run docking
             ligands, scores_list = run_unidock(
@@ -165,8 +184,8 @@ class UniDock(Base):
                 size_x=self.size_x, size_y=self.size_y, size_z=self.size_z,
                 scoring=scoring_function, num_modes=num_modes,
                 search_mode=search_mode, exhaustiveness=exhaustiveness, max_step=max_step, 
-                seed=seed, refine_step=refine_step, energy_range=energy_range,
-                score_only=score_only, local_only=local_only,
+                seed=seed, refine_step=refine_step, energy_range=energy_range, bias_file=self.bias_file,
+                score_only=score_only, local_only=local_only, multi_bias=multi_bias,
             )
             self.postprocessing(ligand_scores_list=zip(ligands, scores_list), 
                                 save_dir=save_dir,
@@ -222,6 +241,33 @@ def main(args: dict):
         exit(1)
     logging.info(f"[UniDock Pipeline] {len(ligands)} ligands found.")
 
+    bias_file = None
+    if args.get("bias_file"):
+        bias_file = Path(args["bias_file"]).resolve()
+        if not bias_file.exists():
+            logging.error(f"Cannot find {bias_file}")
+            exit(1)
+
+    multi_bias_file_list = []
+    if args["multi_bias"]:
+        if args.get("multi_bias_file"):
+            for multi_bias_file in args["multi_bias_file"]:
+                if not Path(multi_bias_file).exists():
+                    logging.error(f"Cannot find {multi_bias_file}")
+                    continue
+                multi_bias_file_list.append(Path(multi_bias_file).resolve())
+        elif args.get("multi_bias_index"):
+            with open(args["multi_bias_index"], "r") as f:
+                index_content = f.read()
+            index_lines1 = [line.strip() for line in index_content.split("\n") if line.strip()]
+            index_lines2 = [line.strip() for line in index_content.split(" ") if line.strip()]
+            multi_bias_file_list.extend(index_lines2 if len(index_lines2) > len(index_lines1) else index_lines1)
+            multi_bias_file_list = [Path(multi_bias_file).resolve() for multi_bias_file in multi_bias_file_list if Path(multi_bias_file).exists()]
+        
+        if len(multi_bias_file_list) != len(ligands):
+            logging.error("Number of ligands and bias files should be equal in multi-bias mode.")
+            exit(1)
+
     logging.info("[UniDock Pipeline] Start")
     start_time = time.time()
     runner = UniDock(
@@ -233,7 +279,9 @@ def main(args: dict):
         size_x=float(args["size_x"]),
         size_y=float(args["size_y"]),
         size_z=float(args["size_z"]),
-        workdir=workdir
+        bias_file=bias_file,
+        multi_bias_files=multi_bias_file_list,
+        workdir=workdir,
     )
     logging.info("[UniDock Pipeline] Start docking")
     runner.docking(
@@ -249,6 +297,7 @@ def main(args: dict):
         batch_size=int(args["batch_size"]),
         score_only=bool(args["score_only"]),
         local_only=bool(args["local_only"]),
+        multi_bias=bool(args["multi_bias"]),
         score_name="docking_score",
         docking_dir_name="docking_dir",
         topn=int(args["topn"]),
@@ -268,6 +317,12 @@ def get_parser() -> argparse.ArgumentParser:
                         help="Ligand file in sdf format. Specify multiple files separated by commas.")
     parser.add_argument("-i", "--ligand_index", type=str, default=None,
                         help="A text file containing the path of ligand files in sdf format.")
+    parser.add_argument("-b", "--bias_file", type=str, default=None,
+                        help="Bias file in bpf format. Default: None.")
+    parser.add_argument("-mbf", "--multi_bias_file", type=lambda s: s.split(','), default=None,
+                        help="multi Bias file in bpf format separated by commas. Number should be equal to ligands. Default: None.")
+    parser.add_argument("-mbi", "--multi_bias_index", type=str, default=None,
+                        help="A text file containing the path of multi bias files in bpf format. Number should be equal to ligands. Default: None.")
 
     parser.add_argument("-cx", "--center_x", type=float, required=True,
                         help="X-coordinate of the docking box center.")
@@ -317,6 +372,8 @@ def get_parser() -> argparse.ArgumentParser:
                         help="Whether to use score_only mode.")
     parser.add_argument("--local_only", action="store_true",
                         help="Whether to use local_only mode.")
+    parser.add_argument("--multi_bias", action="store_true",
+                        help="Whether to use multi_bias mode.")
 
     parser.add_argument("--seed", type=int, default=181129, 
                         help="Uni-Dock random seed")
