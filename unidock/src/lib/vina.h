@@ -225,7 +225,7 @@ public:
            m_ad4grid.corner1(), m_ad4grid.corner2(), generator, m_verbosity, seed, bias_batch_list);
     }
     auto end = std::chrono::system_clock::now();
-    std::cout << "Kernel running time: "
+    std::cout << "CUDA Kernel running time: "
               << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << std::endl;
     done(m_verbosity, 1);
     start = std::chrono::system_clock::now();
