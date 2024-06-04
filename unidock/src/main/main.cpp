@@ -1012,7 +1012,7 @@ bug reporting, license agreements, and more information.      \n";
                     max_num_lig_pairs = std::max(max_num_lig_pairs,num_lig_pairs_vector.at(i));
                 }
                 
-                printf("max_num_atoms%ld\n",max_num_atoms);
+                printf("max_num_atoms:%ld\n",max_num_atoms);
                 printf("max_num_torsions:%ld\n",max_num_torsions);
                 printf("max_num_rigids:%ld\n",max_num_rigids);
                 printf("max_num_lig_pairs:%ld\n",max_num_lig_pairs);
@@ -1038,13 +1038,13 @@ bug reporting, license agreements, and more information.      \n";
                 printMaxValues(smallGroup);
                 
                 std::cout << "Medium Group:" << std::endl;
-                printMaxValues(mediumGroup);
+                if (!mediumGroup.empty()) printMaxValues(mediumGroup);
                 
                 std::cout << "Large Group:" << std::endl;
-                printMaxValues(largeGroup);
+                if (!largeGroup.empty()) printMaxValues(largeGroup);
                 
                 std::cout << "Extra Large Group:" << std::endl;
-                printMaxValues(extraLargeGroup);
+                if (!extraLargeGroup.empty()) printMaxValues(extraLargeGroup);
                 int processed_ligands_smile = 0;
                 int smile_batch_id = 0;
                 int processed_ligands_medium = 0;
