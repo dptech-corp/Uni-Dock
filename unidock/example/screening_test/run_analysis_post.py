@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 import time
 
-log_file_path = "./result/def/1024/astex_log.txt"  # 定义日志文件的路径
+log_file_path = "./result/def/2048/astex_log.txt"  # 定义日志文件的路径
 def find_sdf_files_recursively(folder_path):
     # 将字符串路径转换为Path对象
     folder_path = Path(folder_path)
@@ -19,7 +19,7 @@ def find_sdf_files_recursively(folder_path):
     return sdf_files_str
 
 # 假设我们要搜索的文件夹路径为'/path/to/your/folder'
-folder_path = '/home/yxyy/Documents/code/Uni-Dock/unidock/example/screening_test/casf2016_ligand_sdf'
+folder_path = '/home/yxyy/Documents/code/Uni-Dock/unidock/example/screening_test/astex_ligand_sdf'
 
 # 调用函数并打印结果
 sdf_files = find_sdf_files_recursively(folder_path)
@@ -40,9 +40,7 @@ def build_commands_from_csv(csv_file):
             x = row['X']
             y = row['Y']
             z = row['Z']
-            # command = f"../../build/unidock  --receptor ./receptor_grids/{pdb_id}/unidock/receptor_grids/protein_conf_0/protein.pdbqt --ligand_index def_ligands.txt --center_x {x} --center_y {y} --center_z {z} --size_x 27 --size_y 27 --size_z 27 --dir ./result/def/1024 --exhaustiveness 1024 --max_step 1 --num_modes 1024 --scoring vina --refine_step 5 --seed 5 --verbosity 1"
-            command = f"../../build/unidock  --receptor ./CASF2016/{pdb_id}/unidock/receptor_grids/protein_conf_0/protein.pdbqt --ligand_index def_ligands.txt --center_x {x} --center_y {y} --center_z {z} --size_x 27 --size_y 27 --size_z 27 --dir ./result/def/1024 --exhaustiveness 1024 --max_step 1 --num_modes 1024 --scoring vina --refine_step 5 --seed 5 --verbosity 1"
-
+            command = f"../../build/unidock  --receptor ./receptor_grids/{pdb_id}/unidock/receptor_grids/protein_conf_0/protein.pdbqt --ligand_index def_ligands.txt --center_x {x} --center_y {y} --center_z {z} --size_x 27 --size_y 27 --size_z 27 --dir ./result/def/2048 --exhaustiveness 2048 --max_step 1 --num_modes 2048 --scoring vina --refine_step 5 --seed 5 --verbosity 1"
             commands.append(command)
             start_time = time.time()  # 记录命令开始执行的时间
             try:
