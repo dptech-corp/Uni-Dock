@@ -1065,11 +1065,6 @@ bug reporting, license agreements, and more information.      \n";
                         min_rmsd,max_evals,max_step,seed, refine_step, local_only, energy_range);
                 template_batch_docking<ExtraLargeConfig>(v,all_ligands,extraLargeGroup,"Extra Large",exhaustiveness, multi_bias,max_memory,
                         receptor_atom_numbers, out_dir,bias_file, num_modes,
-                        min_rmsd,max_evals,max_step,seed, refine_step, local_only, energy_range);}
-                else{
-                   std::vector<Ligand> extraLargeGroup(ligands.begin(), ligands.end()); 
-                   template_batch_docking<ExtraLargeConfig>(v,all_ligands,extraLargeGroup,"Extra Large in safe mode",exhaustiveness, multi_bias,max_memory,
-                        receptor_atom_numbers, out_dir,bias_file, num_modes,
                         min_rmsd,max_evals,max_step,seed, refine_step, local_only, energy_range);
                 template_batch_docking<MaxConfig>(v,all_ligands,maxGroup,"Max",exhaustiveness, multi_bias,max_memory,
                         receptor_atom_numbers, out_dir,bias_file, num_modes,
