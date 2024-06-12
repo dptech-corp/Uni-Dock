@@ -1130,6 +1130,34 @@ std::vector<output_type> monte_carlo_template::cuda_to_vina<ExtraLargeConfig>(ou
     }
     return results_vina;
 }
+template<>
+std::vector<output_type> monte_carlo_template::cuda_to_vina<MaxConfig>(output_type_cuda_t_<MaxConfig> results_ptr[],
+                                                   int thread) const {
+    // DEBUG_PRINTF("entering cuda_to_vina\n");
+    std::vector<output_type> results_vina;
+    for (int i = 0; i < thread; ++i) {
+        output_type_cuda_t_<MaxConfig> results = results_ptr[i];
+        conf tmp_c;
+        tmp_c.ligands.resize(1);
+        // Position
+        for (int j = 0; j < 3; j++) tmp_c.ligands[0].rigid.position[j] = results.position[j];
+        // Orientation
+        qt q(results.orientation[0], results.orientation[1], results.orientation[2],
+             results.orientation[3]);
+        tmp_c.ligands[0].rigid.orientation = q;
+        output_type tmp_vina(tmp_c, results.e);
+        // torsion
+        for (int j = 0; j < results.lig_torsion_size; j++)
+            tmp_vina.c.ligands[0].torsions.push_back(results.lig_torsion[j]);
+        // coords
+        for (int j = 0; j < MaxConfig::MAX_NUM_OF_ATOMS_; j++) {
+            vec v_tmp(results.coords[j][0], results.coords[j][1], results.coords[j][2]);
+            if (v_tmp[0] * v_tmp[1] * v_tmp[2] != 0) tmp_vina.coords.push_back(v_tmp);
+        }
+        results_vina.push_back(tmp_vina);
+    }
+    return results_vina;
+}
 __host__ void monte_carlo::operator()(
     std::vector<model> &m_gpu, std::vector<output_container> &out_gpu,
     std::vector<precalculate_byatom> &p_gpu, triangular_matrix_cuda_t *m_data_list_gpu,
@@ -2971,6 +2999,13 @@ __host__ void monte_carlo_template::do_docking<ExtraLargeConfig>(std::vector<mod
     const igrid &ig, const vec &corner1, const vec &corner2, rng &generator, int verbosity,
     unsigned long long seed, std::vector<std::vector<bias_element>> &bias_batch_list) const {
         monte_carlo_template::do_docking_base<ExtraLargeConfig>(m_gpu, out_gpu,p_gpu, m_data_list_gpu,ig, corner1, corner2, generator, verbosity,seed, bias_batch_list);
+    }
+template <>
+__host__ void monte_carlo_template::do_docking<MaxConfig>(std::vector<model> &m_gpu, std::vector<output_container> &out_gpu,
+    std::vector<precalculate_byatom> &p_gpu, triangular_matrix_cuda_t *m_data_list_gpu,
+    const igrid &ig, const vec &corner1, const vec &corner2, rng &generator, int verbosity,
+    unsigned long long seed, std::vector<std::vector<bias_element>> &bias_batch_list) const {
+        monte_carlo_template::do_docking_base<MaxConfig>(m_gpu, out_gpu,p_gpu, m_data_list_gpu,ig, corner1, corner2, generator, verbosity,seed, bias_batch_list);
     }
 /* Above based on monte-carlo.cpp */
 

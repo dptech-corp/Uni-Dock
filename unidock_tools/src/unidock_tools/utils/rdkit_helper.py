@@ -43,7 +43,7 @@ def set_properties(mol: Chem.Mol, properties: dict):
 
 
 def sdf_writer(mols: List[Chem.Mol],
-               output_file: Union[str, os.PathLike]):
+               output_file: Union[str, bytes, os.PathLike]):
     with Chem.SDWriter(str(output_file)) as writer:
         for mol in mols:
             writer.write(mol)
