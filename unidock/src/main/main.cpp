@@ -95,6 +95,30 @@ float calculateScore(const Ligand &ligand) {
 bool compareLigands(const Ligand &a, const Ligand &b) {
     return a.score < b.score;
 }
+void classifyLigands(const std::vector<Ligand>& ligands,std::vector<Ligand> &smallGroup, std::vector<Ligand> &mediumGroup,std::vector<Ligand> & largeGroup, std::vector<Ligand> &extraLargeGroup, std::vector<Ligand> &overflowGroup) {
+    const int atomThresholds[5] = {40, 80, 120, 160, 300};
+    const int torsionThresholds[5] = {8, 16, 24, 36, 48};
+    const int rigidThresholds[5] = {12, 24, 36, 64, 128};
+    const int pairThresholds[5] = {300, 600, 1024, 2048, 4096};
+
+    for (const auto& lig : ligands) {
+        if (lig.num_atoms <= atomThresholds[0] && lig.num_torsions <= torsionThresholds[0] &&
+            lig.num_rigids <= rigidThresholds[0] && lig.num_lig_pairs <= pairThresholds[0]) {
+            smallGroup.push_back(lig);
+        } else if (lig.num_atoms <= atomThresholds[1] && lig.num_torsions <= torsionThresholds[1] &&
+                   lig.num_rigids <= rigidThresholds[1] && lig.num_lig_pairs <= pairThresholds[1]) {
+            mediumGroup.push_back(lig);
+        } else if (lig.num_atoms <= atomThresholds[2] && lig.num_torsions <= torsionThresholds[2] &&
+                   lig.num_rigids <= rigidThresholds[2] && lig.num_lig_pairs <= pairThresholds[2]) {
+            largeGroup.push_back(lig);
+        } else if (lig.num_atoms <= atomThresholds[3] && lig.num_torsions <= torsionThresholds[3] &&
+                   lig.num_rigids <= rigidThresholds[3] && lig.num_lig_pairs <= pairThresholds[3]) {
+            extraLargeGroup.push_back(lig);
+        } else {
+            overflowGroup.push_back(lig);
+        }
+    }
+}
 void printMaxValues(const std::vector<Ligand>& group) {
     int max_atoms = std::numeric_limits<int>::min();
     int max_torsions = std::numeric_limits<int>::min();
@@ -996,19 +1020,6 @@ RDKit::ROMol *mol1 = RDKit::SmilesToMol("Cc1ccccc1");
                     max_num_torsions = std::max(max_num_torsions, num_torsions_vector.at(i));
                     max_num_rigids = std::max(max_num_rigids,num_rigids_vector.at(i));
                     max_num_lig_pairs = std::max(max_num_lig_pairs,num_lig_pairs_vector.at(i));
-
-                    // printf("num_atoms%ld\n",num_atoms_vector.at(i));
-                    // printf("num_torsions:%ld\n",num_torsions_vector.at(i));
-                    // printf("num_rigids:%ld\n",num_rigids_vector.at(i));
-                    // printf("num_internal_pairs:%ld\n",num_lig_pairs_vector.at(i));
-                    
-                    // all_ligands[i].second.about();
-                        
-                // printf("max_num_ligands%ld\n",max_num_ligands);
-                // printf("max_num_other_pairs%ld\n",max_num_other_pairs);
-                // printf("max_num_flex%ld\n",max_num_flex);
-                // printf("max_num_ligand_degrees_of_freedom%ld\n",max_num_ligand_degrees_of_freedom);
-                // printf("max_num_internal_pairs%ld\n",max_num_internal_pairs);
                 }
                 
                 printf("max_num_atoms%ld\n",max_num_atoms);
@@ -1026,12 +1037,13 @@ RDKit::ROMol *mol1 = RDKit::SmilesToMol("Cc1ccccc1");
                     lig.score = calculateScore(lig);
                     ligands.push_back(lig);
                 }
-                std::sort(ligands.begin(), ligands.end(), compareLigands);
-                int groupSize = ligands.size() / 4;
-                std::vector<Ligand> smallGroup(ligands.begin(), ligands.begin() + groupSize);
-                std::vector<Ligand> mediumGroup(ligands.begin() + groupSize, ligands.begin() + 2 * groupSize);
-                std::vector<Ligand> largeGroup(ligands.begin() + 2 * groupSize, ligands.begin() + 3 * groupSize);
-                std::vector<Ligand> extraLargeGroup(ligands.begin() + 3 * groupSize, ligands.end());
+
+                std::vector<Ligand> smallGroup;
+                std::vector<Ligand> mediumGroup;
+                std::vector<Ligand> largeGroup;
+                std::vector<Ligand> extraLargeGroup;
+                std::vector<Ligand> maxGroup;
+                classifyLigands(ligands,smallGroup,mediumGroup,largeGroup,extraLargeGroup,maxGroup);
                 std::cout << "Small Group:" << std::endl;
                 printMaxValues(smallGroup);
                 
@@ -1061,6 +1073,9 @@ RDKit::ROMol *mol1 = RDKit::SmilesToMol("Cc1ccccc1");
                         receptor_atom_numbers, out_dir,bias_file, num_modes,
                         min_rmsd,max_evals,max_step,seed, refine_step, local_only, energy_range);
                 template_batch_docking<ExtraLargeConfig>(v,all_ligands,extraLargeGroup,"Extra Large",exhaustiveness, multi_bias,max_memory,
+                        receptor_atom_numbers, out_dir,bias_file, num_modes,
+                        min_rmsd,max_evals,max_step,seed, refine_step, local_only, energy_range);
+                template_batch_docking<MaxConfig>(v,all_ligands,maxGroup,"Max",exhaustiveness, multi_bias,max_memory,
                         receptor_atom_numbers, out_dir,bias_file, num_modes,
                         min_rmsd,max_evals,max_step,seed, refine_step, local_only, energy_range);
             }
