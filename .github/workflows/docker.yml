@@ -36,7 +36,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_PAT }}
 
       - name: build and push container
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           platforms: linux/amd64
           tags: ${{ steps.meta.outputs.tags }}
