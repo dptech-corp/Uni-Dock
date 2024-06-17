@@ -14,7 +14,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 # >>>>>> Language Configuration Begin
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 
 set(CMAKE_CUDA_FLAGS_DEBUG "-g -G")
 option(Boost_USE_STATIC_LIBS "Whether to use static libs for boost" OFF)
@@ -98,6 +98,8 @@ list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
 # >>>>>> Libraries Definitions Begin
 # Find RDKit
 find_package(RDKit REQUIRED)
+# Find Eigen3
+find_package(Eigen3 REQUIRED)
 
 # Group boost dependencies
 add_library(boost_deps INTERFACE)
@@ -136,6 +138,12 @@ target_include_directories(cuda PUBLIC src/lib src/cuda)
 add_executable(obb src/cuda/obb.cu)
 # >>> Main binary (obb test)
 add_executable(bvh src/bvh/bvh.cpp src/bvh/bvh.hpp)
+# >>> Main binary (rdkit rotation)
+add_executable(unidock2 src/rdkit/main.cpp )
+target_link_libraries(unidock2 PRIVATE
+  RDKit::SmilesParse RDKit::MolHash
+  Eigen3::Eigen
+)
 # >>> Main binary (unidock)
 add_executable(${VINA_BIN_NAME} src/main/main.cpp)
 target_link_libraries(${VINA_BIN_NAME} PRIVATE

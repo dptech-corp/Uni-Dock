@@ -34,9 +34,7 @@
 #include "simulation_container.h"
 
 #include <iostream>
-#include <GraphMol/GraphMol.h>
-#include <GraphMol/SmilesParse/SmilesParse.h>
-#include <GraphMol/FileParsers/FileParsers.h>
+
 
 struct usage_error : public std::runtime_error {
     usage_error(const std::string& message) : std::runtime_error(message) {}
@@ -336,12 +334,7 @@ DOI 10.1002/jcc.21334                                         \n\
 \n\
 Please refer to https://github.com/dptech-corp/Uni-Dock/ for  \n\
 bug reporting, license agreements, and more information.      \n";
-RDKit::ROMol *mol1 = RDKit::SmilesToMol("Cc1ccccc1");
-  std::cout << "Number of atoms " << mol1->getNumAtoms() << std::endl;
 
-  using namespace RDKit;
-  auto mol = "C[C@H](F)c1ccc(C#N)cc1"_smiles;
-  std::cout << "Number of atoms : " << mol->getNumAtoms() << std::endl;
     try {
         std::string rigid_name;
         std::string flex_name;
