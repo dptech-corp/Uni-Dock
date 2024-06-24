@@ -144,6 +144,11 @@ target_link_libraries(unidock2 PRIVATE
   RDKit::SmilesParse RDKit::MolHash
   Eigen3::Eigen
 )
+add_executable(bfgs src/rdkit/bfgs.cpp )
+target_link_libraries(bfgs PRIVATE
+  RDKit::SmilesParse RDKit::MolHash
+  Eigen3::Eigen
+)
 # >>> Main binary (unidock)
 add_executable(${VINA_BIN_NAME} src/main/main.cpp)
 target_link_libraries(${VINA_BIN_NAME} PRIVATE

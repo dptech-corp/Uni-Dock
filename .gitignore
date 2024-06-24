@@ -15,7 +15,14 @@ unidock/example/screening_test/unidock
 unidock/example/screening_test/fail_result
 unidock/example/screening_test/receptor_grids
 unidock/example/screening_test/unidock_root
-unidock/example/screening_test/test_dock
+unidock/example/screening_test/astex
+unidock/example/screening_test/astex_cleaned
+unidock/example/screening_test/CASF2016
+unidock/example/screening_test/casf2016_ligand_sdf
+unidock/example/screening_test/posebuster
+unidock/example/screening_test/posebuster_ligand_sdf
+unidock/example/screening_test/astex_ligand_sdf
 unidock_tools/dist
 unidock_tools/dist/*
 *.egg-info
+*_log.txt
