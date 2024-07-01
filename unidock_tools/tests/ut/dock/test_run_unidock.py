@@ -4,23 +4,24 @@ import shutil
 import uuid
 import pytest
 
-
 @pytest.fixture
 def receptor():
     return Path(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-                             "inputs", "1iep_protein.pdbqt"))
-
+                             'inputs', '1G9V', 'protein.pdbqt'))
 
 @pytest.fixture
 def ligand():
     return Path(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-                             "inputs", "1iep_ligand_prep.sdf"))
+                             'inputs', '1G9V', '1G9V_ligand_prepared.sdf'))
 
+@pytest.fixture
+def ad4_map_prefix():
+    return Path(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+                             'inputs', '1G9V', 'protein'))
 
 @pytest.fixture
 def pocket():
-    return [15.11, 53.98, 17.14, 19.23, 27.64, 24.19]
-
+    return [5.122, 18.327, 37.332, 22.5, 22.5, 22.5]
 
 def test_run_unidock_vina(receptor, ligand, pocket):
     from unidock_tools.modules.docking import run_unidock
@@ -54,8 +55,7 @@ def test_run_unidock_vina(receptor, ligand, pocket):
 
     shutil.rmtree(workdir, ignore_errors=True)
 
-
-def test_run_unidock_ad4(receptor, ligand, pocket):
+def test_run_unidock_ad4(receptor, ligand, ad4_map_prefix, pocket):
     from unidock_tools.modules.docking import run_unidock
 
     workdir = Path(f"./tmp+{uuid.uuid4()}")
@@ -72,6 +72,7 @@ def test_run_unidock_ad4(receptor, ligand, pocket):
         size_y=pocket[4],
         size_z=pocket[5],
         scoring="ad4",
+        ad4_map_prefix=ad4_map_prefix,
         num_modes=5,
         energy_range=12.0,
         seed=42,

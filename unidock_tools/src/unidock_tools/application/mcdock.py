@@ -1,4 +1,4 @@
-from typing import List, Union, Tuple
+from typing import List, Tuple, Union, Optional
 from pathlib import Path
 import os
 import time
@@ -10,7 +10,7 @@ from rdkit import Chem
 
 from unidock_tools.utils import time_logger, randstr, make_tmp_dir, MolGroup
 from unidock_tools.modules.confgen import generate_conf
-from unidock_tools.modules.protein_prep import pdb2pdbqt
+from unidock_tools.modules.protein_prep import receptor_preprocessor
 from unidock_tools.modules.ligand_prep import TopologyBuilder
 from unidock_tools.modules.docking import run_unidock
 from .unidock_pipeline import Base, UniDock
@@ -61,6 +61,11 @@ class MultiConfDock(Base):
                  size_x: float = 22.5,
                  size_y: float = 22.5,
                  size_z: float = 22.5,
+                 kept_ligand_resname_list: Optional[List[str]] = None,
+                 prepared_hydrogen: bool = True,
+                 preserve_original_resname: bool = True,
+                 covalent_residue_atom_info_list: Optional[List[Tuple[str, str]]] = None,
+                 generate_ad4_grids: bool = False,
                  gen_conf: bool = True,
                  max_nconf: int = 1000,
                  min_rmsd: float = 0.5,
@@ -70,7 +75,7 @@ class MultiConfDock(Base):
         Initializes a MultiConfDock object.
 
         Args:
-            receptor (Path): Path to the receptor file in pdbqt format.
+            receptor (Path): Path to the receptor file in PDB format.
             ligands (List[Path]): List of paths to the ligand files in sdf format.
             center_x (float): X-coordinate of the center of the docking box.
             center_y (float): Y-coordinate of the center of the docking box.
@@ -84,11 +89,22 @@ class MultiConfDock(Base):
         self.workdir = workdir
         self.workdir.mkdir(parents=True, exist_ok=True)
         if receptor.suffix == ".pdb":
-            pdb2pdbqt(receptor, workdir.joinpath(receptor.stem + ".pdbqt"))
-            receptor = workdir.joinpath(receptor.stem + ".pdbqt")
-        if receptor.suffix != ".pdbqt":
-            logging.error("receptor file must be pdb/pdbqt format")
+            receptor_pdbqt_file_name, protein_grid_prefix = receptor_preprocessor(str(receptor),
+                                                                                  kept_ligand_resname_list=kept_ligand_resname_list,
+                                                                                  prepared_hydrogen=prepared_hydrogen,
+                                                                                  preserve_original_resname=preserve_original_resname,
+                                                                                  target_center=(center_x, center_y, center_z),
+                                                                                  box_size=(size_x, size_y, size_z),
+                                                                                  covalent_residue_atom_info_list=covalent_residue_atom_info_list,
+                                                                                  generate_ad4_grids=generate_ad4_grids,
+                                                                                  working_dir_name=str(workdir))
+
+            self.receptor = receptor_pdbqt_file_name
+            self.ad4_map_prefix = protein_grid_prefix
+        else:
+            logging.error("receptor file must be PDB format!!")
             exit(1)
+
         self.receptor = receptor
         self.mol_group = MolGroup(ligands)
         self.build_topology()
@@ -194,7 +210,7 @@ class MultiConfDock(Base):
                 receptor=self.receptor, ligands=ligand_list, output_dir=output_dir,
                 center_x=self.center_x, center_y=self.center_y, center_z=self.center_z,
                 size_x=self.size_x, size_y=self.size_y, size_z=self.size_z,
-                scoring=scoring_function, num_modes=num_modes,
+                scoring=scoring_function, ad4_map_prefix=self.ad4_map_prefix, num_modes=num_modes,
                 search_mode=search_mode, exhaustiveness=exhaustiveness, max_step=max_step, 
                 seed=seed, refine_step=refine_step, energy_range=energy_range,
                 score_only=score_only, local_only=local_only,
