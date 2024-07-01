@@ -989,7 +989,7 @@ __device__ void bfgs_warp(cg::thread_block_tile<TileSize> &tile, output_type_cud
     // Profiling: perform timing within kernel
     int n = 3 + 3 + x->lig_torsion_size; /* the dimensions of matirx */
 
-    float f0, f1, f_orig, alpha;
+    float f0 = 0.0f, f1, f_orig, alpha;
 
     matrix_d_init_warp(tile, h, n, 0);
     matrix_d_set_diagonal_warp(tile, h, 1);
@@ -1059,7 +1059,7 @@ __device__ void bfgs_warp(cg::thread_block_tile<TileSize> &tile, output_type_cud
     // Profiling: perform timing within kernel
     int n = 3 + 3 + x->lig_torsion_size; /* the dimensions of matirx */
 
-    float f0, f1, f_orig, alpha;
+    float f0 = 0.0f, f1, f_orig, alpha;
 
     matrix_d_init_warp<TileSize,Config>(tile, h, n, 0);
     matrix_d_set_diagonal_warp<TileSize,Config>(tile, h, 1);
