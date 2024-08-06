@@ -12,8 +12,9 @@ from multiprocess import Pool
 from rdkit import Chem
 from rdkit.Chem.PropertyMol import PropertyMol
 
+
 from unidock_tools.utils import time_logger, randstr, make_tmp_dir, read_ligand, sdf_writer
-from unidock_tools.modules.protein_prep import pdb2pdbqt
+from unidock_tools.modules.protein_prep import receptor_preprocessor
 from unidock_tools.modules.ligand_prep import TopologyBuilder
 from unidock_tools.modules.docking import run_unidock
 from .base import Base
@@ -50,7 +51,6 @@ DEFAULT_ARGS = {
     "multi_bias_index": None,
 }
 
-
 class UniDock(Base):
     def __init__(self,
                  receptor: Path,
@@ -61,36 +61,55 @@ class UniDock(Base):
                  size_x: float = 22.5,
                  size_y: float = 22.5,
                  size_z: float = 22.5,
+                 kept_ligand_resname_list: Optional[List[str]] = None,
+                 prepared_hydrogen: bool = True,
+                 preserve_original_resname: bool = True,
+                 covalent_residue_atom_info_list: Optional[List[Tuple[str, str]]] = None,
+                 generate_ad4_grids: bool = False,
                  bias_file: Optional[Path] = None,
                  multi_bias_files: List[Path] = [],
                  workdir: Path = Path("docking_pipeline"),
                  ):
         """
-        Initializes a MultiConfDock object.
+        Initializes a UniDock object.
 
         Args:
-            receptor (Path): Path to the receptor file in pdbqt format.
-            ligands (List[Path]): List of paths to the ligand files in sdf format.
+            receptor (Path): Path to the receptor file in PDB format.
+            ligands (List[Path]): List of paths to the ligand files in SDF format.
             center_x (float): X-coordinate of the center of the docking box.
             center_y (float): Y-coordinate of the center of the docking box.
             center_z (float): Z-coordinate of the center of the docking box.
             size_x (float, optional): Size of the docking box in the x-dimension. Defaults to 22.5.
             size_y (float, optional): Size of the docking box in the y-dimension. Defaults to 22.5.
             size_z (float, optional): Size of the docking box in the z-dimension. Defaults to 22.5.
-            workdir (Path, optional): Path to the working directory. Defaults to Path("MultiConfDock").
+            kept_ligand_resname_list (List[str], optional): List of ligand residue names to keep during receptor preprocessing. Defaults to None.
+            prepared_hydrogen (bool, optional): Whether to prepare hydrogen during receptor preprocessing. Defaults to True.
+            preserve_original_resname (bool, optional): Whether to preserve the original residue names during receptor preprocessing. Defaults to True.
+            covalent_residue_atom_info_list (List[Tuple[str, str]], optional): Atom information for covalent residues during receptor preprocessing. Defaults to None.
+            workdir (Path, optional): Path to the working directory. Defaults to Path("docking_pipeline").
         """
         self.check_dependencies()
 
         self.workdir = workdir
         self.workdir.mkdir(parents=True, exist_ok=True)
 
-        if receptor.suffix == ".pdb":
-            pdb2pdbqt(receptor, workdir.joinpath(receptor.stem + ".pdbqt"))
-            receptor = workdir.joinpath(receptor.stem + ".pdbqt")
-        if receptor.suffix != ".pdbqt":
-            logging.error("receptor file must be pdb/pdbqt format")
+        if receptor.suffix != '.pdb':
+            logging.error('receptor file must be in PDB format!')
             exit(1)
-        self.receptor = receptor
+        else:
+            receptor_pdbqt_file_name, protein_grid_prefix = receptor_preprocessor(str(receptor),
+                                                                                  kept_ligand_resname_list=kept_ligand_resname_list,
+                                                                                  prepared_hydrogen=prepared_hydrogen,
+                                                                                  preserve_original_resname=preserve_original_resname,
+                                                                                  target_center=(center_x, center_y, center_z),
+                                                                                  box_size=(size_x, size_y, size_z),
+                                                                                  covalent_residue_atom_info_list=covalent_residue_atom_info_list,
+                                                                                  generate_ad4_grids=generate_ad4_grids,
+                                                                                  working_dir_name=str(workdir))
+
+            self.receptor = receptor_pdbqt_file_name
+            self.ad4_map_prefix = protein_grid_prefix
+
         self.mols = sum([read_ligand(ligand) for ligand in ligands], [])
         self.mols = [PropertyMol(mol) for mol in self.mols]
         self.bias_file = bias_file
@@ -182,7 +201,7 @@ class UniDock(Base):
                 receptor=self.receptor, ligands=ligand_list, output_dir=output_dir,
                 center_x=self.center_x, center_y=self.center_y, center_z=self.center_z,
                 size_x=self.size_x, size_y=self.size_y, size_z=self.size_z,
-                scoring=scoring_function, num_modes=num_modes,
+                scoring=scoring_function, ad4_map_prefix=self.ad4_map_prefix, num_modes=num_modes,
                 search_mode=search_mode, exhaustiveness=exhaustiveness, max_step=max_step, 
                 seed=seed, refine_step=refine_step, energy_range=energy_range, bias_file=self.bias_file,
                 score_only=score_only, local_only=local_only, multi_bias=multi_bias,
@@ -241,6 +260,11 @@ def main(args: dict):
         exit(1)
     logging.info(f"[UniDock Pipeline] {len(ligands)} ligands found.")
 
+    if args['scoring_function'] == 'ad4':
+        generate_ad4_grids = True
+    else:
+        generate_ad4_grids = False
+
     bias_file = None
     if args.get("bias_file"):
         bias_file = Path(args["bias_file"]).resolve()
@@ -270,6 +294,15 @@ def main(args: dict):
 
     logging.info("[UniDock Pipeline] Start")
     start_time = time.time()
+    def parse_covalent_residue_atom_info(covalent_residue_atom_info_str: str) -> List[List[Tuple[str, str, int, str]]]:
+        residue_info_list = []
+        residue_atoms = covalent_residue_atom_info_str.split(',')
+        for residue_atom in residue_atoms:
+            residue_info = residue_atom.strip().split()
+            chain_id, residue_name, residue_number, atom_name = residue_info
+            residue_info_list.append((chain_id, residue_name, int(residue_number), atom_name))
+        return residue_info_list
+    
     runner = UniDock(
         receptor=Path(args["receptor"]).resolve(),
         ligands=ligands,
@@ -279,10 +312,16 @@ def main(args: dict):
         size_x=float(args["size_x"]),
         size_y=float(args["size_y"]),
         size_z=float(args["size_z"]),
+        kept_ligand_resname_list=args.get("kept_ligand_resname_list"),
+        prepared_hydrogen=args.get("prepared_hydrogen", True),
+        preserve_original_resname=args.get("preserve_original_resname", True),
+        covalent_residue_atom_info_list=parse_covalent_residue_atom_info(args.get("covalent_residue_atom_info")) if args.get("covalent_residue_atom_info") is not None else None,
+        generate_ad4_grids=generate_ad4_grids,
         bias_file=bias_file,
         multi_bias_files=multi_bias_file_list,
         workdir=workdir,
     )
+
     logging.info("[UniDock Pipeline] Start docking")
     runner.docking(
         save_dir=savedir,
@@ -312,9 +351,9 @@ def get_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="UniDock")
 
     parser.add_argument("-r", "--receptor", type=str, required=True,
-                        help="Receptor file in pdbqt format.")
+                        help="Receptor file in PDB format.")
     parser.add_argument("-l", "--ligands", type=lambda s: s.split(','), default=None,
-                        help="Ligand file in sdf format. Specify multiple files separated by commas.")
+                        help="Ligand file in SDF format. Specify multiple files separated by commas.")
     parser.add_argument("-i", "--ligand_index", type=str, default=None,
                         help="A text file containing the path of ligand files in sdf format.")
     parser.add_argument("-b", "--bias_file", type=str, default=None,
@@ -336,6 +375,15 @@ def get_parser() -> argparse.ArgumentParser:
                         help="Width of the docking box in Y direction. Default: 22.5.")
     parser.add_argument("-sz", "--size_z", type=float, default=22.5,
                         help="Width of the docking box in Z direction. Default: 22.5.")
+
+    parser.add_argument("-kr", "--kept_ligand_resname_list", type=str, nargs='+', default=None,
+                        help="List of ligand residue names to keep during receptor preprocessing. Default:None")
+    parser.add_argument("-ph", "--prepared_hydrogen", action="store_false",
+                        help="Whether to prepare hydrogen during receptor preprocessing.")
+    parser.add_argument("-pr", "--preserve_resname", action="store_false",
+                        help="Whether to preserve the original residue names during receptor preprocessing.")
+    parser.add_argument("-cra", "--covalent_residue_atom_info", type=str, default=None,
+                        help="Atom information for covalent residues during receptor preprocessing.To use it like this: -cra 'A VAL 1 CA, A VAL 1 CB, A VAL 1 O'")
 
     parser.add_argument("-wd", "--workdir", type=str, default=f"unidock_pipeline_{randstr(5)}",
                         help="Working directory. Default: 'MultiConfDock'.")
@@ -387,8 +435,8 @@ def main_cli():
     Command line interface for UniDock.
 
     Input files:
-    -r, --receptor: receptor file in pdbqt format
-    -l, --ligands: ligand file in sdf format, separated by commas(,)
+    -r, --receptor: receptor file in PDB format
+    -l, --ligands: ligand file in SDF format, separated by commas(,)
     -i, --ligand_index: a text file containing the path of ligand files in sdf format
 
     Docking box:
@@ -398,6 +446,12 @@ def main_cli():
     -sx, --size_x: size_x of docking box (default: 22.5)
     -sy, --size_y: size_y of docking box (default: 22.5)
     -sz, --size_z: size_z of docking box (default: 22.5)
+    
+    Receptor processor argument:
+    -kr, --kept_ligand_resname_list: List of ligand residue names to keep during receptor preprocessing (Default: None)
+    -ph, --prepared_hydrogen: Whether to prepare hydrogen during receptor preprocessing  (Default: False)
+    -pr, --preserve_resname: Whether to preserve the original residue names during receptor preprocessing  (Default: False)
+    -cra, --covalent_residue_atom_info: Atom information for covalent residues during receptor preprocessing  (Default: None). To use it like this: -cra 'A VAL 1 CA, A VAL 1 CB, A VAL 1 O'
 
     Optional arguments:
     -wd, --workdir: working directory (default: MultiConfDock)

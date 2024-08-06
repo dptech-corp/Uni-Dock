@@ -1,4 +1,4 @@
-# $Id: AD4.1_bound.dat,v 1.4 2009/04/15 22:38:29 rhuey Exp $
+# $Id: AD4.1_bound.dat,v 1.1 2016/02/06 00:10:27 pradeep Exp $
 # 
 # AutoDock 
 # 
@@ -92,7 +92,6 @@ atom_par A      4.00  0.150  33.5103  -0.00052  0.0  0.0  0  -1  -1  0	# Non H-b
 atom_par N      3.50  0.160  22.4493  -0.00162  0.0  0.0  0  -1  -1  1	# Non H-bonding Nitrogen
 atom_par NA     3.50  0.160  22.4493  -0.00162  1.9  5.0  4  -1  -1  1	# Acceptor 1 H-bond Nitrogen
 atom_par NS     3.50  0.160  22.4493  -0.00162  1.9  5.0  3  -1  -1  1	# Acceptor S Spherical Nitrogen
-atom_par O      3.20  0.200  17.1573  -0.00251  0.0  0.0  0  -1  -1  2	# Non H-bonding Oxygen
 atom_par OA     3.20  0.200  17.1573  -0.00251  1.9  5.0  5  -1  -1  2	# Acceptor 2 H-bonds Oxygen
 atom_par OS     3.20  0.200  17.1573  -0.00251  1.9  5.0  3  -1  -1  2	# Acceptor S Spherical Oxygen
 atom_par F      3.09  0.080  15.4480  -0.00110  0.0  0.0  0  -1  -1  4	# Non H-bonding Fluorine
@@ -101,6 +100,7 @@ atom_par MG     1.30  0.875   1.5600  -0.00110  0.0  0.0  0  -1  -1  4	# Non H-b
 atom_par P      4.20  0.200  38.7924  -0.00110  0.0  0.0  0  -1  -1  5	# Non H-bonding Phosphorus
 atom_par SA     4.00  0.200  33.5103  -0.00214  2.5  1.0  5  -1  -1  6	# Acceptor 2 H-bonds Sulphur
 atom_par S      4.00  0.200  33.5103  -0.00214  0.0  0.0  0  -1  -1  6	# Non H-bonding Sulphur
+atom_par Se     4.00  0.200  33.5103  -0.00214  2.5  1.0  5  -1  -1  6  # Acceptor 2 H-bonds Sulphur
 atom_par Cl     4.09  0.276  35.8235  -0.00110  0.0  0.0  0  -1  -1  4	# Non H-bonding Chlorine
 atom_par CL     4.09  0.276  35.8235  -0.00110  0.0  0.0  0  -1  -1  4	# Non H-bonding Chlorine
 atom_par Ca     1.98  0.550   2.7700  -0.00110  0.0  0.0  0  -1  -1  4	# Non H-bonding Calcium
@@ -119,3 +119,4 @@ atom_par G      4.00  0.150  33.5103  -0.00143  0.0  0.0  0  -1  -1  0	# Ring cl
 atom_par GA     4.00  0.150  33.5103  -0.00052  0.0  0.0  0  -1  -1  0	# Ring closure Glue Aromatic Carbon   # SF
 atom_par J      4.00  0.150  33.5103  -0.00143  0.0  0.0  0  -1  -1  0	# Ring closure Glue Aliphatic Carbon  # SF
 atom_par Q      4.00  0.150  33.5103  -0.00143  0.0  0.0  0  -1  -1  0	# Ring closure Glue Aliphatic Carbon  # SF
+atom_par TZ     1.00  0.000   0.0000   0.00000  0.0  0.0  0  -1  -1  0  # Tetrahedral Zinc Pseudo Atom

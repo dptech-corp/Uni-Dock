@@ -1,19 +1,19 @@
-from pathlib import Path
 import os
+import tempfile
 import subprocess
 import pytest
-
 
 @pytest.fixture
 def pdb_file():
     return os.path.join(os.path.dirname(os.path.dirname(__file__)), "inputs", "protein.pdb")
 
+def test_receptor_processor_app(pdb_file):
+    protein_pdbqt_file_name = "protein.pdbqt"
+    with tempfile.TemporaryDirectory() as work_dir:
+        cmd = f"unidocktools proteinprep -r {pdb_file} -o {protein_pdbqt_file_name} -wd {work_dir}"
+        subprocess.run(cmd, shell=True, cwd=work_dir)
+        assert os.path.isfile(os.path.join(work_dir, protein_pdbqt_file_name)), "PDBQT file was not generated"
 
-def test_pdb2pdbqt_app(pdb_file):
-    pdbqt_file = "protein.pdbqt"
-    cmd = f"unidocktools proteinprep -r {pdb_file} -o {pdbqt_file}"
-    print(cmd)
-    resp = subprocess.run(cmd, shell=True, capture_output=True, encoding="utf-8")
-    print(resp.stdout)
-    assert resp.returncode==0, f"run proteinprep app err:\n{resp.stderr}"
-    Path(pdbqt_file).unlink(missing_ok=True)
+
+if __name__ == "__main__":
+    pytest.main([__file__])
