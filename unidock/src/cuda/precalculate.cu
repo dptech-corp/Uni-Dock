@@ -1,4 +1,3 @@
-
 #include "kernel.h"
 #include "math.h"
 #include "model.h"
@@ -7,16 +6,19 @@
 #include "precalculate.h"
 #include "precalculate_gpu.cuh"
 
+__constant__ scoring_function_cuda_t scoring_cuda_gpu_const;
+__constant__ fl common_rs_gpu_const[FAST_SIZE];
+
+
 // TODO: define kernel here
 __global__ void precalculate_gpu(triangular_matrix_cuda_t *m_data_gpu_list,
-                                 scoring_function_cuda_t *sf_gpu, sz *atom_xs_gpu, sz *atom_ad_gpu,
+                                 sz *atom_xs_gpu, sz *atom_ad_gpu,
                                  fl *atom_charge_gpu, int *atom_num_gpu, fl factor,
-                                 fl *common_rs_gpu, fl max_fl, int thread, int max_atom_num) {
+                                 fl max_fl, int thread, int max_atom_num) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx >= thread) {
         return;
     }
-    // DEBUG_PRINTF("idx=%d\n", idx);
     // move to correct atom offset
     atom_xs_gpu += idx * max_atom_num;
     atom_ad_gpu += idx * max_atom_num;
@@ -25,50 +27,45 @@ __global__ void precalculate_gpu(triangular_matrix_cuda_t *m_data_gpu_list,
     // DEBUG_PRINTF("atom_num=%d\n", atom_num);
     precalculate_element_cuda_t *p_data_gpu = m_data_gpu_list[idx].p_data;
 
-    // // debug
-    // for (int i = 0;i < atom_num;++i){
-    //     DEBUG_PRINTF("atom[%d] on gpu: xs=%lu\n", i, atom_xs_gpu[i]);
-    // }
-
     for (int i = 0; i < atom_num; ++i) {
         for (int j = i; j < atom_num; ++j) {
             int offset = i + j * (j + 1) / 2;  // copied from "triangular_matrix_index.h"
             int n = SMOOTH_SIZE;
             p_data_gpu[offset].factor = 32.0;
-            switch (sf_gpu->m_sf_choice) {
+            switch (scoring_cuda_gpu_const.m_sf_choice) {
                 case SF_VINA: {
                     for (int k = 0; k < n; ++k) {
                         fl sum = 0;
                         // calculate smooth_e
-                        sum += sf_gpu->m_weights[0]
+                        sum += scoring_cuda_gpu_const.m_weights[0]
                                * vina_gaussian_cuda_eval(
-                                   atom_xs_gpu[i], atom_xs_gpu[j], common_rs_gpu[k],
-                                   sf_gpu->vina_gaussian_cutoff_1, sf_gpu->vina_gaussian_offset_1,
-                                   sf_gpu->vina_gaussian_width_1);
-                        sum += sf_gpu->m_weights[1]
+                                   atom_xs_gpu[i], atom_xs_gpu[j], common_rs_gpu_const[k],
+                                   scoring_cuda_gpu_const.vina_gaussian_cutoff_1, scoring_cuda_gpu_const.vina_gaussian_offset_1,
+                                   scoring_cuda_gpu_const.vina_gaussian_width_1);
+                        sum += scoring_cuda_gpu_const.m_weights[1]
                                * vina_gaussian_cuda_eval(
-                                   atom_xs_gpu[i], atom_xs_gpu[j], common_rs_gpu[k],
-                                   sf_gpu->vina_gaussian_cutoff_2, sf_gpu->vina_gaussian_offset_2,
-                                   sf_gpu->vina_gaussian_width_2);
-                        sum += sf_gpu->m_weights[2]
+                                   atom_xs_gpu[i], atom_xs_gpu[j], common_rs_gpu_const[k],
+                                   scoring_cuda_gpu_const.vina_gaussian_cutoff_2, scoring_cuda_gpu_const.vina_gaussian_offset_2,
+                                   scoring_cuda_gpu_const.vina_gaussian_width_2);
+                        sum += scoring_cuda_gpu_const.m_weights[2]
                                * vina_repulsion_cuda_eval(
-                                   atom_xs_gpu[i], atom_xs_gpu[j], common_rs_gpu[k],
-                                   sf_gpu->vina_repulsion_cutoff, sf_gpu->vina_repulsion_offset);
-                        sum += sf_gpu->m_weights[3]
+                                   atom_xs_gpu[i], atom_xs_gpu[j], common_rs_gpu_const[k],
+                                   scoring_cuda_gpu_const.vina_repulsion_cutoff, scoring_cuda_gpu_const.vina_repulsion_offset);
+                        sum += scoring_cuda_gpu_const.m_weights[3]
                                * vina_hydrophobic_cuda_eval(
-                                   atom_xs_gpu[i], atom_xs_gpu[j], common_rs_gpu[k],
-                                   sf_gpu->vina_hydrophobic_good, sf_gpu->vina_hydrophobic_bad,
-                                   sf_gpu->vina_hydrophobic_cutoff);
-                        sum += sf_gpu->m_weights[4]
+                                   atom_xs_gpu[i], atom_xs_gpu[j], common_rs_gpu_const[k],
+                                   scoring_cuda_gpu_const.vina_hydrophobic_good, scoring_cuda_gpu_const.vina_hydrophobic_bad,
+                                   scoring_cuda_gpu_const.vina_hydrophobic_cutoff);
+                        sum += scoring_cuda_gpu_const.m_weights[4]
                                * vina_non_dir_h_bond_cuda_eval(atom_xs_gpu[i], atom_xs_gpu[j],
-                                                               common_rs_gpu[k],
-                                                               sf_gpu->vina_non_dir_h_bond_good,
-                                                               sf_gpu->vina_non_dir_h_bond_bad,
-                                                               sf_gpu->vina_non_dir_h_bond_cutoff);
-                        sum += sf_gpu->m_weights[5]
+                                                               common_rs_gpu_const[k],
+                                                               scoring_cuda_gpu_const.vina_non_dir_h_bond_good,
+                                                               scoring_cuda_gpu_const.vina_non_dir_h_bond_bad,
+                                                               scoring_cuda_gpu_const.vina_non_dir_h_bond_cutoff);
+                        sum += scoring_cuda_gpu_const.m_weights[5]
                                * linearattraction_eval(atom_xs_gpu[i], atom_xs_gpu[j],
-                                                       common_rs_gpu[k],
-                                                       sf_gpu->linearattraction_cutoff);
+                                                       common_rs_gpu_const[k],
+                                                       scoring_cuda_gpu_const.linearattraction_cutoff);
                         p_data_gpu[offset].smooth[k][0] = sum;
                         // DEBUG_PRINTF("i=%d, j=%d, k=%d, sum=%f\n", i, j, k, sum);
                     }
@@ -78,32 +75,32 @@ __global__ void precalculate_gpu(triangular_matrix_cuda_t *m_data_gpu_list,
                     for (int k = 0; k < n; ++k) {
                         fl sum = 0;
                         // calculate smooth_e
-                        sum += sf_gpu->m_weights[0]
+                        sum += scoring_cuda_gpu_const.m_weights[0]
                                * vinardo_gaussian_eval(
-                                   atom_xs_gpu[i], atom_xs_gpu[j], common_rs_gpu[k],
-                                   sf_gpu->vinardo_gaussian_offset, sf_gpu->vinardo_gaussian_width,
-                                   sf_gpu->vinardo_gaussian_cutoff);
-                        sum += sf_gpu->m_weights[1]
+                                   atom_xs_gpu[i], atom_xs_gpu[j], common_rs_gpu_const[k],
+                                   scoring_cuda_gpu_const.vinardo_gaussian_offset, scoring_cuda_gpu_const.vinardo_gaussian_width,
+                                   scoring_cuda_gpu_const.vinardo_gaussian_cutoff);
+                        sum += scoring_cuda_gpu_const.m_weights[1]
                                * vinardo_repulsion_eval(atom_xs_gpu[i], atom_xs_gpu[j],
-                                                        common_rs_gpu[k],
-                                                        sf_gpu->vinardo_repulsion_cutoff,
-                                                        sf_gpu->vinardo_repulsion_offset);
-                        sum += sf_gpu->m_weights[2]
+                                                        common_rs_gpu_const[k],
+                                                        scoring_cuda_gpu_const.vinardo_repulsion_cutoff,
+                                                        scoring_cuda_gpu_const.vinardo_repulsion_offset);
+                        sum += scoring_cuda_gpu_const.m_weights[2]
                                * vinardo_hydrophobic_eval(atom_xs_gpu[i], atom_xs_gpu[j],
-                                                          common_rs_gpu[k],
-                                                          sf_gpu->vinardo_hydrophobic_good,
-                                                          sf_gpu->vinardo_hydrophobic_bad,
-                                                          sf_gpu->vinardo_hydrophobic_cutoff);
-                        sum += sf_gpu->m_weights[3]
+                                                          common_rs_gpu_const[k],
+                                                          scoring_cuda_gpu_const.vinardo_hydrophobic_good,
+                                                          scoring_cuda_gpu_const.vinardo_hydrophobic_bad,
+                                                          scoring_cuda_gpu_const.vinardo_hydrophobic_cutoff);
+                        sum += scoring_cuda_gpu_const.m_weights[3]
                                * vinardo_non_dir_h_bond_eval(atom_xs_gpu[i], atom_xs_gpu[j],
-                                                             common_rs_gpu[k],
-                                                             sf_gpu->vinardo_non_dir_h_bond_good,
-                                                             sf_gpu->vinardo_non_dir_h_bond_bad,
-                                                             sf_gpu->vinardo_non_dir_h_bond_cutoff);
-                        sum += sf_gpu->m_weights[4]
+                                                             common_rs_gpu_const[k],
+                                                             scoring_cuda_gpu_const.vinardo_non_dir_h_bond_good,
+                                                             scoring_cuda_gpu_const.vinardo_non_dir_h_bond_bad,
+                                                             scoring_cuda_gpu_const.vinardo_non_dir_h_bond_cutoff);
+                        sum += scoring_cuda_gpu_const.m_weights[4]
                                * linearattraction_eval(atom_xs_gpu[i], atom_xs_gpu[j],
-                                                       common_rs_gpu[k],
-                                                       sf_gpu->linearattraction_cutoff);
+                                                       common_rs_gpu_const[k],
+                                                       scoring_cuda_gpu_const.linearattraction_cutoff);
                         p_data_gpu[offset].smooth[k][0] = sum;
                         // DEBUG_PRINTF("i=%d, j=%d, k=%d, sum=%f\n", i, j, k, sum);
                     }
@@ -113,30 +110,30 @@ __global__ void precalculate_gpu(triangular_matrix_cuda_t *m_data_gpu_list,
                     for (int k = 0; k < n; ++k) {
                         fl sum = 0;
                         // calculate smooth_e
-                        sum += sf_gpu->m_weights[0]
-                               * ad4_vdw_eval(atom_ad_gpu[i], atom_ad_gpu[j], common_rs_gpu[k],
-                                              sf_gpu->ad4_vdw_smoothing, sf_gpu->ad4_vdw_cap,
-                                              sf_gpu->ad4_vdw_cutoff);
-                        sum += sf_gpu->m_weights[1]
-                               * ad4_hb_eval(atom_ad_gpu[i], atom_ad_gpu[j], common_rs_gpu[k],
-                                             sf_gpu->ad4_hb_smoothing, sf_gpu->ad4_hb_cap,
-                                             sf_gpu->ad4_hb_cutoff);
-                        sum += sf_gpu->m_weights[2]
+                        sum += scoring_cuda_gpu_const.m_weights[0]
+                               * ad4_vdw_eval(atom_ad_gpu[i], atom_ad_gpu[j], common_rs_gpu_const[k],
+                                              scoring_cuda_gpu_const.ad4_vdw_smoothing, scoring_cuda_gpu_const.ad4_vdw_cap,
+                                              scoring_cuda_gpu_const.ad4_vdw_cutoff);
+                        sum += scoring_cuda_gpu_const.m_weights[1]
+                               * ad4_hb_eval(atom_ad_gpu[i], atom_ad_gpu[j], common_rs_gpu_const[k],
+                                             scoring_cuda_gpu_const.ad4_hb_smoothing, scoring_cuda_gpu_const.ad4_hb_cap,
+                                             scoring_cuda_gpu_const.ad4_hb_cutoff);
+                        sum += scoring_cuda_gpu_const.m_weights[2]
                                * ad4_electrostatic_eval(
-                                   atom_charge_gpu[i], atom_charge_gpu[j], common_rs_gpu[k],
-                                   sf_gpu->ad4_electrostatic_cap, sf_gpu->ad4_electrostatic_cutoff);
-                        sum += sf_gpu->m_weights[3]
+                                   atom_charge_gpu[i], atom_charge_gpu[j], common_rs_gpu_const[k],
+                                   scoring_cuda_gpu_const.ad4_electrostatic_cap, scoring_cuda_gpu_const.ad4_electrostatic_cutoff);
+                        sum += scoring_cuda_gpu_const.m_weights[3]
                                * ad4_solvation_eval_gpu(
                                    atom_ad_gpu[i], atom_xs_gpu[i], atom_charge_gpu[i],
                                    atom_ad_gpu[j], atom_xs_gpu[j], atom_charge_gpu[j],
-                                   sf_gpu->ad4_solvation_desolvation_sigma,
-                                   sf_gpu->ad4_solvation_solvation_q,
-                                   sf_gpu->ad4_solvation_charge_dependent,
-                                   sf_gpu->ad4_solvation_cutoff, common_rs_gpu[k]);
-                        sum += sf_gpu->m_weights[4]
+                                   scoring_cuda_gpu_const.ad4_solvation_desolvation_sigma,
+                                   scoring_cuda_gpu_const.ad4_solvation_solvation_q,
+                                   scoring_cuda_gpu_const.ad4_solvation_charge_dependent,
+                                   scoring_cuda_gpu_const.ad4_solvation_cutoff, common_rs_gpu_const[k]);
+                        sum += scoring_cuda_gpu_const.m_weights[4]
                                * linearattraction_eval(atom_xs_gpu[i], atom_xs_gpu[j],
-                                                       common_rs_gpu[k],
-                                                       sf_gpu->linearattraction_cutoff);
+                                                       common_rs_gpu_const[k],
+                                                       scoring_cuda_gpu_const.linearattraction_cutoff);
                         p_data_gpu[offset].smooth[k][0] = sum;
                         // DEBUG_PRINTF("i=%d, j=%d, k=%d, sum=%f\n", i, j, k, sum);
                     }
@@ -151,8 +148,8 @@ __global__ void precalculate_gpu(triangular_matrix_cuda_t *m_data_gpu_list,
                 if (k == 0 || k == n - 1) {
                     dor = 0;
                 } else {
-                    fl delta = common_rs_gpu[k + 1] - common_rs_gpu[k - 1];
-                    fl r = common_rs_gpu[k];
+                    fl delta = common_rs_gpu_const[k + 1] - common_rs_gpu_const[k - 1];
+                    fl r = common_rs_gpu_const[k];
                     dor = (p_data_gpu[offset].smooth[k + 1][0]
                            - p_data_gpu[offset].smooth[k - 1][0])
                           / (delta * r);
@@ -288,16 +285,9 @@ void precalculate_parallel(triangular_matrix_cuda_t *m_data_list_cpu,
             break;
         }
     }
-    scoring_function_cuda_t *scoring_cuda_gpu;
-    checkCUDA(cudaMalloc(&scoring_cuda_gpu, sizeof(scoring_function_cuda_t)));
-    checkCUDA(cudaMemcpy(scoring_cuda_gpu, &scoring_cuda, sizeof(scoring_function_cuda_t),
-                         cudaMemcpyHostToDevice));
 
     // transfer common_rs to gpu
-    fl *common_rs_gpu;
-    checkCUDA(cudaMalloc(&common_rs_gpu, FAST_SIZE * sizeof(fl)));
-    checkCUDA(cudaMemcpy(common_rs_gpu, common_rs.data(), FAST_SIZE * sizeof(fl),
-                         cudaMemcpyHostToDevice));
+    checkCUDA(cudaMemcpyToSymbol(common_rs_gpu_const, common_rs.data(), FAST_SIZE * sizeof(fl)));
 
     // malloc output buffer for m_data, array of precalculate_element
     triangular_matrix_cuda_t *m_data_gpu_list;
@@ -316,9 +306,10 @@ void precalculate_parallel(triangular_matrix_cuda_t *m_data_list_cpu,
 
     // TODO: launch kernel
     DEBUG_PRINTF("launch kernel precalculate_gpu, thread=%d\n", thread);
-    precalculate_gpu<<<thread / 4 + 1, 4>>>(m_data_gpu_list, scoring_cuda_gpu, atom_xs_gpu,
+    checkCUDA(cudaMemcpyToSymbol(scoring_cuda_gpu_const, &scoring_cuda, sizeof(scoring_function_cuda_t)));
+    precalculate_gpu<<<thread / 4 + 1, 4>>>(m_data_gpu_list, atom_xs_gpu,
                                             atom_ad_gpu, atom_charge_gpu, atom_num_gpu, 32,
-                                            common_rs_gpu, max_fl, thread, max_atom_num);
+                                            max_fl, thread, max_atom_num);
 
     checkCUDA(cudaDeviceSynchronize());
 
@@ -326,25 +317,10 @@ void precalculate_parallel(triangular_matrix_cuda_t *m_data_list_cpu,
 
     memcpy(m_data_list_cpu, m_data_cpu_list, sizeof(m_data_cpu_list));
 
-    // // debug printing, only check the first ligand
-    // DEBUG_PRINTF("energies about the first ligand on GPU:\n");
-    // for (int i = 0;i < precalculate_matrix_size[0]; ++i){
-    //     DEBUG_PRINTF("precalculated_byatom.m_data.m_data[%d]: (smooth.first, smooth.second, fast)
-    //     ", i); for (int j = 0;j < FAST_SIZE; ++j){
-    //         DEBUG_PRINTF("(%f, %f, %f) ",
-    //         m_precalculated_byatom_gpu[0].m_data.m_data[i].smooth[j].first,
-    //         m_precalculated_byatom_gpu[0].m_data.m_data[i].smooth[j].second,
-    //         m_precalculated_byatom_gpu[0].m_data.m_data[i].fast[j]);
-    //     }
-    //     DEBUG_PRINTF("\n");
-    // }
-
     // TODO: free memory
     checkCUDA(cudaFree(atom_xs_gpu));
     checkCUDA(cudaFree(atom_ad_gpu));
     checkCUDA(cudaFree(atom_charge_gpu));
     checkCUDA(cudaFree(atom_num_gpu));
-    checkCUDA(cudaFree(scoring_cuda_gpu));
-    checkCUDA(cudaFree(common_rs_gpu));
     checkCUDA(cudaFree(m_data_gpu_list));
 }
