@@ -11,7 +11,7 @@ COPY . /opt/unidock
 
 RUN cd /opt/unidock && \
     cmake -B build && \
-    cmake --build build -j`nprocs` && \
+    cmake --build build -j`nproc` && \
     cmake --install build && \
     rm -r /opt/unidock
 
