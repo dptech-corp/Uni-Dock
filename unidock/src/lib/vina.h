@@ -36,7 +36,7 @@
 #include <boost/program_options.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/filesystem/exception.hpp>
-#include <boost/filesystem/convenience.hpp>  // filesystem::basename
+#include <boost/filesystem.hpp>  // filesystem::basename
 #include <boost/thread/thread.hpp>           // hardware_concurrency // FIXME rm ?
 #include <boost/algorithm/string.hpp>
 // #include <openbabel/mol.h>
@@ -216,7 +216,7 @@ public:
     sstm << "Performing docking (random seed: " << m_seed << ")";
     doing(sstm.str(), m_verbosity, 0);
     auto start = std::chrono::system_clock::now();
-   
+
     if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO) {
         mc.do_docking<Config>(m_model_gpu, poses_gpu, m_precalculated_byatom_gpu, m_data_list_gpu, m_grid,
            m_grid.corner1(), m_grid.corner2(), generator, m_verbosity, seed, bias_batch_list);
