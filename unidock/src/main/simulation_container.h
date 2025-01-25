@@ -327,8 +327,7 @@ struct simulation_container {
             complex_property& cp
                 = m_ptr_complex_property_holder->m_properties[m_successful_property_count];
 
-            if (boost::filesystem::extension(m_ligand_config_paths[id].path().string())
-                == ".json") {
+            if (m_ligand_config_paths[id].path().extension().string() == ".json") {
                 try {
                     success_filled = fill_config_from_json(
                         cp, m_ligand_config_paths[id].path().string(),
