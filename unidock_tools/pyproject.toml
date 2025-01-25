@@ -9,7 +9,9 @@ version = "0.0.1"
 keywords = [ "Docking" ]
 authors = [
     { name = "Yannan Yuan", email = "yuanyn@dp.tech" },
-    { name = "Hang Zheng", email = "zhengh@dp.tech" }
+    { name = "Hang Zheng", email = "zhengh@dp.tech" },
+    { name = "Hong-Rui Lin", email = "linhongrui@dp.tech" },
+    { name = "Pengli Zhang", email = "zhangpengli@dp.tech" }
 ]
 description = "Several docking-related applications based on Uni-Dock."
 readme = "README.md"
@@ -31,7 +33,8 @@ classifiers = [
 ]
 
 [tool.setuptools.package-data]
-"*" = ["*.dat"]
+"*" = ["*/templates/*", "*/receptor_topology/bin/*","*/receptor_topology/data/*"]
+
 
 [project.urls]
 Homepage = "https://github.com/dptech-corp/Uni-Dock"
@@ -56,3 +59,4 @@ reportMissingModuleSource = false
 reportAttributeAccessIssue = false
 reportIncompatibleMethodOverride = false
 reportCallIssue = false
+reportArgumentType = false
