@@ -30,7 +30,7 @@
 #include <boost/program_options.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/filesystem/exception.hpp>
-#include <boost/filesystem/convenience.hpp>  // filesystem::basename
+#include <boost/filesystem.hpp>  // filesystem::basename
 
 #include "file.h"
 #include "parse_error.h"
