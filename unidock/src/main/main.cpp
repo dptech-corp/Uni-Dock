@@ -109,6 +109,11 @@ void classifyLigands(const std::vector<Ligand>& ligands,std::vector<Ligand> &sma
         } else if (lig.num_atoms <= atomThresholds[3] && lig.num_torsions <= torsionThresholds[3] &&
                    lig.num_rigids <= rigidThresholds[3] && lig.num_lig_pairs <= pairThresholds[3]) {
             extraLargeGroup.push_back(lig);
+        } else if (lig.num_atoms <= atomThresholds[4] &&
+                   lig.num_torsions <= torsionThresholds[4] &&
+                   lig.num_rigids <= rigidThresholds[4] &&
+                   lig.num_lig_pairs <= pairThresholds[4]) {
+            maxGroup.push_back(lig);
         } else {
             overflowGroup.push_back(lig);
         }
