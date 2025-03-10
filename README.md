@@ -29,10 +29,15 @@ The benchmarks are publicly available at <https://github.com/dptech-corp/Uni-Doc
 
 
 ## Changelog
-
+- 2025-03-10: Relicense the entire repository under Apache 2.0.
 - 2024-02-29: Release [Uni-Dock v1.1](./unidock/README.md#changelog) and [Uni-Dock Tools](./unidock_tools/README.md).
 - 2023-08-21: Upload source codes of Uni-Dock.
 - 2023-08-14: Add Uni-Dock Tools to support SDF format input for vina and vinardo scoring functions.
+
+## License
+Uni-Dock is licensed under the **Apache License 2.0**.
+
+Previously, the `unidock/` directory was licensed under LGPL 3, but as of **March 10, 2025**, the entire repository has been relicensed under Apache 2.0 for better consistency and compatibility.
 
 ## Citation
 
