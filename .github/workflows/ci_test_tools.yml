@@ -56,7 +56,7 @@ jobs:
     needs: [flake8,pyright]
     runs-on: nvidia
     container:
-      image: dptechnology/unidock_tools
+      image: nvidia/cuda:12.2.0-devel-ubuntu22.04
       options: --gpus all
     steps:
     - name: checkout repo
@@ -65,7 +65,7 @@ jobs:
     - name: install unidock
       working-directory: ./unidock
       run: |
-        apt-get update && apt-get install -y ninja-build
+        apt-get update && apt-get install -y build-essential cmake libboost-all-dev ninja-build git wget
         mkdir build
         cd build
         cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release
@@ -73,24 +73,30 @@ jobs:
         cmake --install .
         cd ..
 
-    - name: check env
-      run: |
-        unidock --version
-        confgen --version
-        which python
-
     - name: install tools
       working-directory: ./unidock_tools
       run: |
+        wget --quiet -O conda.sh https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh
+        bash conda.sh -b -p /opt/conda
+        rm conda.sh
+        export PATH=/opt/conda/bin:$PATH
+
+        wget --quiet -O CDPKit.sh https://github.com/molinfo-vienna/CDPKit/releases/download/v1.1.0/CDPKit-1.1.0-Linux-x86_64.sh
+        echo y | bash CDPKit.sh --cpack_skip_license --include-subdir
+        rm CDPKit.sh
+
+        mamba install -y ipython requests tqdm python-lmdb openbabel ambertools openmm cuda-version=12.0 -c conda-forge
         pip install .
 
     - name: run unit-test
       working-directory: ./unidock_tools
       run: |
+        export PATH=/opt/conda/bin:$PATH
         pip install pytest pytest-cov
         pytest tests/ut -vv --cov --cov-report term
 
     - name: run application e2e test
       working-directory: ./unidock_tools
       run: |
+        export PATH=/opt/conda/bin:$PATH
         pytest tests/applications -vv --cov --cov-report term

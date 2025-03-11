@@ -92,4 +92,4 @@ See [MCDock Usage](./MCDOCK.md#usage)
 
 # License
 
-This project is licensed under the terms of Apache license 2.0. See [LICENSE](./LICENSE) for additional details.
+This project is licensed under the terms of Apache license 2.0. See [LICENSE](../LICENSE) for additional details.
