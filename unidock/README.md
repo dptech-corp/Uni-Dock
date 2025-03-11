@@ -220,7 +220,9 @@ Major changes are documented. For the detailed changes, please refer to the comm
 
 ## License
 
-This project is licensed under the terms of the GNU Lesser General Public License v3.0. See [LICENSE](./LICENSE) for details.
+This project is licensed under the terms of the **Apache License Version 2.0**. See [LICENSE](../LICENSE) for details.
+
+Previously, the Uni-Dock project was licensed under LGPL 3, but as of **March 10, 2025**, the entire repository has been relicensed under Apache 2.0 for better consistency and compatibility.
 
 Developed by [DP Technology](https://dp.tech/en), [Hermite®](https://dp.tech/en/product/hermite) is a new-generation drug computing design platform which integrates artificial intelligence, physical modeling and high-performance computing to provide a one-stop computing solution for preclinical drug research and development. It integrates the features of Uni-Dock, along with virtual screening workflow for an efficient drug discovery process.
 
