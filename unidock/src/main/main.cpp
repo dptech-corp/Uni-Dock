@@ -901,6 +901,43 @@ bug reporting, license agreements, and more information.      \n";
                 v.global_search(exhaustiveness, num_modes, min_rmsd, max_evals);
                 v.write_poses(out_name, num_modes, energy_range);
             }
+        } else if (vm.count("batch")) {
+            if (randomize_only) {
+                printf("Not available under batch mode.\n");
+                return 0;
+            }
+            
+            if (sf_name.compare("vina") == 0 || sf_name.compare("vinardo") == 0) {
+                if (vm.count("maps")) {
+                    v.load_maps(maps);
+                } else {
+                    // Will compute maps for all Vina atom types
+                    v.compute_vina_maps(center_x, center_y, center_z, size_x, size_y, size_z,
+                                      grid_spacing, force_even_voxels);
+
+                    if (vm.count("write_maps")) v.write_maps(out_maps);
+                }
+            }
+
+            std::vector<std::string> ligand_names{std::move(batch_ligand_names)};
+            std::cout << "Total ligands (batch mode): " << ligand_names.size() << std::endl;
+
+            for (size_t i = 0; i < ligand_names.size(); ++i) {
+                std::vector<model> ligands;
+                ligands.emplace_back(parse_ligand_from_file_no_failure(
+                    ligand_names[i], v.m_scoring_function->get_atom_typing(), keep_H));
+                Vina v1(v);  // reuse init'ed maps
+                v1.set_ligand_from_object(ligands);
+                
+                std::string out_file = default_output(get_filename(ligand_names[i]), out_dir);
+                
+                v1.global_search(exhaustiveness, num_modes, min_rmsd, max_evals);
+                
+                v1.write_poses(out_file, num_modes, energy_range);
+                
+                std::cout << "Processed " << (i + 1) << "/" << ligand_names.size() 
+                          << ": " << ligand_names[i] << std::endl;
+            }
         } else if (vm.count("gpu_batch") || vm.count("ligand_index")) {
             if (randomize_only) {
                 printf("Not available under gpu_batch mode.\n");
