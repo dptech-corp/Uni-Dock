@@ -1,13 +1,11 @@
-from typing import List, Generator, Any, Optional, Union
+from typing import List, Generator, Any, Optional
 from pathlib import Path
 import os
 import copy
 import logging
 import math
-from multiprocessing import Pool
 from rdkit import Chem
 
-from .string import make_tmp_dir, randstr
 from .rdkit_helper import sdf_writer, set_properties, clear_properties
 from .read_ligand import read_ligand
 
@@ -130,14 +128,13 @@ class MolGroup:
 
     def write_sdf_by_idx(self,
                          idx: int,
-                         save_dir: Union[str, os.PathLike],
+                         save_dir: Path,
                          seperate_conf: bool = False,
                          conf_prefix: str = "_CONF",
                          props_list: List[str] = [],
                          exclude_props_list: List[str] = [],
                          ) -> List[Path]:
-        save_dir = make_tmp_dir(str(save_dir), False, False)
-
+        os.makedirs(save_dir, exist_ok=True)
         mol_confs_copy = [self.mol_group[idx].get_rdkit_mol_conf_with_props(
             conf_idx, props_list, exclude_props_list) for conf_idx in range(
                 len(self.mol_group[idx]))]
@@ -146,16 +143,16 @@ class MolGroup:
         sdf_file_list = []
         if seperate_conf:
             for conf_id, mol_conf in enumerate(mol_confs_copy):
-                save_name = f"{save_dir}/{file_prefix}{conf_prefix}{conf_id}.sdf"
-                sdf_writer([mol_conf], save_name)
-                sdf_file_list.append(Path(save_name))
+                save_path = save_dir / f"{file_prefix}{conf_prefix}{conf_id}.sdf"
+                sdf_writer([mol_conf], save_path)
+                sdf_file_list.append(save_path)
         else:
-            save_name = f"{save_dir}/{file_prefix}.sdf"
-            sdf_writer(mol_confs_copy, save_name)
-            sdf_file_list.append(Path(save_name))
+            save_path = save_dir / f"{file_prefix}.sdf"
+            sdf_writer(mol_confs_copy, save_path)
+            sdf_file_list.append(save_path)
         return sdf_file_list
 
-    def write_sdf(self, save_dir: Union[str, os.PathLike],
+    def write_sdf(self, save_dir: Path,
                   seperate_conf: bool = False,
                   conf_prefix: str = "_CONF",
                   props_list: List[str] = [],

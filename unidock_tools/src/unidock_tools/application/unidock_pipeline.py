@@ -1,4 +1,4 @@
-from typing import List, Tuple, Iterable, Union, Optional
+from typing import List, Tuple, Iterable, Optional
 from pathlib import Path
 import os
 import time
@@ -12,9 +12,8 @@ from multiprocess import Pool
 from rdkit import Chem
 from rdkit.Chem.PropertyMol import PropertyMol
 
-
-from unidock_tools.utils import time_logger, randstr, make_tmp_dir, read_ligand, sdf_writer
-from unidock_tools.modules.protein_prep import receptor_preprocessor
+from unidock_tools.utils import time_logger, randstr, read_ligand, sdf_writer
+from unidock_tools.modules.protein_prep import pdb2pdbqt
 from unidock_tools.modules.ligand_prep import TopologyBuilder
 from unidock_tools.modules.docking import run_unidock
 from .base import Base
@@ -32,7 +31,7 @@ DEFAULT_ARGS = {
     "size_z": 22.5,
     "workdir": "docking_workdir",
     "savedir": "docking_results",
-    "batch_size": 1200,
+    "batch_size": 18000,
     "scoring_function": "vina",
     "search_mode": "",
     "exhaustiveness": 128,
@@ -55,61 +54,49 @@ class UniDock(Base):
     def __init__(self,
                  receptor: Path,
                  ligands: List[Path],
+                 workdir: Path,
                  center_x: float,
                  center_y: float,
                  center_z: float,
                  size_x: float = 22.5,
                  size_y: float = 22.5,
                  size_z: float = 22.5,
-                 kept_ligand_resname_list: Optional[List[str]] = None,
-                 prepared_hydrogen: bool = True,
-                 preserve_original_resname: bool = True,
-                 covalent_residue_atom_info_list: Optional[List[Tuple[str, str]]] = None,
-                 generate_ad4_grids: bool = False,
                  bias_file: Optional[Path] = None,
                  multi_bias_files: List[Path] = [],
-                 workdir: Path = Path("docking_pipeline"),
                  ):
         """
         Initializes a UniDock object.
 
         Args:
-            receptor (Path): Path to the receptor file in PDB format.
+            receptor (Path): Path to the receptor file in PDB or PDBQT format.
             ligands (List[Path]): List of paths to the ligand files in SDF format.
+            workdir (Path): Path to the working directory.
             center_x (float): X-coordinate of the center of the docking box.
             center_y (float): Y-coordinate of the center of the docking box.
             center_z (float): Z-coordinate of the center of the docking box.
             size_x (float, optional): Size of the docking box in the x-dimension. Defaults to 22.5.
             size_y (float, optional): Size of the docking box in the y-dimension. Defaults to 22.5.
             size_z (float, optional): Size of the docking box in the z-dimension. Defaults to 22.5.
-            kept_ligand_resname_list (List[str], optional): List of ligand residue names to keep during receptor preprocessing. Defaults to None.
-            prepared_hydrogen (bool, optional): Whether to prepare hydrogen during receptor preprocessing. Defaults to True.
-            preserve_original_resname (bool, optional): Whether to preserve the original residue names during receptor preprocessing. Defaults to True.
-            covalent_residue_atom_info_list (List[Tuple[str, str]], optional): Atom information for covalent residues during receptor preprocessing. Defaults to None.
-            workdir (Path, optional): Path to the working directory. Defaults to Path("docking_pipeline").
+            bias_file (Optional[Path], optional): Path to the bias file. Defaults to None.
+            multi_bias_files (List[Path], optional): List of paths to multiple bias files. Defaults to [].
         """
         self.check_dependencies()
 
         self.workdir = workdir
         self.workdir.mkdir(parents=True, exist_ok=True)
 
-        if receptor.suffix != '.pdb':
-            logging.error('receptor file must be in PDB format!')
+        if receptor.suffix == '.pdb':
+            try:
+                pdb2pdbqt(str(receptor), str(workdir.joinpath(receptor.stem + ".pdbqt")))
+                receptor = workdir.joinpath(receptor.stem + ".pdbqt")
+            except Exception as e:
+                logging.error(f"Failed to convert PDB file to PDBQT: {e}")
+                exit(1)
+        if receptor.suffix != '.pdbqt':
+            logging.error("receptor file must be pdb/pdbqt format")
             exit(1)
-        else:
-            receptor_pdbqt_file_name, protein_grid_prefix = receptor_preprocessor(str(receptor),
-                                                                                  kept_ligand_resname_list=kept_ligand_resname_list,
-                                                                                  prepared_hydrogen=prepared_hydrogen,
-                                                                                  preserve_original_resname=preserve_original_resname,
-                                                                                  target_center=(center_x, center_y, center_z),
-                                                                                  box_size=(size_x, size_y, size_z),
-                                                                                  covalent_residue_atom_info_list=covalent_residue_atom_info_list,
-                                                                                  generate_ad4_grids=generate_ad4_grids,
-                                                                                  working_dir_name=str(workdir))
 
-            self.receptor = receptor_pdbqt_file_name
-            self.ad4_map_prefix = protein_grid_prefix
-
+        self.receptor = receptor
         self.mols = sum([read_ligand(ligand) for ligand in ligands], [])
         self.mols = [PropertyMol(mol) for mol in self.mols]
         self.bias_file = bias_file
@@ -165,7 +152,7 @@ class UniDock(Base):
                     logging.info(filename)
                     logging.info(self.multi_bias_files_dict)
                     if filename in self.multi_bias_files_dict:
-                        shutil.copyfile(self.multi_bias_files_dict[filename], os.path.join(input_dir, f"{filename}.bpf"))
+                        shutil.copyfile(self.multi_bias_files_dict[filename], input_dir.joinpath(f"{filename}.bpf"))
                     else:
                         logging.warning(f"Cannot find bias file in multi-bias mode for {filename}")
             yield input_list
@@ -175,22 +162,25 @@ class UniDock(Base):
                 save_dir: Path,
                 scoring_function: str = "vina",
                 search_mode: str = "",
-                exhaustiveness: int = 256,
-                max_step: int = 10,
+                exhaustiveness: int = 128,
+                max_step: int = 20,
                 num_modes: int = 3,
                 refine_step: int = 3,
                 energy_range: float = 3.0,
                 seed : int = 181129,
-                batch_size: int = 1200,
+                batch_size: int = 18000,
                 score_only: bool = False,
                 local_only: bool = False,
                 multi_bias: bool = False,
                 score_name: str = "docking_score",
-                docking_dir_name : str = "docking_dir",
-                topn: int = 10,
+                topn: int = 100,
+                debug: bool = False,
         ):
-        input_dir = make_tmp_dir(f"{self.workdir}/{docking_dir_name}/docking_inputs", date=False)
-        output_dir = make_tmp_dir(f"{self.workdir}/{docking_dir_name}/docking_results", date=False)
+        input_dir = self.workdir.joinpath("docking_inputs")
+        input_dir.mkdir(parents=True, exist_ok=True)
+        output_dir = self.workdir.joinpath("docking_results")
+        output_dir.mkdir(parents=True, exist_ok=True)
+
         for ligand_list in self.init_docking_data(
                 input_dir=input_dir,
                 batch_size=batch_size,
@@ -201,44 +191,66 @@ class UniDock(Base):
                 receptor=self.receptor, ligands=ligand_list, output_dir=output_dir,
                 center_x=self.center_x, center_y=self.center_y, center_z=self.center_z,
                 size_x=self.size_x, size_y=self.size_y, size_z=self.size_z,
-                scoring=scoring_function, ad4_map_prefix=self.ad4_map_prefix, num_modes=num_modes,
+                scoring=scoring_function, num_modes=num_modes,
                 search_mode=search_mode, exhaustiveness=exhaustiveness, max_step=max_step, 
                 seed=seed, refine_step=refine_step, energy_range=energy_range, bias_file=self.bias_file,
                 score_only=score_only, local_only=local_only, multi_bias=multi_bias,
+                debug=debug,
             )
-            self.postprocessing(ligand_scores_list=zip(ligands, scores_list), 
+            self.postprocessing(ligands=ligands, 
+                                scores_list=scores_list, 
                                 save_dir=save_dir,
-                                topn_conf=topn, score_name=score_name)
+                                topn_conf=topn, 
+                                score_name=score_name,
+                                )
 
-    def _postprocessing(self, ligand_scores_tup: Tuple,
+    def _postprocessing(self, ligand_scores_tup: Tuple[Path, List[float]],
                        save_dir: Path,
-                       topn_conf: int = 10,
-                       score_name: str = "score"):
+                       topn_conf: int = 100,
+                       score_name: str = "score") -> List[Tuple[str, str, int, float]]:
         ligand, scores = ligand_scores_tup
         result_mols = [mol for mol in Chem.SDMolSupplier(str(ligand), removeHs=False)]
         if topn_conf and topn_conf < len(result_mols):
             result_mols = result_mols[:topn_conf]
+
+        table_contents = []
         for i, mol in enumerate(result_mols):
             mol.SetDoubleProp(score_name, scores[i])
             for prop_name in ["Uni-Dock RESULT", "filename", "fragInfo", "torsionInfo", "atomInfo"]:
                 if mol.HasProp(prop_name):
                     mol.ClearProp(prop_name)
-        sdf_writer(result_mols, os.path.join(save_dir, f"{Path(ligand).stem.rstrip('_out')}.sdf"))
+            table_contents.append((ligand.stem.rstrip('_out'), str(mol.GetProp("_Name")), i, scores[i]))
+        out_path = save_dir / f"{ligand.stem.rstrip('_out')}.sdf"
+        sdf_writer(result_mols, out_path)
+        return table_contents
 
     @time_logger
-    def postprocessing(self, ligand_scores_list: Iterable,
+    def postprocessing(self, 
+                       ligands: List[Path],
+                       scores_list: List[List[float]],
                        save_dir: Path,
-                       topn_conf: int = 10,
-                       score_name: str = "score"):
+                       topn_conf: int = 100,
+                       score_name: str = "score",
+                       ):
         os.makedirs(save_dir, exist_ok=True)
         with Pool(os.cpu_count()) as pool:
-            pool.map(partial(self._postprocessing, save_dir=save_dir, topn_conf=topn_conf, score_name=score_name), ligand_scores_list)   
+            multi_table_contents = pool.map(partial(self._postprocessing, 
+                             save_dir=save_dir, 
+                             topn_conf=topn_conf, 
+                             score_name=score_name), 
+                     zip(ligands, scores_list))
+
+        csv_str = "file_name,mol_name,conf_id,score\n"
+        for table_contents in multi_table_contents:
+            for file_name, mol_name, conf_id, score in table_contents:
+                csv_str += f"{file_name},{mol_name},{conf_id},{score}\n"
+        with open(save_dir / "results.csv", "w") as f:
+            f.write(csv_str)
 
 
 def main(args: dict):
-    args = {**DEFAULT_ARGS, **args}
-    workdir = Path(args["workdir"]).resolve()
     savedir = Path(args["savedir"]).resolve()
+    workdir = savedir / f"workdir_{randstr(5)}"
 
     ligands = []
     if args.get("ligands"):
@@ -259,11 +271,6 @@ def main(args: dict):
         logging.error("No ligands found.")
         exit(1)
     logging.info(f"[UniDock Pipeline] {len(ligands)} ligands found.")
-
-    if args['scoring_function'] == 'ad4':
-        generate_ad4_grids = True
-    else:
-        generate_ad4_grids = False
 
     bias_file = None
     if args.get("bias_file"):
@@ -286,60 +293,47 @@ def main(args: dict):
             index_lines1 = [line.strip() for line in index_content.split("\n") if line.strip()]
             index_lines2 = [line.strip() for line in index_content.split(" ") if line.strip()]
             multi_bias_file_list.extend(index_lines2 if len(index_lines2) > len(index_lines1) else index_lines1)
-            multi_bias_file_list = [Path(multi_bias_file).resolve() for multi_bias_file in multi_bias_file_list if Path(multi_bias_file).exists()]
+            multi_bias_file_list = [Path(multi_bias_file).resolve() for multi_bias_file in multi_bias_file_list \
+                                    if Path(multi_bias_file).exists()]
         
         if len(multi_bias_file_list) != len(ligands):
             logging.error("Number of ligands and bias files should be equal in multi-bias mode.")
             exit(1)
 
     logging.info("[UniDock Pipeline] Start")
-    start_time = time.time()
-    def parse_covalent_residue_atom_info(covalent_residue_atom_info_str: str) -> List[List[Tuple[str, str, int, str]]]:
-        residue_info_list = []
-        residue_atoms = covalent_residue_atom_info_str.split(',')
-        for residue_atom in residue_atoms:
-            residue_info = residue_atom.strip().split()
-            chain_id, residue_name, residue_number, atom_name = residue_info
-            residue_info_list.append((chain_id, residue_name, int(residue_number), atom_name))
-        return residue_info_list
-    
+    start_time = time.time()   
     runner = UniDock(
         receptor=Path(args["receptor"]).resolve(),
         ligands=ligands,
-        center_x=float(args["center_x"]),
-        center_y=float(args["center_y"]),
-        center_z=float(args["center_z"]),
-        size_x=float(args["size_x"]),
-        size_y=float(args["size_y"]),
-        size_z=float(args["size_z"]),
-        kept_ligand_resname_list=args.get("kept_ligand_resname_list"),
-        prepared_hydrogen=args.get("prepared_hydrogen", True),
-        preserve_original_resname=args.get("preserve_original_resname", True),
-        covalent_residue_atom_info_list=parse_covalent_residue_atom_info(args.get("covalent_residue_atom_info")) if args.get("covalent_residue_atom_info") is not None else None,
-        generate_ad4_grids=generate_ad4_grids,
+        workdir=workdir,
+        center_x=args["center_x"],
+        center_y=args["center_y"],
+        center_z=args["center_z"],
+        size_x=args["size_x"],
+        size_y=args["size_y"],
+        size_z=args["size_z"],
         bias_file=bias_file,
         multi_bias_files=multi_bias_file_list,
-        workdir=workdir,
     )
 
     logging.info("[UniDock Pipeline] Start docking")
     runner.docking(
         save_dir=savedir,
-        scoring_function=str(args["scoring_function"]),
-        search_mode=str(args["search_mode"]),
-        exhaustiveness=int(args["exhaustiveness"]),
-        max_step=int(args["max_step"]),
-        num_modes=int(args["num_modes"]),
-        refine_step=int(args["refine_step"]),
-        energy_range=float(args["energy_range"]),
+        scoring_function=args["scoring_function"],
+        search_mode=args["search_mode"],
+        exhaustiveness=args["exhaustiveness"],
+        max_step=args["max_step"],
+        num_modes=args["num_modes"],
+        refine_step=args["refine_step"],
+        energy_range=args["energy_range"],
         seed=args["seed"],
-        batch_size=int(args["batch_size"]),
-        score_only=bool(args["score_only"]),
-        local_only=bool(args["local_only"]),
-        multi_bias=bool(args["multi_bias"]),
+        batch_size=args["batch_size"],
+        score_only=args["score_only"],
+        local_only=args["local_only"],
+        multi_bias=args["multi_bias"],
         score_name="docking_score",
-        docking_dir_name="docking_dir",
-        topn=int(args["topn"]),
+        topn=args["topn"],
+        debug=args["debug"],
     )
     end_time = time.time()
     logging.info(f"UniDock Pipeline finished ({end_time - start_time:.2f} s)")
@@ -376,21 +370,10 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument("-sz", "--size_z", type=float, default=22.5,
                         help="Width of the docking box in Z direction. Default: 22.5.")
 
-    parser.add_argument("-kr", "--kept_ligand_resname_list", type=str, nargs='+', default=None,
-                        help="List of ligand residue names to keep during receptor preprocessing. Default:None")
-    parser.add_argument("-ph", "--prepared_hydrogen", action="store_false",
-                        help="Whether to prepare hydrogen during receptor preprocessing.")
-    parser.add_argument("-pr", "--preserve_resname", action="store_false",
-                        help="Whether to preserve the original residue names during receptor preprocessing.")
-    parser.add_argument("-cra", "--covalent_residue_atom_info", type=str, default=None,
-                        help="Atom information for covalent residues during receptor preprocessing.To use it like this: -cra 'A VAL 1 CA, A VAL 1 CB, A VAL 1 O'")
-
-    parser.add_argument("-wd", "--workdir", type=str, default=f"unidock_pipeline_{randstr(5)}",
-                        help="Working directory. Default: 'MultiConfDock'.")
     parser.add_argument("-sd", "--savedir", type=str, default="unidock_results",
-                        help="Save directory. Default: 'MultiConfDock-Result'.")
+                        help="Save directory. Default: 'unidock_results'.")
     parser.add_argument("-bs", "--batch_size", type=int, default=18000,
-                        help="Batch size for docking. Default: 1200.")
+                        help="Batch size for docking. Default: 18000.")
 
     parser.add_argument("-sf", "--scoring_function",
                         type=str, default="vina",
@@ -454,17 +437,20 @@ def main_cli():
     -cra, --covalent_residue_atom_info: Atom information for covalent residues during receptor preprocessing  (Default: None). To use it like this: -cra 'A VAL 1 CA, A VAL 1 CB, A VAL 1 O'
 
     Optional arguments:
-    -wd, --workdir: working directory (default: MultiConfDock)
-    -sd, --savedir: save directory (default: MultiConfDock-Result)
-    -bs, --batch_size: batch size for docking (default: 20)
+    -sd, --savedir: save directory (default: unidock_results)
+    -bs, --batch_size: batch size for docking (default: 18000)
 
     Uni-Dock arguments:
     -sf, --scoring_function: scoring function used in rigid docking (default: vina)
-    -ex, --exhaustiveness: exhaustiveness used in rigid docking (default: 256)
-    -ms, --max_step: max_step used in rigid docking (default: 10)
+    -ex, --exhaustiveness: exhaustiveness used in rigid docking (default: 128)
+    -ms, --max_step: max_step used in rigid docking (default: 20)
     -nm, --num_modes: num_modes used in rigid docking (default: 3)
     -rs, --refine_step: refine_step used in rigid docking (default: 3)
-    -topn, --topn: topn used in rigid docking (default: 200)
+    -topn, --topn: topn used in rigid docking (default: 100)
+
+    Optional arguments:
+    -seed, --seed: Uni-Dock random seed (default: 181129)
+    -debug, --debug: debug mode (default: False)
     """
     parser = get_parser()
     args = parser.parse_args().__dict__

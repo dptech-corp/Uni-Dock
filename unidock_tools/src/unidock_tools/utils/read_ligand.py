@@ -2,7 +2,6 @@ from typing import Union, List
 from pathlib import Path
 import os
 import logging
-import traceback
 from rdkit import Chem
 
 
