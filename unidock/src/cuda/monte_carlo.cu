@@ -511,7 +511,7 @@ __host__ void monte_carlo::mc_stream(
 
         // Preparing ligand data
         DEBUG_PRINTF("prepare ligand data\n");
-        assert(m.num_other_pairs() == 0);  // m.other_pairs is not supported!
+        // Flex residue other_pairs are now supported
         assert(m.ligands.size() <= 1);     // Only one ligand supported!
 
         if (m.ligands.size() == 0) {  // ligand parsing error
@@ -550,6 +550,16 @@ __host__ void monte_carlo::mc_stream(
                 m_cuda->ligand.pairs.type_pair_index[i] = m.ligands[0].pairs[i].type_pair_index;
                 m_cuda->ligand.pairs.a[i] = m.ligands[0].pairs[i].a;
                 m_cuda->ligand.pairs.b[i] = m.ligands[0].pairs[i].b;
+            }
+            // Copy other_pairs (flex-flex interactions)
+            {
+                interacting_pairs op = m.get_other_pairs();
+                m_cuda->other_pairs.num_pairs = std::min((int)op.size(), (int)(sizeof(m_cuda->other_pairs.a)/sizeof(m_cuda->other_pairs.a[0])));
+                for (int i = 0; i < m_cuda->other_pairs.num_pairs; i++) {
+                    m_cuda->other_pairs.type_pair_index[i] = op[i].type_pair_index;
+                    m_cuda->other_pairs.a[i] = op[i].a;
+                    m_cuda->other_pairs.b[i] = op[i].b;
+                }
             }
             m_cuda->ligand.begin = m.ligands[0].begin;  // 0
             m_cuda->ligand.end = m.ligands[0].end;      // 29
@@ -613,11 +623,9 @@ __host__ void monte_carlo::mc_stream(
             /* Prepare rand_molec_struc data */
             int lig_torsion_size = tmp.c.ligands[0].torsions.size();
             DEBUG_PRINTF("lig_torsion_size=%d\n", lig_torsion_size);
-            int flex_torsion_size;
-            if (tmp.c.flex.size() != 0)
-                flex_torsion_size = tmp.c.flex[0].torsions.size();
-            else
-                flex_torsion_size = 0;
+            int flex_torsion_size = 0;
+            for (int fi = 0; fi < tmp.c.flex.size(); fi++)
+                flex_torsion_size += tmp.c.flex[fi].torsions.size();
             // std::vector<vec> uniform_data;
             // uniform_data.resize(thread);
 
@@ -634,9 +642,13 @@ __host__ void monte_carlo::mc_stream(
                     rand_molec_struc_tmp->lig_torsion[j]
                         = tmp.c.ligands[0].torsions[j];  // Only support one ligand
                 assert(flex_torsion_size <= MAX_NUM_OF_FLEX_TORSION);
-                for (int j = 0; j < flex_torsion_size; j++)
-                    rand_molec_struc_tmp->flex_torsion[j]
-                        = tmp.c.flex[0].torsions[j];  // Only support one flex
+                {
+                    int ft_idx = 0;
+                    for (int fi = 0; fi < tmp.c.flex.size(); fi++)
+                        for (int j = 0; j < tmp.c.flex[fi].torsions.size(); j++)
+                            rand_molec_struc_tmp->flex_torsion[ft_idx++]
+                                = tmp.c.flex[fi].torsions[j];
+                }
 
                 rand_molec_struc_tmp->orientation[0]
                     = (float)tmp.c.ligands[0].rigid.orientation.R_component_1();
@@ -1309,7 +1321,7 @@ __host__ void monte_carlo::operator()(
 
         // Preparing ligand data
         DEBUG_PRINTF("prepare ligand data\n");
-        assert(m.num_other_pairs() == 0);  // m.other_pairs is not supported!
+        // Flex residue other_pairs are now supported
         assert(m.ligands.size() <= 1);     // Only one ligand supported!
 
         if (m.ligands.size() == 0) {  // ligand parsing error
@@ -1347,6 +1359,16 @@ __host__ void monte_carlo::operator()(
                 m_cuda->ligand.pairs.type_pair_index[i] = m.ligands[0].pairs[i].type_pair_index;
                 m_cuda->ligand.pairs.a[i] = m.ligands[0].pairs[i].a;
                 m_cuda->ligand.pairs.b[i] = m.ligands[0].pairs[i].b;
+            }
+            // Copy other_pairs (flex-flex interactions)
+            {
+                interacting_pairs op = m.get_other_pairs();
+                m_cuda->other_pairs.num_pairs = std::min((int)op.size(), (int)(sizeof(m_cuda->other_pairs.a)/sizeof(m_cuda->other_pairs.a[0])));
+                for (int i = 0; i < m_cuda->other_pairs.num_pairs; i++) {
+                    m_cuda->other_pairs.type_pair_index[i] = op[i].type_pair_index;
+                    m_cuda->other_pairs.a[i] = op[i].a;
+                    m_cuda->other_pairs.b[i] = op[i].b;
+                }
             }
             m_cuda->ligand.begin = m.ligands[0].begin;  // 0
             m_cuda->ligand.end = m.ligands[0].end;      // 29
@@ -1409,11 +1431,9 @@ __host__ void monte_carlo::operator()(
             /* Prepare rand_molec_struc data */
             int lig_torsion_size = tmp.c.ligands[0].torsions.size();
             DEBUG_PRINTF("lig_torsion_size=%d\n", lig_torsion_size);
-            int flex_torsion_size;
-            if (tmp.c.flex.size() != 0)
-                flex_torsion_size = tmp.c.flex[0].torsions.size();
-            else
-                flex_torsion_size = 0;
+            int flex_torsion_size = 0;
+            for (int fi = 0; fi < tmp.c.flex.size(); fi++)
+                flex_torsion_size += tmp.c.flex[fi].torsions.size();
             // std::vector<vec> uniform_data;
             // uniform_data.resize(thread);
 
@@ -1430,9 +1450,13 @@ __host__ void monte_carlo::operator()(
                     rand_molec_struc_tmp->lig_torsion[j]
                         = tmp.c.ligands[0].torsions[j];  // Only support one ligand
                 assert(flex_torsion_size <= MAX_NUM_OF_FLEX_TORSION);
-                for (int j = 0; j < flex_torsion_size; j++)
-                    rand_molec_struc_tmp->flex_torsion[j]
-                        = tmp.c.flex[0].torsions[j];  // Only support one flex
+                {
+                    int ft_idx = 0;
+                    for (int fi = 0; fi < tmp.c.flex.size(); fi++)
+                        for (int j = 0; j < tmp.c.flex[fi].torsions.size(); j++)
+                            rand_molec_struc_tmp->flex_torsion[ft_idx++]
+                                = tmp.c.flex[fi].torsions[j];
+                }
 
                 rand_molec_struc_tmp->orientation[0]
                     = (float)tmp.c.ligands[0].rigid.orientation.R_component_1();
@@ -1880,7 +1904,7 @@ __host__ void monte_carlo_template::operator()(
 
         // Preparing ligand data
         DEBUG_PRINTF("prepare ligand data\n");
-        assert(m.num_other_pairs() == 0);  // m.other_pairs is not supported!
+        // Flex residue other_pairs are now supported
         assert(m.ligands.size() <= 1);     // Only one ligand supported!
 
         if (m.ligands.size() == 0) {  // ligand parsing error
@@ -1918,6 +1942,16 @@ __host__ void monte_carlo_template::operator()(
                 m_cuda->ligand.pairs.type_pair_index[i] = m.ligands[0].pairs[i].type_pair_index;
                 m_cuda->ligand.pairs.a[i] = m.ligands[0].pairs[i].a;
                 m_cuda->ligand.pairs.b[i] = m.ligands[0].pairs[i].b;
+            }
+            // Copy other_pairs (flex-flex interactions)
+            {
+                interacting_pairs op = m.get_other_pairs();
+                m_cuda->other_pairs.num_pairs = std::min((int)op.size(), (int)(sizeof(m_cuda->other_pairs.a)/sizeof(m_cuda->other_pairs.a[0])));
+                for (int i = 0; i < m_cuda->other_pairs.num_pairs; i++) {
+                    m_cuda->other_pairs.type_pair_index[i] = op[i].type_pair_index;
+                    m_cuda->other_pairs.a[i] = op[i].a;
+                    m_cuda->other_pairs.b[i] = op[i].b;
+                }
             }
             m_cuda->ligand.begin = m.ligands[0].begin;  // 0
             m_cuda->ligand.end = m.ligands[0].end;      // 29
@@ -1980,11 +2014,9 @@ __host__ void monte_carlo_template::operator()(
             /* Prepare rand_molec_struc data */
             int lig_torsion_size = tmp.c.ligands[0].torsions.size();
             DEBUG_PRINTF("lig_torsion_size=%d\n", lig_torsion_size);
-            int flex_torsion_size;
-            if (tmp.c.flex.size() != 0)
-                flex_torsion_size = tmp.c.flex[0].torsions.size();
-            else
-                flex_torsion_size = 0;
+            int flex_torsion_size = 0;
+            for (int fi = 0; fi < tmp.c.flex.size(); fi++)
+                flex_torsion_size += tmp.c.flex[fi].torsions.size();
             // std::vector<vec> uniform_data;
             // uniform_data.resize(thread);
 
@@ -2001,9 +2033,13 @@ __host__ void monte_carlo_template::operator()(
                     rand_molec_struc_tmp->lig_torsion[j]
                         = tmp.c.ligands[0].torsions[j];  // Only support one ligand
                 assert(flex_torsion_size <= MAX_NUM_OF_FLEX_TORSION);
-                for (int j = 0; j < flex_torsion_size; j++)
-                    rand_molec_struc_tmp->flex_torsion[j]
-                        = tmp.c.flex[0].torsions[j];  // Only support one flex
+                {
+                    int ft_idx = 0;
+                    for (int fi = 0; fi < tmp.c.flex.size(); fi++)
+                        for (int j = 0; j < tmp.c.flex[fi].torsions.size(); j++)
+                            rand_molec_struc_tmp->flex_torsion[ft_idx++]
+                                = tmp.c.flex[fi].torsions[j];
+                }
 
                 rand_molec_struc_tmp->orientation[0]
                     = (float)tmp.c.ligands[0].rigid.orientation.R_component_1();
@@ -2534,7 +2570,7 @@ __host__ void monte_carlo_template::do_docking_base<Config>(std::vector<model> &
 
         // Preparing ligand data
         DEBUG_PRINTF("prepare ligand data\n");
-        assert(m.num_other_pairs() == 0);  // m.other_pairs is not supported!
+        // Flex residue other_pairs are now supported
         assert(m.ligands.size() <= 1);     // Only one ligand supported!
 
         if (m.ligands.size() == 0) {  // ligand parsing error
@@ -2572,6 +2608,16 @@ __host__ void monte_carlo_template::do_docking_base<Config>(std::vector<model> &
                 m_cuda->ligand.pairs.type_pair_index[i] = m.ligands[0].pairs[i].type_pair_index;
                 m_cuda->ligand.pairs.a[i] = m.ligands[0].pairs[i].a;
                 m_cuda->ligand.pairs.b[i] = m.ligands[0].pairs[i].b;
+            }
+            // Copy other_pairs (flex-flex interactions)
+            {
+                interacting_pairs op = m.get_other_pairs();
+                m_cuda->other_pairs.num_pairs = std::min((int)op.size(), (int)(sizeof(m_cuda->other_pairs.a)/sizeof(m_cuda->other_pairs.a[0])));
+                for (int i = 0; i < m_cuda->other_pairs.num_pairs; i++) {
+                    m_cuda->other_pairs.type_pair_index[i] = op[i].type_pair_index;
+                    m_cuda->other_pairs.a[i] = op[i].a;
+                    m_cuda->other_pairs.b[i] = op[i].b;
+                }
             }
             m_cuda->ligand.begin = m.ligands[0].begin;  // 0
             m_cuda->ligand.end = m.ligands[0].end;      // 29
@@ -2637,11 +2683,9 @@ __host__ void monte_carlo_template::do_docking_base<Config>(std::vector<model> &
             /* Prepare rand_molec_struc data */
             int lig_torsion_size = tmp.c.ligands[0].torsions.size();
             DEBUG_PRINTF("lig_torsion_size=%d\n", lig_torsion_size);
-            int flex_torsion_size;
-            if (tmp.c.flex.size() != 0)
-                flex_torsion_size = tmp.c.flex[0].torsions.size();
-            else
-                flex_torsion_size = 0;
+            int flex_torsion_size = 0;
+            for (int fi = 0; fi < tmp.c.flex.size(); fi++)
+                flex_torsion_size += tmp.c.flex[fi].torsions.size();
             // std::vector<vec> uniform_data;
             // uniform_data.resize(thread);
 
@@ -2657,10 +2701,14 @@ __host__ void monte_carlo_template::do_docking_base<Config>(std::vector<model> &
                 for (int j = 0; j < lig_torsion_size; j++)
                     rand_molec_struc_tmp->lig_torsion[j]
                         = tmp.c.ligands[0].torsions[j];  // Only support one ligand
-                assert(flex_torsion_size <= Config::MAX_NUM_OF_FLEX_TORSION_);
-                for (int j = 0; j < flex_torsion_size; j++)
-                    rand_molec_struc_tmp->flex_torsion[j]
-                        = tmp.c.flex[0].torsions[j];  // Only support one flex
+                assert(flex_torsion_size <= (int)Config::MAX_NUM_OF_FLEX_TORSION_);
+                {
+                    int ft_idx = 0;
+                    for (int fi = 0; fi < tmp.c.flex.size(); fi++)
+                        for (int j = 0; j < tmp.c.flex[fi].torsions.size(); j++)
+                            rand_molec_struc_tmp->flex_torsion[ft_idx++]
+                                = tmp.c.flex[fi].torsions[j];
+                }
 
                 rand_molec_struc_tmp->orientation[0]
                     = (float)tmp.c.ligands[0].rigid.orientation.R_component_1();

@@ -462,7 +462,16 @@ __device__ __forceinline__ void m_cuda_init_with_m_cuda_warp(cg::thread_block_ti
 
     ligand_init_with_ligand_warp(tile, &m_cuda_old->ligand, &m_cuda_new->ligand);
 
-    if (tile.thread_rank() == 0) m_cuda_new->m_num_movable_atoms = m_cuda_old->m_num_movable_atoms;
+    // Copy other_pairs (flex-flex interactions)
+    if (tile.thread_rank() == 0) {
+        m_cuda_new->other_pairs.num_pairs = m_cuda_old->other_pairs.num_pairs;
+        m_cuda_new->m_num_movable_atoms = m_cuda_old->m_num_movable_atoms;
+    }
+    for (int i = tile.thread_rank(); i < m_cuda_old->other_pairs.num_pairs; i += tile.num_threads()) {
+        m_cuda_new->other_pairs.type_pair_index[i] = m_cuda_old->other_pairs.type_pair_index[i];
+        m_cuda_new->other_pairs.a[i] = m_cuda_old->other_pairs.a[i];
+        m_cuda_new->other_pairs.b[i] = m_cuda_old->other_pairs.b[i];
+    }
 
     tile.sync();
 }
@@ -484,7 +493,16 @@ __device__ __forceinline__ void m_cuda_init_with_m_cuda_warp(cg::thread_block_ti
 
     ligand_init_with_ligand_warp<TileSize,Config>(tile, &m_cuda_old->ligand, &m_cuda_new->ligand);
 
-    if (tile.thread_rank() == 0) m_cuda_new->m_num_movable_atoms = m_cuda_old->m_num_movable_atoms;
+    // Copy other_pairs (flex-flex interactions)
+    if (tile.thread_rank() == 0) {
+        m_cuda_new->other_pairs.num_pairs = m_cuda_old->other_pairs.num_pairs;
+        m_cuda_new->m_num_movable_atoms = m_cuda_old->m_num_movable_atoms;
+    }
+    for (int i = tile.thread_rank(); i < m_cuda_old->other_pairs.num_pairs; i += tile.num_threads()) {
+        m_cuda_new->other_pairs.type_pair_index[i] = m_cuda_old->other_pairs.type_pair_index[i];
+        m_cuda_new->other_pairs.a[i] = m_cuda_old->other_pairs.a[i];
+        m_cuda_new->other_pairs.b[i] = m_cuda_old->other_pairs.b[i];
+    }
 
     tile.sync();
 }
@@ -824,10 +842,16 @@ __device__ float m_eval_deriv_warp(cg::thread_block_tile<TileSize> &tile, output
     e += eval_interacting_pairs_deriv_warp(tile, p_cuda_gpu, v[0], &m_cuda_gpu->ligand.pairs,
                                            &m_cuda_gpu->m_coords, &m_cuda_gpu->minus_forces,
                                            epsilon_fl);
+    // Evaluate other_pairs (flex-flex interactions)
+    if (m_cuda_gpu->other_pairs.num_pairs > 0) {
+        e += eval_interacting_pairs_deriv_warp(tile, p_cuda_gpu, v[2],
+                                               (const lig_pairs_cuda_t *)&m_cuda_gpu->other_pairs,
+                                               &m_cuda_gpu->m_coords, &m_cuda_gpu->minus_forces,
+                                               epsilon_fl);
+    }
     tile.sync();
     e = cg::reduce(tile, e, cg::plus<float>());
 
-    // should add derivs for glue, other and inter pairs
     POT_deriv_warp(tile, &m_cuda_gpu->minus_forces, &m_cuda_gpu->ligand.rigid,
                    &m_cuda_gpu->m_coords, g, pot_aux);
 
@@ -849,10 +873,16 @@ __device__ float m_eval_deriv_warp(cg::thread_block_tile<TileSize> &tile, output
     e += eval_interacting_pairs_deriv_warp<TileSize,Config>(tile, p_cuda_gpu, v[0], &m_cuda_gpu->ligand.pairs,
                                            &m_cuda_gpu->m_coords, &m_cuda_gpu->minus_forces,
                                            epsilon_fl);
+    // Evaluate other_pairs (flex-flex interactions)
+    if (m_cuda_gpu->other_pairs.num_pairs > 0) {
+        e += eval_interacting_pairs_deriv_warp<TileSize,Config>(tile, p_cuda_gpu, v[2],
+                                               (const lig_pairs_cuda_t_<Config> *)&m_cuda_gpu->other_pairs,
+                                               &m_cuda_gpu->m_coords, &m_cuda_gpu->minus_forces,
+                                               epsilon_fl);
+    }
     tile.sync();
     e = cg::reduce(tile, e, cg::plus<float>());
 
-    // should add derivs for glue, other and inter pairs
     POT_deriv_warp<TileSize,Config>(tile, &m_cuda_gpu->minus_forces, &m_cuda_gpu->ligand.rigid,
                    &m_cuda_gpu->m_coords, g, pot_aux);
 

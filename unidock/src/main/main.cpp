@@ -999,12 +999,22 @@ bug reporting, license agreements, and more information.      \n";
                 size_t max_num_torsions = 0;
                 size_t max_num_rigids = 0;
                 size_t max_num_lig_pairs = 0;
+                // Account for receptor flex atoms/torsions in grouping
+                // The receptor's movable atoms (flex) will be added to each ligand model
+                size_t receptor_flex_atoms = v.m_receptor.num_atoms();
+                size_t receptor_flex_torsions = sum(v.m_receptor.flex.count_torsions());
+                (void)0; // receptor other_pairs stored separately in CUDA struct
+
                 printf("all_ligands.size():%ld\n",all_ligands.size());
                 for (int i = 0; i <  all_ligands.size(); ++i) {
                     // printf("i=:%d\n",i);
-                    num_atoms_vector.at(i) = all_ligands[i].second.num_atoms();
+                    num_atoms_vector.at(i) = all_ligands[i].second.num_atoms() + receptor_flex_atoms;
                     num_torsions_vector.at(i)=sum(all_ligands[i].second.ligands.count_torsions());
-                    num_rigids_vector.at(i)=all_ligands[i].second.ligands[0].children.size();
+                    {
+                        size_t lig_rigids = all_ligands[i].second.ligands.size() > 0
+                            ? all_ligands[i].second.ligands[0].children.size() : 0;
+                        num_rigids_vector.at(i) = lig_rigids + receptor_flex_torsions;
+                    }
                     num_lig_pairs_vector.at(i)=all_ligands[i].second.num_internal_pairs();
                     max_num_atoms = std::max(max_num_atoms, num_atoms_vector.at(i));
                     max_num_torsions = std::max(max_num_torsions, num_torsions_vector.at(i));

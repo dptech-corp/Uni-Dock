@@ -23,7 +23,7 @@ void check(T result, char const *const func, const char *const file, int const l
 
 // kernel2 macros
 #define MAX_NUM_OF_LIG_TORSION 48
-#define MAX_NUM_OF_FLEX_TORSION 1
+#define MAX_NUM_OF_FLEX_TORSION 24
 #define MAX_NUM_OF_RIGID 24
 #define MAX_NUM_OF_ATOMS 150
 #define SIZE_OF_MOLEC_STRUC \
@@ -34,6 +34,7 @@ void check(T result, char const *const func, const char *const file, int const l
     ((6 + MAX_NUM_OF_LIG_TORSION + MAX_NUM_OF_FLEX_TORSION) \
      * (6 + MAX_NUM_OF_LIG_TORSION + MAX_NUM_OF_FLEX_TORSION + 1) / 2)
 #define MAX_NUM_OF_LIG_PAIRS 1024
+#define MAX_NUM_OF_OTHER_PAIRS 1024
 #define MAX_NUM_OF_BFGS_STEPS 64
 #define MAX_NUM_OF_RANDOM_MAP 1000  // not too large (stack overflow!)
 #define GRIDS_SIZE 37               // larger than vina1.1, max(XS_TYPE_SIZE, AD_TYPE_SIZE + 2)
@@ -61,7 +62,7 @@ void check(T result, char const *const func, const char *const file, int const l
         //    bound
 struct SizeConfig {
 static constexpr size_t MAX_NUM_OF_LIG_TORSION_ = 48;
-static constexpr size_t MAX_NUM_OF_FLEX_TORSION_ = 1;
+static constexpr size_t MAX_NUM_OF_FLEX_TORSION_ = 24;
 static constexpr size_t MAX_NUM_OF_RIGID_ = 128;
 static constexpr size_t MAX_NUM_OF_ATOMS_ = 300;
 static constexpr size_t SIZE_OF_MOLEC_STRUC_ =
@@ -97,7 +98,7 @@ static constexpr size_t MAX_LIGAND_NUM_  = 10250;
 };
 struct SmallConfig {
 static constexpr size_t MAX_NUM_OF_LIG_TORSION_ = 8;
-static constexpr size_t MAX_NUM_OF_FLEX_TORSION_ = 1;
+static constexpr size_t MAX_NUM_OF_FLEX_TORSION_ = 24;
 static constexpr size_t MAX_NUM_OF_RIGID_ = 12;
 static constexpr size_t MAX_NUM_OF_ATOMS_ = 40;
 static constexpr size_t SIZE_OF_MOLEC_STRUC_ =
@@ -133,7 +134,7 @@ static constexpr size_t MAX_LIGAND_NUM_  = 10250;
 };
 struct MediumConfig {
 static constexpr size_t MAX_NUM_OF_LIG_TORSION_ = 16;
-static constexpr size_t MAX_NUM_OF_FLEX_TORSION_ = 1;
+static constexpr size_t MAX_NUM_OF_FLEX_TORSION_ = 24;
 static constexpr size_t MAX_NUM_OF_RIGID_ = 18;
 static constexpr size_t MAX_NUM_OF_ATOMS_ = 80;
 static constexpr size_t SIZE_OF_MOLEC_STRUC_ =
@@ -169,7 +170,7 @@ static constexpr size_t MAX_LIGAND_NUM_  = 10250;
 };
 struct LargeConfig {
 static constexpr size_t MAX_NUM_OF_LIG_TORSION_ = 24;
-static constexpr size_t MAX_NUM_OF_FLEX_TORSION_ = 1;
+static constexpr size_t MAX_NUM_OF_FLEX_TORSION_ = 24;
 static constexpr size_t MAX_NUM_OF_RIGID_ = 36;
 static constexpr size_t MAX_NUM_OF_ATOMS_ = 120;
 static constexpr size_t SIZE_OF_MOLEC_STRUC_ =
@@ -205,7 +206,7 @@ static constexpr size_t MAX_LIGAND_NUM_  = 10250;
 };
 struct ExtraLargeConfig {
 static constexpr size_t MAX_NUM_OF_LIG_TORSION_ = 36;
-static constexpr size_t MAX_NUM_OF_FLEX_TORSION_ = 1;
+static constexpr size_t MAX_NUM_OF_FLEX_TORSION_ = 24;
 static constexpr size_t MAX_NUM_OF_RIGID_ = 64;
 static constexpr size_t MAX_NUM_OF_ATOMS_ = 160;
 static constexpr size_t SIZE_OF_MOLEC_STRUC_ =
@@ -241,7 +242,7 @@ static constexpr size_t MAX_LIGAND_NUM_  = 10250;
 };
 struct MaxConfig {
 static constexpr size_t MAX_NUM_OF_LIG_TORSION_ = 48;
-static constexpr size_t MAX_NUM_OF_FLEX_TORSION_ = 1;
+static constexpr size_t MAX_NUM_OF_FLEX_TORSION_ = 24;
 static constexpr size_t MAX_NUM_OF_RIGID_ = 128;
 static constexpr size_t MAX_NUM_OF_ATOMS_ = 300;
 static constexpr size_t SIZE_OF_MOLEC_STRUC_ =
@@ -353,10 +354,18 @@ typedef struct {
 } random_maps_t;
 
 typedef struct {
+    int type_pair_index[MAX_NUM_OF_OTHER_PAIRS];
+    int a[MAX_NUM_OF_OTHER_PAIRS];
+    int b[MAX_NUM_OF_OTHER_PAIRS];
+    int num_pairs;
+} other_pairs_cuda_t;
+
+typedef struct {
     atom_cuda_t atoms[MAX_NUM_OF_ATOMS];
     m_coords_cuda_t m_coords;
     m_minus_forces_t minus_forces;
     ligand_cuda_t ligand;
+    other_pairs_cuda_t other_pairs;
     int m_num_movable_atoms;  // will be -1 if ligand parsing failed
 } m_cuda_t;
 
@@ -517,11 +526,20 @@ struct random_maps_t_{
 } ;
 
 template <typename Config>
+struct other_pairs_cuda_t_{
+    int type_pair_index[Config::MAX_NUM_OF_LIG_PAIRS_];
+    int a[Config::MAX_NUM_OF_LIG_PAIRS_];
+    int b[Config::MAX_NUM_OF_LIG_PAIRS_];
+    int num_pairs;
+} ;
+
+template <typename Config>
 struct m_cuda_t_{
     atom_cuda_t atoms[Config::MAX_NUM_OF_ATOMS_];
     m_coords_cuda_t_<Config> m_coords;
     m_minus_forces_t_<Config> minus_forces;
     ligand_cuda_t_<Config> ligand;
+    other_pairs_cuda_t_<Config> other_pairs;
     int m_num_movable_atoms;  // will be -1 if ligand parsing failed
 } ;
 template <typename Config>
