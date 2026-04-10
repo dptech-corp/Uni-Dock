@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
@@ -34,7 +34,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
@@ -60,7 +60,7 @@ jobs:
       options: --gpus all
     steps:
     - name: checkout repo
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     - name: install unidock
       working-directory: ./unidock
