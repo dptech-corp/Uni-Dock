@@ -85,7 +85,7 @@ jobs:
         echo y | bash CDPKit.sh --cpack_skip_license --include-subdir
         rm CDPKit.sh
 
-        mamba install -y ipython openbabel -c conda-forge
+        mamba install -y python=3.12 ipython openbabel -c conda-forge
         pip install .
 
     - name: run unit-test
