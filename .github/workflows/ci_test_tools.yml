@@ -13,7 +13,7 @@ jobs:
     container:
       image: ghcr.io/astral-sh/uv:python3.12-bookworm-slim
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - name: Run ruff check
       working-directory: ./unidock_tools
       run: uvx ruff check
@@ -24,10 +24,10 @@ jobs:
     runs-on: nvidia
     container:
       image: nvidia/cuda:12.8.0-devel-ubuntu22.04
-      options: --gpus all
+      options: --gpus all -v /etc/apt/sources.list:/etc/apt/sources.list:ro
     steps:
     - name: checkout repo
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     - name: install unidock
       working-directory: ./unidock
