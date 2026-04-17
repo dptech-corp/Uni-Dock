@@ -18,7 +18,7 @@ RUN wget --quiet -O conda.sh \
     && rm conda.sh
 ENV PATH=/opt/conda/bin:$PATH
 
-RUN mamba create -y -n unidock python=3.10 ipython openbabel -c conda-forge
+RUN mamba create -y -n unidock python=3.12 ipython openbabel -c conda-forge
 
 SHELL ["/bin/bash", "-c"]
 
@@ -36,7 +36,6 @@ mamba activate unidock\n' > /opt/activate_unidock.sh
 
 ENV BASH_ENV="/opt/activate_unidock.sh"
 ENV PATH="/opt/conda/envs/unidock/bin:/opt/conda/bin:$PATH"
-# ENV LD_LIBRARY_PATH="/opt/conda/envs/unidock/lib:${LD_LIBRARY_PATH}"
 
 ENTRYPOINT ["/opt/entrypoint.sh"]
 CMD ["bash"]

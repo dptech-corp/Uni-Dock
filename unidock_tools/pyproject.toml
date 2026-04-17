@@ -15,7 +15,7 @@ authors = [
 ]
 description = "Several docking-related applications based on Uni-Dock."
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.10,<=3.12"
 dependencies = [
     "rdkit",
     "networkx",
@@ -42,20 +42,11 @@ Repository = "https://github.com/dptech-corp/Uni-Dock.git"
 [project.scripts]
 unidocktools = "unidock_tools.main:main_cli"
 
-#[project.entry-points."unidocktools"]
-#unidocktools = "unidock_tools.main:main_cli"
+[tool.ruff]
+exclude = ["tests/"]
+src = ["src"]
+line-length = 120
+indent-width = 4
 
-[tool.pyright]
-include = ["unidock_tools"]
-exclude = ["**/node_modules",
-    "**/__pycache__",
-    "unidock_tools/data"
-]
-pythonVersion = "3.11"
-pythonPlatform = "Linux"
-reportMissingImports = false
-reportMissingModuleSource = false
-reportAttributeAccessIssue = false
-reportIncompatibleMethodOverride = false
-reportCallIssue = false
-reportArgumentType = false
+[tool.ruff.lint]
+select = ["E", "F", "W", "B", "SIM", "I"]

@@ -8,52 +8,19 @@ on:
       - main
 
 jobs:
-  flake8:
-    continue-on-error: true
+  ruff:
     runs-on: ubuntu-latest
-
+    container:
+      image: astral-sh/uv:python3.12-bookworm-slim
     steps:
     - uses: actions/checkout@v4
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-          python-version: 3.11
-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install flake8
-
-    - name: Run flake8 formating
+    - name: Run ruff check
       working-directory: ./unidock_tools
-      run: |
-        flake8 src --exit-zero
-
-  pyright:
-    continue-on-error: true
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v4
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-          python-version: 3.11
-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install pyright
-
-    - name: Run pyright check
-      id: pyright_check
-      working-directory: ./unidock_tools
-      run: |
-        pyright src
+      run: uvx ruff check
 
   tests:
     if: ${{ always() }}
-    needs: [flake8,pyright]
+    needs: [ruff]
     runs-on: nvidia
     container:
       image: nvidia/cuda:12.8.0-devel-ubuntu22.04
@@ -76,27 +43,31 @@ jobs:
     - name: install tools
       working-directory: ./unidock_tools
       run: |
+        wget --quiet -O CDPKit.sh https://github.com/molinfo-vienna/CDPKit/releases/download/v1.1.0/CDPKit-1.1.0-Linux-x86_64.sh
+        echo y | bash CDPKit.sh --cpack_skip_license --include-subdir
+        rm CDPKit.sh
+
         wget --quiet -O conda.sh https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh
         bash conda.sh -b -p /opt/conda
         rm conda.sh
         export PATH=/opt/conda/bin:$PATH
 
-        wget --quiet -O CDPKit.sh https://github.com/molinfo-vienna/CDPKit/releases/download/v1.1.0/CDPKit-1.1.0-Linux-x86_64.sh
-        echo y | bash CDPKit.sh --cpack_skip_license --include-subdir
-        rm CDPKit.sh
+        mamba create -y -n unidock python=3.12 openbabel pytest pytest-cov -c conda-forge
 
-        mamba install -y python=3.12 ipython openbabel -c conda-forge
+        printf 'source /opt/conda/etc/profile.d/conda.sh\nsource /opt/conda/etc/profile.d/mamba.sh\nmamba activate unidock\n' > /opt/activate_unidock.sh
+        echo "BASH_ENV=/opt/activate_unidock.sh" >> $GITHUB_ENV
+        echo "/opt/conda/envs/unidock/bin" >> $GITHUB_PATH
+        echo "/opt/conda/bin" >> $GITHUB_PATH
+
+        source /opt/activate_unidock.sh
         pip install .
 
     - name: run unit-test
       working-directory: ./unidock_tools
       run: |
-        export PATH=/opt/conda/bin:$PATH
-        pip install pytest pytest-cov
         pytest tests/ut -vv --cov --cov-report term
 
     - name: run application e2e test
       working-directory: ./unidock_tools
       run: |
-        export PATH=/opt/conda/bin:$PATH
         pytest tests/applications -vv --cov --cov-report term
