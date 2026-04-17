@@ -12,10 +12,10 @@ jobs:
     runs-on: nvidia
     container:
       image: nvidia/cuda:12.8.0-devel-ubuntu22.04
-      options: --gpus all
+      options: --gpus all -v /etc/apt/sources.list:/etc/apt/sources.list:ro
     steps:
     - name: checkout repo
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     - name: install basic packages
       run: |
@@ -38,9 +38,9 @@ jobs:
         unidock --version
 
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
-        python-version: '3.11'
+        python-version: '3.12'
 
     - name: perform unit-test
       run: |

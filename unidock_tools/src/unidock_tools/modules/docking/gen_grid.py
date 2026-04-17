@@ -2,9 +2,8 @@ import os
 import shutil
 import subprocess as sp
 
-
 GRID_SPACING = 0.375
-LIGAND_ATOM_TYPES = ['A', 'Br', 'C', 'Ca', 'Cl', 'F', 'Fe', 'G', 'GA', 'H', 'HD', 'HS','I', 'J', 'Mg', 'Mn', 
+LIGAND_ATOM_TYPES = ['A', 'Br', 'C', 'Ca', 'Cl', 'F', 'Fe', 'G', 'GA', 'H', 'HD', 'HS','I', 'J', 'Mg', 'Mn',
                      'N', 'NA', 'NS', 'OA', 'OS', 'P', 'Q', 'S', 'SA', 'Z', 'Zn']
 
 GPF_SCRIPTS = """outlev 2
@@ -35,8 +34,8 @@ def get_protein_atom_types(pdbqt_file:str) -> list[str]:
     return list(set(atom_types))
 
 
-def generate_ad4_grid(pdbqt_file:str, workdir:str, 
-                      center:tuple[float, float, float], 
+def generate_ad4_grid(pdbqt_file:str, workdir:str,
+                      center:tuple[float, float, float],
                       size:tuple[float, float, float]) -> str:
     os.makedirs(workdir, exist_ok=True)
 
@@ -61,7 +60,7 @@ def generate_ad4_grid(pdbqt_file:str, workdir:str,
     shutil.copyfile(AUTOGRID_PARAMETER_FILE, os.path.join(workdir, 'AD4.1_bound.dat'))
 
     os.chmod(AUTOGRID_BINARY, 0o755)
-    resp = sp.run(f'{AUTOGRID_BINARY} -p protein.gpf -l protein.glg', shell=True, 
+    resp = sp.run(f'{AUTOGRID_BINARY} -p protein.gpf -l protein.glg', shell=True,
                   capture_output=True, encoding='utf-8', cwd=workdir)
     if resp.returncode != 0:
         raise RuntimeError(f'autogrid4 failed: {resp.stdout}\n{resp.stderr}')
