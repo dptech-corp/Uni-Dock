@@ -1,1 +1,1 @@
-from .torsion_tree import TopologyBuilder
+from .torsion_tree import TopologyBuilder as TopologyBuilder

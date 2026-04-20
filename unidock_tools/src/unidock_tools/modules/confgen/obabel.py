@@ -1,11 +1,12 @@
-from typing import List
-import shutil
 import logging
-import multiprocessing as mlp
+import shutil
 import subprocess as sp
+from typing import List
+
 from rdkit import Chem
 
 from unidock_tools.utils import make_tmp_dir
+
 from .base import ConfGeneratorBase
 
 
@@ -24,10 +25,7 @@ class OBabelConfGenerator(ConfGeneratorBase):
                               *args, **kwargs) -> List[Chem.Mol]:
         workdir = make_tmp_dir("obabel")
         if not name:
-            if mol.HasProp("_Name"):
-                name = mol.GetProp("_Name")
-            else:
-                name = "ligand"
+            name = mol.GetProp("_Name") if mol.HasProp("_Name") else "ligand"
         smi = f"{Chem.MolToSmiles(mol, isomericSmiles=True, allHsExplicit=True)}\t{name}"
         with open(f"{workdir}/{name}.smi", "w") as f:
             f.write(smi)

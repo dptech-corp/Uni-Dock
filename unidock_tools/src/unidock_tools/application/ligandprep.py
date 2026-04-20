@@ -1,15 +1,16 @@
-from typing import List, Tuple, Generator
-from pathlib import Path
+import argparse
+import logging
 import os
+import traceback
 from functools import partial
 from multiprocessing import Pool
-import traceback
-import logging
-import argparse
+from pathlib import Path
+from typing import Generator, List, Tuple
+
 from rdkit import Chem
 
-from unidock_tools.utils import read_ligand
 from unidock_tools.modules.ligand_prep import TopologyBuilder
+from unidock_tools.utils import read_ligand
 
 
 def iter_ligands(ligands: List[Path], batch_size: int = 1200,
@@ -45,7 +46,7 @@ def ligprep(mol_name_tup: Tuple[Chem.Mol, str], savedir: Path, save_format: str 
             tb.write_pdbqt_file(os.path.join(savedir, f"{name}.pdbqt"))
         else:
             logging.error(f"Invalid save format: {save_format}")
-    except:
+    except Exception:
         logging.error(f"ligprep failed for {name}: {traceback.format_exc()}")
 
 
@@ -68,7 +69,7 @@ def main(args: dict):
     os.makedirs(Path(args["savedir"]).resolve(), exist_ok=True)
     for mol_name_tup_list in iter_ligands(ligands, args["batch_size"], args["use_file_name"]):
         with Pool(os.cpu_count()) as pool:
-            pool.map(partial(ligprep, savedir=args["savedir"], 
+            pool.map(partial(ligprep, savedir=args["savedir"],
                              save_format=args["save_format"]), mol_name_tup_list)
 
 
@@ -80,7 +81,7 @@ def get_parser() -> argparse.ArgumentParser:
                         help="A text file containing the path of ligand files in sdf format.")
     parser.add_argument("-sd", "--savedir", type=str, default="ligprep_results",
                         help="Save directory. Default: 'MultiConfDock-Result'.")
-    parser.add_argument("-sf", "--save_format", type=str, default="sdf", 
+    parser.add_argument("-sf", "--save_format", type=str, default="sdf",
                         help="Ligprep result files format. Choose from ['sdf', 'pdbqt']. Default: 'sdf'.")
     parser.add_argument("-bs", "--batch_size", type=int, default=1200,
                         help="Batch size for docking. Default: 1200.")

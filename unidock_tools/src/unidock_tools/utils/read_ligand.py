@@ -1,7 +1,8 @@
-from typing import Union, List
-from pathlib import Path
-import os
 import logging
+import os
+from pathlib import Path
+from typing import List, Union
+
 from rdkit import Chem
 
 
@@ -31,7 +32,7 @@ def read_smi(smi_file:Union[str, bytes, os.PathLike]) -> List[Chem.Mol]:
             if name:
                 mol.SetProp("_Name", name)
             mols.append(mol)
-        except:
+        except Exception:
             continue
     return mols
 

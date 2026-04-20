@@ -1,7 +1,8 @@
-from typing import List, Union
-import os
 import logging
+import os
 import traceback
+from typing import List, Union
+
 from rdkit import Chem
 
 
@@ -38,7 +39,7 @@ def set_properties(mol: Chem.Mol, properties: dict):
                 mol.SetDoubleProp(key, value)
             else:
                 mol.SetProp(key, str(value))
-        except:
+        except Exception:
             logging.warning(f"set property {key} err: {traceback.format_exc()}")
 
 
