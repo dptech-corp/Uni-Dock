@@ -14,11 +14,11 @@ jobs:
       options: --gpus all
     steps:
       - name: Checkout test suites
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: dptech-corp/Uni-Dock-Benchmarks
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: 3.11
       - name: Install requirements
@@ -30,12 +30,12 @@ jobs:
         run: |
           python3 scripts/test_molecular_docking.py
       - name: Upload docking results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: molecular_docking_results.csv
           path: results/results.csv
       - name: Upload docking metrics
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: molecular_docking_metrics.csv
           path: results/metrics.csv
@@ -45,7 +45,7 @@ jobs:
           rm -rf results
           python3 scripts/test_virtual_screening.py
       - name: Upload virtual screening results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: virtual_screening_results.csv
           path: results/results.csv

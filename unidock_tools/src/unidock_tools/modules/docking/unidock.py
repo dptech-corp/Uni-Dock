@@ -1,11 +1,12 @@
-from typing import List, Tuple, Dict, Optional
-from pathlib import Path
 import logging
 import os
 import shutil
 import subprocess
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple
 
 from unidock_tools.utils import randstr, time_logger
+
 from .gen_grid import generate_ad4_grid
 
 
@@ -46,8 +47,8 @@ class UniDockRunner:
         if scoring.lower() == "ad4":
             map_dir = os.path.join(self.workdir, "mapdir")
             os.makedirs(map_dir, exist_ok=True)
-            map_prefix = generate_ad4_grid(str(receptor), map_dir, 
-                                           (center_x, center_y, center_z), 
+            map_prefix = generate_ad4_grid(str(receptor), map_dir,
+                                           (center_x, center_y, center_z),
                                            (size_x, size_y, size_z))
             cmd += ["--maps", map_prefix]
         else:
@@ -97,7 +98,9 @@ class UniDockRunner:
         logging.info(f"unidock cmd: {' '.join(cmd)}")
         self.cmd = cmd
 
-        self.pre_result_ligands = [Path(os.path.join(output_dir, f"{l.stem}_out.sdf")) for l in ligands]
+        self.pre_result_ligands = [
+            Path(os.path.join(output_dir, f"{lig_path.stem}_out.sdf")) for lig_path in ligands
+        ]
 
     def run(self):
         resp = subprocess.run(
@@ -191,7 +194,7 @@ def run_unidock(
         filename_score_dict = UniDockRunner.read_score_txt(scores_txt)
         result_ligands = ligands
         scores_list = [[filename_score_dict[os.path.basename(fpath)]] for fpath in result_ligands]
-    
+
     if not debug:
         runner.clean_workdir()
 
