@@ -1,6 +1,6 @@
-from typing import Union, List
-import os
-from math import isnan, isinf
+from math import isinf, isnan
+from typing import List
+
 from rdkit import Chem
 from rdkit.Chem import AllChem
 

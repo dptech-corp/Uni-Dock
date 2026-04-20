@@ -1,12 +1,13 @@
-from typing import List, Generator, Any, Optional
-from pathlib import Path
-import os
 import copy
 import logging
 import math
+import os
+from pathlib import Path
+from typing import Any, Generator, List, Optional
+
 from rdkit import Chem
 
-from .rdkit_helper import sdf_writer, set_properties, clear_properties
+from .rdkit_helper import clear_properties, sdf_writer, set_properties
 from .read_ligand import read_ligand
 
 
@@ -24,7 +25,7 @@ class Mol:
     @staticmethod
     def clear_rdkit_props(mol: Chem.Mol) -> Chem.Mol:
         mol = copy.copy(mol)
-        for prop in mol.GetPropNames(): 
+        for prop in mol.GetPropNames():
             mol.ClearProp(prop)
         return mol
 
@@ -36,7 +37,7 @@ class Mol:
 
     def get_conf_props(self) -> dict:
         return self.conf_props
-    
+
     def get_mol_confs(self) -> List[Chem.Mol]:
         return self.mol_confs
 
@@ -54,8 +55,16 @@ class Mol:
             "conf props length should be same as mol_confs length"
         self.conf_props.update(conf_props)
 
-    def get_rdkit_mol_conf_with_props(self, conf_idx: int, props_list: List[str] = [], 
-                                      exclude_props_list: List[str] = []) -> Chem.Mol:
+    def get_rdkit_mol_conf_with_props(
+        self,
+        conf_idx: int,
+        props_list: Optional[List[str]] = None,
+        exclude_props_list: Optional[List[str]] = None,
+    ) -> Chem.Mol:
+        if props_list is None:
+            props_list = []
+        if exclude_props_list is None:
+            exclude_props_list = []
         mol = copy.copy(self.mol_confs[conf_idx])
         props = copy.deepcopy(self.get_props())
         props.update({k:v[conf_idx] for k, v in self.get_conf_props().items()})
@@ -84,7 +93,10 @@ class MolGroup:
 
     def iter_idx_list(self, batch_size: int) -> Generator[List[int], None, None]:
         real_batch_size = math.ceil(len(self.mol_group) / math.ceil(len(self.mol_group) / batch_size))
-        batch_id_list = [list(range(i, min(len(self.mol_group), i + real_batch_size))) for i in range(0, len(self.mol_group), real_batch_size)]
+        batch_id_list = [
+            list(range(i, min(len(self.mol_group), i + real_batch_size)))
+            for i in range(0, len(self.mol_group), real_batch_size)
+        ]
         for sub_id_list in batch_id_list:
             yield sub_id_list
 
@@ -94,7 +106,7 @@ class MolGroup:
             mols = read_ligand(ligand_file)
             for i, mol in enumerate(mols):
                 if mol:
-                    self.mol_group.append(Mol(mol, {"file_prefix": f"{file_prefix}_{i}" if len(mols) > 1 
+                    self.mol_group.append(Mol(mol, {"file_prefix": f"{file_prefix}_{i}" if len(mols) > 1
                                                     else file_prefix}))
 
     def update_property_by_idx(self, idx: int, property_name: str, value: Any, is_conf_prop: bool = False):
@@ -105,7 +117,7 @@ class MolGroup:
 
     def update_mol_confs(self, idx: int, mol_confs: List[Chem.Mol]):
         if not isinstance(mol_confs, list):
-            logging.warning(f"molecule_list should be list")
+            logging.warning("molecule_list should be list")
             mol_confs = [mol_confs]
         self.mol_group[idx].update_mol_confs([clear_properties(mol) for mol in mol_confs])
 
@@ -117,7 +129,7 @@ class MolGroup:
             return
         self.update_mol_confs(file_prefix_dict[file_prefix], mol_confs_list)
 
-    def update_property_by_file_prefix(self, file_prefix: str, 
+    def update_property_by_file_prefix(self, file_prefix: str,
                                        property_name: str, value: Any, is_conf_prop: bool = False):
         file_prefix_dict = {mol.get_prop("file_prefix", ""): idx for idx, mol in enumerate(self.mol_group)}
         logging.debug(file_prefix_dict)
@@ -131,9 +143,13 @@ class MolGroup:
                          save_dir: Path,
                          seperate_conf: bool = False,
                          conf_prefix: str = "_CONF",
-                         props_list: List[str] = [],
-                         exclude_props_list: List[str] = [],
+                         props_list: Optional[List[str]] = None,
+                         exclude_props_list: Optional[List[str]] = None,
                          ) -> List[Path]:
+        if props_list is None:
+            props_list = []
+        if exclude_props_list is None:
+            exclude_props_list = []
         os.makedirs(save_dir, exist_ok=True)
         mol_confs_copy = [self.mol_group[idx].get_rdkit_mol_conf_with_props(
             conf_idx, props_list, exclude_props_list) for conf_idx in range(
@@ -155,8 +171,12 @@ class MolGroup:
     def write_sdf(self, save_dir: Path,
                   seperate_conf: bool = False,
                   conf_prefix: str = "_CONF",
-                  props_list: List[str] = [],
-                  exclude_props_list: List[str] = []) -> List[Path]:
+                  props_list: Optional[List[str]] = None,
+                  exclude_props_list: Optional[List[str]] = None) -> List[Path]:
+        if props_list is None:
+            props_list = []
+        if exclude_props_list is None:
+            exclude_props_list = []
         result_files = []
         for idx in range(len(self.mol_group)):
             result_files.extend(self.write_sdf_by_idx(idx=idx, save_dir=save_dir,

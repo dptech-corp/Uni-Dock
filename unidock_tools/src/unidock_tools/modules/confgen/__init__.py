@@ -1,1 +1,1 @@
-from .confgen import generate_conf
+from .confgen import generate_conf as generate_conf
