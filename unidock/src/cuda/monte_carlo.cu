@@ -1478,7 +1478,7 @@ __host__ void monte_carlo::operator()(
         std::cout << "with multi bias ";
 
         checkCUDA(cudaMalloc(&ig_cuda_gpu, ig_cuda_size * num_of_ligands));
-        checkCUDA(cudaMemset(&ig_cuda_gpu, 0, ig_cuda_size * num_of_ligands));
+        checkCUDA(cudaMemset(ig_cuda_gpu, 0, ig_cuda_size * num_of_ligands));
         for (int l = 0; l < num_of_ligands; ++l) {
             if (ig.get_atu() == atom_type::XS) {
                 cache ig_tmp(ig.get_gd(), ig.get_slope());
