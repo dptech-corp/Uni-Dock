@@ -1588,6 +1588,7 @@ void Vina::global_search(const int exhaustiveness, const int n_poses, const doub
                     = m_model.eval_intramolecular(m_precalculated_byatom, m_non_cache, authentic_v);
         }
         VINA_FOR_IN(i, poses) {
+            if (!not_max(poses[i].e)) continue;  // skip out-of-bounds poses
             if (m_verbosity > 1) std::cout << "ENERGY FROM SEARCH: " << poses[i].e << "\n";
 
             m_model.set(poses[i].c);
@@ -1624,6 +1625,7 @@ void Vina::global_search(const int exhaustiveness, const int n_poses, const doub
         }
 
         VINA_FOR_IN(i, poses) {
+            if (!not_max(poses[i].e)) continue;  // skip out-of-bounds poses
             m_model.set(poses[i].c);
 
             // Get RMSD between current pose and best_model
@@ -1787,6 +1789,7 @@ void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const 
             }
 
             for (int i = 0; i < poses.size(); ++i) {
+                if (!not_max(poses[i].e)) continue;  // skip out-of-bounds poses
                 if (m_verbosity > 1) std::cout << "ENERGY FROM SEARCH: " << poses[i].e << "\n";
 
                 m_model_gpu[l].set(poses[i].c);
@@ -1827,6 +1830,7 @@ void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const 
             }
 
             VINA_FOR_IN(i, poses) {
+                if (!not_max(poses[i].e)) continue;  // skip out-of-bounds poses
                 m_model_gpu[l].set(poses[i].c);
 
                 // Get RMSD between current pose and best_model
