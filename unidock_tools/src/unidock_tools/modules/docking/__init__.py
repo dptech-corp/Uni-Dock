@@ -1,2 +1,2 @@
-from .unidock import run_unidock
-from .metric import calc_rmsd
+from .metric import calc_rmsd as calc_rmsd
+from .unidock import run_unidock as run_unidock

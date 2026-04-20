@@ -3,7 +3,7 @@ from rdkit.Chem import rdMolAlign
 
 
 def calc_rmsd(
-    ref_ligand: str, 
+    ref_ligand: str,
     target_ligand: str,
 ):
     ref_mol = Chem.SDMolSupplier(str(ref_ligand), removeHs=True)[0]

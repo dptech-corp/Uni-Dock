@@ -1,23 +1,24 @@
-from typing import List, Tuple, Iterable, Optional
-from pathlib import Path
-import os
-import time
-import shutil
 import argparse
 import logging
-import traceback
 import math
+import os
+import shutil
+import time
+import traceback
 from functools import partial
+from pathlib import Path
+from typing import List, Optional, Tuple
+
 from multiprocess import Pool
 from rdkit import Chem
 from rdkit.Chem.PropertyMol import PropertyMol
 
-from unidock_tools.utils import time_logger, randstr, read_ligand, sdf_writer
-from unidock_tools.modules.protein_prep import pdb2pdbqt
-from unidock_tools.modules.ligand_prep import TopologyBuilder
 from unidock_tools.modules.docking import run_unidock
-from .base import Base
+from unidock_tools.modules.ligand_prep import TopologyBuilder
+from unidock_tools.modules.protein_prep import pdb2pdbqt
+from unidock_tools.utils import randstr, read_ligand, sdf_writer, time_logger
 
+from .base import Base
 
 DEFAULT_ARGS = {
     "receptor": None,
@@ -62,7 +63,7 @@ class UniDock(Base):
                  size_y: float = 22.5,
                  size_z: float = 22.5,
                  bias_file: Optional[Path] = None,
-                 multi_bias_files: List[Path] = [],
+                 multi_bias_files: Optional[List[Path]] = None,
                  ):
         """
         Initializes a UniDock object.
@@ -78,9 +79,12 @@ class UniDock(Base):
             size_y (float, optional): Size of the docking box in the y-dimension. Defaults to 22.5.
             size_z (float, optional): Size of the docking box in the z-dimension. Defaults to 22.5.
             bias_file (Optional[Path], optional): Path to the bias file. Defaults to None.
-            multi_bias_files (List[Path], optional): List of paths to multiple bias files. Defaults to [].
+            multi_bias_files (Optional[List[Path]], optional): List of paths to multiple bias files. Defaults to None.
         """
         self.check_dependencies()
+
+        if multi_bias_files is None:
+            multi_bias_files = []
 
         self.workdir = workdir
         self.workdir.mkdir(parents=True, exist_ok=True)
@@ -115,7 +119,7 @@ class UniDock(Base):
         if not shutil.which("unidock"):
             raise ModuleNotFoundError("To run Uni-Dock, you need to install Uni-Dock")
 
-    def _prepare_topology_sdf(self, mol: Chem.Mol, 
+    def _prepare_topology_sdf(self, mol: Chem.Mol,
                               savedir: Path) -> Optional[Path]:
         """
         Build topology for a molecule.
@@ -128,7 +132,7 @@ class UniDock(Base):
             topo_builder.build_molecular_graph()
             topo_builder.write_sdf_file(savedir / f"{filename}.sdf", do_rigid_docking=False)
             return savedir / f"{filename}.sdf"
-        except:
+        except Exception:
             logging.error(f"{filename} failed to build topology: {traceback.format_exc()}")
             return None
 
@@ -192,15 +196,15 @@ class UniDock(Base):
                 center_x=self.center_x, center_y=self.center_y, center_z=self.center_z,
                 size_x=self.size_x, size_y=self.size_y, size_z=self.size_z,
                 scoring=scoring_function, num_modes=num_modes,
-                search_mode=search_mode, exhaustiveness=exhaustiveness, max_step=max_step, 
+                search_mode=search_mode, exhaustiveness=exhaustiveness, max_step=max_step,
                 seed=seed, refine_step=refine_step, energy_range=energy_range, bias_file=self.bias_file,
                 score_only=score_only, local_only=local_only, multi_bias=multi_bias,
                 debug=debug,
             )
-            self.postprocessing(ligands=ligands, 
-                                scores_list=scores_list, 
+            self.postprocessing(ligands=ligands,
+                                scores_list=scores_list,
                                 save_dir=save_dir,
-                                topn_conf=topn, 
+                                topn_conf=topn,
                                 score_name=score_name,
                                 )
 
@@ -225,7 +229,7 @@ class UniDock(Base):
         return table_contents
 
     @time_logger
-    def postprocessing(self, 
+    def postprocessing(self,
                        ligands: List[Path],
                        scores_list: List[List[float]],
                        save_dir: Path,
@@ -234,11 +238,11 @@ class UniDock(Base):
                        ):
         os.makedirs(save_dir, exist_ok=True)
         with Pool(os.cpu_count()) as pool:
-            multi_table_contents = pool.map(partial(self._postprocessing, 
-                             save_dir=save_dir, 
-                             topn_conf=topn_conf, 
-                             score_name=score_name), 
-                     zip(ligands, scores_list))
+            multi_table_contents = pool.map(partial(self._postprocessing,
+                             save_dir=save_dir,
+                             topn_conf=topn_conf,
+                             score_name=score_name),
+                     zip(ligands, scores_list, strict=True))
 
         csv_str = "file_name,mol_name,conf_id,score\n"
         for table_contents in multi_table_contents:
@@ -295,13 +299,13 @@ def main(args: dict):
             multi_bias_file_list.extend(index_lines2 if len(index_lines2) > len(index_lines1) else index_lines1)
             multi_bias_file_list = [Path(multi_bias_file).resolve() for multi_bias_file in multi_bias_file_list \
                                     if Path(multi_bias_file).exists()]
-        
+
         if len(multi_bias_file_list) != len(ligands):
             logging.error("Number of ligands and bias files should be equal in multi-bias mode.")
             exit(1)
 
     logging.info("[UniDock Pipeline] Start")
-    start_time = time.time()   
+    start_time = time.time()
     runner = UniDock(
         receptor=Path(args["receptor"]).resolve(),
         ligands=ligands,
@@ -353,9 +357,15 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument("-b", "--bias_file", type=str, default=None,
                         help="Bias file in bpf format. Default: None.")
     parser.add_argument("-mbf", "--multi_bias_file", type=lambda s: s.split(','), default=None,
-                        help="multi Bias file in bpf format separated by commas. Number should be equal to ligands. Default: None.")
+                        help=(
+                            "multi Bias file in bpf format separated by commas. "
+                            "Number should be equal to ligands. Default: None."
+                        ))
     parser.add_argument("-mbi", "--multi_bias_index", type=str, default=None,
-                        help="A text file containing the path of multi bias files in bpf format. Number should be equal to ligands. Default: None.")
+                        help=(
+                            "A text file containing the path of multi bias files in bpf format. "
+                            "Number should be equal to ligands. Default: None."
+                        ))
 
     parser.add_argument("-cx", "--center_x", type=float, required=True,
                         help="X-coordinate of the docking box center.")
@@ -393,7 +403,7 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument("-rs", "--refine_step",
                         type=int, default=3,
                         help="Refine step. Default: 3.")
-    parser.add_argument("-er", "--energy_range", 
+    parser.add_argument("-er", "--energy_range",
                         type=float, default=3.0,
                         help="Energy range. Default: 3.0")
     parser.add_argument("-topn", "--topn",
@@ -406,7 +416,7 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument("--multi_bias", action="store_true",
                         help="Whether to use multi_bias mode.")
 
-    parser.add_argument("--seed", type=int, default=181129, 
+    parser.add_argument("--seed", type=int, default=181129,
                         help="Uni-Dock random seed")
     parser.add_argument("--debug", action="store_true",
                         help="Whether to use debug mode (debug-level log, keep workdir)")
@@ -429,12 +439,16 @@ def main_cli():
     -sx, --size_x: size_x of docking box (default: 22.5)
     -sy, --size_y: size_y of docking box (default: 22.5)
     -sz, --size_z: size_z of docking box (default: 22.5)
-    
+
     Receptor processor argument:
-    -kr, --kept_ligand_resname_list: List of ligand residue names to keep during receptor preprocessing (Default: None)
-    -ph, --prepared_hydrogen: Whether to prepare hydrogen during receptor preprocessing  (Default: False)
-    -pr, --preserve_resname: Whether to preserve the original residue names during receptor preprocessing  (Default: False)
-    -cra, --covalent_residue_atom_info: Atom information for covalent residues during receptor preprocessing  (Default: None). To use it like this: -cra 'A VAL 1 CA, A VAL 1 CB, A VAL 1 O'
+    -kr, --kept_ligand_resname_list: List of ligand residue names to keep during receptor
+        preprocessing (Default: None)
+    -ph, --prepared_hydrogen: Whether to prepare hydrogen during receptor preprocessing
+        (Default: False)
+    -pr, --preserve_resname: Whether to preserve the original residue names during receptor
+        preprocessing (Default: False)
+    -cra, --covalent_residue_atom_info: Atom information for covalent residues during receptor
+        preprocessing (Default: None). Example: -cra 'A VAL 1 CA, A VAL 1 CB, A VAL 1 O'
 
     Optional arguments:
     -sd, --savedir: save directory (default: unidock_results)

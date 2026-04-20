@@ -1,10 +1,10 @@
-from pathlib import Path
+import argparse
+import glob
+import importlib
+import logging
 import os
 import sys
-import glob
-import logging
-import importlib
-import argparse
+from pathlib import Path
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from unidock_tools import application
