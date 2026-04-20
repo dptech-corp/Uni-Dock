@@ -1,11 +1,11 @@
-from typing import Dict, Tuple, Union
 import os
-import numpy as np
-import networkx as nx
-from rdkit import Chem
-from rdkit.Chem import GetMolFrags, FragmentOnBonds
-from rdkit.Chem.rdPartialCharges import ComputeGasteigerCharges
+from typing import Dict, Tuple, Union
 
+import networkx as nx
+import numpy as np
+from rdkit import Chem
+from rdkit.Chem import FragmentOnBonds, GetMolFrags
+from rdkit.Chem.rdPartialCharges import ComputeGasteigerCharges
 
 ATOM_TYPE_DEFINITION_LIST = [{'smarts': '[#1]', 'atype': 'H', 'comment': 'invisible'},
                              {'smarts': '[#1][#7,#8,#9,#15,#16]', 'atype': 'HD', 'comment': None},
@@ -319,7 +319,6 @@ class TopologyBuilder:
 
                 edge_info = self.torsion_tree.edges[(node_idx, neighbor_node_idx)]
                 begin_node_idx = edge_info['begin_node_idx']
-                end_node_idx = edge_info['end_node_idx']
                 begin_atom_name = edge_info['begin_atom_name']
                 end_atom_name = edge_info['end_atom_name']
 
@@ -346,7 +345,10 @@ class TopologyBuilder:
         self.pdbqt_atom_line_list = []
 
         self.pdbqt_remark_torsion_line_format = '{:6s}   {:^2d}  {:1s}    {:7s} {:6s} {:^7s}  {:3s}  {:^7s}\n'
-        self.pdbqt_atom_line_format = '{:4s}  {:5d} {:^4s} {:3s} {:1s}{:4d}    {:8.3f}{:8.3f}{:8.3f}{:6.2f}{:6.2f}    {:6.3f} {:<2s}\n'
+        self.pdbqt_atom_line_format = (
+            '{:4s}  {:5d} {:^4s} {:3s} {:1s}{:4d}    '
+            '{:8.3f}{:8.3f}{:8.3f}{:6.2f}{:6.2f}    {:6.3f} {:<2s}\n'
+        )
         self.pdbqt_branch_line_format = '{:6s} {:3d} {:3d}\n'
         self.pdbqt_end_branch_line_format = '{:9s} {:3d} {:3d}\n'
         self.torsion_dof_line_format = '{:7s} {:d}'
@@ -447,7 +449,7 @@ class TopologyBuilder:
             atom_info = str(sdf_atom_idx).ljust(3) + charge[:10].ljust(10) + atom_type.ljust(2)
             atom_info_str += atom_info
             atom_info_str += '\n'
-        
+
         frag_all_info_str = " ".join([str(i) for i in range(1, 1 + self.mol.GetNumAtoms())])
 
         return frag_info_str, frag_all_info_str, torsion_info_str, atom_info_str

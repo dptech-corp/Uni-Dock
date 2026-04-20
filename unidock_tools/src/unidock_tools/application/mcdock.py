@@ -1,20 +1,21 @@
-from typing import List, Tuple
-from pathlib import Path
-import os
-import time
-import shutil
 import argparse
 import logging
+import os
+import shutil
+import time
+from pathlib import Path
+from typing import List, Optional, Tuple
+
 from multiprocess import Pool
 from rdkit import Chem
 
-from unidock_tools.utils import time_logger, randstr, MolGroup
 from unidock_tools.modules.confgen import generate_conf
-from unidock_tools.modules.protein_prep import pdb2pdbqt
-from unidock_tools.modules.ligand_prep import TopologyBuilder
 from unidock_tools.modules.docking import run_unidock
-from .unidock_pipeline import Base
+from unidock_tools.modules.ligand_prep import TopologyBuilder
+from unidock_tools.modules.protein_prep import pdb2pdbqt
+from unidock_tools.utils import MolGroup, randstr, time_logger
 
+from .unidock_pipeline import Base
 
 DEFAULT_ARGS = {
     "receptor": None,
@@ -133,11 +134,18 @@ class MultiConfDock(Base):
                 self.mol_group.update_property_by_idx(idx, "atomInfo", atom_info)
 
     @time_logger
-    def init_docking_data(self, input_dir: Path, batch_size: int = 20, props_list : List[str] = []):
+    def init_docking_data(
+        self,
+        input_dir: Path,
+        batch_size: int = 20,
+        props_list: Optional[List[str]] = None,
+    ):
+        if props_list is None:
+            props_list = []
         for sub_idx_list in self.mol_group.iter_idx_list(batch_size):
             input_list = []
             for idx in sub_idx_list:
-                input_list += self.mol_group.write_sdf_by_idx(idx, save_dir=input_dir, 
+                input_list += self.mol_group.write_sdf_by_idx(idx, save_dir=input_dir,
                                                               seperate_conf=True, props_list=props_list)
             yield input_list, input_dir
 
@@ -153,7 +161,7 @@ class MultiConfDock(Base):
             fprefix = fprefix.split("_CONF")[0]
             result_mols = [mol for mol in Chem.SDMolSupplier(str(ligand), removeHs=False)]
             mol_score_dict[fprefix] = mol_score_dict.get(fprefix, []) + \
-                [(mol, s) for mol, s in zip(result_mols, scores)]
+                [(mol, s) for mol, s in zip(result_mols, scores, strict=True)]
         for fprefix in mol_score_dict:
             mol_score_list = mol_score_dict[fprefix]
             mol_score_list.sort(key=lambda x: x[1], reverse=False)
@@ -181,14 +189,16 @@ class MultiConfDock(Base):
                     local_only: bool = False,
                     score_name: str = "docking_score",
                     docking_dir_name : str = "docking_dir",
-                    props_list : List[str] = [],
+                    props_list : Optional[List[str]] = None,
                     debug: bool = False,
                     ):
+        if props_list is None:
+            props_list = []
         input_dir = self.workdir / docking_dir_name / "docking_inputs"
         output_dir = self.workdir / docking_dir_name / "docking_results"
         os.makedirs(input_dir, exist_ok=True)
         os.makedirs(output_dir, exist_ok=True)
-        for ligand_list, input_dir in self.init_docking_data(
+        for ligand_list, _ in self.init_docking_data(
                 input_dir=input_dir,
                 batch_size=batch_size,
                 props_list=props_list,
@@ -199,20 +209,20 @@ class MultiConfDock(Base):
                 center_x=self.center_x, center_y=self.center_y, center_z=self.center_z,
                 size_x=self.size_x, size_y=self.size_y, size_z=self.size_z,
                 scoring=scoring_function, num_modes=num_modes,
-                search_mode=search_mode, exhaustiveness=exhaustiveness, max_step=max_step, 
+                search_mode=search_mode, exhaustiveness=exhaustiveness, max_step=max_step,
                 seed=seed, refine_step=refine_step, energy_range=energy_range,
                 score_only=score_only, local_only=local_only,
                 debug=debug,
             )
             # Ranking
-            self.postprocessing(zip(ligands, scores_list), topn, score_name)
+            self.postprocessing(zip(ligands, scores_list, strict=True), topn, score_name)
 
 
     @time_logger
     def save_results(self, save_dir: Path):
         os.makedirs(save_dir, exist_ok=True)
-        res_list = self.mol_group.write_sdf(save_dir=save_dir, seperate_conf=False, conf_prefix="_unidock", 
-                                            exclude_props_list=["file_prefix", 
+        res_list = self.mol_group.write_sdf(save_dir=save_dir, seperate_conf=False, conf_prefix="_unidock",
+                                            exclude_props_list=["file_prefix",
                                                                 "fragInfo", "fragAllInfo", "torsionInfo", "atomInfo"])
         return res_list
 
@@ -389,7 +399,7 @@ def get_parser() -> argparse.ArgumentParser:
                         type=int, default=1,
                         help="Top N results used in local refine. Default: 1.")
 
-    parser.add_argument("--seed", type=int, default=181129, 
+    parser.add_argument("--seed", type=int, default=181129,
                         help="Uni-Dock random seed")
     parser.add_argument("--debug", action="store_true",
                         help="Debug mode")
