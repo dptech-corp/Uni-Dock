@@ -907,6 +907,23 @@ bug reporting, license agreements, and more information.      \n";
                 return 0;
             }
             v.enable_gpu();
+            // Check flex residue limits for GPU docking.
+            // The CUDA kernel supports at most MAX_NUM_OF_FLEX_TORSION (1) flex
+            // torsion. Reject configurations that exceed this to avoid CUDA errors.
+            if (vm.count("flex")) {
+                size_t total_flex_torsions = sum(v.m_receptor.flex.count_torsions());
+                // MAX_NUM_OF_FLEX_TORSION in kernel.h
+                const size_t max_flex_torsions_gpu = 1;
+                if (total_flex_torsions > max_flex_torsions_gpu) {
+                    std::cerr << "ERROR: The flexible residues have " << total_flex_torsions
+                              << " torsions, but GPU docking supports at most "
+                              << max_flex_torsions_gpu << ".\n"
+                              << "Please reduce the number of flexible residues, or use "
+                              << "--ligand for CPU docking with flexible residues.\n"
+                              << "See https://github.com/dptech-corp/Uni-Dock/issues/159\n";
+                    return 1;
+                }
+            }
             if (sf_name.compare("vina") == 0 || sf_name.compare("vinardo") == 0) {
                 if (vm.count("maps")) {
                     v.load_maps(maps);
@@ -999,12 +1016,22 @@ bug reporting, license agreements, and more information.      \n";
                 size_t max_num_torsions = 0;
                 size_t max_num_rigids = 0;
                 size_t max_num_lig_pairs = 0;
+                // When flex residues are present, the combined model (receptor +
+                // ligand) will have more atoms and rigid bodies than the raw ligand.
+                // Account for this to select the correct Config group.
+                size_t receptor_atoms = v.m_receptor.num_atoms();
+                size_t receptor_flex_torsions = sum(v.m_receptor.flex.count_torsions());
+
                 printf("all_ligands.size():%ld\n",all_ligands.size());
                 for (int i = 0; i <  all_ligands.size(); ++i) {
                     // printf("i=:%d\n",i);
-                    num_atoms_vector.at(i) = all_ligands[i].second.num_atoms();
+                    num_atoms_vector.at(i) = all_ligands[i].second.num_atoms() + receptor_atoms;
                     num_torsions_vector.at(i)=sum(all_ligands[i].second.ligands.count_torsions());
-                    num_rigids_vector.at(i)=all_ligands[i].second.ligands[0].children.size();
+                    {
+                        size_t lig_rigids = all_ligands[i].second.ligands.size() > 0
+                            ? all_ligands[i].second.ligands[0].children.size() : 0;
+                        num_rigids_vector.at(i) = lig_rigids + receptor_flex_torsions;
+                    }
                     num_lig_pairs_vector.at(i)=all_ligands[i].second.num_internal_pairs();
                     max_num_atoms = std::max(max_num_atoms, num_atoms_vector.at(i));
                     max_num_torsions = std::max(max_num_torsions, num_torsions_vector.at(i));
