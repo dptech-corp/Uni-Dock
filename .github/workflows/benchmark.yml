@@ -16,7 +16,7 @@ jobs:
       - name: Checkout test suites
         uses: actions/checkout@v6
         with:
-          repository: dptech-corp/Uni-Dock-Benchmarks
+          repository: dptech-corp/Uni-Dock-Benchmarks-bak
       - name: Setup Python
         uses: actions/setup-python@v6
         with:
