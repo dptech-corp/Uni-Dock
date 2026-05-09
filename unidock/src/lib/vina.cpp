@@ -538,6 +538,34 @@ void Vina::compute_vina_maps(double center_x, double center_y, double center_z, 
         gd[i].end = gd[i].begin + real_span;
     }
 
+    // Validate grid dimensions against GPU buffer limits.
+    // These must match MAX_NUM_OF_GRID_MI/MJ/MK and MAX_NUM_OF_GRID_POINT in cuda/kernel.h.
+    {
+        size_t n0 = gd[0].n_voxels + 1;
+        size_t n1 = gd[1].n_voxels + 1;
+        size_t n2 = gd[2].n_voxels + 1;
+        size_t total_grid_points = n0 * n1 * n2;
+        const size_t max_dim = 128;       // MAX_NUM_OF_GRID_MI/MJ/MK in cuda/kernel.h
+        const size_t max_points = 512000; // MAX_NUM_OF_GRID_POINT in cuda/kernel.h
+        if (n0 > max_dim || n1 > max_dim || n2 > max_dim) {
+            std::cerr << "ERROR: Grid dimension (" << n0 << " x " << n1 << " x " << n2
+                      << ") exceeds GPU buffer limit (" << max_dim << " per axis).\n"
+                      << "       Reduce box size or increase --spacing.\n"
+                      << "       If you have enough GPU memory, increase MAX_NUM_OF_GRID_MI/MJ/MK\n"
+                      << "       in cuda/kernel.h and recompile.\n";
+            exit(EXIT_FAILURE);
+        }
+        if (total_grid_points > max_points) {
+            std::cerr << "ERROR: Total grid points (" << total_grid_points
+                      << ") exceeds GPU buffer limit (MAX_NUM_OF_GRID_POINT="
+                      << max_points << ").\n"
+                      << "       Reduce box size or increase --spacing.\n"
+                      << "       If you have enough GPU memory, increase MAX_NUM_OF_GRID_POINT\n"
+                      << "       in cuda/kernel.h and recompile.\n";
+            exit(EXIT_FAILURE);
+        }
+    }
+
     // Initialize the scoring function
     precalculate precalculated_sf(*m_scoring_function);
     // Store it now in Vina object because of non_cache
