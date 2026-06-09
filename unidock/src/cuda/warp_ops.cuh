@@ -499,7 +499,7 @@ __device__ __forceinline__ float ig_eval_deriv_warp(cg::thread_block_tile<TileSi
     int nat = num_atom_types(ig_cuda_gpu->atu);
     for (int i = tile.thread_rank(); i < m_cuda_gpu->m_num_movable_atoms; i += tile.num_threads()) {
         int t = m_cuda_gpu->atoms[i].types[ig_cuda_gpu->atu];
-        if (t >= nat) {
+        if (t >= nat || xs_is_glue_type_gpu(m_cuda_gpu->atoms[i].types[2])) {
             m_cuda_gpu->minus_forces.coords[i][0] = 0.0f;
             m_cuda_gpu->minus_forces.coords[i][1] = 0.0f;
             m_cuda_gpu->minus_forces.coords[i][2] = 0.0f;
@@ -526,7 +526,7 @@ __device__ __forceinline__ float ig_eval_deriv_warp(cg::thread_block_tile<TileSi
     int nat = num_atom_types(ig_cuda_gpu->atu);
     for (int i = tile.thread_rank(); i < m_cuda_gpu->m_num_movable_atoms; i += tile.num_threads()) {
         int t = m_cuda_gpu->atoms[i].types[ig_cuda_gpu->atu];
-        if (t >= nat) {
+        if (t >= nat || xs_is_glue_type_gpu(m_cuda_gpu->atoms[i].types[2])) {
             m_cuda_gpu->minus_forces.coords[i][0] = 0.0f;
             m_cuda_gpu->minus_forces.coords[i][1] = 0.0f;
             m_cuda_gpu->minus_forces.coords[i][2] = 0.0f;

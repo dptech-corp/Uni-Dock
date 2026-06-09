@@ -616,6 +616,9 @@ void model::initialize_pairs(const distance_type_matrix& mobility) {
                     if (is_glue_pair(i, j)) {
                         // Add glue_i - glue_i interaction pair
                         glue_pairs.push_back(ip);
+                    } else if (ad_is_glue(atoms[i].ad) || ad_is_glue(atoms[j].ad)) {
+                        // G0..G3 are virtual ring-closure markers: exclude them from
+                        // normal (non-glue) pairs so they don't bias search/scoring.
                     } else if (i_lig < ligands.size() && find_ligand(j) == i_lig) {
                         // Add INTRAmolecular ligand_i - ligand_i
                         ligands[i_lig].pairs.push_back(ip);
@@ -1005,14 +1008,12 @@ fl model::eval_intramolecular(const precalculate_byatom& p, const igrid& ig, con
         }
     }
     // printf("e3=%f\n", e);
-    // glue_i - glue_i and glue_i - glue_j interactions (no cutoff)
-    VINA_FOR_IN(i, glue_pairs) {
-        const interacting_pair& pair = glue_pairs[i];
-        fl r2 = vec_distance_sqr(coords[pair.a], coords[pair.b]);
-        fl this_e = p.eval_fast(pair.a, pair.b, r2);
-        curl(this_e, v[2]);
-        e += this_e;
-    }
+    // Macrocycle glue (CG-G) is a ring-closure search restraint, NOT part of the
+    // ligand's internal energy for binding. Excluding it here keeps the reported
+    // "unbound"/intramolecular reference consistent with Vina::score(_gpu)'s intra
+    // term (which does not include glue), so glue does not leak into the affinity.
+    // (Was: a glue_pairs loop adding +50*r per pair, producing absurd scores for
+    //  macrocyclic ligands on the GPU path.)
     // printf("e4=%f\n", e);
 
     return e;

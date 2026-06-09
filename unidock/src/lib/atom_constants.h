@@ -224,6 +224,12 @@ const sz acceptor_kinds_size = sizeof(acceptor_kind_data) / sizeof(acceptor_kind
 
 inline bool ad_is_hydrogen(sz ad) { return ad == AD_TYPE_H || ad == AD_TYPE_HD; }
 
+// G0..G3 are virtual macrocycle "glue" pseudo-atoms (ring-closure markers): they
+// have no real interactions and must not bias scoring/search via normal pairs.
+inline bool ad_is_glue(sz ad) {
+    return ad == AD_TYPE_G0 || ad == AD_TYPE_G1 || ad == AD_TYPE_G2 || ad == AD_TYPE_G3;
+}
+
 inline bool ad_is_heteroatom(sz ad) {  // returns false for ad >= AD_TYPE_SIZE
     return ad != AD_TYPE_A && ad != AD_TYPE_C && ad != AD_TYPE_H && ad != AD_TYPE_HD
            && ad < AD_TYPE_SIZE;

@@ -7,6 +7,16 @@
 
 #define M_PI_F 3.1415927f
 
+// Macrocycle "glue" pseudo-atoms (G0..G3) are virtual ring-closure markers with
+// no real (vdW/grid) interactions. They must be excluded from intermolecular
+// (ligand-grid) scoring, mirroring the CPU cache (lib/cache.cpp). atoms[i].types[2]
+// is always the XS atom type. Without this, the GPU search is misled by an
+// unpopulated grid and drives macrocyclic ligands into pathological poses.
+__device__ __forceinline__ bool xs_is_glue_type_gpu(int xs_t) {
+    return xs_t == (int)XS_TYPE_G0 || xs_t == (int)XS_TYPE_G1 || xs_t == (int)XS_TYPE_G2
+           || xs_t == (int)XS_TYPE_G3;
+}
+
 /* Below based on mutate_conf.cpp */
 
 __device__ __forceinline__ void quaternion_increment(float *q, const float *rotation,
@@ -648,7 +658,7 @@ __device__ __forceinline__ float ig_eval_deriv(output_type_cuda_t *x, change_cud
     int nat = num_atom_types(ig_cuda_gpu->atu);
     for (int i = 0; i < m_cuda_gpu->m_num_movable_atoms; i++) {
         int t = m_cuda_gpu->atoms[i].types[ig_cuda_gpu->atu];
-        if (t >= nat) {
+        if (t >= nat || xs_is_glue_type_gpu(m_cuda_gpu->atoms[i].types[2])) {
             for (int j = 0; j < 3; j++) m_cuda_gpu->minus_forces.coords[i][j] = 0;
             continue;
         }
@@ -670,7 +680,7 @@ __device__ __forceinline__ float ig_eval_deriv(output_type_cuda_t_<Config> *x, c
     int nat = num_atom_types(ig_cuda_gpu->atu);
     for (int i = 0; i < m_cuda_gpu->m_num_movable_atoms; i++) {
         int t = m_cuda_gpu->atoms[i].types[ig_cuda_gpu->atu];
-        if (t >= nat) {
+        if (t >= nat || xs_is_glue_type_gpu(m_cuda_gpu->atoms[i].types[2])) {
             for (int j = 0; j < 3; j++) m_cuda_gpu->minus_forces.coords[i][j] = 0;
             continue;
         }

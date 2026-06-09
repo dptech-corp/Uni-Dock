@@ -408,6 +408,7 @@ fl non_cache::eval(const model& m, fl v) const {  // clean up
 bool non_cache::within(const model& m, fl margin) const {
     VINA_FOR(i, m.num_movable_atoms()) {
         if (m.atoms[i].is_hydrogen()) continue;
+        if (ad_is_glue(m.atoms[i].ad)) continue;  // virtual macrocycle markers: not real atoms
         const vec& a_coords = m.coords[i];
         VINA_FOR_IN(j, gd)
         if (gd[j].n_voxels > 0)
