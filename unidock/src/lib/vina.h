@@ -283,6 +283,7 @@ public:
             }
 
             for (int i = 0; i < poses.size(); ++i) {
+                if (!not_max(poses[i].e)) continue;  // skip out-of-bounds poses
                 if (m_verbosity > 1) std::cout << "ENERGY FROM SEARCH: " << poses[i].e << "\n";
 
                 m_model_gpu[l].set(poses[i].c);
@@ -323,6 +324,7 @@ public:
             }
 
             VINA_FOR_IN(i, poses) {
+                if (!not_max(poses[i].e)) continue;  // skip out-of-bounds poses
                 m_model_gpu[l].set(poses[i].c);
 
                 // Get RMSD between current pose and best_model
