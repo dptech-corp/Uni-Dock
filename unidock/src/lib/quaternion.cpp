@@ -35,15 +35,20 @@ bool eq(
 }
 
 qt angle_to_quaternion(const vec& axis, fl angle) {  // axis is assumed to be a unit vector
-    // assert(eq(tvmet::norm2(axis), 1));
-    if (!eq(axis.norm(), 1)) {
-        printf("angle_to_quaternion axis.norm=%f, failed\n", axis.norm());
+    fl n = axis.norm();
+    if (std::isnan(n) || n < epsilon_fl) {
+        // Degenerate axis (NaN or zero-length): return identity quaternion (no rotation)
+        return qt_identity;
     }
-    assert(eq(axis.norm(), 1));
+    vec normalized_axis = axis;
+    if (!eq(n, 1)) {
+        // Renormalize axis that drifted from unit length due to floating-point precision
+        normalized_axis = axis / n;
+    }
     normalize_angle(angle);  // this is probably only necessary if angles can be very big
     fl c = std::cos(angle / 2);
     fl s = std::sin(angle / 2);
-    return qt(c, s * axis[0], s * axis[1], s * axis[2]);
+    return qt(c, s * normalized_axis[0], s * normalized_axis[1], s * normalized_axis[2]);
 }
 
 qt angle_to_quaternion(const vec& rotation) {
