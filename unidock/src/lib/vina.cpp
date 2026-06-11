@@ -545,8 +545,9 @@ void Vina::compute_vina_maps(double center_x, double center_y, double center_z, 
         size_t n1 = gd[1].n_voxels + 1;
         size_t n2 = gd[2].n_voxels + 1;
         size_t total_grid_points = n0 * n1 * n2;
-        const size_t max_dim = 128;       // MAX_NUM_OF_GRID_MI/MJ/MK in cuda/kernel.h
-        const size_t max_points = 512000; // MAX_NUM_OF_GRID_POINT in cuda/kernel.h
+        const size_t max_dim = 128;        // MAX_NUM_OF_GRID_MI/MJ/MK in cuda/kernel.h
+        const size_t max_points = 531441;  // MAX_NUM_OF_GRID_POINT in cuda/kernel.h (= 81^3,
+                                           // fits the default 30 A / 0.375 box; see PR for buffer bump)
         if (n0 > max_dim || n1 > max_dim || n2 > max_dim) {
             std::cerr << "ERROR: Grid dimension (" << n0 << " x " << n1 << " x " << n2
                       << ") exceeds GPU buffer limit (" << max_dim << " per axis).\n"
