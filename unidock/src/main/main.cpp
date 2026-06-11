@@ -1003,6 +1003,15 @@ bug reporting, license agreements, and more information.      \n";
                 for (int i = 0; i <  all_ligands.size(); ++i) {
                     // printf("i=:%d\n",i);
                     num_atoms_vector.at(i) = all_ligands[i].second.num_atoms();
+                    if (all_ligands[i].second.ligands.empty()) {
+                        // Ligand failed to parse - mark as invalid to avoid segfault
+                        num_torsions_vector.at(i) = 0;
+                        num_rigids_vector.at(i) = 0;
+                        num_lig_pairs_vector.at(i) = 0;
+                        std::cerr << "WARNING: Skipping ligand " << all_ligands[i].first
+                                  << " (failed to parse)" << std::endl;
+                        continue;
+                    }
                     num_torsions_vector.at(i)=sum(all_ligands[i].second.ligands.count_torsions());
                     num_rigids_vector.at(i)=all_ligands[i].second.ligands[0].children.size();
                     num_lig_pairs_vector.at(i)=all_ligands[i].second.num_internal_pairs();
