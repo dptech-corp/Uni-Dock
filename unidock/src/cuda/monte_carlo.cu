@@ -41,6 +41,28 @@
 #include <cooperative_groups.h>
 #include <cooperative_groups/reduce.h>
 
+static inline void check_grid_dims(size_t m_i, size_t m_j, size_t m_k, size_t data_size,
+                                   size_t max_mi, size_t max_mj, size_t max_mk,
+                                   size_t max_points) {
+    if (m_i > max_mi || m_j > max_mj || m_k > max_mk) {
+        std::cerr << "ERROR: Grid dimension (" << m_i << " x " << m_j << " x " << m_k
+                  << ") exceeds GPU buffer limit (" << max_mi << " x " << max_mj << " x "
+                  << max_mk << ").\n"
+                  << "       Reduce box size or increase --spacing.\n"
+                  << "       If you have enough GPU memory, increase MAX_NUM_OF_GRID_MI/MJ/MK\n"
+                  << "       in cuda/kernel.h and recompile." << std::endl;
+        throw std::runtime_error("Grid dimensions exceed GPU buffer limits");
+    }
+    if (data_size > max_points) {
+        std::cerr << "ERROR: Total grid points (" << data_size
+                  << ") exceeds GPU buffer limit (MAX_NUM_OF_GRID_POINT=" << max_points << ").\n"
+                  << "       Reduce box size or increase --spacing.\n"
+                  << "       If you have enough GPU memory, increase MAX_NUM_OF_GRID_POINT\n"
+                  << "       in cuda/kernel.h and recompile." << std::endl;
+        throw std::runtime_error("Grid data size exceeds GPU buffer limits");
+    }
+}
+
 #undef DEBUG_PRINTF
 #define DEBUG
 #define DEBUG_PRINTF(...)
@@ -716,16 +738,13 @@ __host__ void monte_carlo::mc_stream(
                     }
                     if (tmp_grids[i].m_data.dim0() != 0) {
                         ig_cuda_ptr->grids[i].m_i = tmp_grids[i].m_data.dim0();
-                        assert(MAX_NUM_OF_GRID_MI >= ig_cuda_ptr->grids[i].m_i);
                         ig_cuda_ptr->grids[i].m_j = tmp_grids[i].m_data.dim1();
-                        assert(MAX_NUM_OF_GRID_MJ >= ig_cuda_ptr->grids[i].m_j);
                         ig_cuda_ptr->grids[i].m_k = tmp_grids[i].m_data.dim2();
-                        assert(MAX_NUM_OF_GRID_MK >= ig_cuda_ptr->grids[i].m_k);
-
-                        assert(tmp_grids[i].m_data.m_data.size()
-                               == ig_cuda_ptr->grids[i].m_i * ig_cuda_ptr->grids[i].m_j
-                                      * ig_cuda_ptr->grids[i].m_k);
-                        assert(tmp_grids[i].m_data.m_data.size() <= MAX_NUM_OF_GRID_POINT);
+                        check_grid_dims(ig_cuda_ptr->grids[i].m_i, ig_cuda_ptr->grids[i].m_j,
+                                        ig_cuda_ptr->grids[i].m_k,
+                                        tmp_grids[i].m_data.m_data.size(),
+                                        MAX_NUM_OF_GRID_MI, MAX_NUM_OF_GRID_MJ,
+                                        MAX_NUM_OF_GRID_MK, MAX_NUM_OF_GRID_POINT);
                         memcpy(ig_cuda_ptr->grids[i].m_data, tmp_grids[i].m_data.m_data.data(),
                                tmp_grids[i].m_data.m_data.size() * sizeof(fl));
                     } else {
@@ -764,15 +783,13 @@ __host__ void monte_carlo::mc_stream(
                     }
                     if (tmp_grids[i].m_data.dim0() != 0) {
                         ig_cuda_ptr->grids[i].m_i = tmp_grids[i].m_data.dim0();
-                        assert(MAX_NUM_OF_GRID_MI >= ig_cuda_ptr->grids[i].m_i);
                         ig_cuda_ptr->grids[i].m_j = tmp_grids[i].m_data.dim1();
-                        assert(MAX_NUM_OF_GRID_MJ >= ig_cuda_ptr->grids[i].m_j);
                         ig_cuda_ptr->grids[i].m_k = tmp_grids[i].m_data.dim2();
-                        assert(MAX_NUM_OF_GRID_MK >= ig_cuda_ptr->grids[i].m_k);
-
-                        assert(tmp_grids[i].m_data.m_data.size()
-                               == ig_cuda_ptr->grids[i].m_i * ig_cuda_ptr->grids[i].m_j
-                                      * ig_cuda_ptr->grids[i].m_k);
+                        check_grid_dims(ig_cuda_ptr->grids[i].m_i, ig_cuda_ptr->grids[i].m_j,
+                                        ig_cuda_ptr->grids[i].m_k,
+                                        tmp_grids[i].m_data.m_data.size(),
+                                        MAX_NUM_OF_GRID_MI, MAX_NUM_OF_GRID_MJ,
+                                        MAX_NUM_OF_GRID_MK, MAX_NUM_OF_GRID_POINT);
                         memcpy(ig_cuda_ptr->grids[i].m_data, tmp_grids[i].m_data.m_data.data(),
                                tmp_grids[i].m_data.m_data.size() * sizeof(fl));
                     } else {
@@ -805,15 +822,13 @@ __host__ void monte_carlo::mc_stream(
             }
             if (tmp_grids[i].m_data.dim0() != 0) {
                 ig_cuda_ptr->grids[i].m_i = tmp_grids[i].m_data.dim0();
-                assert(MAX_NUM_OF_GRID_MI >= ig_cuda_ptr->grids[i].m_i);
                 ig_cuda_ptr->grids[i].m_j = tmp_grids[i].m_data.dim1();
-                assert(MAX_NUM_OF_GRID_MJ >= ig_cuda_ptr->grids[i].m_j);
                 ig_cuda_ptr->grids[i].m_k = tmp_grids[i].m_data.dim2();
-                assert(MAX_NUM_OF_GRID_MK >= ig_cuda_ptr->grids[i].m_k);
-
-                assert(tmp_grids[i].m_data.m_data.size()
-                       == ig_cuda_ptr->grids[i].m_i * ig_cuda_ptr->grids[i].m_j
-                              * ig_cuda_ptr->grids[i].m_k);
+                check_grid_dims(ig_cuda_ptr->grids[i].m_i, ig_cuda_ptr->grids[i].m_j,
+                                ig_cuda_ptr->grids[i].m_k,
+                                tmp_grids[i].m_data.m_data.size(),
+                                MAX_NUM_OF_GRID_MI, MAX_NUM_OF_GRID_MJ,
+                                MAX_NUM_OF_GRID_MK, MAX_NUM_OF_GRID_POINT);
                 memcpy(ig_cuda_ptr->grids[i].m_data, tmp_grids[i].m_data.m_data.data(),
                        tmp_grids[i].m_data.m_data.size() * sizeof(fl));
             } else {
@@ -1510,16 +1525,13 @@ __host__ void monte_carlo::operator()(
                     }
                     if (tmp_grids[i].m_data.dim0() != 0) {
                         ig_cuda_ptr->grids[i].m_i = tmp_grids[i].m_data.dim0();
-                        assert(MAX_NUM_OF_GRID_MI >= ig_cuda_ptr->grids[i].m_i);
                         ig_cuda_ptr->grids[i].m_j = tmp_grids[i].m_data.dim1();
-                        assert(MAX_NUM_OF_GRID_MJ >= ig_cuda_ptr->grids[i].m_j);
                         ig_cuda_ptr->grids[i].m_k = tmp_grids[i].m_data.dim2();
-                        assert(MAX_NUM_OF_GRID_MK >= ig_cuda_ptr->grids[i].m_k);
-
-                        assert(tmp_grids[i].m_data.m_data.size()
-                               == ig_cuda_ptr->grids[i].m_i * ig_cuda_ptr->grids[i].m_j
-                                      * ig_cuda_ptr->grids[i].m_k);
-                        assert(tmp_grids[i].m_data.m_data.size() <= MAX_NUM_OF_GRID_POINT);
+                        check_grid_dims(ig_cuda_ptr->grids[i].m_i, ig_cuda_ptr->grids[i].m_j,
+                                        ig_cuda_ptr->grids[i].m_k,
+                                        tmp_grids[i].m_data.m_data.size(),
+                                        MAX_NUM_OF_GRID_MI, MAX_NUM_OF_GRID_MJ,
+                                        MAX_NUM_OF_GRID_MK, MAX_NUM_OF_GRID_POINT);
                         memcpy(ig_cuda_ptr->grids[i].m_data, tmp_grids[i].m_data.m_data.data(),
                                tmp_grids[i].m_data.m_data.size() * sizeof(fl));
                     } else {
@@ -1558,15 +1570,13 @@ __host__ void monte_carlo::operator()(
                     }
                     if (tmp_grids[i].m_data.dim0() != 0) {
                         ig_cuda_ptr->grids[i].m_i = tmp_grids[i].m_data.dim0();
-                        assert(MAX_NUM_OF_GRID_MI >= ig_cuda_ptr->grids[i].m_i);
                         ig_cuda_ptr->grids[i].m_j = tmp_grids[i].m_data.dim1();
-                        assert(MAX_NUM_OF_GRID_MJ >= ig_cuda_ptr->grids[i].m_j);
                         ig_cuda_ptr->grids[i].m_k = tmp_grids[i].m_data.dim2();
-                        assert(MAX_NUM_OF_GRID_MK >= ig_cuda_ptr->grids[i].m_k);
-
-                        assert(tmp_grids[i].m_data.m_data.size()
-                               == ig_cuda_ptr->grids[i].m_i * ig_cuda_ptr->grids[i].m_j
-                                      * ig_cuda_ptr->grids[i].m_k);
+                        check_grid_dims(ig_cuda_ptr->grids[i].m_i, ig_cuda_ptr->grids[i].m_j,
+                                        ig_cuda_ptr->grids[i].m_k,
+                                        tmp_grids[i].m_data.m_data.size(),
+                                        MAX_NUM_OF_GRID_MI, MAX_NUM_OF_GRID_MJ,
+                                        MAX_NUM_OF_GRID_MK, MAX_NUM_OF_GRID_POINT);
                         memcpy(ig_cuda_ptr->grids[i].m_data, tmp_grids[i].m_data.m_data.data(),
                                tmp_grids[i].m_data.m_data.size() * sizeof(fl));
                     } else {
@@ -1599,15 +1609,13 @@ __host__ void monte_carlo::operator()(
             }
             if (tmp_grids[i].m_data.dim0() != 0) {
                 ig_cuda_ptr->grids[i].m_i = tmp_grids[i].m_data.dim0();
-                assert(MAX_NUM_OF_GRID_MI >= ig_cuda_ptr->grids[i].m_i);
                 ig_cuda_ptr->grids[i].m_j = tmp_grids[i].m_data.dim1();
-                assert(MAX_NUM_OF_GRID_MJ >= ig_cuda_ptr->grids[i].m_j);
                 ig_cuda_ptr->grids[i].m_k = tmp_grids[i].m_data.dim2();
-                assert(MAX_NUM_OF_GRID_MK >= ig_cuda_ptr->grids[i].m_k);
-
-                assert(tmp_grids[i].m_data.m_data.size()
-                       == ig_cuda_ptr->grids[i].m_i * ig_cuda_ptr->grids[i].m_j
-                              * ig_cuda_ptr->grids[i].m_k);
+                check_grid_dims(ig_cuda_ptr->grids[i].m_i, ig_cuda_ptr->grids[i].m_j,
+                                ig_cuda_ptr->grids[i].m_k,
+                                tmp_grids[i].m_data.m_data.size(),
+                                MAX_NUM_OF_GRID_MI, MAX_NUM_OF_GRID_MJ,
+                                MAX_NUM_OF_GRID_MK, MAX_NUM_OF_GRID_POINT);
                 memcpy(ig_cuda_ptr->grids[i].m_data, tmp_grids[i].m_data.m_data.data(),
                        tmp_grids[i].m_data.m_data.size() * sizeof(fl));
             } else {
@@ -2080,16 +2088,13 @@ __host__ void monte_carlo_template::operator()(
                     }
                     if (tmp_grids[i].m_data.dim0() != 0) {
                         ig_cuda_ptr->grids[i].m_i = tmp_grids[i].m_data.dim0();
-                        assert(MAX_NUM_OF_GRID_MI >= ig_cuda_ptr->grids[i].m_i);
                         ig_cuda_ptr->grids[i].m_j = tmp_grids[i].m_data.dim1();
-                        assert(MAX_NUM_OF_GRID_MJ >= ig_cuda_ptr->grids[i].m_j);
                         ig_cuda_ptr->grids[i].m_k = tmp_grids[i].m_data.dim2();
-                        assert(MAX_NUM_OF_GRID_MK >= ig_cuda_ptr->grids[i].m_k);
-
-                        assert(tmp_grids[i].m_data.m_data.size()
-                               == ig_cuda_ptr->grids[i].m_i * ig_cuda_ptr->grids[i].m_j
-                                      * ig_cuda_ptr->grids[i].m_k);
-                        assert(tmp_grids[i].m_data.m_data.size() <= MAX_NUM_OF_GRID_POINT);
+                        check_grid_dims(ig_cuda_ptr->grids[i].m_i, ig_cuda_ptr->grids[i].m_j,
+                                        ig_cuda_ptr->grids[i].m_k,
+                                        tmp_grids[i].m_data.m_data.size(),
+                                        MAX_NUM_OF_GRID_MI, MAX_NUM_OF_GRID_MJ,
+                                        MAX_NUM_OF_GRID_MK, MAX_NUM_OF_GRID_POINT);
                         memcpy(ig_cuda_ptr->grids[i].m_data, tmp_grids[i].m_data.m_data.data(),
                                tmp_grids[i].m_data.m_data.size() * sizeof(fl));
                     } else {
@@ -2128,15 +2133,13 @@ __host__ void monte_carlo_template::operator()(
                     }
                     if (tmp_grids[i].m_data.dim0() != 0) {
                         ig_cuda_ptr->grids[i].m_i = tmp_grids[i].m_data.dim0();
-                        assert(MAX_NUM_OF_GRID_MI >= ig_cuda_ptr->grids[i].m_i);
                         ig_cuda_ptr->grids[i].m_j = tmp_grids[i].m_data.dim1();
-                        assert(MAX_NUM_OF_GRID_MJ >= ig_cuda_ptr->grids[i].m_j);
                         ig_cuda_ptr->grids[i].m_k = tmp_grids[i].m_data.dim2();
-                        assert(MAX_NUM_OF_GRID_MK >= ig_cuda_ptr->grids[i].m_k);
-
-                        assert(tmp_grids[i].m_data.m_data.size()
-                               == ig_cuda_ptr->grids[i].m_i * ig_cuda_ptr->grids[i].m_j
-                                      * ig_cuda_ptr->grids[i].m_k);
+                        check_grid_dims(ig_cuda_ptr->grids[i].m_i, ig_cuda_ptr->grids[i].m_j,
+                                        ig_cuda_ptr->grids[i].m_k,
+                                        tmp_grids[i].m_data.m_data.size(),
+                                        MAX_NUM_OF_GRID_MI, MAX_NUM_OF_GRID_MJ,
+                                        MAX_NUM_OF_GRID_MK, MAX_NUM_OF_GRID_POINT);
                         memcpy(ig_cuda_ptr->grids[i].m_data, tmp_grids[i].m_data.m_data.data(),
                                tmp_grids[i].m_data.m_data.size() * sizeof(fl));
                     } else {
@@ -2169,15 +2172,13 @@ __host__ void monte_carlo_template::operator()(
             }
             if (tmp_grids[i].m_data.dim0() != 0) {
                 ig_cuda_ptr->grids[i].m_i = tmp_grids[i].m_data.dim0();
-                assert(MAX_NUM_OF_GRID_MI >= ig_cuda_ptr->grids[i].m_i);
                 ig_cuda_ptr->grids[i].m_j = tmp_grids[i].m_data.dim1();
-                assert(MAX_NUM_OF_GRID_MJ >= ig_cuda_ptr->grids[i].m_j);
                 ig_cuda_ptr->grids[i].m_k = tmp_grids[i].m_data.dim2();
-                assert(MAX_NUM_OF_GRID_MK >= ig_cuda_ptr->grids[i].m_k);
-
-                assert(tmp_grids[i].m_data.m_data.size()
-                       == ig_cuda_ptr->grids[i].m_i * ig_cuda_ptr->grids[i].m_j
-                              * ig_cuda_ptr->grids[i].m_k);
+                check_grid_dims(ig_cuda_ptr->grids[i].m_i, ig_cuda_ptr->grids[i].m_j,
+                                ig_cuda_ptr->grids[i].m_k,
+                                tmp_grids[i].m_data.m_data.size(),
+                                MAX_NUM_OF_GRID_MI, MAX_NUM_OF_GRID_MJ,
+                                MAX_NUM_OF_GRID_MK, MAX_NUM_OF_GRID_POINT);
                 memcpy(ig_cuda_ptr->grids[i].m_data, tmp_grids[i].m_data.m_data.data(),
                        tmp_grids[i].m_data.m_data.size() * sizeof(fl));
             } else {
@@ -2737,16 +2738,13 @@ __host__ void monte_carlo_template::do_docking_base<Config>(std::vector<model> &
                     }
                     if (tmp_grids[i].m_data.dim0() != 0) {
                         ig_cuda_ptr->grids[i].m_i = tmp_grids[i].m_data.dim0();
-                        assert(MAX_NUM_OF_GRID_MI >= ig_cuda_ptr->grids[i].m_i);
                         ig_cuda_ptr->grids[i].m_j = tmp_grids[i].m_data.dim1();
-                        assert(MAX_NUM_OF_GRID_MJ >= ig_cuda_ptr->grids[i].m_j);
                         ig_cuda_ptr->grids[i].m_k = tmp_grids[i].m_data.dim2();
-                        assert(MAX_NUM_OF_GRID_MK >= ig_cuda_ptr->grids[i].m_k);
-
-                        assert(tmp_grids[i].m_data.m_data.size()
-                               == ig_cuda_ptr->grids[i].m_i * ig_cuda_ptr->grids[i].m_j
-                                      * ig_cuda_ptr->grids[i].m_k);
-                        assert(tmp_grids[i].m_data.m_data.size() <= Config::MAX_NUM_OF_GRID_POINT_);
+                        check_grid_dims(ig_cuda_ptr->grids[i].m_i, ig_cuda_ptr->grids[i].m_j,
+                                        ig_cuda_ptr->grids[i].m_k,
+                                        tmp_grids[i].m_data.m_data.size(),
+                                        Config::MAX_NUM_OF_GRID_MI_, Config::MAX_NUM_OF_GRID_MJ_,
+                                        Config::MAX_NUM_OF_GRID_MK_, Config::MAX_NUM_OF_GRID_POINT_);
                         memcpy(ig_cuda_ptr->grids[i].m_data, tmp_grids[i].m_data.m_data.data(),
                                tmp_grids[i].m_data.m_data.size() * sizeof(fl));
                     } else {
@@ -2785,15 +2783,13 @@ __host__ void monte_carlo_template::do_docking_base<Config>(std::vector<model> &
                     }
                     if (tmp_grids[i].m_data.dim0() != 0) {
                         ig_cuda_ptr->grids[i].m_i = tmp_grids[i].m_data.dim0();
-                        assert(SmallConfig::MAX_NUM_OF_GRID_MI_ >= ig_cuda_ptr->grids[i].m_i);
                         ig_cuda_ptr->grids[i].m_j = tmp_grids[i].m_data.dim1();
-                        assert(SmallConfig::MAX_NUM_OF_GRID_MJ_ >= ig_cuda_ptr->grids[i].m_j);
                         ig_cuda_ptr->grids[i].m_k = tmp_grids[i].m_data.dim2();
-                        assert(SmallConfig::MAX_NUM_OF_GRID_MK_ >= ig_cuda_ptr->grids[i].m_k);
-
-                        assert(tmp_grids[i].m_data.m_data.size()
-                               == ig_cuda_ptr->grids[i].m_i * ig_cuda_ptr->grids[i].m_j
-                                      * ig_cuda_ptr->grids[i].m_k);
+                        check_grid_dims(ig_cuda_ptr->grids[i].m_i, ig_cuda_ptr->grids[i].m_j,
+                                        ig_cuda_ptr->grids[i].m_k,
+                                        tmp_grids[i].m_data.m_data.size(),
+                                        SmallConfig::MAX_NUM_OF_GRID_MI_, SmallConfig::MAX_NUM_OF_GRID_MJ_,
+                                        SmallConfig::MAX_NUM_OF_GRID_MK_, SmallConfig::MAX_NUM_OF_GRID_POINT_);
                         memcpy(ig_cuda_ptr->grids[i].m_data, tmp_grids[i].m_data.m_data.data(),
                                tmp_grids[i].m_data.m_data.size() * sizeof(fl));
                     } else {
@@ -2826,15 +2822,13 @@ __host__ void monte_carlo_template::do_docking_base<Config>(std::vector<model> &
             }
             if (tmp_grids[i].m_data.dim0() != 0) {
                 ig_cuda_ptr->grids[i].m_i = tmp_grids[i].m_data.dim0();
-                assert(MAX_NUM_OF_GRID_MI >= ig_cuda_ptr->grids[i].m_i);
                 ig_cuda_ptr->grids[i].m_j = tmp_grids[i].m_data.dim1();
-                assert(MAX_NUM_OF_GRID_MJ >= ig_cuda_ptr->grids[i].m_j);
                 ig_cuda_ptr->grids[i].m_k = tmp_grids[i].m_data.dim2();
-                assert(MAX_NUM_OF_GRID_MK >= ig_cuda_ptr->grids[i].m_k);
-
-                assert(tmp_grids[i].m_data.m_data.size()
-                       == ig_cuda_ptr->grids[i].m_i * ig_cuda_ptr->grids[i].m_j
-                              * ig_cuda_ptr->grids[i].m_k);
+                check_grid_dims(ig_cuda_ptr->grids[i].m_i, ig_cuda_ptr->grids[i].m_j,
+                                ig_cuda_ptr->grids[i].m_k,
+                                tmp_grids[i].m_data.m_data.size(),
+                                MAX_NUM_OF_GRID_MI, MAX_NUM_OF_GRID_MJ,
+                                MAX_NUM_OF_GRID_MK, MAX_NUM_OF_GRID_POINT);
                 memcpy(ig_cuda_ptr->grids[i].m_data, tmp_grids[i].m_data.m_data.data(),
                        tmp_grids[i].m_data.m_data.size() * sizeof(fl));
             } else {
