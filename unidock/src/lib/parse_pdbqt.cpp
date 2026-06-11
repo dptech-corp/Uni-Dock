@@ -136,12 +136,17 @@ parsed_atom parse_sdf_atom_string(const std::string& str, int number) {
         name = name.substr(0, 1);
     }
     sz ad = string_to_ad_type(name);
-    // std::cout << "parse_sdf_atom_string, name=" << name << ", ad=" << ad << std::endl;
     fl charge = 0;
 
     parsed_atom tmp(ad, charge, coords, 0, number);
 
-    return tmp;
+    if (is_non_ad_metal_name(name)) tmp.xs = XS_TYPE_Met_D;
+    if (tmp.acceptable_type())
+        return tmp;
+    else
+        throw struct_parse_error(
+            "Atom type " + name + " is not a valid AutoDock type "
+            "(see src/lib/atom_constants.h). Atom will be ignored in SDF file.");
 }
 
 struct atom_reference {
