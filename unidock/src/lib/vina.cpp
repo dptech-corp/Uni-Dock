@@ -538,6 +538,35 @@ void Vina::compute_vina_maps(double center_x, double center_y, double center_z, 
         gd[i].end = gd[i].begin + real_span;
     }
 
+    // Validate grid dimensions against GPU buffer limits.
+    // These must match MAX_NUM_OF_GRID_MI/MJ/MK and MAX_NUM_OF_GRID_POINT in cuda/kernel.h.
+    {
+        size_t n0 = gd[0].n_voxels + 1;
+        size_t n1 = gd[1].n_voxels + 1;
+        size_t n2 = gd[2].n_voxels + 1;
+        size_t total_grid_points = n0 * n1 * n2;
+        const size_t max_dim = 128;        // MAX_NUM_OF_GRID_MI/MJ/MK in cuda/kernel.h
+        const size_t max_points = 531441;  // MAX_NUM_OF_GRID_POINT in cuda/kernel.h (= 81^3,
+                                           // fits the default 30 A / 0.375 box; see PR for buffer bump)
+        if (n0 > max_dim || n1 > max_dim || n2 > max_dim) {
+            std::cerr << "ERROR: Grid dimension (" << n0 << " x " << n1 << " x " << n2
+                      << ") exceeds GPU buffer limit (" << max_dim << " per axis).\n"
+                      << "       Reduce box size or increase --spacing.\n"
+                      << "       If you have enough GPU memory, increase MAX_NUM_OF_GRID_MI/MJ/MK\n"
+                      << "       in cuda/kernel.h and recompile.\n";
+            exit(EXIT_FAILURE);
+        }
+        if (total_grid_points > max_points) {
+            std::cerr << "ERROR: Total grid points (" << total_grid_points
+                      << ") exceeds GPU buffer limit (MAX_NUM_OF_GRID_POINT="
+                      << max_points << ").\n"
+                      << "       Reduce box size or increase --spacing.\n"
+                      << "       If you have enough GPU memory, increase MAX_NUM_OF_GRID_POINT\n"
+                      << "       in cuda/kernel.h and recompile.\n";
+            exit(EXIT_FAILURE);
+        }
+    }
+
     // Initialize the scoring function
     precalculate precalculated_sf(*m_scoring_function);
     // Store it now in Vina object because of non_cache
@@ -1588,6 +1617,7 @@ void Vina::global_search(const int exhaustiveness, const int n_poses, const doub
                     = m_model.eval_intramolecular(m_precalculated_byatom, m_non_cache, authentic_v);
         }
         VINA_FOR_IN(i, poses) {
+            if (!not_max(poses[i].e)) continue;  // skip out-of-bounds poses
             if (m_verbosity > 1) std::cout << "ENERGY FROM SEARCH: " << poses[i].e << "\n";
 
             m_model.set(poses[i].c);
@@ -1624,6 +1654,7 @@ void Vina::global_search(const int exhaustiveness, const int n_poses, const doub
         }
 
         VINA_FOR_IN(i, poses) {
+            if (!not_max(poses[i].e)) continue;  // skip out-of-bounds poses
             m_model.set(poses[i].c);
 
             // Get RMSD between current pose and best_model
@@ -1787,6 +1818,7 @@ void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const 
             }
 
             for (int i = 0; i < poses.size(); ++i) {
+                if (!not_max(poses[i].e)) continue;  // skip out-of-bounds poses
                 if (m_verbosity > 1) std::cout << "ENERGY FROM SEARCH: " << poses[i].e << "\n";
 
                 m_model_gpu[l].set(poses[i].c);
@@ -1827,6 +1859,7 @@ void Vina::global_search_gpu(const int exhaustiveness, const int n_poses, const 
             }
 
             VINA_FOR_IN(i, poses) {
+                if (!not_max(poses[i].e)) continue;  // skip out-of-bounds poses
                 m_model_gpu[l].set(poses[i].c);
 
                 // Get RMSD between current pose and best_model
