@@ -66,12 +66,16 @@ set(REQUIRED_BOOST_COMPONENTS
   system thread serialization
   filesystem program_options timer
 )
+# Header-only Boost used (transitively) by the CUDA sources, e.g. boost/math/quaternion.hpp
+# via quaternion.h -> conf.h -> tree.h -> model.h. Must be part of the fetched Boost so the
+# cuda target resolves these to the fetched headers, not a (possibly newer) system Boost (#189).
+set(REQUIRED_BOOST_CUDA_HEADERS math)
 
 Set(FETCHCONTENT_QUIET FALSE) # Needed to print downloading progress
 
 if(FETCH_BOOST)
   set(BOOST_ENABLE_CMAKE ON)
-  set(BOOST_INCLUDE_LIBRARIES ${REQUIRED_BOOST_COMPONENTS})
+  set(BOOST_INCLUDE_LIBRARIES ${REQUIRED_BOOST_COMPONENTS} ${REQUIRED_BOOST_CUDA_HEADERS})
 
   # downloading a compressed release speeds up the download
   FetchContent_Declare(
@@ -129,6 +133,12 @@ target_include_directories(lib PUBLIC src/lib src/cuda)
 
 add_library(cuda OBJECT src/cuda/monte_carlo.cu src/cuda/precalculate.cu)
 target_include_directories(cuda PUBLIC src/lib src/cuda)
+# When using fetched Boost, link the header-only Boost::math so the CUDA target picks up the
+# fetched Boost headers instead of a newer system Boost (>=1.90 breaks nvcc with a
+# "constexpr constexpr" error in boost/math). See #189.
+if(FETCH_BOOST)
+  target_link_libraries(cuda PUBLIC Boost::math)
+endif()
 
 # >>>>>> Libraries Definitions End
 
