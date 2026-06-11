@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Docker image used"
+        description: "Docker image tag used"
         required: false
         default: "latest"
 jobs:
@@ -20,32 +20,40 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v6
         with:
-          python-version: 3.11
+          python-version: "3.11"
       - name: Install requirements
         run: |
-          apt update && apt install -y wget unzip
+          apt-get update && apt-get install -y wget unzip curl
           pip install -r scripts/requirements.txt
+      - name: Download benchmark data
+        run: bash getData.sh
 
-      - name: Run molecular docking benchmarks
+      - name: Run molecular docking benchmark (Uni-Dock V1)
+        working-directory: scripts
         run: |
-          python3 scripts/test_molecular_docking.py
-      - name: Upload docking results
+          python3 run_test.py \
+            --version 1 --bin unidock --type molecular_docking \
+            --device 0 --seed 123 \
+            --rootdir "$GITHUB_WORKSPACE" \
+            --savedir "$GITHUB_WORKSPACE/results/molecular_docking"
+      - name: Upload molecular docking results
         uses: actions/upload-artifact@v7
         with:
-          name: molecular_docking_results.csv
-          path: results/results.csv
-      - name: Upload docking metrics
-        uses: actions/upload-artifact@v7
-        with:
-          name: molecular_docking_metrics.csv
-          path: results/metrics.csv
+          name: molecular_docking_results
+          path: |
+            results/molecular_docking/res.csv
+            results/molecular_docking/metrics.csv
 
-      - name: Run virtual screening benchmarks
+      - name: Run virtual screening benchmark (Uni-Dock V1)
+        working-directory: scripts
         run: |
-          rm -rf results
-          python3 scripts/test_virtual_screening.py
+          python3 run_test.py \
+            --version 1 --bin unidock --type virtual_screening \
+            --device 0 --seed 123 \
+            --rootdir "$GITHUB_WORKSPACE" \
+            --savedir "$GITHUB_WORKSPACE/results/virtual_screening"
       - name: Upload virtual screening results
         uses: actions/upload-artifact@v7
         with:
-          name: virtual_screening_results.csv
-          path: results/results.csv
+          name: virtual_screening_results
+          path: results/virtual_screening/res.csv
