@@ -41,7 +41,7 @@ void check(T result, char const *const func, const char *const file, int const l
 #define MAX_NUM_OF_GRID_MI 128  // 55
 #define MAX_NUM_OF_GRID_MJ 128  // 55
 #define MAX_NUM_OF_GRID_MK 128  // 81
-#define MAX_NUM_OF_GRID_POINT 512000
+#define MAX_NUM_OF_GRID_POINT 531441
 
 #define GRID_MI 65//55
 #define GRID_MJ 71//55
@@ -79,7 +79,7 @@ static constexpr size_t GRIDS_SIZE_ =37   ;            // larger than vina1.1, m
 static constexpr size_t MAX_NUM_OF_GRID_MI_ =128;  // 55
 static constexpr size_t MAX_NUM_OF_GRID_MJ_= 128;  // 55
 static constexpr size_t MAX_NUM_OF_GRID_MK_ =128 ; // 81
-static constexpr size_t MAX_NUM_OF_GRID_POINT_ =512000;
+static constexpr size_t MAX_NUM_OF_GRID_POINT_ =531441;
 
 //#define GRID_MI 65//55
 //#define GRID_MJ 71//55
@@ -115,7 +115,7 @@ static constexpr size_t GRIDS_SIZE_ =37   ;            // larger than vina1.1, m
 static constexpr size_t MAX_NUM_OF_GRID_MI_ =128;  // 55
 static constexpr size_t MAX_NUM_OF_GRID_MJ_= 128;  // 55
 static constexpr size_t MAX_NUM_OF_GRID_MK_ =128 ; // 81
-static constexpr size_t MAX_NUM_OF_GRID_POINT_ =512000;
+static constexpr size_t MAX_NUM_OF_GRID_POINT_ =531441;
 
 //#define GRID_MI 65//55
 //#define GRID_MJ 71//55
@@ -151,7 +151,7 @@ static constexpr size_t GRIDS_SIZE_ =37   ;            // larger than vina1.1, m
 static constexpr size_t MAX_NUM_OF_GRID_MI_ =128;  // 55
 static constexpr size_t MAX_NUM_OF_GRID_MJ_= 128;  // 55
 static constexpr size_t MAX_NUM_OF_GRID_MK_ =128 ; // 81
-static constexpr size_t MAX_NUM_OF_GRID_POINT_ =512000;
+static constexpr size_t MAX_NUM_OF_GRID_POINT_ =531441;
 
 //#define GRID_MI 65//55
 //#define GRID_MJ 71//55
@@ -187,7 +187,7 @@ static constexpr size_t GRIDS_SIZE_ =37   ;            // larger than vina1.1, m
 static constexpr size_t MAX_NUM_OF_GRID_MI_ =128;  // 55
 static constexpr size_t MAX_NUM_OF_GRID_MJ_= 128;  // 55
 static constexpr size_t MAX_NUM_OF_GRID_MK_ =128 ; // 81
-static constexpr size_t MAX_NUM_OF_GRID_POINT_ =512000;
+static constexpr size_t MAX_NUM_OF_GRID_POINT_ =531441;
 
 //#define GRID_MI 65//55
 //#define GRID_MJ 71//55
@@ -223,7 +223,7 @@ static constexpr size_t GRIDS_SIZE_ =37   ;            // larger than vina1.1, m
 static constexpr size_t MAX_NUM_OF_GRID_MI_ =128;  // 55
 static constexpr size_t MAX_NUM_OF_GRID_MJ_= 128;  // 55
 static constexpr size_t MAX_NUM_OF_GRID_MK_ =128 ; // 81
-static constexpr size_t MAX_NUM_OF_GRID_POINT_ =512000;
+static constexpr size_t MAX_NUM_OF_GRID_POINT_ =531441;
 
 //#define GRID_MI 65//55
 //#define GRID_MJ 71//55
@@ -259,7 +259,7 @@ static constexpr size_t GRIDS_SIZE_ =37   ;            // larger than vina1.1, m
 static constexpr size_t MAX_NUM_OF_GRID_MI_ =128;  // 55
 static constexpr size_t MAX_NUM_OF_GRID_MJ_= 128;  // 55
 static constexpr size_t MAX_NUM_OF_GRID_MK_ =128 ; // 81
-static constexpr size_t MAX_NUM_OF_GRID_POINT_ =512000;
+static constexpr size_t MAX_NUM_OF_GRID_POINT_ =531441;
 
 //#define GRID_MI 65//55
 //#define GRID_MJ 71//55
