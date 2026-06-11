@@ -1005,14 +1005,15 @@ fl model::eval_intramolecular(const precalculate_byatom& p, const igrid& ig, con
         }
     }
     // printf("e3=%f\n", e);
-    // glue_i - glue_i and glue_i - glue_j interactions (no cutoff)
-    VINA_FOR_IN(i, glue_pairs) {
-        const interacting_pair& pair = glue_pairs[i];
-        fl r2 = vec_distance_sqr(coords[pair.a], coords[pair.b]);
-        fl this_e = p.eval_fast(pair.a, pair.b, r2);
-        curl(this_e, v[2]);
-        e += this_e;
-    }
+    // NOTE: glue_i - glue_j (macrocycle ring-closure) pairs are intentionally NOT
+    // scored here. They are a sampling artifact used only to pull a broken ring
+    // closed during optimization (see eval_deriv), and overlap (r->0) when closed,
+    // which the standard Vina repulsion turns into a large spurious energy. Including
+    // them here (the unbound/intramolecular reference) while the bound intra (evali)
+    // excludes them breaks the cancellation in `inter + intra - intramolecular_energy`,
+    // leaking a huge term into the reported affinity (#102/#192/#37). AutoDock Vina
+    // likewise keeps the glue out of the reported energy. No effect on non-macrocycle
+    // ligands (glue_pairs is empty).
     // printf("e4=%f\n", e);
 
     return e;
