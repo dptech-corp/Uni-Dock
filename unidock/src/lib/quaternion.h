@@ -23,13 +23,84 @@
 #ifndef VINA_QUATERNION_H
 #define VINA_QUATERNION_H
 
-#include <boost/math/quaternion.hpp>
 #include <boost/serialization/split_free.hpp>
 
 #include "common.h"
 #include "random.h"
 
-typedef boost::math::quaternion<fl> qt;
+// Custom quaternion type replacing boost::math::quaternion<fl>. Boost's
+// GPU-enabled math headers (Boost >= 1.87) cannot be compiled by nvcc:
+// boost/math/tools/numeric_limits.hpp expands BOOST_MATH_STATIC to `constexpr`
+// under __CUDACC__ and then writes `BOOST_MATH_STATIC constexpr ...`, i.e.
+// `constexpr constexpr`, which nvcc rejects. Since boost::math::quaternion is
+// only pulled into the CUDA translation units via the `qt` type, we reimplement
+// the (small) subset of quaternion operations the code uses. The same type is
+// used by host and device translation units so there is no ABI mismatch.
+// Component order and operation order match boost::math::quaternion.
+struct qt {
+    fl a, b, c, d;
+    qt() : a(0), b(0), c(0), d(0) {}
+    qt(fl a_, fl b_, fl c_, fl d_) : a(a_), b(b_), c(c_), d(d_) {}
+    fl R_component_1() const { return a; }
+    fl R_component_2() const { return b; }
+    fl R_component_3() const { return c; }
+    fl R_component_4() const { return d; }
+    qt& operator*=(fl rhs) {
+        a *= rhs;
+        b *= rhs;
+        c *= rhs;
+        d *= rhs;
+        return *this;
+    }
+    qt& operator/=(fl rhs) {
+        a /= rhs;
+        b /= rhs;
+        c /= rhs;
+        d /= rhs;
+        return *this;
+    }
+    qt& operator*=(const qt& rhs) {  // Hamilton product (matches boost::math::quaternion)
+        const fl ar = rhs.a, br = rhs.b, cr = rhs.c, dr = rhs.d;
+        const qt result(a * ar - b * br - c * cr - d * dr, a * br + b * ar + c * dr - d * cr,
+                        a * cr - b * dr + c * ar + d * br, a * dr + b * cr - c * br + d * ar);
+        *this = result;
+        return *this;
+    }
+    qt& operator/=(const qt& rhs) {  // *this * conj(rhs) / norm_sqr(rhs)
+        const fl nrm2 = rhs.a * rhs.a + rhs.b * rhs.b + rhs.c * rhs.c + rhs.d * rhs.d;
+        const qt conj(rhs.a, -rhs.b, -rhs.c, -rhs.d);
+        *this *= conj;
+        *this /= nrm2;
+        return *this;
+    }
+};
+inline qt operator*(const qt& lhs, const qt& rhs) {
+    qt result(lhs);
+    result *= rhs;
+    return result;
+}
+inline qt operator*(fl lhs, const qt& rhs) {
+    return qt(lhs * rhs.R_component_1(), lhs * rhs.R_component_2(), lhs * rhs.R_component_3(),
+              lhs * rhs.R_component_4());
+}
+inline qt operator*(const qt& lhs, fl rhs) { return rhs * lhs; }
+// Magnitude, equivalent to the former boost::math::abs(q) (scaled for overflow safety).
+inline fl quaternion_norm(const qt& q) {
+    const fl maxim
+        = (std::max)((std::max)(std::abs(q.R_component_1()), std::abs(q.R_component_2())),
+                     (std::max)(std::abs(q.R_component_3()), std::abs(q.R_component_4())));
+    if (maxim == static_cast<fl>(0)) return maxim;
+    const fl mixam = static_cast<fl>(1) / maxim;
+    fl a = q.R_component_1() * mixam;
+    fl b = q.R_component_2() * mixam;
+    fl c = q.R_component_3() * mixam;
+    fl d = q.R_component_4() * mixam;
+    a *= a;
+    b *= b;
+    c *= c;
+    d *= d;
+    return maxim * std::sqrt(a + b + c + d);
+}
 
 // non-intrusive free function split serialization
 namespace boost {
@@ -74,7 +145,7 @@ inline fl quaternion_norm_sqr(const qt& q) {  // equivalent to sqr(boost::math::
 
 inline void quaternion_normalize(qt& q) {
     const fl s = quaternion_norm_sqr(q);
-    assert(eq(s, sqr(boost::math::abs(q))));
+    assert(eq(s, sqr(quaternion_norm(q))));
     const fl a = std::sqrt(s);
     assert(a > epsilon_fl);
     q *= 1 / a;
@@ -83,7 +154,7 @@ inline void quaternion_normalize(qt& q) {
 
 inline void quaternion_normalize_approx(qt& q, const fl tolerance = 1e-6) {
     const fl s = quaternion_norm_sqr(q);
-    assert(eq(s, sqr(boost::math::abs(q))));
+    assert(eq(s, sqr(quaternion_norm(q))));
     if (std::abs(s - 1) < tolerance)
         ;  // most likely scenario
     else {

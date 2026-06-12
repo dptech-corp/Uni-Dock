@@ -24,7 +24,15 @@
 #define VINA_RANDOM_H
 
 #include <random>
+#ifdef __CUDACC__
+// nvcc cannot compile Boost.Math's GPU-enabled headers (Boost >= 1.87), which
+// the <boost/random.hpp> umbrella pulls in via its distributions. The CUDA
+// translation units only need the mt19937 engine type, so include just that.
+// Host translation units keep the full umbrella below (unchanged behavior).
+#include <boost/random/mersenne_twister.hpp>
+#else
 #include <boost/random.hpp>
+#endif
 #include "common.h"
 
 typedef boost::mt19937 rng;
