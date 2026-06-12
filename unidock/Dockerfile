@@ -2,7 +2,7 @@
 # See https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/index.html https://github.com/NVIDIA/nvidia-container-toolkit
 
 ARG CUDA_VERSION=12.9.2
-FROM nvidia/cuda:${CUDA_VERSION}-devel-ubuntu22.04
+FROM nvidia/cuda:${CUDA_VERSION}-devel-ubuntu24.04
 
 RUN apt-get update && apt install -y cmake \
     libboost-system-dev libboost-thread-dev libboost-serialization-dev libboost-filesystem-dev libboost-program-options-dev libboost-timer-dev git
