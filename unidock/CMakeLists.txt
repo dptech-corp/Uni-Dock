@@ -14,7 +14,13 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 # >>>>>> Language Configuration Begin
-set(CMAKE_CXX_STANDARD 14)
+# CUDA 13's bundled CCCL / libcu++ requires C++17; CUDA 12.x keeps C++14.
+if(CMAKE_CUDA_COMPILER_VERSION VERSION_GREATER_EQUAL 13.0)
+  set(CMAKE_CXX_STANDARD 17)
+  set(CMAKE_CUDA_STANDARD 17)
+else()
+  set(CMAKE_CXX_STANDARD 14)
+endif()
 
 set(CMAKE_CUDA_FLAGS_DEBUG "-g -G")
 option(Boost_USE_STATIC_LIBS "Whether to use static libs for boost" OFF)
@@ -25,7 +31,6 @@ check_language(CUDA)
 if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
   # https://en.wikipedia.org/wiki/CUDA#GPUs_supported
   set(CMAKE_CUDA_ARCHITECTURES
-    70 # V100
     75 # RTX 20, T4
     80 # A100, A800
     86 # RTX 30
@@ -34,6 +39,10 @@ if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
     100 # B100, B200, GB200
     120 # RTX 50, B40
   )
+  # CUDA 13 removed Volta (sm_70 / V100); only target it on CUDA 12.x.
+  if(CMAKE_CUDA_COMPILER_VERSION VERSION_LESS 13.0)
+    list(PREPEND CMAKE_CUDA_ARCHITECTURES 70) # V100
+  endif()
 endif()
 
 # Add fast math for release build
