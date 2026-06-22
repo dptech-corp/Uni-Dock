@@ -15,7 +15,7 @@ jobs:
       options: --gpus all -v /etc/apt/sources.list:/etc/apt/sources.list:ro
     steps:
     - name: checkout repo
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: install basic packages
       run: |
