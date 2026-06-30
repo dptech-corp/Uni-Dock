@@ -13,7 +13,7 @@ jobs:
     container:
       image: ghcr.io/astral-sh/uv:python3.12-bookworm-slim
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
     - name: Run ruff check
       working-directory: ./unidock_tools
       run: uvx ruff check
@@ -30,7 +30,7 @@ jobs:
         shell: bash
     steps:
     - name: checkout repo
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: install unidock
       working-directory: ./unidock
